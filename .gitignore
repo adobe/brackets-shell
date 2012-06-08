@@ -1,0 +1,27 @@
+# Start by ignoring all
+*
+# Add appshell source
+!appshell/*
+
+# Add gyp/gypi
+!appshell.gyp
+!appshell_paths.gypi
+
+# Add .gitignore
+!.gitignore
+
+# Add project build scripts
+!make_appshell_project.sh
+!make_appshell_project.bat
+
+# Add project files
+!appshell.xcodeproj
+!appshell.xcodeproj/project.pbxproj
+!appshell.sln
+!Brackets.vcxproj
+!libcef_dll_wrapper.vcxproj
+
+# Add README
+!README.md
+
+# That's all!
