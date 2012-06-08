@@ -6,15 +6,15 @@
 #include "config.h"
 #import <Cocoa/Cocoa.h>
 #include <sstream>
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include "include/cef_app.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/resource_util.h"
-#include "cefclient/string_util.h"
+#include "client_handler.h"
+#include "resource_util.h"
+#include "string_util.h"
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;

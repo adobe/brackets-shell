@@ -100,11 +100,11 @@ void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
 }
 
 
-// Handles the native implementation for the client_app extension.
-class ClientAppExtensionHandler : public CefV8Handler {
+// Handles the native implementation for the appshell extension.
+class AppShellExtensionHandler : public CefV8Handler {
  public:
-  explicit ClientAppExtensionHandler(CefRefPtr<ClientApp> client_app)
-    : client_app_(client_app) {
+  explicit AppShellExtensionHandler(CefRefPtr<ClientApp> client_app)
+  {
   }
 
   virtual bool Execute(const CefString& name,
@@ -112,62 +112,24 @@ class ClientAppExtensionHandler : public CefV8Handler {
                        const CefV8ValueList& arguments,
                        CefRefPtr<CefV8Value>& retval,
                        CefString& exception) {
-    bool handled = false;
 
-    if (name == "sendMessage") {
-      // Send a message to the browser process.
-      if ((arguments.size() == 1 || arguments.size() == 2) &&
-          arguments[0]->IsString()) {
-        CefRefPtr<CefBrowser> browser =
-            CefV8Context::GetCurrentContext()->GetBrowser();
-        ASSERT(browser.get());
-
-        CefString name = arguments[0]->GetStringValue();
-        if (!name.empty()) {
-          CefRefPtr<CefProcessMessage> message =
-              CefProcessMessage::Create(name);
-
-          // Translate the arguments, if any.
-          if (arguments.size() == 2 && arguments[1]->IsArray())
-            SetList(arguments[1], message->GetArgumentList());
-
-          browser->SendProcessMessage(PID_BROWSER, message);
-          handled = true;
-        }
-      }
-    } else if (name == "setMessageCallback") {
-      // Set a message callback.
-      if (arguments.size() == 2 && arguments[0]->IsString() &&
-          arguments[1]->IsFunction()) {
-        std::string name = arguments[0]->GetStringValue();
-        CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
-        int browser_id = context->GetBrowser()->GetIdentifier();
-        client_app_->SetMessageCallback(name, browser_id, context,
-                                        arguments[1]);
-        handled = true;
-      }
-    }  else if (name == "removeMessageCallback") {
-      // Remove a message callback.
-      if (arguments.size() == 1 && arguments[0]->IsString()) {
-        std::string name = arguments[0]->GetStringValue();
-        CefRefPtr<CefV8Context> context = CefV8Context::GetCurrentContext();
-        int browser_id = context->GetBrowser()->GetIdentifier();
-        bool removed = client_app_->RemoveMessageCallback(name, browser_id);
-        retval = CefV8Value::CreateBool(removed);
-        handled = true;
-      }
-    }
-
-    if (!handled)
-      exception = "Invalid method arguments";
-
-    return true;
+	// Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
+	CefRefPtr<CefBrowser> browser = 
+	  CefV8Context::GetCurrentContext()->GetBrowser();
+	ASSERT(browser.get());
+	CefRefPtr<CefProcessMessage> message = 
+	  CefProcessMessage::Create(name);
+	CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+	for (unsigned int i = 0; i < arguments.size(); i++)
+	  SetListValue(messageArgs, i, arguments[i]);
+	browser->SendProcessMessage(PID_BROWSER, message);
+	
+	return true;
   }
 
  private:
-  CefRefPtr<ClientApp> client_app_;
-
-  IMPLEMENT_REFCOUNTING(ClientAppExtensionHandler);
+	
+  IMPLEMENT_REFCOUNTING(AppShellExtensionHandler);
 };
 
 }  // namespace
@@ -178,31 +140,6 @@ ClientApp::ClientApp()
   CreateRenderDelegates(render_delegates_);
 }
 
-void ClientApp::SetMessageCallback(const std::string& message_name,
-                                 int browser_id,
-                                 CefRefPtr<CefV8Context> context,
-                                 CefRefPtr<CefV8Value> function) {
-  ASSERT(CefCurrentlyOn(TID_RENDERER));
-
-  callback_map_.insert(
-      std::make_pair(std::make_pair(message_name, browser_id),
-                     std::make_pair(context, function)));
-}
-
-bool ClientApp::RemoveMessageCallback(const std::string& message_name,
-                                    int browser_id) {
-  ASSERT(CefCurrentlyOn(TID_RENDERER));
-
-  CallbackMap::iterator it =
-      callback_map_.find(std::make_pair(message_name, browser_id));
-  if (it != callback_map_.end()) {
-    callback_map_.erase(it);
-    return true;
-  }
-
-  return false;
-}
-
 void ClientApp::GetProxyForUrl(const CefString& url,
                                CefProxyInfo& proxy_info) {
   proxy_info.proxyType = proxy_type_;
@@ -211,27 +148,11 @@ void ClientApp::GetProxyForUrl(const CefString& url,
 }
 
 void ClientApp::OnWebKitInitialized() {
-  // Register the client_app extension.
-  std::string app_code =
-    "var app;"
-    "if (!app)"
-    "  app = {};"
-    "(function() {"
-    "  app.sendMessage = function(name, arguments) {"
-    "    native function sendMessage();"
-    "    return sendMessage(name, arguments);"
-    "  };"
-    "  app.setMessageCallback = function(name, callback) {"
-    "    native function setMessageCallback();"
-    "    return setMessageCallback(name, callback);"
-    "  };"
-    "  app.removeMessageCallback = function(name) {"
-    "    native function removeMessageCallback();"
-    "    return removeMessageCallback(name);"
-    "  };"
-    "})();";
-  CefRegisterExtension("v8/app", app_code,
-      new ClientAppExtensionHandler(this));
+  // Register the appshell extension.
+  std::string extension_code = GetExtensionJSSource();
+
+  CefRegisterExtension("appshell", extension_code,
+      new AppShellExtensionHandler(this));
 
   // Execute delegate callbacks.
   RenderDelegateSet::iterator it = render_delegates_.begin();
@@ -255,18 +176,6 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
   RenderDelegateSet::iterator it = render_delegates_.begin();
   for (; it != render_delegates_.end(); ++it)
     (*it)->OnContextReleased(this, browser, frame, context);
-
-  // Remove any JavaScript callbacks registered for the context that has been
-  // released.
-  if (!callback_map_.empty()) {
-    CallbackMap::iterator it = callback_map_.begin();
-    for (; it != callback_map_.end();) {
-      if (it->second.first->IsSame(context))
-        callback_map_.erase(it++);
-      else
-        ++it;
-    }
-  }
 }
 
 bool ClientApp::OnProcessMessageRecieved(
@@ -282,43 +191,6 @@ bool ClientApp::OnProcessMessageRecieved(
   for (; it != render_delegates_.end() && !handled; ++it) {
     handled = (*it)->OnProcessMessageRecieved(this, browser, source_process,
                                               message);
-  }
-
-  if (handled)
-    return true;
-
-  // Execute the registered JavaScript callback if any.
-  if (!callback_map_.empty()) {
-    CefString message_name = message->GetName();
-    CallbackMap::const_iterator it = callback_map_.find(
-        std::make_pair(message_name.ToString(),
-                       browser->GetIdentifier()));
-    if (it != callback_map_.end()) {
-      // Enter the context.
-      it->second.first->Enter();
-
-      CefV8ValueList arguments;
-
-      // First argument is the message name.
-      arguments.push_back(CefV8Value::CreateString(message_name));
-
-      // Second argument is the list of message arguments.
-      CefRefPtr<CefListValue> list = message->GetArgumentList();
-      CefRefPtr<CefV8Value> args = CefV8Value::CreateArray(list->GetSize());
-      SetList(list, args);
-      arguments.push_back(args);
-
-      // Execute the callback.
-      CefRefPtr<CefV8Value> retval =
-          it->second.second->ExecuteFunction(NULL, arguments);
-      if (retval.get()) {
-        if (retval->IsBool())
-          handled = retval->GetBoolValue();
-      }
-
-      // Exit the context.
-      it->second.first->Exit();
-    }
   }
 
   return handled;

@@ -2,16 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "cefclient/client_handler.h"
+#include "client_handler.h"
 #include <stdio.h>
 #include <sstream>
 #include <string>
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/wrapper/cef_stream_resource_handler.h"
-#include "cefclient/cefclient.h"
-#include "cefclient/resource_util.h"
-#include "cefclient/string_util.h"
+#include "cefclient.h"
+#include "resource_util.h"
+#include "string_util.h"
+#include "appshell/appshell_extensions.h"
 
 
 // Custom menu command Ids.
@@ -294,8 +295,10 @@ void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
 // static
 void ClientHandler::CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates) {
+	appshell_extensions::CreateProcessMessageDelegates(delegates);
 }
 
 // static
 void ClientHandler::CreateRequestDelegates(RequestDelegateSet& delegates) {
+	appshell_extensions::CreateRequestDelegates(delegates);
 }

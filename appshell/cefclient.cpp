@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include <stdio.h>
 #include <cstdlib>
 #include <sstream>
@@ -13,10 +13,10 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "include/cef_web_plugin.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/client_switches.h"
-#include "cefclient/string_util.h"
-#include "cefclient/util.h"
+#include "client_handler.h"
+#include "client_switches.h"
+#include "string_util.h"
+#include "util.h"
 
 namespace {
 

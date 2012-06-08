@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "cefclient/client_app.h"
-#include "cefclient/client_handler.h"
+#include "client_app.h"
+#include "client_handler.h"
 
 namespace appshell_extensions {
 	
