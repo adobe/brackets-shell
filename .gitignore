@@ -3,6 +3,10 @@
 # Add appshell source
 !appshell
 !appshell/*
+!appshell/mac
+!appshell/mac/*
+!appshell/res
+!appshell/res/*
 appshell/.DS_Store
 
 # Add gyp/gypi
