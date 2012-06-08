@@ -3,6 +3,7 @@
 # Add appshell source
 !appshell
 !appshell/*
+appshell/.DS_Store
 
 # Add gyp/gypi
 !appshell.gyp
