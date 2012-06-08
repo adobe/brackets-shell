@@ -996,7 +996,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ../../chromium/src/build/mac/strip_from_xcode\nexit 1\n";
+			shellScript = "exec tools/strip_from_xcode\nexit 1\n";
 			showEnvVarsInLog = 0;
 		};
 		3B16BF13B8896C93428E0A35 /* Postbuild "Change Mach-O Flags" */ = {
@@ -1012,7 +1012,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ../../chromium/src/build/mac/change_mach_o_flags_from_xcode.sh\nexit 1\n";
+			shellScript = "exec tools/change_mach_o_flags_from_xcode.sh\nexit 1\n";
 			showEnvVarsInLog = 0;
 		};
 		5FFA01E4430BFD752A7D9747 /* Postbuild "Change Mach-O Flags" */ = {
@@ -1028,7 +1028,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ../../chromium/src/build/mac/change_mach_o_flags_from_xcode.sh\nexit 1\n";
+			shellScript = "exec tools/change_mach_o_flags_from_xcode.sh\nexit 1\n";
 			showEnvVarsInLog = 0;
 		};
 		910380272B9E47B3102A393B /* Postbuild "Fix Framework Link" */ = {
@@ -1060,7 +1060,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ../../chromium/src/build/mac/strip_from_xcode\nexit 1\n";
+			shellScript = "exec tools/strip_from_xcode\nexit 1\n";
 			showEnvVarsInLog = 0;
 		};
 		E0B5A15D59AE1A8E7AF929D3 /* Postbuild "Fix Framework Link" */ = {
