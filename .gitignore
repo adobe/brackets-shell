@@ -1,6 +1,7 @@
 # Start by ignoring all
 *
 # Add appshell source
+!appshell
 !appshell/*
 
 # Add gyp/gypi
