@@ -3,7 +3,7 @@
 // can be found in the LICENSE file.
 
 #include "config.h"
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
@@ -14,9 +14,9 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/resource.h"
-#include "cefclient/string_util.h"
+#include "client_handler.h"
+#include "resource.h"
+#include "string_util.h"
 
 
 #define MAX_LOADSTRING 100

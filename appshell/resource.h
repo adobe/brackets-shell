@@ -49,6 +49,7 @@
 #define IDS_LOCALSTORAGE                1004
 #define IDS_XMLHTTPREQUEST              1005
 #define IDS_DOMACCESS                   1006
+#define IDS_BRACKETS_EXTENSIONS         1007
 
 // Avoid files associated with MacOS
 #define _X86_

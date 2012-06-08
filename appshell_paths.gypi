@@ -101,6 +101,7 @@
     'appshell_sources_win': [
       'appshell/cefclient.rc',
       'appshell/cefclient_win.cpp',
+      'appshell/client_app_win.cpp',
       'appshell/client_handler_win.cpp',
       'appshell/resource.h',
       'appshell/res/cefclient.ico',
