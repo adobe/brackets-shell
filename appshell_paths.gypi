@@ -80,6 +80,8 @@
       '<@(autogen_client_side)',
     ],
     'appshell_sources_common': [
+      'appshell/appshell_extensions.cpp',
+      'appshell/appshell_extensions.h',
       'appshell/config.h',
       'appshell/cefclient.cpp',
       'appshell/cefclient.h',
@@ -111,6 +113,8 @@
       'appshell/resource_util_mac.mm',
     ],
     'appshell_sources_mac_helper': [
+      'appshell/appshell_extensions.cpp',
+      'appshell/appshell_extensions.h',
       'appshell/client_app.cpp',
       'appshell/client_app.h',
       'appshell/client_app_delegates.cpp',
