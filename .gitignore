@@ -5,6 +5,8 @@
 !appshell/*
 !appshell/mac
 !appshell/mac/*
+!appshell/mac/English.lproj
+!appshell/mac/English.lproj/*
 !appshell/res
 !appshell/res/*
 appshell/.DS_Store
