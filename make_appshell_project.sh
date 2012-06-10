@@ -13,3 +13,6 @@ $CHROMIUM_SRC_PATH/tools/gyp/gyp appshell.gyp -I $CHROMIUM_SRC_PATH/build/common
 # Fix up paths
 sed 's:[^ ]*/src/build/mac/:tools/:' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
 mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
+
+sed 's:SYMROOT = \([^\;]*\);:SYMROOT = xcodebuild;:' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
+mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
