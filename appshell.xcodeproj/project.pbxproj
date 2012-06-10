@@ -1355,7 +1355,7 @@
 				INTERMEDIATE_DIR = "$(PROJECT_DERIVED_FILE_DIR)/$(CONFIGURATION)";
 				SDKROOT = macosx10.6;
 				SHARED_INTERMEDIATE_DIR = "$(SYMROOT)/DerivedSources/$(CONFIGURATION)";
-				SYMROOT = ../../cef3/chromium/src/xcodebuild;
+				SYMROOT = xcodebuild;
 			};
 			name = Release;
 		};
@@ -1597,7 +1597,7 @@
 				INTERMEDIATE_DIR = "$(PROJECT_DERIVED_FILE_DIR)/$(CONFIGURATION)";
 				SDKROOT = macosx10.6;
 				SHARED_INTERMEDIATE_DIR = "$(SYMROOT)/DerivedSources/$(CONFIGURATION)";
-				SYMROOT = ../../cef3/chromium/src/xcodebuild;
+				SYMROOT = xcodebuild;
 			};
 			name = Debug;
 		};
