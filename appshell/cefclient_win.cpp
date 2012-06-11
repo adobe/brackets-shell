@@ -289,6 +289,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Populate the settings based on command line arguments.
       AppGetBrowserSettings(settings);
 
+      settings.file_access_from_file_urls_allowed = true;
+      settings.universal_access_from_file_urls_allowed = true;
+
       // Initialize window info to the defaults for a child window
       info.SetAsChild(hWnd, rect);
 

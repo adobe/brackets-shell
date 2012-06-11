@@ -36,7 +36,9 @@ void CreateRequestDelegates(ClientHandler::RequestDelegateSet& delegates);
 
 // Extension error codes. These MUST be in sync with the error
 // codes in brackets_extensions.js
+#if !defined(OS_WIN) // NO_ERROR is defined on windows
 static const int NO_ERROR                   = 0;
+#endif
 static const int ERR_UNKNOWN                = 1;
 static const int ERR_INVALID_PARAMS         = 2;
 static const int ERR_NOT_FOUND              = 3;

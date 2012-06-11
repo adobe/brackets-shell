@@ -51,3 +51,9 @@ std::string ClientApp::GetExtensionJSSource()
 
     return "";
 }
+
+double ClientApp::GetElapsedMilliseconds()
+{
+    // TODO: Raymond, please implement
+    return 0;
+}

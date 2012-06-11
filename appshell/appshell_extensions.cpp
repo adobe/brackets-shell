@@ -151,12 +151,7 @@ public:
                 ExtensionString encoding = argList->GetString(2);
                 std::string contents = "";
                 
-                // We only support utf8 for now
-                if (encoding != "utf8") {
-                    error = ERR_UNSUPPORTED_ENCODING;
-                } else {
-                    error = ReadFile(filename, encoding, contents);
-                }
+                error = ReadFile(filename, encoding, contents);
                 
                 // Set response args for this function
                 responseArgs->SetString(2, contents);
