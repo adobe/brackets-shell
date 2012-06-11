@@ -4,10 +4,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "cefclient/client_handler.h"
+#include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 
 // ClientHandler::ClientLifeSpanHandler implementation
 

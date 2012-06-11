@@ -28,6 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Binary
 //
 
+IDS_BRACKETS_EXTENSIONS BINARY		"brackets_extensions.js"
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
