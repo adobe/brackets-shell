@@ -99,6 +99,7 @@
       'appshell/util.h',
     ],
     'appshell_sources_win': [
+      'appshell/appshell_extensions_win.cpp',
       'appshell/cefclient.rc',
       'appshell/cefclient_win.cpp',
       'appshell/client_app_win.cpp',
@@ -110,6 +111,7 @@
       'appshell/resource_util_win.cpp',
     ],
     'appshell_sources_mac': [
+      'appshell/appshell_extensions_mac.mm',
       'appshell/client_app_mac.mm',
       'appshell/cefclient_mac.mm',
       'appshell/client_handler_mac.mm',
@@ -118,6 +120,7 @@
     'appshell_sources_mac_helper': [
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
+      'appshell/appshell_extensions_mac.mm',
       'appshell/client_app.cpp',
       'appshell/client_app.h',
       'appshell/client_app_mac.mm',

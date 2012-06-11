@@ -59,7 +59,9 @@
 		5164086404B14363CC7BCBE0 /* libcef_dll_wrapper2.cc in Sources */ = {isa = PBXBuildFile; fileRef = C36233CB23734A273D2D0F79 /* libcef_dll_wrapper2.cc */; };
 		5241E88E7E6435DE2C0FE500 /* transfer_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9211C221356E0B082C4816A /* transfer_util.cpp */; };
 		5B03FFBE66C7EE2CDF6B714E /* client_app_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = FC33590C4ECC150F9CD14493 /* client_app_mac.mm */; };
+		5B112E85C066A8D1E8EF68A4 /* appshell_extensions_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */; };
 		61A09DAC3E367C528215AB8B /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A90B310A1CB19C285E2E13FE /* libcef_dll_wrapper.a */; };
+		6479369F5007A233EABEB8A0 /* appshell_extensions_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */; };
 		651022340D1643D1DE957102 /* post_data_element_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 235412E5669505A9DD7C2303 /* post_data_element_ctocpp.cc */; };
 		655F9692081BDAAB642B28DC /* render_process_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8ABFDFF093F6B71602851374 /* render_process_handler_cpptoc.cc */; };
 		6B295097B29E8FB628815A1B /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = EDDE848ADF50901E338C0DE5 /* MainMenu.xib */; };
@@ -362,6 +364,7 @@
 		932B910099817CB226487AF4 /* cef_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_ptr.h; sourceTree = "<group>"; };
 		93B4F36427B200909D58F8F9 /* cef_base.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_base.h; sourceTree = "<group>"; };
 		94288A47CD51C8E44C1D9A7D /* cef_proxy_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_proxy_handler.h; sourceTree = "<group>"; };
+		95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = appshell_extensions_mac.mm; sourceTree = "<group>"; };
 		960AF2FA67AD34478B16E1FE /* ffmpegsumo.so */ = {isa = PBXFileReference; lastKnownFileType = text; path = ffmpegsumo.so; sourceTree = "<group>"; };
 		9B6B1C35B41FBDC6DDEFF52E /* read_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = read_handler_cpptoc.cc; sourceTree = "<group>"; };
 		9C2240AAB28AC105AD67ACFD /* cef_frame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_frame.h; sourceTree = "<group>"; };
@@ -567,6 +570,7 @@
 				2CF60921DE182D498BFC8418 /* mac */,
 				F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */,
 				2C6200DAA24D72696664A534 /* appshell_extensions.h */,
+				95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */,
 				F55C44F44BBA964EFE0B704F /* brackets_extensions.js */,
 				522C920B68963035E6CE38FE /* cefclient.cpp */,
 				217F2C98268E9035AD8D9C14 /* cefclient.h */,
@@ -1123,6 +1127,7 @@
 				486D6CF9DA73142E734968DC /* client_handler.cpp in Sources */,
 				ABA1F3972217F5082F33E0A4 /* client_switches.cpp in Sources */,
 				404420811CFE6F0A01D86D6E /* string_util.cpp in Sources */,
+				5B112E85C066A8D1E8EF68A4 /* appshell_extensions_mac.mm in Sources */,
 				8094DACA8E9D03B15276A209 /* client_app_mac.mm in Sources */,
 				C5EBE4A85C81F593EDF064F5 /* cefclient_mac.mm in Sources */,
 				7418E8ADE705BE89705C7438 /* client_handler_mac.mm in Sources */,
@@ -1135,6 +1140,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A53BD3DB0E080310E710A5CE /* appshell_extensions.cpp in Sources */,
+				6479369F5007A233EABEB8A0 /* appshell_extensions_mac.mm in Sources */,
 				A7C00A73ED6CE468CB8A2DEF /* client_app.cpp in Sources */,
 				5B03FFBE66C7EE2CDF6B714E /* client_app_mac.mm in Sources */,
 				37732F00B07028873199D832 /* client_app_delegates.cpp in Sources */,

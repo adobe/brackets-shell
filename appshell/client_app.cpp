@@ -52,6 +52,37 @@ void SetList(CefRefPtr<CefV8Value> source, CefRefPtr<CefListValue> target) {
     SetListValue(target, i, source->GetValue(i));
 }
 
+CefRefPtr<CefV8Value> ListValueToV8Value(CefRefPtr<CefListValue> value, int index)
+{
+    CefRefPtr<CefV8Value> new_value;
+    
+    CefValueType type = value->GetType(index);
+    switch (type) {
+        case VTYPE_LIST: {
+            CefRefPtr<CefListValue> list = value->GetList(index);
+            new_value = CefV8Value::CreateArray(list->GetSize());
+            SetList(list, new_value);
+        } break;
+        case VTYPE_BOOL:
+            new_value = CefV8Value::CreateBool(value->GetBool(index));
+            break;
+        case VTYPE_DOUBLE:
+            new_value = CefV8Value::CreateDouble(value->GetDouble(index));
+            break;
+        case VTYPE_INT:
+            new_value = CefV8Value::CreateInt(value->GetInt(index));
+            break;
+        case VTYPE_STRING:
+            new_value = CefV8Value::CreateString(value->GetString(index));
+            break;
+        default:
+            new_value = CefV8Value::CreateNull();
+            break;
+    }
+    
+    return new_value;
+}
+    
 // Transfer a List value to a V8 array index.
 void SetListValue(CefRefPtr<CefV8Value> list, int index,
                   CefRefPtr<CefListValue> value) {
@@ -104,7 +135,8 @@ void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
 class AppShellExtensionHandler : public CefV8Handler {
  public:
   explicit AppShellExtensionHandler(CefRefPtr<ClientApp> client_app)
-  {
+    : client_app_(client_app)
+    , messageId(0) {
   }
 
   virtual bool Execute(const CefString& name,
@@ -113,23 +145,46 @@ class AppShellExtensionHandler : public CefV8Handler {
                        CefRefPtr<CefV8Value>& retval,
                        CefString& exception) {
 
-	// Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
-	CefRefPtr<CefBrowser> browser = 
-	  CefV8Context::GetCurrentContext()->GetBrowser();
-	ASSERT(browser.get());
-	CefRefPtr<CefProcessMessage> message = 
-	  CefProcessMessage::Create(name);
-	CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
-	for (unsigned int i = 0; i < arguments.size(); i++)
-	  SetListValue(messageArgs, i, arguments[i]);
-	browser->SendProcessMessage(PID_BROWSER, message);
+      // The only message that is handled here is getElapsedMilliseconds(). All other
+      // messages are passed to the browser process.
+      if (name == "GetElapsedMilliseconds") {
+          retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
+      } else {
+          // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
+          CefRefPtr<CefBrowser> browser = 
+          CefV8Context::GetCurrentContext()->GetBrowser();
+          ASSERT(browser.get());
+          CefRefPtr<CefProcessMessage> message = 
+                CefProcessMessage::Create(name);
+          CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+          
+          // The first argument must be a callback function
+          if (arguments.size() < 1 || !arguments[0]->IsFunction()) {
+              std::string functionName = name;
+              fprintf(stderr, "Function called without callback param: %s\n", functionName.c_str());
+              return false;
+          } 
+          
+          // The first argument is the message id
+          client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
+          SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
+          
+          // Pass the rest of the arguments
+          for (unsigned int i = 1; i < arguments.size(); i++)
+              SetListValue(messageArgs, i, arguments[i]);
+          browser->SendProcessMessage(PID_BROWSER, message);
+          
+          messageId++;
+      }
 	
 	return true;
   }
 
  private:
+    CefRefPtr<ClientApp> client_app_;
+    int32 messageId;
 	
-  IMPLEMENT_REFCOUNTING(AppShellExtensionHandler);
+    IMPLEMENT_REFCOUNTING(AppShellExtensionHandler);
 };
 
 }  // namespace
@@ -179,19 +234,39 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
 }
 
 bool ClientApp::OnProcessMessageRecieved(
-    CefRefPtr<CefBrowser> browser,
-    CefProcessId source_process,
-    CefRefPtr<CefProcessMessage> message) {
-  ASSERT(source_process == PID_BROWSER);
+        CefRefPtr<CefBrowser> browser,
+        CefProcessId source_process,
+        CefRefPtr<CefProcessMessage> message) {
+    ASSERT(source_process == PID_BROWSER);
 
-  bool handled = false;
+    bool handled = false;
 
-  // Execute delegate callbacks.
-  RenderDelegateSet::iterator it = render_delegates_.begin();
-  for (; it != render_delegates_.end() && !handled; ++it) {
-    handled = (*it)->OnProcessMessageRecieved(this, browser, source_process,
-                                              message);
-  }
+    // Execute delegate callbacks.
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end() && !handled; ++it) {
+        handled = (*it)->OnProcessMessageRecieved(this, browser, source_process, message);
+    }
 
-  return handled;
+    if (!handled) {
+        if (message->GetName() == "invokeCallback") {
+            CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+            int32 callbackId = messageArgs->GetInt(0);
+                    
+            CefRefPtr<CefV8Context> context = callback_map_[callbackId].first;
+            CefRefPtr<CefV8Value> callbackFunction = callback_map_[callbackId].second;
+            CefV8ValueList arguments;
+            context->Enter();
+               
+            for (size_t i = 1; i < messageArgs->GetSize(); i++) {
+                arguments.push_back(ListValueToV8Value(messageArgs, i));
+            }
+            
+            callbackFunction->ExecuteFunction(NULL, arguments);
+            context->Exit();
+            
+            callback_map_.erase(callbackId);
+        }
+    }
+    
+    return handled;
 }

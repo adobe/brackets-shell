@@ -40,20 +40,9 @@ if (!brackets.fs) {
 if (!brackets.app) {
     brackets.app = {};
 }
-(function () {
-    // Internal function to get the last error code.
-    native function GetLastError();
-    function getLastError() {
-        return GetLastError();
-    }
-    
-    // For debug purposes. When true, a 10 millisecond timeout is
-    // run before the callback is called. See invokeCallback() below
-    // for details.
-    brackets.forceAsyncCallbacks = false;
-    
+(function () {    
     // Error values. These MUST be in sync with the error values
-    // at the top of brackets_extensions.mm.
+    // at the top of brackets_extensions.h.
     
     /**
      * @constant No error.
@@ -104,28 +93,7 @@ if (!brackets.app) {
      * @constant Specified path does not point to a directory.
      */
     brackets.fs.ERR_NOT_DIRECTORY           = 9;
-        
-    /**
-     * Invoke a callback function.
-     *
-     * If the variable "brackets.forceAsyncCallbacks" is true, the callback is called after a 10
-     * ms timer is run. If brackets.forceAsyncCallbacks is false, the callback is called
-     * immediately.
-     */
-    function invokeCallback(callback) {
-        var args = [].splice.call(arguments, 1);
-    
-        function doCallback() {
-            callback.apply(this, args);
-        }
-        
-        if (brackets.forceAsyncCallbacks) {
-            setTimeout(doCallback, 10);
-        } else {
-            doCallback();
-        }
-    }
-    
+ 
     /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
@@ -150,11 +118,9 @@ if (!brackets.app) {
     native function ShowOpenDialog();
     brackets.fs.showOpenDialog = function (allowMultipleSelection, chooseDirectory, title, initialPath, fileTypes, callback) {
         setTimeout(function () {
-            var resultString = ShowOpenDialog(allowMultipleSelection, chooseDirectory,
-                                             title || 'Open', initialPath || '',
-                                             fileTypes ? fileTypes.join(' ') : '');
-            var result = JSON.parse(resultString || '[]');
-            invokeCallback(callback, getLastError(), result);
+            ShowOpenDialog(callback, allowMultipleSelection, chooseDirectory,
+                             title || 'Open', initialPath || '',
+                             fileTypes ? fileTypes.join(' ') : '');
         }, 0);
     };
     
@@ -176,9 +142,7 @@ if (!brackets.app) {
      */
     native function ReadDir();
     brackets.fs.readdir = function (path, callback) {
-        var resultString = ReadDir(path);
-        var result = JSON.parse(resultString || '[]');
-        invokeCallback(callback, getLastError(), result);
+        var resultString = ReadDir(callback, path);
     };
     
     /**
@@ -195,20 +159,19 @@ if (!brackets.app) {
      *                 
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
-    native function IsDirectory();
     native function GetFileModificationTime();
     brackets.fs.stat = function (path, callback) {
-        var isDir = IsDirectory(path);
-        var modtime = GetFileModificationTime(path);
-        invokeCallback(callback, getLastError(), {
-            isFile: function () {
-                return !isDir;
-            },
-            isDirectory: function () {
-                return isDir;
-            },
-            mtime: modtime
-        });
+        GetFileModificationTime(function (err, modtime, isDir) {
+            callback(err, {
+                isFile: function () {
+                    return !isDir;
+                },
+                isDirectory: function () {
+                    return isDir;
+                },
+                mtime: new Date(modtime * 1000) // modtime is seconds since 1970, convert to ms
+            });
+        }, path);
     };
  
     /**
@@ -246,8 +209,7 @@ if (!brackets.app) {
      */
     native function ReadFile();
     brackets.fs.readFile = function (path, encoding, callback) {
-        var contents = ReadFile(path, encoding);
-        invokeCallback(callback, getLastError(), contents);
+        ReadFile(callback, path, encoding);
     };
     
     /**
@@ -269,10 +231,7 @@ if (!brackets.app) {
      */
     native function WriteFile();
     brackets.fs.writeFile = function (path, data, encoding, callback) {
-        WriteFile(path, data, encoding);
-        if (callback) {
-            invokeCallback(callback, getLastError());
-        }
+        WriteFile(callback, path, data, encoding);
     };
     
     /**
@@ -291,8 +250,7 @@ if (!brackets.app) {
      */
     native function SetPosixPermissions();
     brackets.fs.chmod = function (path, mode, callback) {
-        SetPosixPermissions(path, mode);
-        invokeCallback(callback, getLastError());
+        SetPosixPermissions(callback, path, mode);
     };
     
     /**
@@ -310,15 +268,8 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function DeleteFileOrDirectory();
-    native function IsDirectory();
     brackets.fs.unlink = function (path, callback) {
-        // Unlink can only delete files
-        if (IsDirectory(path)) {
-            invokeCallback(callback, brackets.fs.ERR_NOT_FILE);
-            return;
-        }
-        DeleteFileOrDirectory(path);
-        invokeCallback(callback, getLastError());
+        DeleteFileOrDirectory(callback, path);
     };
 
     /**
@@ -346,11 +297,13 @@ if (!brackets.app) {
      */
     native function OpenLiveBrowser();
     brackets.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
+ /*
         // enableRemoteDebugging flag is ignored on mac
         setTimeout(function() {
             OpenLiveBrowser(url);
             callback(getLastError());
         }, 0);
+ */
     };
     
     /**
@@ -368,19 +321,8 @@ if (!brackets.app) {
      */
     native function CloseLiveBrowser();
     brackets.app.closeLiveBrowser = function (callback) {
+ /*
         CloseLiveBrowser(callback);
+ */
     };
-
-    /**
-     * Workaround for CEF bug #501. On Mac, focus (and blur) events are not sent to the
-     * window object. In order for our "sync files on app activate" feature to work, fake
-     * a focus event here. 
-     * TODO (issue 69) - Remove this function once CEF bug #501 is fixed.
-     * http://code.google.com/p/chromiumembedded/issues/detail?id=501
-     */
-    brackets.sendFakeFocusEvent = function() {
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent("focus", false);
-        window.dispatchEvent(evt);
-    }
 })();

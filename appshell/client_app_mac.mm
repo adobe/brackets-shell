@@ -27,6 +27,15 @@
 
 #include <string>
 
+extern CFTimeInterval g_appStartupTime;
+
+double ClientApp::GetElapsedMilliseconds()
+{
+    CFAbsoluteTime elapsed = CFAbsoluteTimeGetCurrent() - g_appStartupTime;
+    
+    return round(elapsed * 1000);
+}
+
 std::string ClientApp::GetExtensionJSSource()
 {
     std::string result;
