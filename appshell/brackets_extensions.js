@@ -121,7 +121,7 @@ if (!brackets.app) {
             ShowOpenDialog(callback, allowMultipleSelection, chooseDirectory,
                              title || 'Open', initialPath || '',
                              fileTypes ? fileTypes.join(' ') : '');
-        }, 0);
+        }, 10);
     };
     
     /**
