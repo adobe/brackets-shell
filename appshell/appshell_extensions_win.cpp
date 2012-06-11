@@ -23,10 +23,12 @@
 
 #include "appshell_extensions.h"
 
+#include <algorithm>
 #include <CommDlg.h>
 #include <ShlObj.h>
 
 // Forward declarations for functions at the bottom of this file
+void FixFilename(ExtensionString& filename);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 
@@ -49,6 +51,8 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 {
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
+
+    FixFilename(initialDirectory);
 
     // TODO (issue #64) - This method should be using IFileDialog instead of the
     /* outdated SHGetPathFromIDList and GetOpenFileName.
@@ -172,6 +176,8 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
+    FixFilename(path);
+
     path += L"\\*";
 
     WIN32_FIND_DATA ffd;
@@ -213,6 +219,8 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
+    FixFilename(filename);
+
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
     if (dwAttr == INVALID_FILE_ATTRIBUTES) {
@@ -233,6 +241,8 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
+    FixFilename(filename);
+
     if (encoding != L"utf8")
         return ERR_UNSUPPORTED_ENCODING;
 
@@ -272,6 +282,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
+    FixFilename(filename);
+
     if (encoding != L"utf8")
         return ERR_UNSUPPORTED_ENCODING;
 
@@ -304,6 +316,11 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void FixFilename(ExtensionString& filename)
+{
+    // Convert '/' to '\'
+    replace(filename.begin(), filename.end(), '/', '\\');
+}
 
 // Maps errors from errno.h to the brackets error codes
 // found in brackets_extensions.js
