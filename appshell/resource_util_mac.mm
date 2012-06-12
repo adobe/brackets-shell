@@ -6,9 +6,9 @@
 #import <Foundation/Foundation.h>
 #include <mach-o/dyld.h>
 #include <stdio.h>
-#include "cefclient/resource_util.h"
+#include "resource_util.h"
 #include "include/cef_stream.h"
-#include "cefclient/util.h"
+#include "util.h"
 
 namespace {
 

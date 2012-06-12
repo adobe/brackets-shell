@@ -3,11 +3,11 @@
 // can be found in the LICENSE file.
 
 #include "config.h"
-#include "cefclient/client_handler.h"
+#include "client_handler.h"
 #include <string>
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-#include "cefclient/resource.h"
+#include "resource.h"
 
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,

@@ -3,7 +3,7 @@
 // can be found in the LICENSE file.
 
 #include "config.h"
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
@@ -14,9 +14,9 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/resource.h"
-#include "cefclient/string_util.h"
+#include "client_handler.h"
+#include "resource.h"
+#include "string_util.h"
 
 
 #define MAX_LOADSTRING 100
@@ -288,6 +288,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       // Populate the settings based on command line arguments.
       AppGetBrowserSettings(settings);
+
+      settings.file_access_from_file_urls_allowed = true;
+      settings.universal_access_from_file_urls_allowed = true;
 
       // Initialize window info to the defaults for a child window
       info.SetAsChild(hWnd, rect);

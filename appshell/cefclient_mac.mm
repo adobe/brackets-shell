@@ -6,15 +6,18 @@
 #include "config.h"
 #import <Cocoa/Cocoa.h>
 #include <sstream>
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include "include/cef_app.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/resource_util.h"
-#include "cefclient/string_util.h"
+#include "client_handler.h"
+#include "resource_util.h"
+#include "string_util.h"
+
+// Application startup time
+CFTimeInterval g_appStartupTime;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -292,6 +295,9 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Populate the settings based on command line arguments.
   AppGetBrowserSettings(settings);
 
+  settings.file_access_from_file_urls_allowed = true;
+  settings.universal_access_from_file_urls_allowed = true;
+
   window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 "http://www.google.com", settings);
@@ -329,6 +335,9 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
+
+  g_appStartupTime = CFAbsoluteTimeGetCurrent();
+
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
