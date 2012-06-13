@@ -26,9 +26,16 @@
 #include <algorithm>
 #include <CommDlg.h>
 #include <ShlObj.h>
+#include <Shlwapi.h>
+#include <stdio.h>
+#include <sys/stat.h>
+
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
 
 // Forward declarations for functions at the bottom of this file
 void FixFilename(ExtensionString& filename);
+void EscapeJSONString(const std::wstring& str, std::wstring& finalResult);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 
@@ -49,6 +56,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
+    std::wstring results = L"[";
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
 
@@ -103,7 +111,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
 
-        allowMulitpleSelection = false;  // TODO: Raymond, please implement.
+        allowMulitpleSelection = false;  
 
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
@@ -119,7 +127,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         if (GetOpenFileName(&ofn)) {
             if (allowMulitpleSelection) {
                 // Multiple selection encodes the files differently
-/*
+
                 // If multiple files are selected, the first null terminator
                 // signals end of directory that the files are all in
                 std::wstring dir(szFile);
@@ -163,7 +171,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                         i += file.length() + 1;
                     }
                 }
-*/
+
             } else {
                 // If multiple files are not allowed, add the single file
                 selectedFiles->SetString(0, szFile);
@@ -306,13 +314,34 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode)
 {
-    // TODO: Raymond, please implement
+    FixFilename(filename);
+
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        return ERR_NOT_FOUND;
+
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
+        return NO_ERROR;
+
+    bool write = (mode & 0200) != 0; 
+    bool read = (mode & 0400) != 0;
+    int mask = (write ? _S_IWRITE : 0) | (read ? _S_IREAD : 0);
+
+    if (_wchmod(filename.c_str(), mask) == -1) {
+        return ConvertErrnoCode(errno); 
+    }
+
     return NO_ERROR;
 }
 
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
-    // TODO: Raymond, please implement
+    FixFilename(filename);
+
+    if (!DeleteFile(filename.c_str()))
+        return ConvertWinErrorCode(GetLastError());
+
     return NO_ERROR;
 }
 
@@ -320,6 +349,30 @@ void FixFilename(ExtensionString& filename)
 {
     // Convert '/' to '\'
     replace(filename.begin(), filename.end(), '/', '\\');
+}
+
+// Escapes characters that have special meaning in JSON
+void EscapeJSONString(const std::wstring& str, std::wstring& finalResult) {
+    std::wstring result;
+        
+    for(size_t pos = 0; pos != str.size(); ++pos) {
+        switch(str[pos]) {
+            case '\a':  result.append(L"\\a");   break;
+            case '\b':  result.append(L"\\b");   break;
+            case '\f':  result.append(L"\\f");   break;
+            case '\n':  result.append(L"\\n");   break;
+            case '\r':  result.append(L"\\r");   break;
+            case '\t':  result.append(L"\\t");   break;
+            case '\v':  result.append(L"\\v");   break;
+            // Note: single quotes are OK for JSON
+            case '\"':  result.append(L"\\\"");  break; // double quote
+            case '\\':  result.append(L"/");     break; // backslash                        
+                        
+            default:   result.append(1, str[pos]); break;
+        }
+    }
+
+    finalResult = result;
 }
 
 // Maps errors from errno.h to the brackets error codes
