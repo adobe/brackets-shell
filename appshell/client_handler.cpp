@@ -14,7 +14,6 @@
 #include "string_util.h"
 #include "appshell/appshell_extensions.h"
 
-
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
@@ -290,6 +289,13 @@ void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
     browser->GetMainFrame()->ExecuteJavaScript(
         "window.open('" +  devtools_url + "');", "about:blank", 0);
   }
+}
+
+bool ClientHandler::OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                                  const CefString& message_text,
+                                  bool is_reload,
+                                  CefRefPtr<CefJSDialogCallback> callback) {
+    return false;
 }
 
 // static

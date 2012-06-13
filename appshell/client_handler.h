@@ -25,7 +25,8 @@ class ClientHandler : public CefClient,
                       public CefRequestHandler,
                       public CefDisplayHandler,
                       public CefGeolocationHandler,
-                      public CefContextMenuHandler {
+                      public CefContextMenuHandler,
+                      public CefJSDialogHandler {
  public:
   // Interface for process message delegates. Do not perform work in the
   // RenderDelegate constructor.
@@ -85,6 +86,10 @@ class ClientHandler : public CefClient,
   virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE {
     return this;
   }
+  virtual CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() OVERRIDE {
+    return this;
+  }
+                          
   virtual bool OnProcessMessageRecieved(CefRefPtr<CefBrowser> browser,
                                         CefProcessId source_process,
                                         CefRefPtr<CefProcessMessage> message)
@@ -180,6 +185,12 @@ class ClientHandler : public CefClient,
 
   void ShowDevTools(CefRefPtr<CefBrowser> browser);
 
+  // CefJSDialogHandler methods
+  virtual bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                                    const CefString& message_text,
+                                    bool is_reload,
+                                    CefRefPtr<CefJSDialogCallback> callback);
+                          
  protected:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
@@ -217,7 +228,7 @@ class ClientHandler : public CefClient,
   CefWindowHandle m_ForwardHwnd;
   CefWindowHandle m_StopHwnd;
   CefWindowHandle m_ReloadHwnd;
-
+                          
   // Support for logging.
   std::string m_LogFile;
 
