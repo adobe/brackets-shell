@@ -32,7 +32,6 @@
 
 // Forward declarations for functions at the bottom of this file
 void FixFilename(ExtensionString& filename);
-void EscapeJSONString(const std::wstring& str, std::wstring& finalResult);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 
