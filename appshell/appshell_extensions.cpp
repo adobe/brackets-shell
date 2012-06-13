@@ -41,7 +41,7 @@ public:
                       CefRefPtr<CefProcessMessage> message) OVERRIDE {
         std::string message_name = message->GetName();
         CefRefPtr<CefListValue> argList = message->GetArgumentList();
-        int32 callbackId;
+        int32 callbackId = -1;
         int32 error = NO_ERROR;
         CefRefPtr<CefProcessMessage> response = 
             CefProcessMessage::Create("invokeCallback");
@@ -53,12 +53,13 @@ public:
         //   argument0 - the id of this message. This id is passed back to the
         //               render process in order to execute callbacks
         //   argument1 - argumentN - the arguments for the function
+        //
+        // Note: Functions without callback can be specified, but they *cannot*
+        // take any arguments.
         
-        if (argList->GetSize() < 1) {
-            fprintf(stderr, "No callback id specified for function %s\n", message_name.c_str());
-            return false;
-        }
-        callbackId = argList->GetInt(0);
+        // If we have any arguments, the first is the callbackId
+        if (argList->GetSize() > 0)
+            callbackId = argList->GetInt(0);
         
         if (message_name == "ShowOpenDialog") {
             // Parameters:
@@ -212,17 +213,24 @@ public:
                 
                 // No additional response args for this function
             }
+        } else if (message_name == "ShowDeveloperTools") {
+            // Parameters - none
+            
+            handler->ShowDevTools(browser);
+
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }
         
-        // Set common response args (callbackId and error)
-        responseArgs->SetInt(0, callbackId);
-        responseArgs->SetInt(1, error);
-        
-        // Send response
-        browser->SendProcessMessage(PID_RENDERER, response);
+        if (callbackId != -1) {
+            // Set common response args (callbackId and error)
+            responseArgs->SetInt(0, callbackId);
+            responseArgs->SetInt(1, error);
+            
+            // Send response
+            browser->SendProcessMessage(PID_RENDERER, response);
+        }
         
         return true;
     }
