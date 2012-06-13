@@ -30,9 +30,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-// The global ClientHandler reference.
-extern CefRefPtr<ClientHandler> g_handler;
-
 // Forward declarations for functions at the bottom of this file
 void FixFilename(ExtensionString& filename);
 void EscapeJSONString(const std::wstring& str, std::wstring& finalResult);
@@ -56,7 +53,6 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
-    std::wstring results = L"[";
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
 
@@ -111,8 +107,6 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
 
-        allowMulitpleSelection = false;  
-
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
         LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
@@ -135,15 +129,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                 // Check for two null terminators, which signal that only one file
                 // was selected
                 if (szFile[dir.length() + 1] == '\0') {
-                    // Escape the single file path and add it to the JSON array
-                    std::wstring escaped;
-                    EscapeJSONString(dir, escaped);
-                    results += L"\"" + escaped + L"\"";
+                    selectedFiles->SetString(0, ExtensionString(dir));
                 } else {
                     // Multiple files are selected
                     wchar_t fullPath[MAX_PATH];
-                    bool firstFile = true;
-                    for (int i = dir.length() + 1;;) {
+                    for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
 
@@ -154,18 +144,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                         // The filename is relative to the directory that was specified as
                         // the first string
                         if (PathCombine(fullPath, dir.c_str(), file.c_str()) != NULL)
-                        {
-                            // Append a comma separator if it is not the first file in the list
-                            if (firstFile)
-                                firstFile = false;
-                            else
-                                results += L",";
-
-                            // Escape the path and add it to the list
-                            std::wstring escaped;
-                            EscapeJSONString(std::wstring(fullPath), escaped);
-                            results += L"\"" + escaped + L"\"";
-                        }
+                            selectedFiles->SetString(fileIndex, ExtensionString(fullPath));
 
                         // Go to the start of the next file name
                         i += file.length() + 1;
@@ -349,30 +328,6 @@ void FixFilename(ExtensionString& filename)
 {
     // Convert '/' to '\'
     replace(filename.begin(), filename.end(), '/', '\\');
-}
-
-// Escapes characters that have special meaning in JSON
-void EscapeJSONString(const std::wstring& str, std::wstring& finalResult) {
-    std::wstring result;
-        
-    for(size_t pos = 0; pos != str.size(); ++pos) {
-        switch(str[pos]) {
-            case '\a':  result.append(L"\\a");   break;
-            case '\b':  result.append(L"\\b");   break;
-            case '\f':  result.append(L"\\f");   break;
-            case '\n':  result.append(L"\\n");   break;
-            case '\r':  result.append(L"\\r");   break;
-            case '\t':  result.append(L"\\t");   break;
-            case '\v':  result.append(L"\\v");   break;
-            // Note: single quotes are OK for JSON
-            case '\"':  result.append(L"\\\"");  break; // double quote
-            case '\\':  result.append(L"/");     break; // backslash                        
-                        
-            default:   result.append(1, str[pos]); break;
-        }
-    }
-
-    finalResult = result;
 }
 
 // Maps errors from errno.h to the brackets error codes
