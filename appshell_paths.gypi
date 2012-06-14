@@ -105,9 +105,7 @@
       'appshell/client_app_win.cpp',
       'appshell/client_handler_win.cpp',
       'appshell/resource.h',
-      'appshell/res/cefclient.ico',
-      'appshell/res/logoball.png',
-      'appshell/res/small.ico',
+      'appshell/res/brackets.ico',
       'appshell/resource_util_win.cpp',
     ],
     'appshell_sources_mac': [
