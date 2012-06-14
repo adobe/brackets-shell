@@ -8,6 +8,7 @@
 #include <commdlg.h>
 #include <shellapi.h>
 #include <direct.h>
+#include <MMSystem.h>
 #include <sstream>
 #include <string>
 #include "include/cef_app.h"
@@ -28,6 +29,7 @@
 #endif // SHOW_TOOLBAR_UI
 
 // Global Variables:
+DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
@@ -55,6 +57,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
                      int       nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
+
+  g_appStartupTime = timeGetTime();
 
   CefMainArgs main_args(hInstance);
   CefRefPtr<ClientApp> app(new ClientApp);
