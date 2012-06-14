@@ -24,7 +24,10 @@
 #include "client_app.h"
 #include "resource.h"
 
+#include <MMSystem.h>
 #include <string>
+
+extern DWORD g_appStartupTime;
 
 std::string ClientApp::GetExtensionJSSource()
 {
@@ -54,6 +57,6 @@ std::string ClientApp::GetExtensionJSSource()
 
 double ClientApp::GetElapsedMilliseconds()
 {
-    // TODO: Raymond, please implement
-    return 0;
+    return (timeGetTime() - g_appStartupTime);
 }
+
