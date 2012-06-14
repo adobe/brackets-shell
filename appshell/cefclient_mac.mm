@@ -24,6 +24,8 @@ extern CefRefPtr<ClientHandler> g_handler;
 
 char szWorkingDir[512];   // The current working directory
 
+NSURL* startupUrl = [NSURL URLWithString:@""];
+
 #ifdef SHOW_TOOLBAR_UI
 // Sizes for URL bar layout
 #define BUTTON_HEIGHT 22
@@ -300,7 +302,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
-                                "http://www.google.com", settings);
+                                [[startupUrl absoluteString] UTF8String], settings);
 
   // Show the window.
   [mainWnd makeKeyAndOrderFront: nil];
@@ -365,6 +367,24 @@ int main(int argc, char* argv[]) {
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
+  // Load the startup path from prefs
+  CGEventRef event = CGEventCreate(NULL);
+  CGEventFlags modifiers = CGEventGetFlags(event);
+  CFRelease(event);
+
+  // Only load the prefs if the shift key isn't down
+  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift)  
+    startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
+
+  if ([[startupUrl absoluteString] isEqualToString:@""]) {
+    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+    [openPanel setTitle:@"Choose startup file"];
+    if ([openPanel runModal] == NSOKButton) {
+      startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
+      [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+    }
+  }
+    
   // Create the application delegate and window.
   NSObject* delegate = [[ClientAppDelegate alloc] init];
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
