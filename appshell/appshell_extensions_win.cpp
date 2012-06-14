@@ -26,9 +26,13 @@
 #include <algorithm>
 #include <CommDlg.h>
 #include <ShlObj.h>
+#include <Shlwapi.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 // Forward declarations for functions at the bottom of this file
-void FixFilename(ExtensionString& filename);
+void ConvertToNativePath(ExtensionString& filename);
+void ConvertToUnixPath(ExtensionString& filename);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 
@@ -51,8 +55,6 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 {
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
-
-    FixFilename(initialDirectory);
 
     // TODO (issue #64) - This method should be using IFileDialog instead of the
     /* outdated SHGetPathFromIDList and GetOpenFileName.
@@ -103,8 +105,6 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
 
-        allowMulitpleSelection = false;  // TODO: Raymond, please implement.
-
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
         LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
@@ -119,7 +119,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         if (GetOpenFileName(&ofn)) {
             if (allowMulitpleSelection) {
                 // Multiple selection encodes the files differently
-/*
+
                 // If multiple files are selected, the first null terminator
                 // signals end of directory that the files are all in
                 std::wstring dir(szFile);
@@ -127,15 +127,13 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                 // Check for two null terminators, which signal that only one file
                 // was selected
                 if (szFile[dir.length() + 1] == '\0') {
-                    // Escape the single file path and add it to the JSON array
-                    std::wstring escaped;
-                    EscapeJSONString(dir, escaped);
-                    results += L"\"" + escaped + L"\"";
+                    ExtensionString filePath(dir);
+                    ConvertToUnixPath(filePath);
+                    selectedFiles->SetString(0, filePath);
                 } else {
                     // Multiple files are selected
                     wchar_t fullPath[MAX_PATH];
-                    bool firstFile = true;
-                    for (int i = dir.length() + 1;;) {
+                    for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
 
@@ -145,25 +143,17 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
                         // The filename is relative to the directory that was specified as
                         // the first string
-                        if (PathCombine(fullPath, dir.c_str(), file.c_str()) != NULL)
-                        {
-                            // Append a comma separator if it is not the first file in the list
-                            if (firstFile)
-                                firstFile = false;
-                            else
-                                results += L",";
-
-                            // Escape the path and add it to the list
-                            std::wstring escaped;
-                            EscapeJSONString(std::wstring(fullPath), escaped);
-                            results += L"\"" + escaped + L"\"";
-                        }
+                        if (PathCombine(fullPath, dir.c_str(), file.c_str()) != NULL) {
+                            ExtensionString filePath(fullPath);
+                            ConvertToUnixPath(filePath);
+                            selectedFiles->SetString(fileIndex, filePath);
+						}
 
                         // Go to the start of the next file name
                         i += file.length() + 1;
                     }
                 }
-*/
+
             } else {
                 // If multiple files are not allowed, add the single file
                 selectedFiles->SetString(0, szFile);
@@ -176,9 +166,10 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
-    FixFilename(path);
+    if (path.length() && path[path.length() - 1] != '/')
+        path += '/';
 
-    path += L"\\*";
+    path += '*';
 
     WIN32_FIND_DATA ffd;
     HANDLE hFind = FindFirstFile(path.c_str(), &ffd);
@@ -219,8 +210,6 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
-    FixFilename(filename);
-
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
     if (dwAttr == INVALID_FILE_ATTRIBUTES) {
@@ -228,6 +217,11 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     }
 
     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
+
+    // Remove trailing "/", if present. _wstat will fail with a "file not found"
+    // error if a directory has a trailing '/' in the name.
+    if (filename[filename.length() - 1] == '/')
+        filename[filename.length() - 1] = 0;
 
     struct _stat buffer;
     if(_wstat(filename.c_str(), &buffer) == -1) {
@@ -241,8 +235,6 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
-    FixFilename(filename);
-
     if (encoding != L"utf8")
         return ERR_UNSUPPORTED_ENCODING;
 
@@ -282,8 +274,6 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    FixFilename(filename);
-
     if (encoding != L"utf8")
         return ERR_UNSUPPORTED_ENCODING;
 
@@ -306,20 +296,43 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode)
 {
-    // TODO: Raymond, please implement
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        return ERR_NOT_FOUND;
+
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
+        return NO_ERROR;
+
+    bool write = (mode & 0200) != 0; 
+    bool read = (mode & 0400) != 0;
+    int mask = (write ? _S_IWRITE : 0) | (read ? _S_IREAD : 0);
+
+    if (_wchmod(filename.c_str(), mask) == -1) {
+        return ConvertErrnoCode(errno); 
+    }
+
     return NO_ERROR;
 }
 
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
-    // TODO: Raymond, please implement
+    if (!DeleteFile(filename.c_str()))
+        return ConvertWinErrorCode(GetLastError());
+
     return NO_ERROR;
 }
 
-void FixFilename(ExtensionString& filename)
+void ConvertToNativePath(ExtensionString& filename)
 {
     // Convert '/' to '\'
     replace(filename.begin(), filename.end(), '/', '\\');
+}
+
+void ConvertToUnixPath(ExtensionString& filename)
+{
+    // Convert '\\' to '/'
+    replace(filename.begin(), filename.end(), '\\', '/');
 }
 
 // Maps errors from errno.h to the brackets error codes
