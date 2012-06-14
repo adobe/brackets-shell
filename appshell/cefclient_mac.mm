@@ -338,6 +338,10 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
 
+  // Delete Special Characters Palette from Edit menu.
+  [[NSUserDefaults standardUserDefaults]
+    setBool:YES forKey:@"NSDisabledCharacterPaletteMenuItem"];
+    
   g_appStartupTime = CFAbsoluteTimeGetCurrent();
 
   CefRefPtr<ClientApp> app(new ClientApp);

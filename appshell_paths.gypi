@@ -138,7 +138,7 @@
       'appshell/util.h',
     ],
     'appshell_bundle_resources_mac': [
-      'appshell/mac/cefclient.icns',
+      'appshell/mac/brackets.icns',
       'appshell/mac/English.lproj/InfoPlist.strings',
       'appshell/mac/English.lproj/MainMenu.xib',
       'appshell/mac/Info.plist',
