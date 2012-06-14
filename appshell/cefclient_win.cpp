@@ -35,6 +35,8 @@ TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
 
+TCHAR szInitialUrl[MAX_PATH] = {0};
+
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
@@ -89,6 +91,36 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance);
+  
+  HKEY hKey;
+  DWORD lResult;
+  #define PREF_NAME L"Software\\Brackets\\InitialURL"
+
+  // Don't read the prefs if the shift key is down
+  if (GetAsyncKeyState(VK_SHIFT) == 0) {
+    if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
+      DWORD length = MAX_PATH;
+      RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
+      RegCloseKey(hKey);
+    }
+  }
+
+  if (!wcslen(szInitialUrl)) {
+      OPENFILENAME ofn = {0};
+      ofn.lStructSize = sizeof(ofn);
+      ofn.lpstrFile = szInitialUrl;
+      ofn.nMaxFile = MAX_PATH;
+      ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+      ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
+
+      if (GetOpenFileName(&ofn)) {
+        lResult = RegCreateKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+        if (lResult == ERROR_SUCCESS) {
+          RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
+          RegCloseKey(hKey);
+        }
+      }
+  }
 
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
@@ -302,7 +334,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Creat the new child browser window
       CefBrowserHost::CreateBrowser(info,
           static_cast<CefRefPtr<CefClient> >(g_handler),
-          "http://www.google.com", settings);
+          szInitialUrl, settings);
 
       return 0;
     }
