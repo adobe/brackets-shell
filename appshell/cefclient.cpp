@@ -156,6 +156,9 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
     // Provide a ClientApp instance to handle proxy resolution.
     app->SetProxyConfig(proxy_type, proxy_config);
   }
+    
+  // Enable dev tools
+  settings.remote_debugging_port = 9234;
 }
 
 // Returns the application browser settings based on command line arguments.

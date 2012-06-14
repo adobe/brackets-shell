@@ -144,7 +144,7 @@ class AppShellExtensionHandler : public CefV8Handler {
                        const CefV8ValueList& arguments,
                        CefRefPtr<CefV8Value>& retval,
                        CefString& exception) {
-
+      
       // The only message that is handled here is getElapsedMilliseconds(). All other
       // messages are passed to the browser process.
       if (name == "GetElapsedMilliseconds") {
@@ -152,22 +152,24 @@ class AppShellExtensionHandler : public CefV8Handler {
       } else {
           // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
           CefRefPtr<CefBrowser> browser = 
-          CefV8Context::GetCurrentContext()->GetBrowser();
+                CefV8Context::GetCurrentContext()->GetBrowser();
           ASSERT(browser.get());
           CefRefPtr<CefProcessMessage> message = 
                 CefProcessMessage::Create(name);
           CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
           
           // The first argument must be a callback function
-          if (arguments.size() < 1 || !arguments[0]->IsFunction()) {
+          if (arguments.size() > 0 && !arguments[0]->IsFunction()) {
               std::string functionName = name;
               fprintf(stderr, "Function called without callback param: %s\n", functionName.c_str());
               return false;
           } 
           
-          // The first argument is the message id
-          client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
-          SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
+          if (arguments.size() > 0) {
+              // The first argument is the message id
+              client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
+              SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
+          }
           
           // Pass the rest of the arguments
           for (unsigned int i = 1; i < arguments.size(); i++)
