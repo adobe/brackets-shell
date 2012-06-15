@@ -82,6 +82,7 @@
 		8F03DB06DAEB3FCC64DBB7F8 /* stream_reader_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1BE21DEA53CCCB6F82B61230 /* stream_reader_ctocpp.cc */; };
 		8FD55C97E1DE2A9B39F63205 /* domvisitor_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 60226CEE12BF2260A17F2328 /* domvisitor_cpptoc.cc */; };
 		9286827D87326B48CDA87B37 /* request_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = B5F6DEF7A5E722606EFDD579 /* request_handler_cpptoc.cc */; };
+		92D1A00BA8DD26C04841665A /* brackets.icns in Resources */ = {isa = PBXBuildFile; fileRef = 749E5239635519A330E75891 /* brackets.icns */; };
 		92FD20DDFF7CEB92E760C991 /* browser_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 380F6E9056AE039AA8A492DD /* browser_ctocpp.cc */; };
 		9832A7870C1EDCCCFF6C9DC4 /* scheme_handler_factory_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = D1DE62EC2EB883C39E54C7BA /* scheme_handler_factory_cpptoc.cc */; };
 		98D7CA892DCE9560817D8DA3 /* client_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C262FF082FED71CE8963FDD5 /* client_app.cpp */; };
@@ -105,7 +106,6 @@
 		C90FB710D7B25572E80BFD69 /* v8accessor_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 845EEC823278584B42AFB2B7 /* v8accessor_cpptoc.cc */; };
 		CF1EE9AEF2671F90918C896C /* brackets_extensions.js in Resources */ = {isa = PBXBuildFile; fileRef = F55C44F44BBA964EFE0B704F /* brackets_extensions.js */; };
 		D44993FFF44DE7241797A865 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 117371CDDB44775B39107AA8 /* AppKit.framework */; };
-		DB1186A70776CD627B4B42AE /* cefclient.icns in Resources */ = {isa = PBXBuildFile; fileRef = 7E44B655C022B8B96CA64796 /* cefclient.icns */; };
 		DDA2289823F976BECC01755A /* menu_model_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 86E19C99BCCDDA939F257FE0 /* menu_model_ctocpp.cc */; };
 		DFF56C4CCC0DF43679368430 /* response_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8637A80D02FB4C99759A9768 /* response_ctocpp.cc */; };
 		E1D8CE3AB1318012B1092D8C /* domevent_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3458504ADE6A6AF8C60A2C67 /* domevent_ctocpp.cc */; };
@@ -329,6 +329,7 @@
 		728F974FA38A31AFD1EBA1ED /* string_visitor_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = string_visitor_cpptoc.cc; sourceTree = "<group>"; };
 		73BD18BBE14A6CD1DE6E5E57 /* process_helper_mac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = process_helper_mac.cpp; sourceTree = "<group>"; };
 		73D701875C12409A5CB2C57A /* cef_v8.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_v8.h; sourceTree = "<group>"; };
+		749E5239635519A330E75891 /* brackets.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = brackets.icns; sourceTree = "<group>"; };
 		7590A687CA84D82F1AA48562 /* cookie_manager_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cookie_manager_ctocpp.h; sourceTree = "<group>"; };
 		7644365DE7CC78D2DEA79A85 /* domnode_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = domnode_ctocpp.cc; sourceTree = "<group>"; };
 		766C178896B6E02C18859DCF /* cef_resource_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_resource_handler.h; sourceTree = "<group>"; };
@@ -337,7 +338,6 @@
 		7A23EBE1C5CFE1625F63FD57 /* cef_context_menu_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_context_menu_handler.h; sourceTree = "<group>"; };
 		7B1F678D2890FCB53A883C89 /* cef_stream_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_stream_capi.h; sourceTree = "<group>"; };
 		7D96382DCC9DC64414EC6E05 /* string_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = string_util.cpp; sourceTree = "<group>"; };
-		7E44B655C022B8B96CA64796 /* cefclient.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = cefclient.icns; sourceTree = "<group>"; };
 		7E9FDC3988B247C56F392E33 /* cef_string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string.h; sourceTree = "<group>"; };
 		7FC6441C12E0D2D5C46FFFE2 /* cef_byte_read_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_byte_read_handler.h; sourceTree = "<group>"; };
 		80CBC98C4853A36252F42EF2 /* cef_values_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_values_capi.h; sourceTree = "<group>"; };
@@ -559,7 +559,7 @@
 				ADAED968E71A7516652B8254 /* Info.plist */,
 				AB557E135D18D071AA200048 /* InfoPlist.strings */,
 				EDDE848ADF50901E338C0DE5 /* MainMenu.xib */,
-				7E44B655C022B8B96CA64796 /* cefclient.icns */,
+				749E5239635519A330E75891 /* brackets.icns */,
 			);
 			path = mac;
 			sourceTree = "<group>";
@@ -991,7 +991,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DB1186A70776CD627B4B42AE /* cefclient.icns in Resources */,
+				92D1A00BA8DD26C04841665A /* brackets.icns in Resources */,
 				EB4A35C3C60BE898F8FB7EC6 /* InfoPlist.strings in Resources */,
 				6B295097B29E8FB628815A1B /* MainMenu.xib in Resources */,
 				CF1EE9AEF2671F90918C896C /* brackets_extensions.js in Resources */,
@@ -1297,7 +1297,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
@@ -1386,7 +1385,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
@@ -1459,7 +1457,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
@@ -1537,7 +1534,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
@@ -1627,7 +1623,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
@@ -1715,7 +1710,6 @@
 					"\"ENABLE_ONE_CLICK_SIGNIN\"",
 					"\"ENABLE_REMOTING=1\"",
 					"\"ENABLE_WEBRTC=1\"",
-					"\"ENABLE_P2P_APIS=1\"",
 					"\"ENABLE_CONFIGURATION_POLICY\"",
 					"\"ENABLE_INPUT_SPEECH\"",
 					"\"ENABLE_NOTIFICATIONS\"",
