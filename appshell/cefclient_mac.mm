@@ -67,6 +67,7 @@ static NSAutoreleasePool* g_autopool = nil;
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate>
+- (IBAction)showAbout:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
 - (IBAction)goBack:(id)sender;
 - (IBAction)goForward:(id)sender;
@@ -81,6 +82,13 @@ static NSAutoreleasePool* g_autopool = nil;
 @end
 
 @implementation ClientWindowDelegate
+
+- (IBAction)showAbout:(id)sender {
+    if (g_handler.get() && g_handler->GetBrowserId()) {
+        g_handler->GetBrowser()->GetMainFrame()->ExecuteJavaScript(
+           "brackets.shellAPI.executeCommand('help.about')", "about:blank", 0);
+    }
+}
 
 #ifdef SHOW_TOOLBAR_UI
 - (IBAction)goBack:(id)sender {
