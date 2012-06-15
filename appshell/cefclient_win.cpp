@@ -349,7 +349,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // Parse the menu selections:
       switch (wmId) {
       case IDM_ABOUT:
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+        if (browser) {
+            browser->GetMainFrame()->ExecuteJavaScript(
+                "brackets.shellAPI.executeCommand('help.about')", "about:blank", 0);
+        }
         return 0;
       case IDM_EXIT:
         DestroyWindow(hWnd);
