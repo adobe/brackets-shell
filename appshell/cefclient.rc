@@ -37,8 +37,7 @@ IDS_BRACKETS_EXTENSIONS BINARY		"brackets_extensions.js"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_CEFCLIENT           ICON                    "res\cefclient.ico"
-IDI_SMALL               ICON                    "res\small.ico"
+IDI_CEFCLIENT           ICON                    "res\brackets.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
