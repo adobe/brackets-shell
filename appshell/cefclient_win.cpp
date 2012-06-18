@@ -350,12 +350,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       switch (wmId) {
       case IDM_ABOUT:
         if (browser) {
-            browser->GetMainFrame()->ExecuteJavaScript(
-                "brackets.shellAPI.executeCommand('help.about')", "about:blank", 0);
+            g_handler->SendJSCommand(browser, HELP_ABOUT);
         }
         return 0;
       case IDM_EXIT:
-        DestroyWindow(hWnd);
+        if (g_handler)
+            g_handler->DispatchCloseToAllBrowsers();
+        else
+            DestroyWindow(hWnd);
         return 0;
       case ID_WARN_CONSOLEMESSAGE:
         if (g_handler.get()) {
@@ -465,11 +467,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
+        g_handler->DispatchCloseToAllBrowsers();
+        return 0;
+        /*
         CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
         if (browser.get()) {
           // Let the browser window know we are about to destroy it.
           browser->GetHost()->ParentWindowWillClose();
         }
+        */
       }
       break;
 

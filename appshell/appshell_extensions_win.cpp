@@ -323,6 +323,11 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void CloseWindow(CefRefPtr<CefBrowser> browser)
+{
+    DestroyWindow(browser->GetHost()->GetWindowHandle());
+}
+
 void ConvertToNativePath(ExtensionString& filename)
 {
     // Convert '/' to '\'

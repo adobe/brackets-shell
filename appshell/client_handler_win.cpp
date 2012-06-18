@@ -84,3 +84,118 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 void ClientHandler::CloseMainWindow() {
   ::PostMessage(m_MainHwnd, WM_CLOSE, 0, 0);
 }
+
+static WNDPROC g_popupWndOldProc = NULL;
+//BRACKETS: added so our popup windows can have a menu bar too
+//
+//  FUNCTION: PopupWndProc(HWND, UINT, WPARAM, LPARAM)
+//
+//  PURPOSE:  Handle commands from the menus.
+LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  //For now, we are only interest in WM_COMMAND's that we know are in our menus
+  //and WM_CLOSE so we can delegate that back to the browser
+  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(hWnd);
+  switch (message)
+  {
+      /*
+    case WM_COMMAND:
+      {
+        int wmId    = LOWORD(wParam);
+        int wmEvent = HIWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_CLOSE:
+            if (browser.get()) {
+                // Brackets:  Delegate to JavaScript code to handle quit via close
+                // so that JavaScript can handle things like saving files
+                if( !BracketsShellAPI::DispatchCloseToBracketsJS(browser) ) {
+                    return 0;
+                }
+                browser->CloseBrowser();
+            }
+            return 0;
+        }
+      }
+      break;
+      */
+
+        case WM_CLOSE:
+          if (browser.get()) {
+            // Brackets:  Delegate to JavaScript code to handle quit via close
+            // so that JavaScript can handle things like saving files
+
+              /*
+            if(!BracketsShellAPI::DispatchCloseToBracketsJS(browser)) {
+              return 0;
+            }
+            */
+        }
+        break;
+  }
+
+  if (g_popupWndOldProc) 
+    return (LRESULT)::CallWindowProc(g_popupWndOldProc, hWnd, message, wParam, lParam);
+  return ::DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+void AttachWindProcToPopup(HWND wnd)
+{
+  if (!wnd) {
+    return;
+  }
+
+  if (!::GetMenu(wnd)) {
+    return; //no menu, no need for the proc
+  }
+
+  WNDPROC curProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(wnd, GWLP_WNDPROC));
+
+  //if this is the first time, assume the above checks are all we need, otherwise
+  //it had better be the same proc we pulled before
+  if (!g_popupWndOldProc) {
+    g_popupWndOldProc = curProc;
+  } else if (g_popupWndOldProc != curProc) {
+    return;
+  }
+
+  SetWindowLongPtr(wnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(PopupWndProc));
+}
+
+void LoadWindowsIcons(HWND wnd)
+{
+    if (!wnd) {
+        return;
+    }
+    //We need to load the icons after the pop up is created so they have the
+    //brackets icon instead of the generic window icon
+    HINSTANCE inst = ::GetModuleHandle(NULL);
+    HICON bigIcon = ::LoadIcon(inst, MAKEINTRESOURCE(IDI_CEFCLIENT));
+    HICON smIcon = ::LoadIcon(inst, MAKEINTRESOURCE(IDI_SMALL));
+    if(bigIcon) {
+        ::SendMessage(wnd, WM_SETICON, ICON_BIG, (LPARAM)bigIcon);
+    }
+    if(smIcon) {
+        ::SendMessage(wnd, WM_SETICON, ICON_SMALL, (LPARAM)smIcon);
+    }
+}
+
+void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
+{
+    HWND hWnd = browser->GetHost()->GetWindowHandle();
+    AttachWindProcToPopup(hWnd);
+    LoadWindowsIcons(hWnd);
+}
+
+CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
+  CefRefPtr<CefBrowser> browser = NULL;
+  if (window) {
+    //go through all the browsers looking for a browser within this window
+    BrowserWindowMap::const_iterator i = browser_window_map_.find((HWND)window);
+    if (i != browser_window_map_.end()) {
+      browser = i->second;
+    }
+  }
+  return browser;
+}

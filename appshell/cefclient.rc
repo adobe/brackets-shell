@@ -28,7 +28,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Binary
 //
 
-IDS_BRACKETS_EXTENSIONS BINARY		"brackets_extensions.js"
+IDS_APPSHELL_EXTENSIONS BINARY      "appshell_extensions.js"
 
 /////////////////////////////////////////////////////////////////////////////
 //
