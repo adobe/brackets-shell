@@ -27,52 +27,8 @@
 #include "client_handler.h"
 
 namespace appshell_extensions {
-    
-// Delegate creation. Called from ClientApp and ClientHandler.
-void CreateProcessMessageDelegates(
-                                   ClientHandler::ProcessMessageDelegateSet& delegates);
-void CreateRequestDelegates(ClientHandler::RequestDelegateSet& delegates);
+
+// Create message delegates that run in the browser process
+void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates);
+
 }  // namespace appshell_extensions
-
-// Extension error codes. These MUST be in sync with the error
-// codes in brackets_extensions.js
-#if !defined(OS_WIN) // NO_ERROR is defined on windows
-static const int NO_ERROR                   = 0;
-#endif
-static const int ERR_UNKNOWN                = 1;
-static const int ERR_INVALID_PARAMS         = 2;
-static const int ERR_NOT_FOUND              = 3;
-static const int ERR_CANT_READ              = 4;
-static const int ERR_UNSUPPORTED_ENCODING   = 5;
-static const int ERR_CANT_WRITE             = 6;
-static const int ERR_OUT_OF_SPACE           = 7;
-static const int ERR_NOT_FILE               = 8;
-static const int ERR_NOT_DIRECTORY          = 9;
-
-#if defined(OS_WIN)
-typedef std::wstring ExtensionString;
-#else
-typedef std::string ExtensionString;
-#endif
-
-// Native extension code. These are implemented in brackets_extensions_mac.mm
-// and brackets_extensions_win.cpp
-int32 ShowOpenDialog(bool allowMulitpleSelection,
-                     bool chooseDirectory,
-                     ExtensionString title,
-                     ExtensionString initialDirectory,
-                     ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFiles);
-
-int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
-
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir);
-
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
-
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding);
-
-int32 SetPosixPermissions(ExtensionString filename, int32 mode);
-
-int32 DeleteFileOrDirectory(ExtensionString filename);
-

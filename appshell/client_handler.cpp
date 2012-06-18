@@ -13,11 +13,14 @@
 #include "resource_util.h"
 #include "string_util.h"
 #include "appshell/appshell_extensions.h"
+#include "appshell/command_callbacks.h"
 
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
 };
+
+ClientHandler::BrowserWindowMap ClientHandler::browser_window_map_;
 
 ClientHandler::ClientHandler()
   : m_MainHwnd(NULL),
@@ -28,6 +31,7 @@ ClientHandler::ClientHandler()
     m_StopHwnd(NULL),
     m_ReloadHwnd(NULL),
     m_bFormElementHasFocus(false) {
+  callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);
   CreateRequestDelegates(request_delegates_);
 }
@@ -40,14 +44,26 @@ bool ClientHandler::OnProcessMessageRecieved(
     CefProcessId source_process,
     CefRefPtr<CefProcessMessage> message) {
   bool handled = false;
-
+  
+  // Check for callbacks first
+  if (message->GetName() == "executeCommandCallback") {
+    int32 commandId = message->GetArgumentList()->GetInt(0);
+    bool result = message->GetArgumentList()->GetBool(1);
+    
+    CefRefPtr<CommandCallback> callback = command_callback_map_[commandId];
+    callback->CommandComplete(result);
+    command_callback_map_.erase(commandId);
+    
+    handled = true;
+  }
+  
   // Execute delegate callbacks.
   ProcessMessageDelegateSet::iterator it = process_message_delegates_.begin();
   for (; it != process_message_delegates_.end() && !handled; ++it) {
     handled = (*it)->OnProcessMessageRecieved(this, browser, source_process,
                                               message);
   }
-
+    
   return handled;
 }
 
@@ -59,7 +75,12 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     // We need to keep the main child window, but not popup windows
     m_Browser = browser;
     m_BrowserId = browser->GetIdentifier();
+  } else {
+    // Call the platform-specific code to hook up popup windows
+    PopupCreated(browser);
   }
+
+  browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
 }
 
 bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
@@ -94,6 +115,8 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     if (it != m_OpenDevToolsURLs.end())
       m_OpenDevToolsURLs.erase(it);
   }
+  
+  browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
 }
 
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
@@ -291,11 +314,27 @@ void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
   }
 }
 
-bool ClientHandler::OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
-                                  const CefString& message_text,
-                                  bool is_reload,
-                                  CefRefPtr<CefJSDialogCallback> callback) {
-    return false;
+void ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)
+{
+  CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("executeCommand");
+  message->GetArgumentList()->SetString(0, commandName);
+
+  if (callback) {
+    callbackId++;
+    command_callback_map_[callbackId] = callback;
+    message->GetArgumentList()->SetInt(1, callbackId);
+  }
+
+  browser->SendProcessMessage(PID_RENDERER, message);
+}
+
+void ClientHandler::DispatchCloseToAllBrowsers() {
+  for (BrowserWindowMap::const_iterator i = browser_window_map_.begin(); 
+            i != browser_window_map_.end(); i++) {
+    CefRefPtr<CefBrowser> browser = i->second;
+    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+    SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+  }
 }
 
 // static
@@ -306,5 +345,4 @@ void ClientHandler::CreateProcessMessageDelegates(
 
 // static
 void ClientHandler::CreateRequestDelegates(RequestDelegateSet& delegates) {
-	appshell_extensions::CreateRequestDelegates(delegates);
 }

@@ -22,7 +22,7 @@
  */ 
 
 // This is the JavaScript code for bridging to native functionality
-// See brackets_extentions.mm for implementation of native methods.
+// See appshell_extentions_[platform] for implementation of native methods.
 //
 // Note: All file native file i/o functions are synchronous, but are exposed
 // here as asynchronous calls. 
@@ -30,69 +30,69 @@
 /*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, forin: true, maxerr: 50, regexp: true */
 /*global define, native */
 
-var brackets;
-if (!brackets) {
-    brackets = {};
+var appshell;
+if (!appshell) {
+    appshell = {};
 }
-if (!brackets.fs) {
-    brackets.fs = {};
+if (!appshell.fs) {
+    appshell.fs = {};
 }
-if (!brackets.app) {
-    brackets.app = {};
+if (!appshell.app) {
+    appshell.app = {};
 }
 (function () {    
     // Error values. These MUST be in sync with the error values
-    // at the top of brackets_extensions.h.
+    // at the top of appshell_extensions_platform.h.
     
     /**
      * @constant No error.
      */
-    brackets.fs.NO_ERROR                    = 0;
+    appshell.fs.NO_ERROR                    = 0;
     
     /**
      * @constant Unknown error occurred.
      */
-    brackets.fs.ERR_UNKNOWN                 = 1;
+    appshell.fs.ERR_UNKNOWN                 = 1;
     
     /**
      * @constant Invalid parameters passed to function.
      */
-    brackets.fs.ERR_INVALID_PARAMS          = 2;
+    appshell.fs.ERR_INVALID_PARAMS          = 2;
     
     /**
      * @constant File or directory was not found.
      */
-    brackets.fs.ERR_NOT_FOUND               = 3;
+    appshell.fs.ERR_NOT_FOUND               = 3;
     
     /**
      * @constant File or directory could not be read.
      */
-    brackets.fs.ERR_CANT_READ               = 4;
+    appshell.fs.ERR_CANT_READ               = 4;
     
     /**
      * @constant An unsupported encoding value was specified.
      */
-    brackets.fs.ERR_UNSUPPORTED_ENCODING    = 5;
+    appshell.fs.ERR_UNSUPPORTED_ENCODING    = 5;
     
     /**
      * @constant File could not be written.
      */
-    brackets.fs.ERR_CANT_WRITE              = 6;
+    appshell.fs.ERR_CANT_WRITE              = 6;
     
     /**
      * @constant Target directory is out of space. File could not be written.
      */
-    brackets.fs.ERR_OUT_OF_SPACE            = 7;
+    appshell.fs.ERR_OUT_OF_SPACE            = 7;
     
     /**
      * @constant Specified path does not point to a file.
      */
-    brackets.fs.ERR_NOT_FILE                = 8;
+    appshell.fs.ERR_NOT_FILE                = 8;
     
     /**
      * @constant Specified path does not point to a directory.
      */
-    brackets.fs.ERR_NOT_DIRECTORY           = 9;
+    appshell.fs.ERR_NOT_DIRECTORY           = 9;
  
     /**
      * Display the OS File Open dialog, allowing the user to select
@@ -116,7 +116,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function ShowOpenDialog();
-    brackets.fs.showOpenDialog = function (allowMultipleSelection, chooseDirectory, title, initialPath, fileTypes, callback) {
+    appshell.fs.showOpenDialog = function (allowMultipleSelection, chooseDirectory, title, initialPath, fileTypes, callback) {
         setTimeout(function () {
             ShowOpenDialog(callback, allowMultipleSelection, chooseDirectory,
                              title || 'Open', initialPath || '',
@@ -141,7 +141,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function ReadDir();
-    brackets.fs.readdir = function (path, callback) {
+    appshell.fs.readdir = function (path, callback) {
         var resultString = ReadDir(callback, path);
     };
     
@@ -160,7 +160,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function GetFileModificationTime();
-    brackets.fs.stat = function (path, callback) {
+    appshell.fs.stat = function (path, callback) {
         GetFileModificationTime(function (err, modtime, isDir) {
             callback(err, {
                 isFile: function () {
@@ -174,11 +174,16 @@ if (!brackets.app) {
         }, path);
     };
  
+    native function CloseWindow();
+    close = function () {
+        CloseWindow();
+    };
+ 
     /**
      * Quits native shell application
      */
     native function QuitApplication();
-    brackets.app.quit = function () {
+    appshell.app.quit = function () {
         QuitApplication();
     };
 
@@ -186,7 +191,7 @@ if (!brackets.app) {
      * Invokes developer tools application
      */
     native function ShowDeveloperTools();
-    brackets.app.showDeveloperTools = function () {
+    appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
     };
 
@@ -208,7 +213,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function ReadFile();
-    brackets.fs.readFile = function (path, encoding, callback) {
+    appshell.fs.readFile = function (path, encoding, callback) {
         ReadFile(callback, path, encoding);
     };
     
@@ -230,7 +235,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function WriteFile();
-    brackets.fs.writeFile = function (path, data, encoding, callback) {
+    appshell.fs.writeFile = function (path, data, encoding, callback) {
         WriteFile(callback, path, data, encoding);
     };
     
@@ -249,7 +254,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function SetPosixPermissions();
-    brackets.fs.chmod = function (path, mode, callback) {
+    appshell.fs.chmod = function (path, mode, callback) {
         SetPosixPermissions(callback, path, mode);
     };
     
@@ -268,7 +273,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function DeleteFileOrDirectory();
-    brackets.fs.unlink = function (path, callback) {
+    appshell.fs.unlink = function (path, callback) {
         DeleteFileOrDirectory(callback, path);
     };
 
@@ -277,7 +282,7 @@ if (!brackets.app) {
      * was launched. 
      */
     native function GetElapsedMilliseconds();
-    brackets.app.getElapsedMilliseconds = function () {
+    appshell.app.getElapsedMilliseconds = function () {
         return GetElapsedMilliseconds();
     }
     
@@ -296,7 +301,7 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function OpenLiveBrowser();
-    brackets.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
+    appshell.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
  /*
         // enableRemoteDebugging flag is ignored on mac
         setTimeout(function() {
@@ -320,9 +325,12 @@ if (!brackets.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function CloseLiveBrowser();
-    brackets.app.closeLiveBrowser = function (callback) {
+    appshell.app.closeLiveBrowser = function (callback) {
  /*
         CloseLiveBrowser(callback);
  */
     };
+ 
+   // Alias the appshell object to brackets. This is temporary and should be removed.
+   brackets = appshell;
 })();
