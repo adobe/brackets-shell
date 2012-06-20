@@ -27,7 +27,7 @@ static bool g_isTerminating = false;
 
 char szWorkingDir[512];   // The current working directory
 
-NSURL* startupUrl = [NSURL URLWithString:@""];
+NSURL* startupUrl = nil;
 
 #ifdef SHOW_TOOLBAR_UI
 // Sizes for URL bar layout
@@ -314,8 +314,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Populate the settings based on command line arguments.
   AppGetBrowserSettings(settings);
 
-  settings.file_access_from_file_urls_allowed = true;
-  settings.universal_access_from_file_urls_allowed = true;
+  settings.web_security_disabled = true;
 
   window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
@@ -403,7 +402,7 @@ int main(int argc, char* argv[]) {
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift)  
     startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
 
-  if ([[startupUrl absoluteString] isEqualToString:@""]) {
+  if (startupUrl == nil) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
     [openPanel setTitle:@"Choose startup file"];
     if ([openPanel runModal] == NSOKButton) {
