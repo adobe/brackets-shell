@@ -204,6 +204,13 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
                                                  withObject:window  waitUntilDone:NO];
 }
 
+void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
+{
+  // TODO : Need to verify makeKeyAndOrderFront call is the right one.
+  NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+  //[window makeKeyAndOrderFront:self]
+}
+
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {
     for (NSUInteger i = 0; i < [array count]; i++) {

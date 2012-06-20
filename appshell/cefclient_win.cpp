@@ -354,10 +354,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
         }
         return 0;
       case IDM_EXIT:
-        if (g_handler)
-            g_handler->DispatchCloseToAllBrowsers();
-        else
-            DestroyWindow(hWnd);
+        if (g_handler.get()) {
+          g_handler->QuittingApp(true);
+    	  g_handler->DispatchCloseToNextBrowser();
+    	} else {
+          DestroyWindow(hWnd);
+		}
         return 0;
       case ID_WARN_CONSOLEMESSAGE:
         if (g_handler.get()) {
@@ -467,15 +469,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
-        g_handler->DispatchCloseToAllBrowsers();
+        // If we already initiated the browser closing, then let default window proc handle it.
+        if (g_handler->IsBrowserClosing())
+          break;
+        g_handler->QuittingApp(true);
+        g_handler->DispatchCloseToNextBrowser();
         return 0;
-        /*
-        CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
-        if (browser.get()) {
-          // Let the browser window know we are about to destroy it.
-          browser->GetHost()->ParentWindowWillClose();
-        }
-        */
       }
       break;
 

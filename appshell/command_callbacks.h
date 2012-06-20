@@ -28,6 +28,7 @@ class CloseWindowCommandCallback : public CommandCallback {
 public:
   CloseWindowCommandCallback(CefRefPtr<CefBrowser> browser)
   : browser_(browser) {
+    BringBrowserWindowToFront(browser_);
   }
   
   virtual void CommandComplete(bool handled) {
@@ -36,7 +37,6 @@ public:
       CloseWindow(browser_);
     }
   }
-  
 private:
   CefRefPtr<CefBrowser> browser_;
 };

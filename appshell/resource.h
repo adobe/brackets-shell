@@ -16,6 +16,7 @@
 #define IDI_CEFCLIENT                   107
 #define IDI_SMALL                       108
 #define IDC_CEFCLIENT                   109
+#define IDC_CEFCLIENT_POPUP             110
 #define IDR_MAINFRAME                   128
 #define IDC_NAV_BACK                    200
 #define IDC_NAV_FORWARD                 201
@@ -41,6 +42,7 @@
 #define ID_TESTS_DIALOGS                32774
 #define ID_TESTS_PLUGIN_INFO            32775
 #define ID_TESTS_DOM_ACCESS             32776
+#define IDM_CLOSE                       32777
 #define IDC_STATIC                      -1
 #define IDS_BINDING                     1000
 #define IDS_DIALOGS                     1001

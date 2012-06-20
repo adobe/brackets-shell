@@ -30,7 +30,9 @@ ClientHandler::ClientHandler()
     m_ForwardHwnd(NULL),
     m_StopHwnd(NULL),
     m_ReloadHwnd(NULL),
-    m_bFormElementHasFocus(false) {
+    m_bFormElementHasFocus(false),
+    m_closing(false),
+    m_quitting(false) {
   callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);
   CreateRequestDelegates(request_delegates_);
@@ -117,6 +119,8 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
   
   browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
+  if (AppIsQuitting() && browser_window_map_.size())
+    DispatchCloseToNextBrowser();
 }
 
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
@@ -328,12 +332,19 @@ void ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
   browser->SendProcessMessage(PID_RENDERER, message);
 }
 
-void ClientHandler::DispatchCloseToAllBrowsers() {
+void ClientHandler::DispatchCloseToNextBrowser() {
+  bool skipFirstOne = (browser_window_map_.size() > 1);
   for (BrowserWindowMap::const_iterator i = browser_window_map_.begin(); 
             i != browser_window_map_.end(); i++) {
+    if (skipFirstOne) {
+        skipFirstOne = false;
+        continue;
+	}
     CefRefPtr<CefBrowser> browser = i->second;
+
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
     SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+    return;
   }
 }
 

@@ -71,3 +71,5 @@ int32 DeleteFileOrDirectory(ExtensionString filename);
 
 void CloseWindow(CefRefPtr<CefBrowser> browser);
 
+void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
+

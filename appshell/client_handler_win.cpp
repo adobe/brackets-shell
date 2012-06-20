@@ -9,6 +9,9 @@
 #include "include/cef_frame.h"
 #include "resource.h"
 
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
+
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,
                                   CefWindowInfo& windowInfo,
@@ -16,6 +19,13 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   CefRefPtr<CefClient>& client,
                                   CefBrowserSettings& settings) {
   REQUIRE_UI_THREAD();
+
+  std::string urlStr = url;
+  
+  //ensure all non-dev tools windows get a menu bar
+  if (windowInfo.menu == NULL && urlStr.find("chrome-devtools:") == std::string::npos) {
+    windowInfo.menu = ::LoadMenu( GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CEFCLIENT_POPUP) );
+  }
 
   return false;
 }
@@ -98,7 +108,7 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
   CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(hWnd);
   switch (message)
   {
-      /*
+      
     case WM_COMMAND:
       {
         int wmId    = LOWORD(wParam);
@@ -106,33 +116,38 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         // Parse the menu selections:
         switch (wmId)
         {
-        case IDM_CLOSE:
+          case IDM_ABOUT:
             if (browser.get()) {
-                // Brackets:  Delegate to JavaScript code to handle quit via close
-                // so that JavaScript can handle things like saving files
-                if( !BracketsShellAPI::DispatchCloseToBracketsJS(browser) ) {
-                    return 0;
-                }
-                browser->CloseBrowser();
+              g_handler->SendJSCommand(browser, HELP_ABOUT);
             }
             return 0;
-        }
+          case IDM_CLOSE:
+            if (g_handler.get() && browser.get()) {
+ 		      if (g_handler->IsBrowserClosing()) {
+ 		        // reset the flag so that we can handle subsequent closing of any popup windows correctly
+ 		        g_handler->ClosingBrowser(false);
+ 		        break;
+ 		      }
+ 		      CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+ 		      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+			}
+			return 0;
+          }
+	  }
+      break;
+
+    case WM_CLOSE:
+      if (g_handler.get() && browser.get()) {
+		  if (g_handler->IsBrowserClosing()) {
+ 		  // reset the flag so that we can handle subsequent closing of any popup windows correctly
+ 		  g_handler->ClosingBrowser(false);
+ 		  break;
+ 		}
+ 		CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+ 		g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+ 		return 0;
       }
       break;
-      */
-
-        case WM_CLOSE:
-          if (browser.get()) {
-            // Brackets:  Delegate to JavaScript code to handle quit via close
-            // so that JavaScript can handle things like saving files
-
-              /*
-            if(!BracketsShellAPI::DispatchCloseToBracketsJS(browser)) {
-              return 0;
-            }
-            */
-        }
-        break;
   }
 
   if (g_popupWndOldProc) 

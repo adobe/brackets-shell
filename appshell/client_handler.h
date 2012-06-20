@@ -184,9 +184,14 @@ class ClientHandler : public CefClient,
   // If callback is specified, it will be called with the result from the command.
   void SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
-  void DispatchCloseToAllBrowsers();
+  void DispatchCloseToNextBrowser();
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
-                        
+
+  void ClosingBrowser(bool closing) { m_closing = closing; }
+  bool IsBrowserClosing() { return m_closing; }
+  void QuittingApp(bool quitting) { m_quitting = quitting; }
+  bool AppIsQuitting() { return m_quitting; }
+
  protected:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
@@ -225,6 +230,8 @@ class ClientHandler : public CefClient,
 
   // True if a form element currently has focus
   bool m_bFormElementHasFocus;
+  bool m_closing;
+  bool m_quitting;
 
   // Registered delegates.
   ProcessMessageDelegateSet process_message_delegates_;

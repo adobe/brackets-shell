@@ -226,8 +226,8 @@ public:
           
         } else if (message_name == "QuitApplication") {
             // Parameters - none
-            
-            handler->DispatchCloseToAllBrowsers();
+			handler->QuittingApp(true);
+            handler->DispatchCloseToNextBrowser();
 
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
