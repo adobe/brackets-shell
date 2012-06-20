@@ -201,6 +201,7 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
     HWND hWnd = browser->GetHost()->GetWindowHandle();
     AttachWindProcToPopup(hWnd);
     LoadWindowsIcons(hWnd);
+    browser->GetHost()->SetFocus(true);
 }
 
 CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
