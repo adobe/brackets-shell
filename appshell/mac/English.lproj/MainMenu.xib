@@ -164,8 +164,7 @@
 								<object class="NSMenuItem" id="632727374">
 									<reference key="NSMenu" ref="110575045"/>
 									<string key="NSTitle">Quit Brackets</string>
-									<string key="NSKeyEquiv">q</string>
-									<int key="NSKeyEquivModMask">1048576</int>
+									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="293900348"/>
 									<reference key="NSMixedImage" ref="169361956"/>
