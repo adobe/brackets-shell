@@ -69,7 +69,10 @@ static NSAutoreleasePool* g_autopool = nil;
 
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
-@interface ClientWindowDelegate : NSObject <NSWindowDelegate>
+@interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
+  BOOL isReallyClosing;
+}
+- (void)setIsReallyClosing;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
@@ -87,17 +90,30 @@ static NSAutoreleasePool* g_autopool = nil;
 
 @implementation ClientWindowDelegate
 
+- (id) init {
+  [super init];
+  isReallyClosing = false;
+  return self;
+}
+
+- (void)setIsReallyClosing {
+  isReallyClosing = true;
+}
+
 - (IBAction)showAbout:(id)sender {
   if (g_handler.get() && g_handler->GetBrowserId())
     g_handler->SendJSCommand(g_handler->GetBrowser(), HELP_ABOUT);
 }
 
 - (IBAction)quit:(id)sender {
+  /*
   if (g_handler.get() && g_handler->GetBrowserId()) {
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_QUIT);
   } else {
     [NSApp terminate:nil];
   }
+  */
+  g_handler->DispatchCloseToNextBrowser();
 }
 
 #ifdef SHOW_TOOLBAR_UI
@@ -190,12 +206,32 @@ static NSAutoreleasePool* g_autopool = nil;
 // to be removed from the screen.
 - (BOOL)windowShouldClose:(id)window { 
   
-  if (g_handler.get() && g_handler->GetBrowserId()) {
+  // This function can be called as many as THREE times for each window.
+  // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
+  // This gives the JavaScript the first crack at handling the command, which may result
+  // is a "Save Changes" dialog being shown.
+  // If the user chose to save changes (or ignore changes), the JavaScript calls window.close(),
+  // which results in a second call to this function. This time we dispatch another FILE_CLOSE_WINDOW
+  // command and return NO again.
+  // The second time the command is called it returns false. In that case, the CloseWindowCommandCallback
+  // will call browser->GetHost()->CloseBrowser(). However, before calling CloseBrowser(), the "isReallyClosing"
+  // flag is set. The CloseBrowser() call results in a THIRD call to this function, but this time we check
+  // the isReallyClosing flag and if true, return YES.
+
+  if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
     
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
     return NO;
   }
+  
+  // Try to make the window go away.
+  [window autorelease];
+  
+  // Clean ourselves up after clearing the stack of anything that might have the
+  // window on it.
+  [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
+                                                 withObject:window  waitUntilDone:NO];
   
   return YES;
 }

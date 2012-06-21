@@ -195,18 +195,13 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
   
-  // Try to make the window go away.
-  [window autorelease];
-  
-  // Clean ourselves up after clearing the stack of anything that might have the
-  // window on it.
-  [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
-                                                 withObject:window  waitUntilDone:NO];
+  // Tell the window delegate it's really time to close
+  [[window delegate] performSelector:@selector(setIsReallyClosing)];
+  browser->GetHost()->CloseBrowser();
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 {
-  // TODO : Need to verify makeKeyAndOrderFront call is the right one.
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
   [window makeKeyAndOrderFront:nil];
 }

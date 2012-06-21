@@ -186,6 +186,14 @@ if (!appshell.app) {
     appshell.app.quit = function () {
         QuitApplication();
     };
+ 
+    /**
+     * Abort a quit operation
+     */
+    native function AbortQuit();
+    appshell.app.abortQuit = function () {
+        AbortQuit();
+    };
 
     /**
      * Invokes developer tools application

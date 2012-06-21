@@ -185,12 +185,8 @@ class ClientHandler : public CefClient,
   void SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
   void DispatchCloseToNextBrowser();
+  void AbortQuit() {m_quitting = false;}
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
-
-  void ClosingBrowser(bool closing) { m_closing = closing; }
-  bool IsBrowserClosing() { return m_closing; }
-  void QuittingApp(bool quitting) { m_quitting = quitting; }
-  bool AppIsQuitting() { return m_quitting; }
 
  protected:
   void SetLoading(bool isLoading);
@@ -230,9 +226,8 @@ class ClientHandler : public CefClient,
 
   // True if a form element currently has focus
   bool m_bFormElementHasFocus;
-  bool m_closing;
   bool m_quitting;
-
+                        
   // Registered delegates.
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
@@ -251,5 +246,4 @@ class ClientHandler : public CefClient,
   // Include the default locking implementation.
   IMPLEMENT_LOCKING(ClientHandler);
 };
-
 #endif  // CEF_TESTS_CEFCLIENT_CLIENT_HANDLER_H_
