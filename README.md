@@ -4,6 +4,14 @@ This is the beginnings of a new CEF3-based application shell for Brackets. It is
 
 If you are interested in contributing to this shell, let us know on the [brackets-dev Google Group](http://groups.google.com/group/brackets-dev), or on the [#brackets channel on freenode](http://webchat.freenode.net/?channels=brackets).
 
+## Running
+
+(Note - we will be posting a download soon. Promise!)
+
+The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
+
+The preferences are stored in `{USER}/Library/Application Settings/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
+
 ## Building
 
 This project requires a CEF3 binary distribution in order to build.
