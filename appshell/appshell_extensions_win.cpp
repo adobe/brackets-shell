@@ -92,7 +92,9 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         if (pidl != 0) {
             if (SHGetPathFromIDList(pidl, szFile)) {
                 // Add directory path to the result
-                selectedFiles->SetString(0, szFile);
+                ExtensionString pathName(szFile);
+                ConvertToUnixPath(pathName);
+                selectedFiles->SetString(0, pathName);
             }
             IMalloc* pMalloc = NULL;
             SHGetMalloc(&pMalloc);
@@ -152,7 +154,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                             ExtensionString filePath(fullPath);
                             ConvertToUnixPath(filePath);
                             selectedFiles->SetString(fileIndex, filePath);
-						}
+                        }
 
                         // Go to the start of the next file name
                         i += file.length() + 1;
@@ -324,6 +326,9 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        return ERR_NOT_FOUND;
+
     if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
         return ERR_NOT_FILE;
 
@@ -336,10 +341,10 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get() && g_handler.get()) {
-		HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-		SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
-	    browser->GetHost()->CloseBrowser();
-	}
+        HWND browserHwnd = browser->GetHost()->GetWindowHandle();
+        SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
+        browser->GetHost()->CloseBrowser();
+    }
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
