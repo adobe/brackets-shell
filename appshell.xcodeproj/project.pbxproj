@@ -97,6 +97,7 @@
 		B0DDE91F41250836E3EC6D6F /* ffmpegsumo.so in Copy to $(BUILT_PRODUCTS_DIR)/Brackets.app/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries/ */ = {isa = PBXBuildFile; fileRef = 960AF2FA67AD34478B16E1FE /* ffmpegsumo.so */; };
 		B335BA5FA3951D47696662CB /* client_switches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB166DE5C11F00828B7B417 /* client_switches.cpp */; };
 		B9B6E151D671D73B99611F36 /* domnode_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 7644365DE7CC78D2DEA79A85 /* domnode_ctocpp.cc */; };
+		BB10F73F618857F79C7F65D9 /* appshell_extensions.js in Resources */ = {isa = PBXBuildFile; fileRef = F7EB475CDCCC2A30AF8D4A0C /* appshell_extensions.js */; };
 		BB89173AA3CFC876A054FB7B /* display_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = EF2C2EC4E5A1D08B06CF0FD7 /* display_handler_cpptoc.cc */; };
 		BD01EF6C6486A5B613FA7017 /* web_plugin_info_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 0C66A0123DAA2BBD73A2939C /* web_plugin_info_ctocpp.cc */; };
 		C1E637FD616AE3950058FE96 /* proxy_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2BA3A8374DBB04156F6EF07C /* proxy_handler_cpptoc.cc */; };
@@ -104,7 +105,6 @@
 		C5EBE4A85C81F593EDF064F5 /* cefclient_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 79A2E45EB29CAA66453661C6 /* cefclient_mac.mm */; };
 		C7429BF3C7C74CB98723F6C0 /* command_line_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = EB60AE270B721E13CF1126AD /* command_line_ctocpp.cc */; };
 		C90FB710D7B25572E80BFD69 /* v8accessor_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 845EEC823278584B42AFB2B7 /* v8accessor_cpptoc.cc */; };
-		CF1EE9AEF2671F90918C896C /* brackets_extensions.js in Resources */ = {isa = PBXBuildFile; fileRef = F55C44F44BBA964EFE0B704F /* brackets_extensions.js */; };
 		D44993FFF44DE7241797A865 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 117371CDDB44775B39107AA8 /* AppKit.framework */; };
 		DDA2289823F976BECC01755A /* menu_model_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 86E19C99BCCDDA939F257FE0 /* menu_model_ctocpp.cc */; };
 		DFF56C4CCC0DF43679368430 /* response_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8637A80D02FB4C99759A9768 /* response_ctocpp.cc */; };
@@ -266,6 +266,7 @@
 		32AC2CDB85725E3715C728CB /* client_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = client_cpptoc.cc; sourceTree = "<group>"; };
 		33499D33F1F9DC890F636536 /* life_span_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = life_span_handler_cpptoc.h; sourceTree = "<group>"; };
 		3458504ADE6A6AF8C60A2C67 /* domevent_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = domevent_ctocpp.cc; sourceTree = "<group>"; };
+		34EA46718B3A0AB6A5AD8EF8 /* command_callbacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = command_callbacks.h; sourceTree = "<group>"; };
 		35C4DBE8E4BAEC7160CD210E /* release_impl_official.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_impl_official.gypi; path = ../../cef3/chromium/src/build/internal/release_impl_official.gypi; sourceTree = "<group>"; };
 		365EDD3D82156D2204917D12 /* cef_cookie.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_cookie.h; sourceTree = "<group>"; };
 		37158D1FB9718895411FDA83 /* cef_string_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string_types.h; sourceTree = "<group>"; };
@@ -337,6 +338,7 @@
 		79A2E45EB29CAA66453661C6 /* cefclient_mac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = cefclient_mac.mm; sourceTree = "<group>"; };
 		7A23EBE1C5CFE1625F63FD57 /* cef_context_menu_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_context_menu_handler.h; sourceTree = "<group>"; };
 		7B1F678D2890FCB53A883C89 /* cef_stream_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_stream_capi.h; sourceTree = "<group>"; };
+		7D1CB415BC5D03739649D7E6 /* appshell_extensions_platform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = appshell_extensions_platform.h; sourceTree = "<group>"; };
 		7D96382DCC9DC64414EC6E05 /* string_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = string_util.cpp; sourceTree = "<group>"; };
 		7E9FDC3988B247C56F392E33 /* cef_string.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string.h; sourceTree = "<group>"; };
 		7FC6441C12E0D2D5C46FFFE2 /* cef_byte_read_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_byte_read_handler.h; sourceTree = "<group>"; };
@@ -458,8 +460,8 @@
 		F1989B67661244ED4B756EE5 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcef.dylib; sourceTree = "<group>"; };
 		F31B254B0DC7D754A1D4D56C /* cef_resource_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_resource_handler_capi.h; sourceTree = "<group>"; };
 		F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = appshell_extensions.cpp; sourceTree = "<group>"; };
-		F55C44F44BBA964EFE0B704F /* brackets_extensions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = brackets_extensions.js; sourceTree = "<group>"; };
 		F7D894242D95F2E165D0ECF6 /* cef_request_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_request_capi.h; sourceTree = "<group>"; };
+		F7EB475CDCCC2A30AF8D4A0C /* appshell_extensions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = appshell_extensions.js; sourceTree = "<group>"; };
 		F8650F6813183C119C198C0F /* stream_writer_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stream_writer_ctocpp.h; sourceTree = "<group>"; };
 		F920274FE06506D9C02842CB /* command_line_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = command_line_ctocpp.h; sourceTree = "<group>"; };
 		FAD7E647FB13C82A751604CC /* cef_resource_bundle_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_resource_bundle_handler.h; sourceTree = "<group>"; };
@@ -570,8 +572,9 @@
 				2CF60921DE182D498BFC8418 /* mac */,
 				F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */,
 				2C6200DAA24D72696664A534 /* appshell_extensions.h */,
+				F7EB475CDCCC2A30AF8D4A0C /* appshell_extensions.js */,
 				95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */,
-				F55C44F44BBA964EFE0B704F /* brackets_extensions.js */,
+				7D1CB415BC5D03739649D7E6 /* appshell_extensions_platform.h */,
 				522C920B68963035E6CE38FE /* cefclient.cpp */,
 				217F2C98268E9035AD8D9C14 /* cefclient.h */,
 				79A2E45EB29CAA66453661C6 /* cefclient_mac.mm */,
@@ -584,6 +587,7 @@
 				E93F80CFC491C3C09AFDD87B /* client_handler_mac.mm */,
 				1CB166DE5C11F00828B7B417 /* client_switches.cpp */,
 				6F16FF80521076B63DF9A19F /* client_switches.h */,
+				34EA46718B3A0AB6A5AD8EF8 /* command_callbacks.h */,
 				726E17688DB25A1076C57E0E /* config.h */,
 				73BD18BBE14A6CD1DE6E5E57 /* process_helper_mac.cpp */,
 				B079D80809064D7C62742C71 /* resource_util.h */,
@@ -994,7 +998,7 @@
 				92D1A00BA8DD26C04841665A /* brackets.icns in Resources */,
 				EB4A35C3C60BE898F8FB7EC6 /* InfoPlist.strings in Resources */,
 				6B295097B29E8FB628815A1B /* MainMenu.xib in Resources */,
-				CF1EE9AEF2671F90918C896C /* brackets_extensions.js in Resources */,
+				BB10F73F618857F79C7F65D9 /* appshell_extensions.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

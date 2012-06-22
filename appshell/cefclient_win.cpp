@@ -28,6 +28,8 @@
 #define URLBAR_HEIGHT  24
 #endif // SHOW_TOOLBAR_UI
 
+#define CLOSING_PROP L"CLOSING"
+
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
@@ -350,12 +352,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       switch (wmId) {
       case IDM_ABOUT:
         if (browser) {
-            browser->GetMainFrame()->ExecuteJavaScript(
-                "brackets.shellAPI.executeCommand('help.about')", "about:blank", 0);
+            g_handler->SendJSCommand(browser, HELP_ABOUT);
         }
         return 0;
       case IDM_EXIT:
-        DestroyWindow(hWnd);
+        if (g_handler.get()) {
+          g_handler->QuittingApp(true);
+    	  g_handler->DispatchCloseToNextBrowser();
+    	} else {
+          DestroyWindow(hWnd);
+		}
         return 0;
       case ID_WARN_CONSOLEMESSAGE:
         if (g_handler.get()) {
@@ -465,11 +471,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
-        CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
-        if (browser.get()) {
-          // Let the browser window know we are about to destroy it.
-          browser->GetHost()->ParentWindowWillClose();
-        }
+        // If we already initiated the browser closing, then let default window proc handle it.
+        HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+        HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+        if (closing) {
+		    RemoveProp(browserHwnd, CLOSING_PROP);
+			break;
+		}
+
+        g_handler->QuittingApp(true);
+        g_handler->DispatchCloseToNextBrowser();
+        return 0;
       }
       break;
 

@@ -22,6 +22,7 @@
  */ 
 
 #include "appshell_extensions.h"
+#include "client_handler.h"
 
 #include <algorithm>
 #include <CommDlg.h>
@@ -29,6 +30,10 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 #include <sys/stat.h>
+
+#define CLOSING_PROP L"CLOSING"
+
+extern CefRefPtr<ClientHandler> g_handler;
 
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
@@ -317,10 +322,33 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
 
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
+        return ERR_NOT_FILE;
+
     if (!DeleteFile(filename.c_str()))
         return ConvertWinErrorCode(GetLastError());
 
     return NO_ERROR;
+}
+
+void CloseWindow(CefRefPtr<CefBrowser> browser)
+{
+    if (browser.get() && g_handler.get()) {
+		HWND browserHwnd = browser->GetHost()->GetWindowHandle();
+		SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
+	    browser->GetHost()->CloseBrowser();
+	}
+}
+
+void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
+{
+    if (browser.get()) {
+        HWND hwnd = browser->GetHost()->GetWindowHandle();
+        if (hwnd) 
+            ::BringWindowToTop(hwnd);
+    }
 }
 
 void ConvertToNativePath(ExtensionString& filename)

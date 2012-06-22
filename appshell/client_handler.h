@@ -11,12 +11,11 @@
 #include <string>
 #include "include/cef_client.h"
 #include "util.h"
-
+#include "command_callbacks.h"
 
 // Define this value to redirect all popup URLs to the main application browser
 // window.
 // #define TEST_REDIRECT_POPUP_URLS
-
 
 // ClientHandler implementation.
 class ClientHandler : public CefClient,
@@ -25,8 +24,7 @@ class ClientHandler : public CefClient,
                       public CefRequestHandler,
                       public CefDisplayHandler,
                       public CefGeolocationHandler,
-                      public CefContextMenuHandler,
-                      public CefJSDialogHandler {
+                      public CefContextMenuHandler {
  public:
   // Interface for process message delegates. Do not perform work in the
   // RenderDelegate constructor.
@@ -84,9 +82,6 @@ class ClientHandler : public CefClient,
     return this;
   }
   virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE {
-    return this;
-  }
-  virtual CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() OVERRIDE {
     return this;
   }
                           
@@ -183,33 +178,30 @@ class ClientHandler : public CefClient,
   void SendNotification(NotificationType type);
   void CloseMainWindow();
 
-  void ShowDevTools(CefRefPtr<CefBrowser> browser);
+  void ShowDevTools(CefRefPtr<CefBrowser> browser);  
+                        
+  // Call the "executeCommand" method, passing the command name.
+  // If callback is specified, it will be called with the result from the command.
+  void SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
+  
+  void DispatchCloseToNextBrowser();
+  void AbortQuit() {m_quitting = false;}
+  static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
 
-  // CefJSDialogHandler methods
-  virtual bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
-                                    const CefString& message_text,
-                                    bool is_reload,
-                                    CefRefPtr<CefJSDialogCallback> callback);
-                          
+  void QuittingApp(bool quitting) { m_quitting = quitting; }
+  bool AppIsQuitting() { return m_quitting; }
+
  protected:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
-
+  void PopupCreated(CefRefPtr<CefBrowser> browser);
+                        
   // Create all of ProcessMessageDelegate objects.
   static void CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates);
 
   // Create all of RequestDelegateSet objects.
   static void CreateRequestDelegates(RequestDelegateSet& delegates);
-
-  // Test context menu creation.
-  void BuildTestMenu(CefRefPtr<CefMenuModel> model);
-  bool ExecuteTestMenu(int command_id);
-  struct TestMenuState {
-    TestMenuState() : check_item(true), radio_item(0) {}
-    bool check_item;
-    int radio_item;
-  } m_TestMenuState;
 
   // The child browser window
   CefRefPtr<CefBrowser> m_Browser;
@@ -237,12 +229,20 @@ class ClientHandler : public CefClient,
 
   // True if a form element currently has focus
   bool m_bFormElementHasFocus;
+  bool m_quitting;
 
   // Registered delegates.
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
 
   std::set<std::string> m_OpenDevToolsURLs;
+  
+  typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
+  static BrowserWindowMap browser_window_map_;
+                        
+  typedef std::map<int32, CefRefPtr<CommandCallback> > CommandCallbackMap;
+  int32 callbackId;
+  CommandCallbackMap command_callback_map_;
 
   // Include the default reference counting implementation.
   IMPLEMENT_REFCOUNTING(ClientHandler);

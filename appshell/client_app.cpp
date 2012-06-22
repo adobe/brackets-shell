@@ -235,6 +235,31 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
     (*it)->OnContextReleased(this, browser, frame, context);
 }
 
+//Simple stack class to ensure calls to Enter and Exit are balanced
+class StContextScope {
+public:
+    StContextScope( const CefRefPtr<CefV8Context>& ctx )
+    : m_ctx(NULL) {
+        if( ctx && ctx->Enter() ) {
+            m_ctx = ctx;
+        }
+    }
+    
+    ~StContextScope() {
+        if(m_ctx) {
+            m_ctx->Exit();
+        }
+    }
+    
+    const CefRefPtr<CefV8Context>& GetContext() const { 
+        return m_ctx;
+    }
+    
+private:
+    CefRefPtr<CefV8Context> m_ctx;
+    
+};
+
 bool ClientApp::OnProcessMessageRecieved(
         CefRefPtr<CefBrowser> browser,
         CefProcessId source_process,
@@ -251,6 +276,9 @@ bool ClientApp::OnProcessMessageRecieved(
 
     if (!handled) {
         if (message->GetName() == "invokeCallback") {
+            // This is called by the appshell extension handler to invoke the asynchronous 
+            // callback function
+            
             CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
             int32 callbackId = messageArgs->GetInt(0);
                     
@@ -267,6 +295,58 @@ bool ClientApp::OnProcessMessageRecieved(
             context->Exit();
             
             callback_map_.erase(callbackId);
+        } else if (message->GetName() == "executeCommand") {
+            // This is called by the browser process to execute a command via JavaScript
+            // 
+            // The first argument is the command name. This is required.
+            // The second argument is a message id. This is optional. If set, a response
+            // message will be sent back to the browser process.
+            
+            CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+            CefString commandName = messageArgs->GetString(0);
+            int messageId = messageArgs->GetSize() > 1 ? messageArgs->GetInt(1) : -1;
+            bool handled = false;
+            
+            StContextScope ctx(browser->GetMainFrame()->GetV8Context());
+            
+            CefRefPtr<CefV8Value> global = ctx.GetContext()->GetGlobal();
+            
+            if (global->HasValue("brackets")) { 
+                
+                CefRefPtr<CefV8Value> brackets = global->GetValue("brackets");
+                
+                if (brackets->HasValue("shellAPI")) {
+                    
+                    CefRefPtr<CefV8Value> shellAPI = brackets->GetValue("shellAPI");
+                    
+                    if (shellAPI->HasValue("executeCommand")) {
+                        
+                        CefRefPtr<CefV8Value> executeCommand = shellAPI->GetValue("executeCommand");
+                        
+                        if (executeCommand->IsFunction()) {
+                            
+                            CefRefPtr<CefV8Value> retval;
+                            CefV8ValueList args;
+                            args.push_back(CefV8Value::CreateString(commandName));
+                            
+                            retval = executeCommand->ExecuteFunction(global, args);
+                            
+                            if (retval) {
+                                handled = retval->GetBoolValue();
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Return a message saying whether or not the command was handled
+            if (messageId != -1) {
+                CefRefPtr<CefProcessMessage> result = CefProcessMessage::Create("executeCommandCallback");
+                result->GetArgumentList()->SetInt(0, messageId);
+                result->GetArgumentList()->SetBool(1, handled);
+                
+                browser->SendProcessMessage(PID_BROWSER, result);
+            }
         }
     }
     

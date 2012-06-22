@@ -21,7 +21,8 @@
  * 
  */ 
 
-#include "appshell/appshell_extensions.h"
+#include "appshell_extensions.h"
+#include "appshell_extensions_platform.h"
 
 namespace appshell_extensions {
 
@@ -218,6 +219,22 @@ public:
             
             handler->ShowDevTools(browser);
 
+        } else if (message_name == "CloseWindow") {
+            // Parameters - none
+          
+            browser->GetHost()->CloseBrowser();
+          
+        } else if (message_name == "QuitApplication") {
+            // Parameters - none
+          
+            // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
+            // quit if all browser windows are closed.
+            handler->DispatchCloseToNextBrowser();
+
+        } else if (message_name == "AbortQuit") {
+            // Parameters - none
+          
+            handler->AbortQuit();
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
@@ -244,9 +261,5 @@ void CreateProcessMessageDelegates(
                                    ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
-
-void CreateRequestDelegates(ClientHandler::RequestDelegateSet& delegates) {
-//	delegates.insert(new RequestDelegate);
-}
-    
+  
 } // namespace appshell_extensions

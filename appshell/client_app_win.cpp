@@ -33,7 +33,7 @@ std::string ClientApp::GetExtensionJSSource()
 {
     extern HINSTANCE hInst;
 
-    HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(IDS_BRACKETS_EXTENSIONS), MAKEINTRESOURCE(256));
+    HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(IDS_APPSHELL_EXTENSIONS), MAKEINTRESOURCE(256));
     DWORD dwSize;
     LPBYTE pBytes = NULL;
 
