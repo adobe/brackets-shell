@@ -118,8 +118,10 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
   
   browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
-  if (AppIsQuitting() && browser_window_map_.size())
+  
+  if (m_quitting) {
     DispatchCloseToNextBrowser();
+  }
 }
 
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
@@ -332,15 +334,23 @@ void ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
 }
 
 void ClientHandler::DispatchCloseToNextBrowser() {
+  // Close the first (main) window last. On Windows, closing the main window exits the application,
+  // so make sure all other windows get a crack at saving changes first.
   bool skipFirstOne = (browser_window_map_.size() > 1);
   for (BrowserWindowMap::const_iterator i = browser_window_map_.begin(); 
             i != browser_window_map_.end(); i++) {
     if (skipFirstOne) {
         skipFirstOne = false;
         continue;
-	}
+	  }
     CefRefPtr<CefBrowser> browser = i->second;
 
+    // Bring the window to the front before sending the command
+    BringBrowserWindowToFront(browser);
+    
+    // This call initiates a quit sequence. We will continue to close browser windows
+    // unless AbortQuit() is called.
+    m_quitting = true;
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
     SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
     return;

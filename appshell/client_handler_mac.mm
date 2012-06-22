@@ -87,25 +87,34 @@ void ClientHandler::CloseMainWindow() {
 
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
-@interface PopupClientWindowDelegate : NSObject <NSWindowDelegate>
+@interface PopupClientWindowDelegate : NSObject <NSWindowDelegate> {
+  CefRefPtr<ClientHandler> clientHandler;
+  NSWindow* window;
+  BOOL isReallyClosing;
+}
 - (IBAction)quit:(id)sender;
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
-
-CefRefPtr<ClientHandler> clientHandler;
-NSWindow* window;
 @end
 
 @implementation PopupClientWindowDelegate
 
+- (id) init {
+  [super init];
+  isReallyClosing = false;
+  return self;
+}
+
 - (IBAction)quit:(id)sender {
+  /*
   CefRefPtr<CefBrowser> browser;
   
   // If the main browser exists, send the command to that browser
   if (clientHandler->GetBrowserId())
     browser = clientHandler->GetBrowser();
-  else
+  
+  if (!browser)
     browser = ClientHandler::GetBrowserForNativeWindow(window);
   
   // TODO: we should have a "get frontmost brackets window" command for this
@@ -115,6 +124,8 @@ NSWindow* window;
   } else {
     [NSApp terminate:nil];
   }
+  */
+  clientHandler->DispatchCloseToNextBrowser();
 }
 
 - (void)setClientHandler:(CefRefPtr<ClientHandler>) handler {
@@ -125,20 +136,42 @@ NSWindow* window;
   window = win;
 }
 
+- (void)setIsReallyClosing {
+  isReallyClosing = true;
+}
+
 // Called when the window is about to close. Perform the self-destruction
 // sequence by getting rid of the window. By returning YES, we allow the window
 // to be removed from the screen.
 
-- (BOOL)windowShouldClose:(id)window {  
-  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+- (BOOL)windowShouldClose:(id)aWindow {  
   
-  if (browser) {
+  // This function can be called as many as THREE times for each window.
+  // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
+  // This gives the JavaScript the first crack at handling the command, which may result
+  // is a "Save Changes" dialog being shown.
+  // If the user chose to save changes (or ignore changes), the JavaScript calls window.close(),
+  // which results in a second call to this function. This time we dispatch another FILE_CLOSE_WINDOW
+  // command and return NO again.
+  // The second time the command is called it returns false. In that case, the CloseWindowCommandCallback
+  // will call browser->GetHost()->CloseBrowser(). However, before calling CloseBrowser(), the "isReallyClosing"
+  // flag is set. The CloseBrowser() call results in a THIRD call to this function, but this time we check
+  // the isReallyClosing flag and if true, return YES.
+
+  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(aWindow);
+  
+  if (!isReallyClosing && browser) {
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
 
     clientHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
     return NO;
   }
-  
+    
+  // Clean ourselves up after clearing the stack of anything that might have the
+  // window on it.
+  [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
+                                                 withObject:aWindow  waitUntilDone:NO];
+
   return YES;
 }
 

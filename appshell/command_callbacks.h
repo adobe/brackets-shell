@@ -28,7 +28,6 @@ class CloseWindowCommandCallback : public CommandCallback {
 public:
   CloseWindowCommandCallback(CefRefPtr<CefBrowser> browser)
   : browser_(browser) {
-    BringBrowserWindowToFront(browser_);
   }
   
   virtual void CommandComplete(bool handled) {

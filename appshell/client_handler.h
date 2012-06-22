@@ -185,6 +185,7 @@ class ClientHandler : public CefClient,
   void SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
   void DispatchCloseToNextBrowser();
+  void AbortQuit() {m_quitting = false;}
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
 
   void QuittingApp(bool quitting) { m_quitting = quitting; }

@@ -226,9 +226,15 @@ public:
           
         } else if (message_name == "QuitApplication") {
             // Parameters - none
-			handler->QuittingApp(true);
+          
+            // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
+            // quit if all browser windows are closed.
             handler->DispatchCloseToNextBrowser();
 
+        } else if (message_name == "AbortQuit") {
+            // Parameters - none
+          
+            handler->AbortQuit();
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
