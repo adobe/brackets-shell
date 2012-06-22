@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#define CLOSING_PROP L"CLOSING"
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Forward declarations for functions at the bottom of this file
@@ -334,16 +336,19 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get() && g_handler.get()) {
-		g_handler->ClosingBrowser(true);
+		HWND browserHwnd = browser->GetHost()->GetWindowHandle();
+		SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
 	    browser->GetHost()->CloseBrowser();
 	}
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 {
-    HWND hwnd = browser->GetHost()->GetWindowHandle();
-    if (hwnd) 
-        ::BringWindowToTop(hwnd);
+    if (browser.get()) {
+        HWND hwnd = browser->GetHost()->GetWindowHandle();
+        if (hwnd) 
+            ::BringWindowToTop(hwnd);
+    }
 }
 
 void ConvertToNativePath(ExtensionString& filename)

@@ -31,7 +31,6 @@ ClientHandler::ClientHandler()
     m_StopHwnd(NULL),
     m_ReloadHwnd(NULL),
     m_bFormElementHasFocus(false),
-    m_closing(false),
     m_quitting(false) {
   callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);

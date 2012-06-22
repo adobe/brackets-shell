@@ -9,6 +9,8 @@
 #include "include/cef_frame.h"
 #include "resource.h"
 
+#define CLOSING_PROP L"CLOSING"
+
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -123,11 +125,13 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             return 0;
           case IDM_CLOSE:
             if (g_handler.get() && browser.get()) {
- 		      if (g_handler->IsBrowserClosing()) {
- 		        // reset the flag so that we can handle subsequent closing of any popup windows correctly
- 		        g_handler->ClosingBrowser(false);
- 		        break;
- 		      }
+              HWND browserHwnd = browser->GetHost()->GetWindowHandle();
+              HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+              if (closing) {
+                RemoveProp(browserHwnd, CLOSING_PROP);
+                break;
+              }
+
  		      CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
  		      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
 			}
@@ -138,13 +142,15 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     case WM_CLOSE:
       if (g_handler.get() && browser.get()) {
-		  if (g_handler->IsBrowserClosing()) {
- 		  // reset the flag so that we can handle subsequent closing of any popup windows correctly
- 		  g_handler->ClosingBrowser(false);
- 		  break;
- 		}
- 		CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
- 		g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+        HWND browserHwnd = browser->GetHost()->GetWindowHandle();
+        HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+        if (closing) {
+            RemoveProp(browserHwnd, CLOSING_PROP);
+            break;
+        }
+
+        CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+        g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
  		return 0;
       }
       break;

@@ -28,6 +28,8 @@
 #define URLBAR_HEIGHT  24
 #endif // SHOW_TOOLBAR_UI
 
+#define CLOSING_PROP L"CLOSING"
+
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
@@ -470,8 +472,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     case WM_CLOSE:
       if (g_handler.get()) {
         // If we already initiated the browser closing, then let default window proc handle it.
-        if (g_handler->IsBrowserClosing())
-          break;
+        HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+        HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+        if (closing) {
+		    RemoveProp(browserHwnd, CLOSING_PROP);
+			break;
+		}
+
         g_handler->QuittingApp(true);
         g_handler->DispatchCloseToNextBrowser();
         return 0;

@@ -187,8 +187,6 @@ class ClientHandler : public CefClient,
   void DispatchCloseToNextBrowser();
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
 
-  void ClosingBrowser(bool closing) { m_closing = closing; }
-  bool IsBrowserClosing() { return m_closing; }
   void QuittingApp(bool quitting) { m_quitting = quitting; }
   bool AppIsQuitting() { return m_quitting; }
 
@@ -230,7 +228,6 @@ class ClientHandler : public CefClient,
 
   // True if a form element currently has focus
   bool m_bFormElementHasFocus;
-  bool m_closing;
   bool m_quitting;
 
   // Registered delegates.
