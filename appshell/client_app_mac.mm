@@ -48,13 +48,13 @@ std::string ClientApp::GetExtensionJSSource()
     NSRange range = [bundlePath rangeOfString: @"/Frameworks/"];
     
     if (range.location == NSNotFound) {
-        sourcePath = [[NSBundle mainBundle] pathForResource: @"brackets_extensions" ofType: @"js"];
+        sourcePath = [[NSBundle mainBundle] pathForResource: @"appshell_extensions" ofType: @"js"];
     } else {
         sourcePath = [bundlePath substringToIndex:range.location];
-        sourcePath = [sourcePath stringByAppendingString:@"/Resources/brackets_extensions.js"];
+        sourcePath = [sourcePath stringByAppendingString:@"/Resources/appshell_extensions.js"];
     }
 #else
-    NSString* sourcePath = [[NSBundle mainBundle] pathForResource: @"brackets_extensions" ofType: @"js"];
+    NSString* sourcePath = [[NSBundle mainBundle] pathForResource: @"appshell_extensions" ofType: @"js"];
 #endif
     
     NSString* jsSource = [[NSString alloc] initWithContentsOfFile:sourcePath encoding:NSUTF8StringEncoding error:nil];

@@ -9,6 +9,8 @@
 #include "include/cef_frame.h"
 #include "cefclient.h"
 
+extern CefRefPtr<ClientHandler> g_handler;
+
 // ClientHandler::ClientLifeSpanHandler implementation
 
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
@@ -80,4 +82,144 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 
 void ClientHandler::CloseMainWindow() {
   // TODO(port): Close window
+}
+
+
+// Receives notifications from controls and the browser window. Will delete
+// itself when done.
+@interface PopupClientWindowDelegate : NSObject <NSWindowDelegate> {
+  CefRefPtr<ClientHandler> clientHandler;
+  NSWindow* window;
+  BOOL isReallyClosing;
+}
+- (IBAction)quit:(id)sender;
+- (BOOL)windowShouldClose:(id)window;
+- (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
+- (void)setWindow:(NSWindow*)window;
+@end
+
+@implementation PopupClientWindowDelegate
+
+- (id) init {
+  [super init];
+  isReallyClosing = false;
+  return self;
+}
+
+- (IBAction)quit:(id)sender {
+  /*
+  CefRefPtr<CefBrowser> browser;
+  
+  // If the main browser exists, send the command to that browser
+  if (clientHandler->GetBrowserId())
+    browser = clientHandler->GetBrowser();
+  
+  if (!browser)
+    browser = ClientHandler::GetBrowserForNativeWindow(window);
+  
+  // TODO: we should have a "get frontmost brackets window" command for this
+  
+  if (clientHandler && browser) {
+    clientHandler->SendJSCommand(browser, FILE_QUIT);
+  } else {
+    [NSApp terminate:nil];
+  }
+  */
+  clientHandler->DispatchCloseToNextBrowser();
+}
+
+- (void)setClientHandler:(CefRefPtr<ClientHandler>) handler {
+  clientHandler = handler;
+}
+
+- (void)setWindow:(NSWindow*)win {
+  window = win;
+}
+
+- (void)setIsReallyClosing {
+  isReallyClosing = true;
+}
+
+// Called when the window is about to close. Perform the self-destruction
+// sequence by getting rid of the window. By returning YES, we allow the window
+// to be removed from the screen.
+
+- (BOOL)windowShouldClose:(id)aWindow {  
+  
+  // This function can be called as many as THREE times for each window.
+  // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
+  // This gives the JavaScript the first crack at handling the command, which may result
+  // is a "Save Changes" dialog being shown.
+  // If the user chose to save changes (or ignore changes), the JavaScript calls window.close(),
+  // which results in a second call to this function. This time we dispatch another FILE_CLOSE_WINDOW
+  // command and return NO again.
+  // The second time the command is called it returns false. In that case, the CloseWindowCommandCallback
+  // will call browser->GetHost()->CloseBrowser(). However, before calling CloseBrowser(), the "isReallyClosing"
+  // flag is set. The CloseBrowser() call results in a THIRD call to this function, but this time we check
+  // the isReallyClosing flag and if true, return YES.
+
+  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(aWindow);
+  
+  if (!isReallyClosing && browser) {
+    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+
+    clientHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+    return NO;
+  }
+    
+  // Clean ourselves up after clearing the stack of anything that might have the
+  // window on it.
+  [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
+                                                 withObject:aWindow  waitUntilDone:NO];
+
+  return YES;
+}
+
+// Deletes itself.
+- (void)cleanup:(id)window {  
+  [self release];
+}
+
+- (void)windowDidBecomeKey:(NSNotification*)notification {
+  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([notification object]);
+  if(browser) {
+    // Give focus to the browser window.
+    browser->GetHost()->SetFocus(true);
+  }
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification {
+  CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([notification object]);
+  if(browser) {
+    // Remove focus from the browser window.
+    browser->GetHost()->SetFocus(false);
+  }
+  [[notification object] makeFirstResponder:nil];
+}
+@end
+
+void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
+  NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+  
+  if (![window delegate]) {
+    PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
+    [delegate setClientHandler:this];
+    [delegate setWindow:window];
+    [window setDelegate:delegate];
+  }
+}
+
+CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
+  CefRefPtr<CefBrowser> browser = NULL;
+  
+  if (window) {
+    //go through all the browsers looking for a browser within this window
+    for (BrowserWindowMap::const_iterator i = browser_window_map_.begin() ; i != browser_window_map_.end() && browser == NULL ; i++ ) {
+      NSView* browserView = i->first;
+      if (browserView && [browserView window] == window) {
+        browser = i->second;
+      }
+    }
+  }
+  return browser;
 }

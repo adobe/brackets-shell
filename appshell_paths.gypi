@@ -82,7 +82,9 @@
     'appshell_sources_common': [
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
-      'appshell/brackets_extensions.js',
+      'appshell/appshell_extensions_platform.h',
+      'appshell/appshell_extensions.js',
+      'appshell/command_callbacks.h',
       'appshell/config.h',
       'appshell/cefclient.cpp',
       'appshell/cefclient.h',
@@ -140,7 +142,7 @@
       'appshell/mac/English.lproj/InfoPlist.strings',
       'appshell/mac/English.lproj/MainMenu.xib',
       'appshell/mac/Info.plist',
-      'appshell/brackets_extensions.js',
+      'appshell/appshell_extensions.js',
     ],
     'appshell_sources_linux': [
       'appshell/cefclient_gtk.cpp',

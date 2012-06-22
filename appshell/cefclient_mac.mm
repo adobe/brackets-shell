@@ -15,16 +15,19 @@
 #include "client_handler.h"
 #include "resource_util.h"
 #include "string_util.h"
+#include "appshell_extensions.h"
+#include "command_callbacks.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+static bool g_isTerminating = false;
 
 char szWorkingDir[512];   // The current working directory
 
-NSURL* startupUrl = [NSURL URLWithString:@""];
+NSURL* startupUrl = nil;
 
 #ifdef SHOW_TOOLBAR_UI
 // Sizes for URL bar layout
@@ -66,8 +69,12 @@ static NSAutoreleasePool* g_autopool = nil;
 
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
-@interface ClientWindowDelegate : NSObject <NSWindowDelegate>
+@interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
+  BOOL isReallyClosing;
+}
+- (void)setIsReallyClosing;
 - (IBAction)showAbout:(id)sender;
+- (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
 - (IBAction)goBack:(id)sender;
 - (IBAction)goForward:(id)sender;
@@ -83,11 +90,30 @@ static NSAutoreleasePool* g_autopool = nil;
 
 @implementation ClientWindowDelegate
 
+- (id) init {
+  [super init];
+  isReallyClosing = false;
+  return self;
+}
+
+- (void)setIsReallyClosing {
+  isReallyClosing = true;
+}
+
 - (IBAction)showAbout:(id)sender {
-    if (g_handler.get() && g_handler->GetBrowserId()) {
-        g_handler->GetBrowser()->GetMainFrame()->ExecuteJavaScript(
-           "brackets.shellAPI.executeCommand('help.about')", "about:blank", 0);
-    }
+  if (g_handler.get() && g_handler->GetBrowserId())
+    g_handler->SendJSCommand(g_handler->GetBrowser(), HELP_ABOUT);
+}
+
+- (IBAction)quit:(id)sender {
+  /*
+  if (g_handler.get() && g_handler->GetBrowserId()) {
+    g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_QUIT);
+  } else {
+    [NSApp terminate:nil];
+  }
+  */
+  g_handler->DispatchCloseToNextBrowser();
 }
 
 #ifdef SHOW_TOOLBAR_UI
@@ -178,15 +204,34 @@ static NSAutoreleasePool* g_autopool = nil;
 // Called when the window is about to close. Perform the self-destruction
 // sequence by getting rid of the window. By returning YES, we allow the window
 // to be removed from the screen.
-- (BOOL)windowShouldClose:(id)window {  
+- (BOOL)windowShouldClose:(id)window { 
+  
+  // This function can be called as many as THREE times for each window.
+  // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
+  // This gives the JavaScript the first crack at handling the command, which may result
+  // is a "Save Changes" dialog being shown.
+  // If the user chose to save changes (or ignore changes), the JavaScript calls window.close(),
+  // which results in a second call to this function. This time we dispatch another FILE_CLOSE_WINDOW
+  // command and return NO again.
+  // The second time the command is called it returns false. In that case, the CloseWindowCommandCallback
+  // will call browser->GetHost()->CloseBrowser(). However, before calling CloseBrowser(), the "isReallyClosing"
+  // flag is set. The CloseBrowser() call results in a THIRD call to this function, but this time we check
+  // the isReallyClosing flag and if true, return YES.
+
+  if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
+    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
+    
+    g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
+    return NO;
+  }
+  
   // Try to make the window go away.
   [window autorelease];
   
   // Clean ourselves up after clearing the stack of anything that might have the
   // window on it.
-  [self performSelectorOnMainThread:@selector(cleanup:)
-                         withObject:window
-                      waitUntilDone:NO];
+  [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
+                                                 withObject:window  waitUntilDone:NO];
   
   return YES;
 }
@@ -241,7 +286,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                                   NSResizableWindowMask )
                        backing:NSBackingStoreBuffered
                        defer:NO];
-  [mainWnd setTitle:@"appshell"];
+  [mainWnd setTitle:@"Brackets"];
   [mainWnd setDelegate:delegate];
 
   // Rely on the window delegate to clean us up rather than immediately
@@ -305,13 +350,12 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Populate the settings based on command line arguments.
   AppGetBrowserSettings(settings);
 
-  settings.file_access_from_file_urls_allowed = true;
-  settings.universal_access_from_file_urls_allowed = true;
+  settings.web_security_disabled = true;
 
   window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 [[startupUrl absoluteString] UTF8String], settings);
-
+  
   // Show the window.
   [mainWnd makeKeyAndOrderFront: nil];
 
@@ -330,6 +374,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 // Sent by the default notification center immediately before the application
 // terminates.
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
+  
   // Shut down CEF.
   g_handler = NULL;
   CefShutdown();
@@ -340,12 +385,20 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   [g_autopool release];
 }
 
+
+-(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication {
+    return YES;
+}
+
 @end
 
 
 int main(int argc, char* argv[]) {
-  CefMainArgs main_args(argc, argv);
+  // Initialize the AutoRelease pool.
+  g_autopool = [[NSAutoreleasePool alloc] init];
 
+  CefMainArgs main_args(argc, argv);
+ 
   // Delete Special Characters Palette from Edit menu.
   [[NSUserDefaults standardUserDefaults]
     setBool:YES forKey:@"NSDisabledCharacterPaletteMenuItem"];
@@ -361,9 +414,6 @@ int main(int argc, char* argv[]) {
 
   // Retrieve the current working directory.
   getcwd(szWorkingDir, sizeof(szWorkingDir));
-
-  // Initialize the AutoRelease pool.
-  g_autopool = [[NSAutoreleasePool alloc] init];
 
   // Initialize the ClientApplication instance.
   [ClientApplication sharedApplication];
@@ -388,7 +438,7 @@ int main(int argc, char* argv[]) {
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift)  
     startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
 
-  if ([[startupUrl absoluteString] isEqualToString:@""]) {
+  if (startupUrl == nil) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
     [openPanel setTitle:@"Choose startup file"];
     if ([openPanel runModal] == NSOKButton) {
@@ -404,7 +454,14 @@ int main(int argc, char* argv[]) {
 
   // Run the application message loop.
   CefRunMessageLoop();
-
+  
+  //if we quit the message loop programatically we need to call
+  //terminate now to properly cleanup everything
+  if (!g_isTerminating) {
+    g_isTerminating = true;
+    [NSApp terminate:NULL];
+  }
+  
   // Don't put anything below this line because it won't be executed.
   return 0;
 }

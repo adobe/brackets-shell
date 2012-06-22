@@ -21,6 +21,7 @@
  * 
  */ 
 
+#include "appshell_extensions_platform.h"
 #include "appshell_extensions.h"
 
 #include <Cocoa/Cocoa.h>
@@ -188,6 +189,21 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
         return NO_ERROR;
     
     return ConvertNSErrorCode(error, false);
+}
+
+void CloseWindow(CefRefPtr<CefBrowser> browser)
+{
+  NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+  
+  // Tell the window delegate it's really time to close
+  [[window delegate] performSelector:@selector(setIsReallyClosing)];
+  browser->GetHost()->CloseBrowser();
+}
+
+void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
+{
+  NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+  [window makeKeyAndOrderFront:nil];
 }
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)

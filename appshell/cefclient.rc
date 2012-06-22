@@ -28,7 +28,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Binary
 //
 
-IDS_BRACKETS_EXTENSIONS BINARY		"brackets_extensions.js"
+IDS_APPSHELL_EXTENSIONS BINARY      "appshell_extensions.js"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -56,6 +56,17 @@ BEGIN
     END
 END
 
+IDC_CEFCLIENT_POPUP MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Close",                      IDM_CLOSE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About",                      IDM_ABOUT
+    END
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //
