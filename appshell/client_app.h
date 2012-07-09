@@ -13,7 +13,6 @@
 #include "include/cef_app.h"
 
 class ClientApp : public CefApp,
-                  public CefProxyHandler,
                   public CefRenderProcessHandler {
  public:
   // Interface for renderer delegates. All RenderDelegates must be returned via
@@ -91,11 +90,6 @@ private:
   }
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()
       OVERRIDE { return this; }
-  virtual CefRefPtr<CefProxyHandler> GetProxyHandler() OVERRIDE { return this; }
-
-  // CefProxyHandler methods.
-  virtual void GetProxyForUrl(const CefString& url,
-                              CefProxyInfo& proxy_info) OVERRIDE;
 
   // CefRenderProcessHandler methods.
   virtual void OnWebKitInitialized() OVERRIDE;

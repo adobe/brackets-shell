@@ -106,19 +106,6 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
     }
   }
 
-  {
-    std::string str = g_command_line->GetSwitchValue(cefclient::kGraphicsImpl);
-    if (!str.empty()) {
-#if defined(OS_WIN)
-      if (str == cefclient::kGraphicsImpl_Angle)
-        settings.graphics_implementation = ANGLE_IN_PROCESS;
-      else if (str == cefclient::kGraphicsImpl_AngleCmdBuffer)
-        settings.graphics_implementation = ANGLE_IN_PROCESS_COMMAND_BUFFER;
-      else
-#endif
-    }
-  }
-
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
 

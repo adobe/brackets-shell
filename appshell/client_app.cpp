@@ -197,13 +197,6 @@ ClientApp::ClientApp()
   CreateRenderDelegates(render_delegates_);
 }
 
-void ClientApp::GetProxyForUrl(const CefString& url,
-                               CefProxyInfo& proxy_info) {
-  proxy_info.proxyType = proxy_type_;
-  if (!proxy_config_.empty())
-    CefString(&proxy_info.proxyList) = proxy_config_;
-}
-
 void ClientApp::OnWebKitInitialized() {
   // Register the appshell extension.
   std::string extension_code = GetExtensionJSSource();
