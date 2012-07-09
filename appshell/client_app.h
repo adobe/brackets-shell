@@ -47,7 +47,7 @@ class ClientApp : public CefApp,
     // handled and should not be passed on to other handlers. RenderDelegates
     // should check for unique message names to avoid interfering with each
     // other.
-    virtual bool OnProcessMessageRecieved(
+    virtual bool OnProcessMessageReceived(
         CefRefPtr<ClientApp> app,
         CefRefPtr<CefBrowser> browser,
         CefProcessId source_process,
@@ -105,7 +105,7 @@ private:
   virtual void OnContextReleased(CefRefPtr<CefBrowser> browser,
                                  CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context) OVERRIDE;
-  virtual bool OnProcessMessageRecieved(
+  virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;

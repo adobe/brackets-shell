@@ -116,17 +116,8 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
         settings.graphics_implementation = ANGLE_IN_PROCESS_COMMAND_BUFFER;
       else
 #endif
-      if (str == cefclient::kGraphicsImpl_Desktop)
-        settings.graphics_implementation = DESKTOP_IN_PROCESS;
-      else if (str == cefclient::kGraphicsImpl_DesktopCmdBuffer)
-        settings.graphics_implementation = DESKTOP_IN_PROCESS_COMMAND_BUFFER;
     }
   }
-
-  settings.local_storage_quota = GetIntValue(
-      g_command_line->GetSwitchValue(cefclient::kLocalStorageQuota));
-  settings.session_storage_quota = GetIntValue(
-      g_command_line->GetSwitchValue(cefclient::kSessionStorageQuota));
 
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
@@ -167,12 +158,6 @@ void AppGetBrowserSettings(CefBrowserSettings& settings) {
   if (!g_command_line.get())
     return;
 
-  settings.drag_drop_disabled =
-      g_command_line->HasSwitch(cefclient::kDragDropDisabled);
-  settings.load_drops_disabled =
-      g_command_line->HasSwitch(cefclient::kLoadDropsDisabled);
-  settings.history_disabled =
-      g_command_line->HasSwitch(cefclient::kHistoryDisabled);
   settings.remote_fonts_disabled =
       g_command_line->HasSwitch(cefclient::kRemoteFontsDisabled);
 
