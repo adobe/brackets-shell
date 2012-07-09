@@ -40,7 +40,7 @@ ClientHandler::ClientHandler()
 ClientHandler::~ClientHandler() {
 }
 
-bool ClientHandler::OnProcessMessageRecieved(
+bool ClientHandler::OnProcessMessageReceived(
     CefRefPtr<CefBrowser> browser,
     CefProcessId source_process,
     CefRefPtr<CefProcessMessage> message) {
@@ -61,7 +61,7 @@ bool ClientHandler::OnProcessMessageRecieved(
   // Execute delegate callbacks.
   ProcessMessageDelegateSet::iterator it = process_message_delegates_.begin();
   for (; it != process_message_delegates_.end() && !handled; ++it) {
-    handled = (*it)->OnProcessMessageRecieved(this, browser, source_process,
+    handled = (*it)->OnProcessMessageReceived(this, browser, source_process,
                                               message);
   }
     
