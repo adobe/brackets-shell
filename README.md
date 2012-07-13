@@ -10,7 +10,7 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
 
-The preferences are stored in `{USER}/Library/Application Settings/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
+The preferences are stored in `{USER}/Library/Application Support/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
 
 ## Building
 
@@ -26,13 +26,30 @@ This project requires a CEF3 binary distribution in order to build.
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.
 
 ####Setup and Building
-Copy all of the contents of the CEF3 binary distribution into the same directory as this file. Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4, do **not** select "Project Modernization" or you will get compile errors.
+Create a folder named `deps` inside the `brackets-shell` folder.
+Create a folder named `cef` inside the `deps` folder.
+Copy all of the contents of the CEF3 binary distribution into the `deps/cef` directory. 
+
+Your directory structure should look like this:
+```
+brackets-shell
+   deps
+      cef
+         // CEF3 binary content in this folder
+   appshell
+      // appshell source
+   README.md
+   ...
+```
+
+Open a terminal window on this directory and run `./make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4, do **not** select "Project Modernization" or you will get compile errors.
 
 ####Generating Projects
 This is only required if you are changing the project files. **NOTE:** Don't change the xcode project files directly. Any changes should be done to the .gyp files, and new xcode projects should be generated.
 
 * Add a <code>CHROMIUM\_SRC\_PATH</code> environment variable that points to your chromium 'src' folder (without a final '/').
-* Open a terminal window on this directory and run <code>make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
+* Open a terminal window on this directory and run <code>./make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
 
 ### Windows
 
@@ -45,7 +62,25 @@ This is only required if you are changing the project files. **NOTE:** Don't cha
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.
 
 ####Setup and Building
-Copy all of the contents of the CEF3 binary distribution into the same directory as this file. Open appshell.sln in Visual Studio. NOTE: If you are using Visual Studio Express, you may get warnings that say some of the projects couldn't be loaded. These can be ignored.
+Create a folder named `deps` inside the `brackets-shell` folder.
+Create a folder named `cef` inside the `deps` folder.
+Copy all of the contents of the CEF3 binary distribution into the `deps/cef` directory. 
+
+Your directory structure should look like this:
+```
+brackets-shell
+   deps
+      cef
+         // CEF3 binary content in this folder
+   appshell
+      // appshell source
+   README.md
+   ...
+```
+
+Open a command prompt on this directory and run `make_symlinks.bat`. This will create symbolic links to several folders in the `deps/cef` directory.
+
+Open appshell.sln in Visual Studio. NOTE: If you are using Visual Studio Express, you may get warnings that say some of the projects couldn't be loaded. These can be ignored.
 
 ####Generating Projects
 This is only required if you are changing the project files. **NOTE:** Don't change the Visual Studio project files directly. Any changes should be done to the .gyp files, and new Visual Studio projects should be generated.

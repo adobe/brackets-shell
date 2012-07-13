@@ -21,6 +21,8 @@ appshell/.DS_Store
 # Add project build scripts
 !make_appshell_project.sh
 !make_appshell_project.bat
+!make_symlinks.sh
+!make_symlinks.bat
 
 # Add project files
 !appshell.xcodeproj
