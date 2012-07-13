@@ -10,7 +10,7 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
 
-The preferences are stored in `{USER}/Library/Application Settings/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
+The preferences are stored in `{USER}/Library/Application Support/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
 
 ## Building
 
@@ -42,14 +42,14 @@ brackets-shell
    ...
 ```
 
-Open a terminal window on this directory and run `make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open a terminal window on this directory and run `./make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
 Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4, do **not** select "Project Modernization" or you will get compile errors.
 
 ####Generating Projects
 This is only required if you are changing the project files. **NOTE:** Don't change the xcode project files directly. Any changes should be done to the .gyp files, and new xcode projects should be generated.
 
 * Add a <code>CHROMIUM\_SRC\_PATH</code> environment variable that points to your chromium 'src' folder (without a final '/').
-* Open a terminal window on this directory and run <code>make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
+* Open a terminal window on this directory and run <code>./make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
 
 ### Windows
 
