@@ -174,11 +174,6 @@ if (!appshell.app) {
         }, path);
     };
  
-    native function CloseWindow();
-    close = function () {
-        CloseWindow();
-    };
- 
     /**
      * Quits native shell application
      */

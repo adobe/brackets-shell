@@ -13,7 +13,6 @@
 #include "include/cef_app.h"
 
 class ClientApp : public CefApp,
-                  public CefProxyHandler,
                   public CefRenderProcessHandler {
  public:
   // Interface for renderer delegates. All RenderDelegates must be returned via
@@ -47,7 +46,7 @@ class ClientApp : public CefApp,
     // handled and should not be passed on to other handlers. RenderDelegates
     // should check for unique message names to avoid interfering with each
     // other.
-    virtual bool OnProcessMessageRecieved(
+    virtual bool OnProcessMessageReceived(
         CefRefPtr<ClientApp> app,
         CefRefPtr<CefBrowser> browser,
         CefProcessId source_process,
@@ -91,11 +90,6 @@ private:
   }
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()
       OVERRIDE { return this; }
-  virtual CefRefPtr<CefProxyHandler> GetProxyHandler() OVERRIDE { return this; }
-
-  // CefProxyHandler methods.
-  virtual void GetProxyForUrl(const CefString& url,
-                              CefProxyInfo& proxy_info) OVERRIDE;
 
   // CefRenderProcessHandler methods.
   virtual void OnWebKitInitialized() OVERRIDE;
@@ -105,7 +99,7 @@ private:
   virtual void OnContextReleased(CefRefPtr<CefBrowser> browser,
                                  CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context) OVERRIDE;
-  virtual bool OnProcessMessageRecieved(
+  virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;

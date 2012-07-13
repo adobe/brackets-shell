@@ -197,13 +197,6 @@ ClientApp::ClientApp()
   CreateRenderDelegates(render_delegates_);
 }
 
-void ClientApp::GetProxyForUrl(const CefString& url,
-                               CefProxyInfo& proxy_info) {
-  proxy_info.proxyType = proxy_type_;
-  if (!proxy_config_.empty())
-    CefString(&proxy_info.proxyList) = proxy_config_;
-}
-
 void ClientApp::OnWebKitInitialized() {
   // Register the appshell extension.
   std::string extension_code = GetExtensionJSSource();
@@ -260,7 +253,7 @@ private:
     
 };
 
-bool ClientApp::OnProcessMessageRecieved(
+bool ClientApp::OnProcessMessageReceived(
         CefRefPtr<CefBrowser> browser,
         CefProcessId source_process,
         CefRefPtr<CefProcessMessage> message) {
@@ -271,7 +264,7 @@ bool ClientApp::OnProcessMessageRecieved(
     // Execute delegate callbacks.
     RenderDelegateSet::iterator it = render_delegates_.begin();
     for (; it != render_delegates_.end() && !handled; ++it) {
-        handled = (*it)->OnProcessMessageRecieved(this, browser, source_process, message);
+        handled = (*it)->OnProcessMessageReceived(this, browser, source_process, message);
     }
 
     if (!handled) {

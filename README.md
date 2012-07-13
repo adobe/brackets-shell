@@ -19,8 +19,8 @@ This project requires a CEF3 binary distribution in order to build.
 ### Mac
 ####Prerequisites
 
-* XCode 3.2.6 or later required to build the project
-* CEF3 binary distribution version 3.1157.677 or newer
+* XCode 3.2.6 - 4.2 required to build the project (4.3.3 support coming soon)
+* CEF3 binary distribution version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.
@@ -39,7 +39,7 @@ This is only required if you are changing the project files. **NOTE:** Don't cha
 ####Prerequisites
 
 * Visual Studio 2010 or later required to build the project. The free Visual Studio Express works fine.
-* CEF3 binary distribution version 3.1142.654 or newer
+* CEF3 binary distribution version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.

@@ -35,7 +35,7 @@ public:
     }
 
     // From ClientHandler::ProcessMessageDelegate.
-    virtual bool OnProcessMessageRecieved(
+    virtual bool OnProcessMessageReceived(
                       CefRefPtr<ClientHandler> handler,
                       CefRefPtr<CefBrowser> browser,
                       CefProcessId source_process,
@@ -219,11 +219,6 @@ public:
             
             handler->ShowDevTools(browser);
 
-        } else if (message_name == "CloseWindow") {
-            // Parameters - none
-          
-            browser->GetHost()->CloseBrowser();
-          
         } else if (message_name == "QuitApplication") {
             // Parameters - none
           
