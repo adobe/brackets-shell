@@ -81,6 +81,9 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     */
 
     if (chooseDirectory) {
+        // SHBrowseForFolder can handle Windows path only, not Unix path.
+        ConvertToNativePath(initialDirectory);
+
         BROWSEINFO bi = {0};
         bi.hwndOwner = GetActiveWindow();
         bi.lpszTitle = title.c_str();
