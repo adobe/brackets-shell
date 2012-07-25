@@ -305,13 +305,10 @@ if (!appshell.app) {
      */
     native function OpenLiveBrowser();
     appshell.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
- /*
         // enableRemoteDebugging flag is ignored on mac
         setTimeout(function() {
-            OpenLiveBrowser(url);
-            callback(getLastError());
+            OpenLiveBrowser(callback, url, enableRemoteDebugging);
         }, 0);
- */
     };
     
     /**
@@ -329,9 +326,7 @@ if (!appshell.app) {
      */
     native function CloseLiveBrowser();
     appshell.app.closeLiveBrowser = function (callback) {
- /*
         CloseLiveBrowser(callback);
- */
     };
  
    // Alias the appshell object to brackets. This is temporary and should be removed.

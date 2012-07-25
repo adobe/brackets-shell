@@ -19,6 +19,7 @@
 #include "resource.h"
 #include "string_util.h"
 
+#include <ShlObj.h>
 
 #define MAX_LOADSTRING 100
 

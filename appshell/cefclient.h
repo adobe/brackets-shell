@@ -23,6 +23,8 @@ CefWindowHandle AppGetMainHwnd();
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
 
+// 
+
 // Initialize the application command line.
 void AppInitCommandLine(int argc, const char* const* argv);
 
