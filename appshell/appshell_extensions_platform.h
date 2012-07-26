@@ -52,7 +52,7 @@ typedef std::string ExtensionString;
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
 
-int32 CloseLiveBrowser();
+//int32 CloseLiveBrowser();
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,

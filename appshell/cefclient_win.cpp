@@ -85,6 +85,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  // Check command
+  if (CefString(&settings.cache_path).length() == 0) {
+	  std::wstring cachePath = AppGetCachePath();
+	  CefString(&settings.cache_path).FromWString(cachePath);
+  }
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
@@ -518,4 +524,15 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
+}
+
+std::wstring AppGetCachePath() {
+  // Brackets: Set persistance cache
+  wchar_t dataPath[MAX_PATH];
+  SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+  
+  std::wstring cachePath = dataPath;
+  cachePath += L"\\Brackets\\cefCache";
+
+  return cachePath;
 }

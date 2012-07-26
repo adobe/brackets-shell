@@ -78,7 +78,7 @@ public:
 				error = OpenLiveBrowser(argURL, enableRemoteDebugging);
 			}
 		} else if (message_name == "CloseLiveBrowser") {
-			error = CloseLiveBrowser();
+			//error = CloseLiveBrowser();
 		} else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
