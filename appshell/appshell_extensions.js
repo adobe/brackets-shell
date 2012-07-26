@@ -326,7 +326,7 @@ if (!appshell.app) {
      */
     native function CloseLiveBrowser();
     appshell.app.closeLiveBrowser = function (callback) {
-        CloseLiveBrowser(callback);
+        //CloseLiveBrowser(callback);
     };
  
    // Alias the appshell object to brackets. This is temporary and should be removed.
