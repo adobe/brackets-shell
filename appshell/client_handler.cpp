@@ -106,13 +106,16 @@ bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+#if defined(OS_WIN)
   // The main browser is the first in the map. It needs to be destroyed last.
-  // So, if we're the main browser, don't erase ourself from the map until
-  // there's only 1 browser remaining in the list.
+  // So, if we're the main browser, don't erase browser from the map until
+  // there's only 1 browser remaining in the list. Windows-only.
   CefWindowHandle hWndThis = browser->GetHost()->GetWindowHandle();
   CefWindowHandle hWndMain = browser_window_map_.begin()->first;
 
-  if (browser_window_map_.size() == 1 || hWndMain != hWndThis) {
+  if (browser_window_map_.size() == 1 || hWndMain != hWndThis)
+#endif
+  {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
@@ -124,7 +127,7 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
         m_OpenDevToolsURLs.erase(it);
 	}
 
-    browser_window_map_.erase(hWndThis);
+    browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
   }
   
   if (m_quitting) {
