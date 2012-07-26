@@ -69,3 +69,7 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 void ClientHandler::CloseMainWindow() {
   // TODO(port): Close main window.
 }
+
+bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
+	return true;
+}

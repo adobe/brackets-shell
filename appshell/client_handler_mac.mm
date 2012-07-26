@@ -223,3 +223,7 @@ CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
   }
   return browser;
 }
+
+bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
+  return true;
+}
