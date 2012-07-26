@@ -162,6 +162,7 @@ class ClientHandler : public CefClient,
 
   CefRefPtr<CefBrowser> GetBrowser() { return m_Browser; }
   int GetBrowserId() { return m_BrowserId; }
+  bool CanCloseBrowser(CefRefPtr<CefBrowser> browser);
 
   std::string GetLogFile();
 
