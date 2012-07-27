@@ -87,8 +87,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
-	  std::wstring cachePath = AppGetCachePath();
-	  CefString(&settings.cache_path).FromWString(cachePath);
+	  CefString(&settings.cache_path) = AppGetCachePath();
   }
 
   // Initialize CEF.
@@ -526,7 +525,7 @@ std::string AppGetWorkingDirectory() {
   return szWorkingDir;
 }
 
-std::wstring AppGetCachePath() {
+CefString AppGetCachePath() {
   // Brackets: Set persistance cache
   wchar_t dataPath[MAX_PATH];
   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
@@ -534,5 +533,5 @@ std::wstring AppGetCachePath() {
   std::wstring cachePath = dataPath;
   cachePath += L"\\Brackets\\cefCache";
 
-  return cachePath;
+  return CefString(cachePath);
 }
