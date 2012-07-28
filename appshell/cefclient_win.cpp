@@ -54,6 +54,23 @@ extern CefRefPtr<ClientHandler> g_handler;
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  // NOLINT(whitespace/line_length)
 #endif
 
+// Registry access functions
+bool GetRegistryInt(LPCWSTR pEntry, int* pDefault, int& ret);
+bool GetRegistryString(LPCWSTR pEntry, LPBYTE pDefault, LPBYTE pRet);
+bool WriteRegistryInt (LPCWSTR pEntry, int val);
+bool WriteRegistryString(LPCWSTR pEntry, LPBYTE pValue, int len);
+
+// Registry key strings
+#define PREF_BRACKETS_BASE		L"Software\\Brackets\\"
+#define PREF_WINPOS_LEFT		L"Window Position Left"
+#define PREF_WINPOS_TOP			L"Window Position Top"
+#define PREF_WINPOS_WIDTH		L"Window Position Width"
+#define PREF_WINPOS_HEIGHT		L"Window Position Height"
+
+// Window state functions
+void SaveWindowRect();
+void RestoreWindowRect(int& left, int& top, int& width, int& height);
+
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -93,18 +110,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance);
-  
-  HKEY hKey;
-  DWORD lResult;
-  #define PREF_NAME L"Software\\Brackets\\InitialURL"
+
+  #define PREF_INITIAL_URL L"InitialURL"
 
   // Don't read the prefs if the shift key is down
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
-    if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
-      DWORD length = MAX_PATH;
-      RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
-      RegCloseKey(hKey);
-    }
+	GetRegistryString(PREF_INITIAL_URL, (LPBYTE)NULL, (LPBYTE)szInitialUrl);
   }
 
   if (!wcslen(szInitialUrl)) {
@@ -116,11 +127,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
       if (GetOpenFileName(&ofn)) {
-        lResult = RegCreateKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-        if (lResult == ERROR_SUCCESS) {
-          RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
-          RegCloseKey(hKey);
-        }
+		WriteRegistryString(PREF_INITIAL_URL, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
       }
   }
 
@@ -155,6 +162,137 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   return result;
 }
+
+// get integer value from registry key
+// caller can either use return value to determine success/fail, or pass a default to be used on fail
+bool GetRegistryInt(LPCWSTR pEntry, int* pDefault, int& ret)
+{
+	HKEY hKey;
+	bool result = false;
+
+	std::wstring key = PREF_BRACKETS_BASE;
+	key += pEntry;
+
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, KEY_READ, &hKey))
+	{
+		DWORD dwValue = 0;
+		DWORD dwType = 0;
+		DWORD dwCount = sizeof(DWORD);
+		if (ERROR_SUCCESS == RegQueryValueEx(hKey, (LPCWSTR)key.c_str(), NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
+		{
+			result = true;
+			ASSERT(dwType == REG_DWORD);
+			ASSERT(dwCount == sizeof(dwValue));
+			ret = (int)dwValue;
+		}
+		RegCloseKey(hKey);
+	}
+
+	if (!result)
+	{
+		// couldn't read value, so use default, if specified
+		if (pDefault)
+			ret = *pDefault;
+	}
+
+	return result;
+}
+
+// get string value from registry key
+// caller can either use return value to determine success/fail, or pass a default to be used on fail
+bool GetRegistryString(LPCWSTR pEntry, LPBYTE pDefault, LPBYTE pRet)
+{
+	// return value buffer is required
+	if (!pRet)
+		return false;
+
+	std::wstring key = PREF_BRACKETS_BASE;
+	key += pEntry;
+
+	HKEY hKey;
+	bool result = false;
+
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, KEY_READ, &hKey))
+	{
+		result = true;
+		DWORD length = MAX_PATH;
+		RegQueryValueEx(hKey, NULL, NULL, NULL, pRet, &length);
+		RegCloseKey(hKey);
+	}
+	else
+	{
+		// couldn't read value, so use default, if specified
+		if (pDefault)
+			*pRet = *pDefault;
+	}
+
+	return result;
+}
+
+// write integer value to registry key
+bool WriteRegistryInt (LPCWSTR pEntry, int val)
+{
+	HKEY hKey;
+	bool result = false;
+
+	std::wstring key = PREF_BRACKETS_BASE;
+	key += pEntry;
+
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+	{
+		DWORD dwCount = sizeof(int);
+		if (ERROR_SUCCESS == RegSetValueEx(hKey, (LPCWSTR)key.c_str(), 0, REG_DWORD, (LPBYTE)&val, dwCount))
+			result = true;
+		RegCloseKey(hKey);
+	}
+
+	return result;
+}
+
+// write string value to registry key
+bool WriteRegistryString(LPCWSTR pEntry, LPBYTE pValue, int len)
+{
+	HKEY hKey;
+	bool result = false;
+
+	std::wstring key = PREF_BRACKETS_BASE;
+	key += pEntry;
+
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+	{
+		result = true;
+		RegSetValueEx(hKey, NULL, 0, REG_SZ, pValue, len);
+		RegCloseKey(hKey);
+	}
+
+	return result;
+}
+
+void SaveWindowRect()
+{
+	// Save position of active window
+	HWND hWnd = GetActiveWindow();
+	if (hWnd)
+	{
+		RECT rect;
+		if (GetWindowRect(hWnd, &rect))
+		{
+			WriteRegistryInt(PREF_WINPOS_LEFT,   rect.left);
+			WriteRegistryInt(PREF_WINPOS_TOP,    rect.top);
+			WriteRegistryInt(PREF_WINPOS_WIDTH,  rect.right  - rect.left);
+			WriteRegistryInt(PREF_WINPOS_HEIGHT, rect.bottom - rect.top);
+		}
+	}
+}
+
+void RestoreWindowRect(int& left, int& top, int& width, int& height)
+{
+	GetRegistryInt(PREF_WINPOS_LEFT,   NULL, left);
+	GetRegistryInt(PREF_WINPOS_TOP,    NULL, top);
+	GetRegistryInt(PREF_WINPOS_WIDTH,  NULL, width);
+	GetRegistryInt(PREF_WINPOS_HEIGHT, NULL, height);
+}
+
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -204,9 +342,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 
   hInst = hInstance;  // Store instance handle in our global variable
 
-  hWnd = CreateWindow(szWindowClass, szTitle,
-                      WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, 0,
-                      CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+  // TODO: test this cases:
+  // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
+
+  int left   = CW_USEDEFAULT;
+  int top    = 0;
+  int width  = CW_USEDEFAULT;
+  int height = 0;
+  RestoreWindowRect(left, top, width, height);
+
+  hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+                      left, top, width, height, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
     return FALSE;
@@ -471,6 +617,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
+
+        SaveWindowRect();
+
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
         HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
