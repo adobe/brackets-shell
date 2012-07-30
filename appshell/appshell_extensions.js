@@ -193,10 +193,14 @@ if (!appshell.app) {
     /**
      * Invokes developer tools application
      */
+    // FIXME (jason-sanjose): https://github.com/adobe/brackets-shell/issues/16
+    // Disable "Show Developer Tools" in brackets-shell. Debug from Chrome via http://localhost:9234
+    /*
     native function ShowDeveloperTools();
     appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
     };
+    */
 
     /**
      * Reads the entire contents of a file. 
