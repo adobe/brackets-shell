@@ -426,6 +426,11 @@ int main(int argc, char* argv[]) {
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  // Check command
+  if (CefString(&settings.cache_path).length() == 0) {
+	  CefString(&settings.cache_path) = AppGetCachePath();
+  }
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
@@ -471,4 +476,14 @@ int main(int argc, char* argv[]) {
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
+}
+
+CefString AppGetCachePath() {
+  // Set persistence cache
+  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+  NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];   
+  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/%@.cef3Cache", libraryDirectory, bundleIdentifier];
+  CefString cachePath = [cefCacheDirectory UTF8String];
+  
+  return cachePath;
 }

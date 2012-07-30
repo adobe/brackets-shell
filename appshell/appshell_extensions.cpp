@@ -62,7 +62,24 @@ public:
         if (argList->GetSize() > 0)
             callbackId = argList->GetInt(0);
         
-        if (message_name == "ShowOpenDialog") {
+		if (message_name == "OpenLiveBrowser") {
+            // Parameters:
+            //  0: string - argURL
+            //  1: bool - enableRemoteDebugging
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_BOOL) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString argURL = argList->GetString(1);
+                bool enableRemoteDebugging = argList->GetBool(2);
+				error = OpenLiveBrowser(argURL, enableRemoteDebugging);
+			}
+		} else if (message_name == "CloseLiveBrowser") {
+			//error = CloseLiveBrowser();
+		} else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
             //  1: bool - allowMultipleSelection
