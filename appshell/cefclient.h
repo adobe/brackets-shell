@@ -23,6 +23,9 @@ CefWindowHandle AppGetMainHwnd();
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
 
+// Returns the default CEF cache location
+CefString AppGetCachePath();
+
 // Initialize the application command line.
 void AppInitCommandLine(int argc, const char* const* argv);
 
