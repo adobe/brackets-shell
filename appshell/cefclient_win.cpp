@@ -531,7 +531,7 @@ CefString AppGetCachePath() {
   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
   
   std::wstring cachePath = dataPath;
-  cachePath += L"\\Brackets\\cefCache";
+  cachePath += L"\\Brackets\\cef_data";
 
   return CefString(cachePath);
 }
