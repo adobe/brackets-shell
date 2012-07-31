@@ -24,6 +24,7 @@
 #pragma once
 
 #include "include/cef_browser.h"
+#include "include/cef_v8.h"
 
 #include <string>
 
@@ -48,11 +49,13 @@ typedef std::wstring ExtensionString;
 typedef std::string ExtensionString;
 #endif
 
+namespace appshell_extensions {
+
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
 
-//int32 CloseLiveBrowser();
+int32 CloseLiveBrowser(CefRefPtr<CefV8Value> callbackFunction);
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
@@ -73,7 +76,10 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
 
+} // namespace appshell_extensions
+
+void OnBeforeShutdown();
+
 void CloseWindow(CefRefPtr<CefBrowser> browser);
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
-

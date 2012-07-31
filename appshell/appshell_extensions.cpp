@@ -26,7 +26,7 @@
 
 namespace appshell_extensions {
 
-namespace {
+//namespace {
         
 class ProcessMessageDelegate : public ClientHandler::ProcessMessageDelegate {
 public:
@@ -62,7 +62,7 @@ public:
         if (argList->GetSize() > 0)
             callbackId = argList->GetInt(0);
         
-		if (message_name == "OpenLiveBrowser") {
+        if (message_name == "OpenLiveBrowser") {
             // Parameters:
             //  0: string - argURL
             //  1: bool - enableRemoteDebugging
@@ -75,11 +75,24 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString argURL = argList->GetString(1);
                 bool enableRemoteDebugging = argList->GetBool(2);
-				error = OpenLiveBrowser(argURL, enableRemoteDebugging);
-			}
-		} else if (message_name == "CloseLiveBrowser") {
-			//error = CloseLiveBrowser();
-		} else if (message_name == "ShowOpenDialog") {
+                error = OpenLiveBrowser(argURL, enableRemoteDebugging);
+            }
+            
+        } else if (message_name == "CloseLiveBrowser") {
+            // Parameters:
+            //  0: string - callback
+            if (argList->GetSize() != 2 /*** ||
+                argList->GetType(1) != VTYPE_BINARY***/) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+//                CefRefPtr<CefBinaryValue> callbackFunction = argList->GetBinary(1);
+                CefRefPtr<CefV8Value> callbackFunction = NULL;    // TEMP
+                error = CloseLiveBrowser(callbackFunction);
+            }
+            
+        } else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
             //  1: bool - allowMultipleSelection
@@ -238,7 +251,11 @@ public:
 
         } else if (message_name == "QuitApplication") {
             // Parameters - none
-          
+
+            // Should be ok to shut this down. Next reference will re-initialize
+            // it if we don't actually shutdown
+            OnBeforeShutdown();
+
             // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
             // quit if all browser windows are closed.
             handler->DispatchCloseToNextBrowser();
@@ -267,11 +284,12 @@ public:
     IMPLEMENT_REFCOUNTING(ProcessMessageDelegate);
 };
     
-} // namespace
+//} // namespace
     
 void CreateProcessMessageDelegates(
                                    ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
+
   
 } // namespace appshell_extensions

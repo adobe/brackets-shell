@@ -588,6 +588,10 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void OnBeforeShutdown()
+{
+}
+
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get() && g_handler.get()) {
@@ -654,4 +658,5 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
         return ERR_UNKNOWN;
     }
 }
+
 
