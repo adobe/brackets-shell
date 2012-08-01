@@ -51,9 +51,12 @@
         'INFOPLIST_FILE': 'appshell/mac/Info.plist',
         # Necessary to avoid an "install_name_tool: changing install names or
         # rpaths can't be redone" error.
-        'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],            'SYMROOT': 'xcodebuild',
+        'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
         # Target build path.
         'SYMROOT': 'xcodebuild',
+        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+        'SDK_ROOT' : '',
       },
       'conditions': [
         ['OS=="win"', {
@@ -196,6 +199,9 @@
       'xcode_settings': {
         # Target build path.
         'SYMROOT': 'xcodebuild',
+        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+        'SDK_ROOT' : '',
       },
     },
   ],
@@ -242,7 +248,11 @@
             'INFOPLIST_FILE': 'appshell/mac/helper-Info.plist',
             # Necessary to avoid an "install_name_tool: changing install names or
             # rpaths can't be redone" error.
-            'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],            'SYMROOT': 'xcodebuild',
+            'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
+            'SYMROOT': 'xcodebuild',
+            'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+            'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+            'SDK_ROOT' : '',
           },
           'postbuilds': [
             {
