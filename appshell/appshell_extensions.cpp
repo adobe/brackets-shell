@@ -26,8 +26,6 @@
 
 namespace appshell_extensions {
 
-//namespace {
-        
 class ProcessMessageDelegate : public ClientHandler::ProcessMessageDelegate {
 public:
     ProcessMessageDelegate()
@@ -79,17 +77,13 @@ public:
             }
             
         } else if (message_name == "CloseLiveBrowser") {
-            // Parameters:
-            //  0: string - callback
-            if (argList->GetSize() != 2 /*** ||
-                argList->GetType(1) != VTYPE_BINARY***/) {
+            // Parameters - none
+            if (argList->GetSize() != 1) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
-//                CefRefPtr<CefBinaryValue> callbackFunction = argList->GetBinary(1);
-                CefRefPtr<CefV8Value> callbackFunction = NULL;    // TEMP
-                error = CloseLiveBrowser(callbackFunction);
+                error = CloseLiveBrowser(browser);
             }
             
         } else if (message_name == "ShowOpenDialog") {
@@ -284,12 +278,8 @@ public:
     IMPLEMENT_REFCOUNTING(ProcessMessageDelegate);
 };
     
-//} // namespace
-    
-void CreateProcessMessageDelegates(
-                                   ClientHandler::ProcessMessageDelegateSet& delegates) {
+void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
-
   
 } // namespace appshell_extensions

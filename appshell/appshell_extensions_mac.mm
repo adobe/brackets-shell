@@ -26,11 +26,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <dirent.h>
-
-extern CefRefPtr<ClientHandler> g_handler;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -46,9 +41,9 @@ public:
     static LiveBrowserMgr* GetInstance();
     static void Shutdown();
 
-    static bool IsChromeRunning();
-    static void CheckForChromeRunning();
-    static void CheckForChromeRunningTimeout();
+    bool IsChromeRunning();
+    void CheckForChromeRunning();
+    void CheckForChromeRunningTimeout();
     
     void CloseLiveBrowserKillTimers();
     void CloseLiveBrowserFireCallback(int valToSend);
@@ -62,6 +57,9 @@ public:
             { m_chromeTerminateObserver = chromeTerminateObserver; }
     void SetCloseCallback(CefRefPtr<CefV8Value> closeLiveBrowserCallback)
             { m_closeLiveBrowserCallback = closeLiveBrowserCallback; }
+    void SetBrowser(CefRefPtr<CefBrowser> browser)
+            { m_browser = browser; }
+            
 
 private:
     // private so this class cannot be instantiated externally
@@ -70,19 +68,13 @@ private:
 
     NSTimer*                            m_closeLiveBrowserTimeoutTimer;
     CefRefPtr<CefV8Value>               m_closeLiveBrowserCallback;
+    CefRefPtr<CefBrowser>               m_browser;
     ChromeWindowsTerminatedObserver*    m_chromeTerminateObserver;
     
     static LiveBrowserMgr* s_instance;
 };
 
 LiveBrowserMgr* LiveBrowserMgr::s_instance = NULL;
-
-/***
-int                lastError;
-//static BracketsExtensionHandler*    s_instance;
-
-//IMPLEMENT_REFCOUNTING(BracketsExtensionHandler);
-***/
 
 // Forward declarations for functions defined later in this file
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list);
@@ -138,128 +130,29 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     return NO_ERROR;
 }
 
-/***/
-/***
-bool IsChromeRunning()
-{
-    NSString *appId = @"com.google.Chrome";
-    NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
-    for (NSUInteger i = 0; i < apps.count; i++) {
-        NSRunningApplication* curApp = [apps objectAtIndex:i];
-        if( curApp && !curApp.terminated ) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void CloseLiveBrowserKillTimers() {
-    if (m_closeLiveBrowserTimeoutTimer) {
-        [m_closeLiveBrowserTimeoutTimer invalidate];
-        [m_closeLiveBrowserTimeoutTimer release];
-        m_closeLiveBrowserTimeoutTimer = nil;
-    }
-    
-    if (m_chromeTerminateObserver) {
-        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
-        [m_chromeTerminateObserver release];
-        m_chromeTerminateObserver = nil;
-    }
-}
-
-void CloseLiveBrowserFireCallback(int valToSend) {
-    if (!m_closeLiveBrowserCallback.get() || !g_handler.get()) {
-        return;
-    }
-    
-    //kill the timers
-    LiveBrowserMgr::GetInstance()->CloseLiveBrowserKillTimers();
-    
-    CefRefPtr<CefV8Context> context = g_handler->GetBrowser()->GetMainFrame()->GetV8Context();
-    CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
-    CefV8ValueList args;
-    args.push_back( CefV8Value::CreateInt( valToSend ) );
-//    CefRefPtr<CefV8Value> r;
-//    CefRefPtr<CefV8Exception> e;
-    
-//    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args, r, e, false );
-    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
-    
-    m_closeLiveBrowserCallback = NULL;
-}
-
-static void CheckForChromeRunning()
-{
-    if( !s_instance ) {
-        return;
-    }
-    
-    if( s_instance->IsChromeRunning() ) {
-        return;
-    }
-    
-    s_instance->CloseLiveBrowserFireCallback(NO_ERROR);
-}
-
-static void CheckForChromeRunningTimeout()
-{
-    if( !s_instance ) {
-        return;
-    }
-    
-    int retVal = (s_instance->IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
-    //notify back to the app
-    s_instance->CloseLiveBrowserFireCallback(retVal);
-}
-***/
-
-int CloseLiveBrowser(CefRefPtr<CefV8Value> callbackFunction)
+int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
 {
     // Reset timeout timer
     LiveBrowserMgr* liveBrowserMgr = LiveBrowserMgr::GetInstance();
-    if (!liveBrowserMgr)
+    if (!liveBrowserMgr || !browser.get())
         return ERR_INVALID_PARAMS;
     
     liveBrowserMgr->CloseLiveBrowserKillTimers();
     
     //We can only handle a single async callback at a time. If there is already one that hasn't fired then
     //we kill it now and get ready for the next. 
+    liveBrowserMgr->SetBrowser(NULL);
     liveBrowserMgr->SetCloseCallback(NULL);
 
 /***
-    if (args.size() > 0) {
-        if( !args[0]->IsFunction() ) {
-            return ERR_INVALID_PARAMS;
-        }
-        //Currently, brackets is mainly designed around a single main browser instance. We only support calling
-        //back this function in that context. When we add support for multiple browser instances this will need
-        //to update to get the correct context and track it's lifespan accordingly.
-        if(!g_handler.get()) {
-            return ERR_UNKNOWN;
-        }
-        
-        if( ! g_handler->GetBrowser()->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) ) {
-            ASSERT(FALSE); //Getting called from not the main browser window.
-            return ERR_UNKNOWN;
-        }
-        
-        liveBrowserMgr->SetCloseCallback(callbackFunction);
-    }
-***/
-    //Currently, brackets is mainly designed around a single main browser instance. We only support calling
-    //back this function in that context. When we add support for multiple browser instances this will need
-    //to update to get the correct context and track it's lifespan accordingly.
-    if(!g_handler.get()) {
-        return ERR_UNKNOWN;
-    }
-    
-    if( ! g_handler->GetBrowser()->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) ) {
+    if( ! browser->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) ) {
         ASSERT(FALSE); //Getting called from not the main browser window.
         return ERR_UNKNOWN;
     }
+***/
     
-    liveBrowserMgr->SetCloseCallback(callbackFunction);
-/***/
+    liveBrowserMgr->SetBrowser(browser);
+    //liveBrowserMgr->SetCloseCallback(callbackFunction);
     
     // Find instances of the Browser and terminate them
     NSString *appId = @"com.google.Chrome";
@@ -286,7 +179,6 @@ int CloseLiveBrowser(CefRefPtr<CefV8Value> callbackFunction)
     
     //start a timeout timer
     NSTimeInterval timeoutInSeconds (apps.count == 0 ? 0.0001 : 3 * 60);
-//    m_closeLiveBrowserTimeoutTimer = [[NSTimer scheduledTimerWithTimeInterval:timeoutInSeconds target:m_chromeTerminateObserver selector:@selector(timeoutTimer:) userInfo:nil repeats:NO] retain];
     LiveBrowserMgr::GetInstance()->SetCloseTimeoutTimer([[NSTimer
                                         scheduledTimerWithTimeInterval:timeoutInSeconds
                                         target:LiveBrowserMgr::GetInstance()->GetTerminateObserver()
@@ -295,8 +187,6 @@ int CloseLiveBrowser(CefRefPtr<CefV8Value> callbackFunction)
                                     );
     return NO_ERROR;
 }
-/***/
-
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
@@ -581,21 +471,18 @@ void LiveBrowserMgr::CloseLiveBrowserFireCallback(int valToSend)
     if (!s_instance)
         return;
         
-    if (!m_closeLiveBrowserCallback.get() || !g_handler.get()) {
-        return;
-    }
-    
     // kill the timers
     CloseLiveBrowserKillTimers();
     
-    CefRefPtr<CefV8Context> context = g_handler->GetBrowser()->GetMainFrame()->GetV8Context();
+    if (!m_closeLiveBrowserCallback.get() || !m_browser.get()) {
+        return;
+    }
+    
+    CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
     CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
     CefV8ValueList args;
     args.push_back( CefV8Value::CreateInt( valToSend ) );
-//    CefRefPtr<CefV8Value> r;
-//    CefRefPtr<CefV8Exception> e;
     
-//    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args, r, e, false );
     m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
     
     m_closeLiveBrowserCallback = NULL;
@@ -603,7 +490,7 @@ void LiveBrowserMgr::CloseLiveBrowserFireCallback(int valToSend)
 
 void LiveBrowserMgr::CheckForChromeRunning()
 {
-    if (!s_instance || IsChromeRunning())
+    if (!s_instance || s_instance->IsChromeRunning())
         return;
     
     s_instance->CloseLiveBrowserFireCallback(NO_ERROR);
@@ -614,7 +501,7 @@ void LiveBrowserMgr::CheckForChromeRunningTimeout()
     if (!s_instance)
         return;
     
-    int retVal = (IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
+    int retVal = (s_instance->IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
     
     //notify back to the app
     s_instance->CloseLiveBrowserFireCallback(retVal);
@@ -648,12 +535,12 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 - (void) appTerminated:(NSNotification *)note
 {
-    appshell_extensions::LiveBrowserMgr::CheckForChromeRunning();
+    appshell_extensions::LiveBrowserMgr::GetInstance()->CheckForChromeRunning();
 }
 
 - (void) timeoutTimer:(NSTimer*)timer
 {
-    appshell_extensions::LiveBrowserMgr::CheckForChromeRunningTimeout();
+    appshell_extensions::LiveBrowserMgr::GetInstance()->CheckForChromeRunningTimeout();
 }
 
 @end

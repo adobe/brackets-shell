@@ -55,7 +55,7 @@ namespace appshell_extensions {
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
 
-int32 CloseLiveBrowser(CefRefPtr<CefV8Value> callbackFunction);
+int32 CloseLiveBrowser(CefRefPtr<CefBrowser> browser);
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
