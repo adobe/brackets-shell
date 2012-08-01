@@ -33,12 +33,13 @@
 @end
 
 
-namespace appshell_extensions {
+///////////////////////////////////////////////////////////////////////////////
+// LiveBrowserMgrMac
 
-class LiveBrowserMgr
+class LiveBrowserMgrMac
 {
 public:
-    static LiveBrowserMgr* GetInstance();
+    static LiveBrowserMgrMac* GetInstance();
     static void Shutdown();
 
     bool IsChromeRunning();
@@ -63,18 +64,107 @@ public:
 
 private:
     // private so this class cannot be instantiated externally
-    LiveBrowserMgr();
-    virtual ~LiveBrowserMgr();
+    LiveBrowserMgrMac();
+    virtual ~LiveBrowserMgrMac();
 
     NSTimer*                            m_closeLiveBrowserTimeoutTimer;
     CefRefPtr<CefV8Value>               m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>               m_browser;
     ChromeWindowsTerminatedObserver*    m_chromeTerminateObserver;
     
-    static LiveBrowserMgr* s_instance;
+    static LiveBrowserMgrMac* s_instance;
 };
 
-LiveBrowserMgr* LiveBrowserMgr::s_instance = NULL;
+
+LiveBrowserMgrMac::LiveBrowserMgrMac()
+    : m_closeLiveBrowserTimeoutTimer(nil)
+    , m_chromeTerminateObserver(nil)
+{
+}
+
+LiveBrowserMgrMac::~LiveBrowserMgrMac()
+{
+    if (s_instance)
+        s_instance->CloseLiveBrowserKillTimers();
+}
+
+LiveBrowserMgrMac* LiveBrowserMgrMac::GetInstance()
+{
+    if (!s_instance)
+        s_instance = new LiveBrowserMgrMac();
+    return s_instance;
+}
+
+void LiveBrowserMgrMac::Shutdown()
+{
+    delete s_instance;
+    s_instance = NULL;
+}
+
+bool LiveBrowserMgrMac::IsChromeRunning()
+{
+    NSString *appId = @"com.google.Chrome";
+    NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
+    for (NSUInteger i = 0; i < apps.count; i++) {
+        NSRunningApplication* curApp = [apps objectAtIndex:i];
+        if( curApp && !curApp.terminated ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
+{
+    if (m_closeLiveBrowserTimeoutTimer) {
+        [m_closeLiveBrowserTimeoutTimer invalidate];
+        [m_closeLiveBrowserTimeoutTimer release];
+        m_closeLiveBrowserTimeoutTimer = nil;
+    }
+    
+    if (m_chromeTerminateObserver) {
+        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
+        [m_chromeTerminateObserver release];
+        m_chromeTerminateObserver = nil;
+    }
+}
+
+void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
+{
+    // kill the timers
+    CloseLiveBrowserKillTimers();
+    
+    if (!m_closeLiveBrowserCallback.get() || !m_browser.get()) {
+        return;
+    }
+    
+    CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
+    CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
+    CefV8ValueList args;
+    args.push_back( CefV8Value::CreateInt( valToSend ) );
+    
+    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
+    
+    m_closeLiveBrowserCallback = NULL;
+}
+
+void LiveBrowserMgrMac::CheckForChromeRunning()
+{
+    if (IsChromeRunning())
+        return;
+    
+    CloseLiveBrowserFireCallback(NO_ERROR);
+}
+
+void LiveBrowserMgrMac::CheckForChromeRunningTimeout()
+{
+    int retVal = (IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
+    
+    //notify back to the app
+    CloseLiveBrowserFireCallback(retVal);
+}
+
+LiveBrowserMgrMac* LiveBrowserMgrMac::s_instance = NULL;
 
 // Forward declarations for functions defined later in this file
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list);
@@ -133,7 +223,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
 {
     // Reset timeout timer
-    LiveBrowserMgr* liveBrowserMgr = LiveBrowserMgr::GetInstance();
+    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
     if (!liveBrowserMgr || !browser.get())
         return ERR_INVALID_PARAMS;
     
@@ -159,11 +249,11 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
     NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
     
     //register an observer to watch for the app terminations
-    if( apps.count > 0 && !LiveBrowserMgr::GetInstance()->GetTerminateObserver() ) {
-        LiveBrowserMgr::GetInstance()->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
+    if( apps.count > 0 && !LiveBrowserMgrMac::GetInstance()->GetTerminateObserver() ) {
+        LiveBrowserMgrMac::GetInstance()->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
         
         [[[NSWorkspace sharedWorkspace] notificationCenter]
-                addObserver:LiveBrowserMgr::GetInstance()->GetTerminateObserver() 
+                addObserver:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver() 
                 selector:@selector(appTerminated:) 
                 name:NSWorkspaceDidTerminateApplicationNotification 
                 object:nil
@@ -179,9 +269,9 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
     
     //start a timeout timer
     NSTimeInterval timeoutInSeconds (apps.count == 0 ? 0.0001 : 3 * 60);
-    LiveBrowserMgr::GetInstance()->SetCloseTimeoutTimer([[NSTimer
+    LiveBrowserMgrMac::GetInstance()->SetCloseTimeoutTimer([[NSTimer
                                         scheduledTimerWithTimeInterval:timeoutInSeconds
-                                        target:LiveBrowserMgr::GetInstance()->GetTerminateObserver()
+                                        target:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()
                                         selector:@selector(timeoutTimer:)
                                         userInfo:nil repeats:NO] retain]
                                     );
@@ -407,113 +497,10 @@ int32 ConvertNSErrorCode(NSError* error, bool isReading)
     return ERR_UNKNOWN;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// LiveBrowserMgr methods
-
-LiveBrowserMgr::LiveBrowserMgr()
-    : m_closeLiveBrowserTimeoutTimer(nil)
-    , m_chromeTerminateObserver(nil)
-{
-}
-
-LiveBrowserMgr::~LiveBrowserMgr()
-{
-    if (s_instance)
-        s_instance->CloseLiveBrowserKillTimers();
-}
-
-LiveBrowserMgr* LiveBrowserMgr::GetInstance()
-{
-    if (!s_instance)
-        s_instance = new LiveBrowserMgr();
-    return s_instance;
-}
-
-void LiveBrowserMgr::Shutdown()
-{
-    delete s_instance;
-    s_instance = NULL;
-}
-
-bool LiveBrowserMgr::IsChromeRunning()
-{
-    NSString *appId = @"com.google.Chrome";
-    NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
-    for (NSUInteger i = 0; i < apps.count; i++) {
-        NSRunningApplication* curApp = [apps objectAtIndex:i];
-        if( curApp && !curApp.terminated ) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void LiveBrowserMgr::CloseLiveBrowserKillTimers()
-{
-    if (!s_instance)
-        return;
-    
-    if (m_closeLiveBrowserTimeoutTimer) {
-        [m_closeLiveBrowserTimeoutTimer invalidate];
-        [m_closeLiveBrowserTimeoutTimer release];
-        m_closeLiveBrowserTimeoutTimer = nil;
-    }
-    
-    if (m_chromeTerminateObserver) {
-        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
-        [m_chromeTerminateObserver release];
-        m_chromeTerminateObserver = nil;
-    }
-}
-
-void LiveBrowserMgr::CloseLiveBrowserFireCallback(int valToSend)
-{
-    if (!s_instance)
-        return;
-        
-    // kill the timers
-    CloseLiveBrowserKillTimers();
-    
-    if (!m_closeLiveBrowserCallback.get() || !m_browser.get()) {
-        return;
-    }
-    
-    CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
-    CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
-    CefV8ValueList args;
-    args.push_back( CefV8Value::CreateInt( valToSend ) );
-    
-    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
-    
-    m_closeLiveBrowserCallback = NULL;
-}
-
-void LiveBrowserMgr::CheckForChromeRunning()
-{
-    if (!s_instance || s_instance->IsChromeRunning())
-        return;
-    
-    s_instance->CloseLiveBrowserFireCallback(NO_ERROR);
-}
-
-void LiveBrowserMgr::CheckForChromeRunningTimeout()
-{
-    if (!s_instance)
-        return;
-    
-    int retVal = (s_instance->IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
-    
-    //notify back to the app
-    s_instance->CloseLiveBrowserFireCallback(retVal);
-}
-
-
-} // namespace appshell_extensions
-
 
 void OnBeforeShutdown()
 {
-    appshell_extensions::LiveBrowserMgr::Shutdown();
+    LiveBrowserMgrMac::Shutdown();
 }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
@@ -535,12 +522,12 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 - (void) appTerminated:(NSNotification *)note
 {
-    appshell_extensions::LiveBrowserMgr::GetInstance()->CheckForChromeRunning();
+    LiveBrowserMgrMac::GetInstance()->CheckForChromeRunning();
 }
 
 - (void) timeoutTimer:(NSTimer*)timer
 {
-    appshell_extensions::LiveBrowserMgr::GetInstance()->CheckForChromeRunningTimeout();
+    LiveBrowserMgrMac::GetInstance()->CheckForChromeRunningTimeout();
 }
 
 @end

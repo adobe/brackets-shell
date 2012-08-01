@@ -49,7 +49,6 @@ typedef std::wstring ExtensionString;
 typedef std::string ExtensionString;
 #endif
 
-namespace appshell_extensions {
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
@@ -75,8 +74,6 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
-
-} // namespace appshell_extensions
 
 void OnBeforeShutdown();
 
