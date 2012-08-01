@@ -56,7 +56,7 @@
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-        'SDK_ROOT' : '',
+        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
       },
       'conditions': [
         ['OS=="win"', {
@@ -201,7 +201,7 @@
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-        'SDK_ROOT' : '',
+        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
       },
     },
   ],
@@ -252,7 +252,7 @@
             'SYMROOT': 'xcodebuild',
             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
             'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-            'SDK_ROOT' : '',
+            'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
           },
           'postbuilds': [
             {
