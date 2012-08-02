@@ -209,12 +209,17 @@ void LiveBrowserMgrWin::CloseLiveBrowserFireCallback(int valToSend)
 	//kill the timers
 	CloseLiveBrowserKillTimers();
 
-	CefRefPtr<CefV8Context> context = g_handler->GetBrowser()->GetMainFrame()->GetV8Context();
-	CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
-	CefV8ValueList args;
-	args.push_back( CefV8Value::CreateInt( valToSend ) );
+	if (g_handler->GetBrowser() &&
+		g_handler->GetBrowser()->GetMainFrame() &&
+		g_handler->GetBrowser()->GetMainFrame()->GetV8Context())
+	{
+		CefRefPtr<CefV8Context> context = g_handler->GetBrowser()->GetMainFrame()->GetV8Context();
+		CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
+		CefV8ValueList args;
+		args.push_back( CefV8Value::CreateInt( valToSend ) );
 
-	m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
+		m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
+	}
 
 	m_closeLiveBrowserCallback = NULL;
 }
@@ -333,7 +338,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     return NO_ERROR;
 }
 
-int CloseLiveBrowser()
+int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
 {
 	LiveBrowserMgrWin* liveBrowserMgr = LiveBrowserMgrWin::GetInstance();
 	if (!liveBrowserMgr)
@@ -350,7 +355,11 @@ int CloseLiveBrowser()
         return ERR_UNKNOWN;
     }
 
-    if( ! g_handler->GetBrowser()->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) ) {
+    if (!g_handler->GetBrowser() ||
+		!g_handler->GetBrowser()->GetMainFrame() ||
+		!g_handler->GetBrowser()->GetMainFrame()->GetV8Context() ||
+		!g_handler->GetBrowser()->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) )
+	{
         ASSERT(FALSE); //Getting called from not the main browser window.
         return ERR_UNKNOWN;
     }
@@ -666,6 +675,7 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
 
 void OnBeforeShutdown()
 {
+	LiveBrowserMgrWin::Shutdown();
 }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)

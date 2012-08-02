@@ -83,9 +83,7 @@ public:
             }
             
             if (error == NO_ERROR) {
-#if defined(OS_MACOSX)
                 error = CloseLiveBrowser(browser);
-#endif
             }
             
         } else if (message_name == "ShowOpenDialog") {
