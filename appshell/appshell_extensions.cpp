@@ -66,8 +66,9 @@ public:
         
         if (message_name == "OpenLiveBrowser") {
             // Parameters:
-            //  0: string - argURL
-            //  1: bool - enableRemoteDebugging
+            //  0: int32 - callback id
+            //  1: string - argURL
+            //  2: bool - enableRemoteDebugging
             if (argList->GetSize() != 3 ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_BOOL) {
@@ -81,17 +82,19 @@ public:
             }
             
         } else if (message_name == "CloseLiveBrowser") {
-            // Parameters - none
+            // Parameters
+            //  0: int32 - callback id
             if (argList->GetSize() != 1) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
                 CloseLiveBrowser(browser, response);
-            }
             
-            // skip standard callback handling
-            return true;
+                // Skip standard callback handling. CloseLiveBrowser fires the
+                // callback asynchronously.
+                return true;
+            }
         } else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
