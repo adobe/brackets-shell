@@ -133,17 +133,20 @@ void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
 {
     // kill the timers
     CloseLiveBrowserKillTimers();
-    
+
     if (!m_closeLiveBrowserCallback.get() || !m_browser.get()) {
         return;
     }
-    
-    CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
-    CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
-    CefV8ValueList args;
-    args.push_back( CefV8Value::CreateInt( valToSend ) );
-    
-    m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
+
+    if (m_browser->GetMainFrame() && m_browser->GetMainFrame()->GetV8Context())
+    {
+        CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
+        CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
+        CefV8ValueList args;
+        args.push_back( CefV8Value::CreateInt( valToSend ) );
+        
+        m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
+    }
     
     m_closeLiveBrowserCallback = NULL;
 }
@@ -234,12 +237,14 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
     liveBrowserMgr->SetBrowser(NULL);
     liveBrowserMgr->SetCloseCallback(NULL);
 
-/***
-    if( ! browser->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) ) {
-        ASSERT(FALSE); //Getting called from not the main browser window.
+    if( ! browser->GetMainFrame() ||
+        ! browser->GetMainFrame()->GetV8Context() || 
+        ! browser->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) )
+    {
+        // This ASSERT causes a crash in debug mode. redmunds 01Aug2012 
+        //ASSERT(FALSE); //Getting called from not the main browser window.
         return ERR_UNKNOWN;
     }
-***/
     
     liveBrowserMgr->SetBrowser(browser);
     //liveBrowserMgr->SetCloseCallback(callbackFunction);
@@ -269,12 +274,12 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
     
     //start a timeout timer
     NSTimeInterval timeoutInSeconds (apps.count == 0 ? 0.0001 : 3 * 60);
-    LiveBrowserMgrMac::GetInstance()->SetCloseTimeoutTimer([[NSTimer
-                                        scheduledTimerWithTimeInterval:timeoutInSeconds
-                                        target:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()
-                                        selector:@selector(timeoutTimer:)
-                                        userInfo:nil repeats:NO] retain]
-                                    );
+    liveBrowserMgr->SetCloseTimeoutTimer([[NSTimer
+                                         scheduledTimerWithTimeInterval:timeoutInSeconds
+                                         target:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()
+                                         selector:@selector(timeoutTimer:)
+                                         userInfo:nil repeats:NO] retain]
+                                         );
     return NO_ERROR;
 }
 
