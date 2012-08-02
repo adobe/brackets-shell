@@ -50,14 +50,14 @@ public:
     void CloseLiveBrowserFireCallback(int valToSend);
 
     ChromeWindowsTerminatedObserver* GetTerminateObserver() { return m_chromeTerminateObserver; }
-    CefRefPtr<CefV8Value> GetCloseCallback() { return m_closeLiveBrowserCallback; }
+    CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
     
     void SetCloseTimeoutTimer(NSTimer* closeLiveBrowserTimeoutTimer)
             { m_closeLiveBrowserTimeoutTimer = closeLiveBrowserTimeoutTimer; }
     void SetTerminateObserver(ChromeWindowsTerminatedObserver* chromeTerminateObserver)
             { m_chromeTerminateObserver = chromeTerminateObserver; }
-    void SetCloseCallback(CefRefPtr<CefV8Value> closeLiveBrowserCallback)
-            { m_closeLiveBrowserCallback = closeLiveBrowserCallback; }
+    void SetCloseCallback(CefRefPtr<CefProcessMessage> response)
+            { m_closeLiveBrowserCallback = response; }
     void SetBrowser(CefRefPtr<CefBrowser> browser)
             { m_browser = browser; }
             
@@ -68,7 +68,7 @@ private:
     virtual ~LiveBrowserMgrMac();
 
     NSTimer*                            m_closeLiveBrowserTimeoutTimer;
-    CefRefPtr<CefV8Value>               m_closeLiveBrowserCallback;
+    CefRefPtr<CefProcessMessage>        m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>               m_browser;
     ChromeWindowsTerminatedObserver*    m_chromeTerminateObserver;
     
@@ -131,24 +131,20 @@ void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
 
 void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
 {
+    CefRefPtr<CefListValue> responseArgs = m_closeLiveBrowserCallback->GetArgumentList();
+    
     // kill the timers
     CloseLiveBrowserKillTimers();
-
-    if (!m_closeLiveBrowserCallback.get() || !m_browser.get()) {
-        return;
-    }
-
-    if (m_browser->GetMainFrame() && m_browser->GetMainFrame()->GetV8Context())
-    {
-        CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
-        CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
-        CefV8ValueList args;
-        args.push_back( CefV8Value::CreateInt( valToSend ) );
-        
-        m_closeLiveBrowserCallback->ExecuteFunctionWithContext( context , objectForThis, args );
-    }
     
+    // Set common response args (callbackId and error)
+    responseArgs->SetInt(1, valToSend);
+    
+    // Send response
+    m_browser->SendProcessMessage(PID_RENDERER, m_closeLiveBrowserCallback);
+    
+    // Clear state
     m_closeLiveBrowserCallback = NULL;
+    m_browser = NULL;
 }
 
 void LiveBrowserMgrMac::CheckForChromeRunning()
@@ -223,38 +219,29 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     return NO_ERROR;
 }
 
-int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
+void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    // Reset timeout timer
     LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
-    if (!liveBrowserMgr || !browser.get())
-        return ERR_INVALID_PARAMS;
     
-    liveBrowserMgr->CloseLiveBrowserKillTimers();
-    
-    //We can only handle a single async callback at a time. If there is already one that hasn't fired then
-    //we kill it now and get ready for the next. 
-    liveBrowserMgr->SetBrowser(NULL);
-    liveBrowserMgr->SetCloseCallback(NULL);
-
-    if( ! browser->GetMainFrame() ||
-        ! browser->GetMainFrame()->GetV8Context() || 
-        ! browser->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) )
-    {
-        // This ASSERT causes a crash in debug mode. redmunds 01Aug2012 
-        //ASSERT(FALSE); //Getting called from not the main browser window.
-        return ERR_UNKNOWN;
+    if (liveBrowserMgr->GetCloseCallback() != NULL) {
+        // We can only handle a single async callback at a time. If there is already one that hasn't fired then
+        // we kill it now and get ready for the next.
+        liveBrowserMgr->CloseLiveBrowserFireCallback(ERR_UNKNOWN);
     }
     
     liveBrowserMgr->SetBrowser(browser);
-    //liveBrowserMgr->SetCloseCallback(callbackFunction);
+    liveBrowserMgr->SetCloseCallback(response);
     
     // Find instances of the Browser and terminate them
     NSString *appId = @"com.google.Chrome";
     NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
     
-    //register an observer to watch for the app terminations
-    if( apps.count > 0 && !LiveBrowserMgrMac::GetInstance()->GetTerminateObserver() ) {
+    if (apps.count == 0) {
+        // No instances of Chrome found. Fire callback immediately.
+        liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
+        return;
+    } else if (apps.count > 0 && !LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()) {
+        //register an observer to watch for the app terminations
         LiveBrowserMgrMac::GetInstance()->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
         
         [[[NSWorkspace sharedWorkspace] notificationCenter]
@@ -265,6 +252,7 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
          ];
     }
     
+    // Iterate over open browser intances and terminate
     for (NSUInteger i = 0; i < apps.count; i++) {
         NSRunningApplication* curApp = [apps objectAtIndex:i];
         if( curApp && !curApp.terminated ) {
@@ -280,7 +268,6 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
                                          selector:@selector(timeoutTimer:)
                                          userInfo:nil repeats:NO] retain]
                                          );
-    return NO_ERROR;
 }
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,

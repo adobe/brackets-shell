@@ -57,8 +57,12 @@ public:
         // take any arguments.
         
         // If we have any arguments, the first is the callbackId
-        if (argList->GetSize() > 0)
+        if (argList->GetSize() > 0) {
             callbackId = argList->GetInt(0);
+            
+            if (callbackId != -1)
+                responseArgs->SetInt(0, callbackId);
+        }
         
         if (message_name == "OpenLiveBrowser") {
             // Parameters:
@@ -83,9 +87,11 @@ public:
             }
             
             if (error == NO_ERROR) {
-                error = CloseLiveBrowser(browser);
+                CloseLiveBrowser(browser, response);
             }
             
+            // skip standard callback handling
+            return true;
         } else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
@@ -264,8 +270,6 @@ public:
         }
         
         if (callbackId != -1) {
-            // Set common response args (callbackId and error)
-            responseArgs->SetInt(0, callbackId);
             responseArgs->SetInt(1, error);
             
             // Send response
