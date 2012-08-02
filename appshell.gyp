@@ -5,7 +5,6 @@
 {
   'variables': {
     'appname': 'Brackets',
-    'mac_sdk': '10.6',
     'chromium_code': 1,
     'conditions': [
       [ 'OS=="mac"', {
@@ -18,6 +17,15 @@
     # Bring in the source file lists for appshell.
     'appshell_paths.gypi',
   ],
+  'target_defaults':
+  {
+    'xcode_settings':
+      {
+        'SDKROOT': '',
+        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
+        'COMBINE_HIDPI_IMAGES': 'YES',
+      },
+  },
   'targets': [
     {
       'target_name': '<(appname)',
@@ -56,7 +64,6 @@
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
       },
       'conditions': [
         ['OS=="win"', {
@@ -201,7 +208,6 @@
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
       },
     },
   ],
@@ -252,7 +258,6 @@
             'SYMROOT': 'xcodebuild',
             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
             'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
-            'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
           },
           'postbuilds': [
             {

@@ -1372,6 +1372,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1434,6 +1435,7 @@
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = Brackets;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1463,6 +1465,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				EXECUTABLE_PREFIX = lib;
 				GCC_CW_ASM_SYNTAX = NO;
@@ -1513,6 +1516,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_CFLAGS = "-fno-strict-aliasing";
 				PRODUCT_NAME = cef_dll_wrapper;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1538,6 +1542,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1600,6 +1605,7 @@
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = "Brackets Helper";
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1619,6 +1625,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1683,6 +1690,7 @@
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = Brackets;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1712,6 +1720,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1776,6 +1785,7 @@
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = "Brackets Helper";
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1802,6 +1812,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = lib;
 				GCC_CW_ASM_SYNTAX = NO;
@@ -1854,6 +1865,7 @@
 					"-fstack-protector-all",
 				);
 				PRODUCT_NAME = cef_dll_wrapper;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
