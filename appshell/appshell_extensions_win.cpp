@@ -34,8 +34,6 @@
 
 #define CLOSING_PROP L"CLOSING"
 
-extern CefRefPtr<ClientHandler> g_handler;
-
 
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
@@ -70,6 +68,8 @@ public:
 
 	void SetCloseCallback(CefRefPtr<CefV8Value> closeLiveBrowserCallback)
 		{ m_closeLiveBrowserCallback = closeLiveBrowserCallback; }
+	void SetBrowser(CefRefPtr<CefBrowser> browser)
+		{ m_browser = browser; }
 	void SetCloseHeartbeatTimerId(UINT closeLiveBrowserHeartbeatTimerId)
 		{ m_closeLiveBrowserHeartbeatTimerId = closeLiveBrowserHeartbeatTimerId; }
 	void SetCloseTimeoutTimerId(UINT closeLiveBrowserTimeoutTimerId)
@@ -83,6 +83,7 @@ private:
 	UINT                    m_closeLiveBrowserHeartbeatTimerId;
 	UINT                    m_closeLiveBrowserTimeoutTimerId;
 	CefRefPtr<CefV8Value>   m_closeLiveBrowserCallback;
+	CefRefPtr<CefBrowser>   m_browser;
 
 	static LiveBrowserMgrWin* s_instance;
 };
@@ -202,18 +203,18 @@ void LiveBrowserMgrWin::CloseLiveBrowserKillTimers()
 
 void LiveBrowserMgrWin::CloseLiveBrowserFireCallback(int valToSend)
 {
-	if (!m_closeLiveBrowserCallback.get() || !g_handler.get()) {
+	if (!m_closeLiveBrowserCallback.get()) {
 		return;
 	}
 
 	//kill the timers
 	CloseLiveBrowserKillTimers();
 
-	if (g_handler->GetBrowser() &&
-		g_handler->GetBrowser()->GetMainFrame() &&
-		g_handler->GetBrowser()->GetMainFrame()->GetV8Context())
+	if (m_browser.get() &&
+		m_browser->GetMainFrame() &&
+		m_browser->GetMainFrame()->GetV8Context())
 	{
-		CefRefPtr<CefV8Context> context = g_handler->GetBrowser()->GetMainFrame()->GetV8Context();
+		CefRefPtr<CefV8Context> context = m_browser->GetMainFrame()->GetV8Context();
 		CefRefPtr<CefV8Value> objectForThis = context->GetGlobal();
 		CefV8ValueList args;
 		args.push_back( CefV8Value::CreateInt( valToSend ) );
@@ -346,25 +347,26 @@ int CloseLiveBrowser(CefRefPtr<CefBrowser> browser)
 
     //We can only handle a single async callback at a time. If there is already one that hasn't fired then
     //we kill it now and get ready for the next. 
-    liveBrowserMgr->SetCloseCallback(NULL);
+	liveBrowserMgr->SetCloseCallback(NULL);
+	liveBrowserMgr->SetBrowser(NULL);
 
     //Currently, brackets is mainly designed around a single main browser instance. We only support calling
     //back this function in that context. When we add support for multiple browser instances this will need
     //to update to get the correct context and track it's lifespan accordingly.
-    if(!g_handler.get()) {
+    if(!browser.get()) {
         return ERR_UNKNOWN;
     }
 
-    if (!g_handler->GetBrowser() ||
-		!g_handler->GetBrowser()->GetMainFrame() ||
-		!g_handler->GetBrowser()->GetMainFrame()->GetV8Context() ||
-		!g_handler->GetBrowser()->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) )
+    if (!browser->GetMainFrame() ||
+		!browser->GetMainFrame()->GetV8Context() ||
+		!browser->GetMainFrame()->GetV8Context()->IsSame(CefV8Context::GetCurrentContext()) )
 	{
         ASSERT(FALSE); //Getting called from not the main browser window.
         return ERR_UNKNOWN;
     }
 
 //	liveBrowserMgr->SetCloseCallback(callbackFunction);
+	liveBrowserMgr->SetBrowser(browser);
 
     EnumChromeWindowsCallbackData cbData = {0};
 
@@ -680,7 +682,7 @@ void OnBeforeShutdown()
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-    if (browser.get() && g_handler.get()) {
+    if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
         browser->GetHost()->CloseBrowser();
