@@ -352,11 +352,11 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     cbData.closeWindow = true;
     ::EnumWindows(LiveBrowserMgrWin::EnumChromeWindowsCallback, (LPARAM)&cbData);
 
-    //set a timeout for up to 3 minutes to close the browser 
-    UINT timeoutInMS = (cbData.numberOfFoundWindows == 0 ? USER_TIMER_MINIMUM : 3 * 60 * 1000);
-
-    if( liveBrowserMgr->GetCloseCallback() ) {
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, timeoutInMS, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+	if (cbData.numberOfFoundWindows == 0) {
+		liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
+	} else if (liveBrowserMgr->GetCloseCallback()) {
+		// set a timeout for up to 3 minutes to close the browser 
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
 }
 
