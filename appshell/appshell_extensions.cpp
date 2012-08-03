@@ -255,10 +255,6 @@ public:
         } else if (message_name == "QuitApplication") {
             // Parameters - none
 
-            // Should be ok to shut this down. Next reference will re-initialize
-            // it if we don't actually shutdown
-            OnBeforeShutdown();
-
             // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
             // quit if all browser windows are closed.
             handler->DispatchCloseToNextBrowser();

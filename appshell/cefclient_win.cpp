@@ -156,6 +156,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     result = static_cast<int>(msg.wParam);
   }
 
+  OnBeforeShutdown();
+
   // Shut down CEF.
   CefShutdown();
 
