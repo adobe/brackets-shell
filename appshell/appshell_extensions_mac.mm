@@ -261,9 +261,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     }
     
     //start a timeout timer
-    NSTimeInterval timeoutInSeconds (apps.count == 0 ? 0.0001 : 3 * 60);
     liveBrowserMgr->SetCloseTimeoutTimer([[NSTimer
-                                         scheduledTimerWithTimeInterval:timeoutInSeconds
+                                         scheduledTimerWithTimeInterval:(3 * 60)
                                          target:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()
                                          selector:@selector(timeoutTimer:)
                                          userInfo:nil repeats:NO] retain]
