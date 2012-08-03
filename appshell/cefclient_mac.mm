@@ -375,6 +375,8 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 // Sent by the default notification center immediately before the application
 // terminates.
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
+
+  OnBeforeShutdown();
   
   // Shut down CEF.
   g_handler = NULL;

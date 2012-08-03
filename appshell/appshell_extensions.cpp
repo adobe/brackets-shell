@@ -26,8 +26,6 @@
 
 namespace appshell_extensions {
 
-namespace {
-        
 class ProcessMessageDelegate : public ClientHandler::ProcessMessageDelegate {
 public:
     ProcessMessageDelegate()
@@ -59,13 +57,18 @@ public:
         // take any arguments.
         
         // If we have any arguments, the first is the callbackId
-        if (argList->GetSize() > 0)
+        if (argList->GetSize() > 0) {
             callbackId = argList->GetInt(0);
+            
+            if (callbackId != -1)
+                responseArgs->SetInt(0, callbackId);
+        }
         
-		if (message_name == "OpenLiveBrowser") {
+        if (message_name == "OpenLiveBrowser") {
             // Parameters:
-            //  0: string - argURL
-            //  1: bool - enableRemoteDebugging
+            //  0: int32 - callback id
+            //  1: string - argURL
+            //  2: bool - enableRemoteDebugging
             if (argList->GetSize() != 3 ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_BOOL) {
@@ -75,11 +78,24 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString argURL = argList->GetString(1);
                 bool enableRemoteDebugging = argList->GetBool(2);
-				error = OpenLiveBrowser(argURL, enableRemoteDebugging);
-			}
-		} else if (message_name == "CloseLiveBrowser") {
-			//error = CloseLiveBrowser();
-		} else if (message_name == "ShowOpenDialog") {
+                error = OpenLiveBrowser(argURL, enableRemoteDebugging);
+            }
+            
+        } else if (message_name == "CloseLiveBrowser") {
+            // Parameters
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                CloseLiveBrowser(browser, response);
+            
+                // Skip standard callback handling. CloseLiveBrowser fires the
+                // callback asynchronously.
+                return true;
+            }
+        } else if (message_name == "ShowOpenDialog") {
             // Parameters:
             //  0: int32 - callback id
             //  1: bool - allowMultipleSelection
@@ -238,7 +254,7 @@ public:
 
         } else if (message_name == "QuitApplication") {
             // Parameters - none
-          
+
             // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
             // quit if all browser windows are closed.
             handler->DispatchCloseToNextBrowser();
@@ -253,8 +269,6 @@ public:
         }
         
         if (callbackId != -1) {
-            // Set common response args (callbackId and error)
-            responseArgs->SetInt(0, callbackId);
             responseArgs->SetInt(1, error);
             
             // Send response
@@ -267,10 +281,7 @@ public:
     IMPLEMENT_REFCOUNTING(ProcessMessageDelegate);
 };
     
-} // namespace
-    
-void CreateProcessMessageDelegates(
-                                   ClientHandler::ProcessMessageDelegateSet& delegates) {
+void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
   
