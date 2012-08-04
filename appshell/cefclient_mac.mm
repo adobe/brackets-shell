@@ -288,7 +288,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                        defer:NO];
   [mainWnd setTitle:@"Brackets"];
   [mainWnd setDelegate:delegate];
-  [mainWnd setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+  [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
   // releasing when the window gets closed. We use the delegate to do
