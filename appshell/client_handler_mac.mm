@@ -200,7 +200,7 @@ void ClientHandler::CloseMainWindow() {
 
 void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
-  [window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenPrimary];
+  [window setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
   
   if (![window delegate]) {
     PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
