@@ -263,6 +263,32 @@ public:
             // Parameters - none
           
             handler->AbortQuit();
+        } else if (message_name == "OpenURLInDefaultBrowser") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - url
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString url = argList->GetString(1);
+                
+                error = OpenURLInDefaultBrowser(url);
+                
+                // No additional response args for this function
+            }
+        } else if (message_name == "GetDevToolsURL") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                responseArgs->SetString(2, browser->GetHost()->GetDevToolsURL(true));
+            }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
