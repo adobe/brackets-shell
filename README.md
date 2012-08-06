@@ -10,7 +10,7 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
 
-The preferences are stored in `{USER}/Library/Application Support/cef_data` on the mac and `{USER}\AppData\Local\cef_data` on Windows.
+The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on the mac and `{USER}\AppData\Roaming\Brackets\cef_data` on Windows.
 
 ## Building
 

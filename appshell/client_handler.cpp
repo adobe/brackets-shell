@@ -359,6 +359,19 @@ void ClientHandler::DispatchCloseToNextBrowser() {
   }
 }
 
+void ClientHandler::AbortQuit()
+{
+	m_quitting = false;
+
+	// Notify all browsers that quit was aborted
+	BrowserWindowMap::const_iterator i, last = browser_window_map_.end();
+	for (i = browser_window_map_.begin(); i != last; i++)
+	{
+		CefRefPtr<CefBrowser> browser = i->second;
+		SendJSCommand(browser, APP_ABORT_QUIT);
+	}
+}
+
 // static
 void ClientHandler::CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates) {

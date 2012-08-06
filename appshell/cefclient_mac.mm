@@ -288,6 +288,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                        defer:NO];
   [mainWnd setTitle:@"Brackets"];
   [mainWnd setDelegate:delegate];
+  [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
   // releasing when the window gets closed. We use the delegate to do
@@ -374,6 +375,8 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 // Sent by the default notification center immediately before the application
 // terminates.
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
+
+  OnBeforeShutdown();
   
   // Shut down CEF.
   g_handler = NULL;
@@ -426,6 +429,11 @@ int main(int argc, char* argv[]) {
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  // Check command
+  if (CefString(&settings.cache_path).length() == 0) {
+	  CefString(&settings.cache_path) = AppGetCachePath();
+  }
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
@@ -471,4 +479,13 @@ int main(int argc, char* argv[]) {
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
+}
+
+CefString AppGetCachePath() {
+  // Set persistence cache
+  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/Brackets/cef_data", libraryDirectory];
+  CefString cachePath = [cefCacheDirectory UTF8String];
+  
+  return cachePath;
 }

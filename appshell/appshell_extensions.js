@@ -193,10 +193,14 @@ if (!appshell.app) {
     /**
      * Invokes developer tools application
      */
+    // FIXME (jason-sanjose): https://github.com/adobe/brackets-shell/issues/16
+    // Disable "Show Developer Tools" in brackets-shell. Debug from Chrome via http://localhost:9234
+    /*
     native function ShowDeveloperTools();
     appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
     };
+    */
 
     /**
      * Reads the entire contents of a file. 
@@ -305,13 +309,10 @@ if (!appshell.app) {
      */
     native function OpenLiveBrowser();
     appshell.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
- /*
         // enableRemoteDebugging flag is ignored on mac
         setTimeout(function() {
-            OpenLiveBrowser(url);
-            callback(getLastError());
+            OpenLiveBrowser(callback, url, enableRemoteDebugging);
         }, 0);
- */
     };
     
     /**
@@ -329,9 +330,7 @@ if (!appshell.app) {
      */
     native function CloseLiveBrowser();
     appshell.app.closeLiveBrowser = function (callback) {
- /*
         CloseLiveBrowser(callback);
- */
     };
  
    // Alias the appshell object to brackets. This is temporary and should be removed.

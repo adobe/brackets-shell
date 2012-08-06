@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <CommDlg.h>
+#include <Psapi.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <stdio.h>
@@ -33,13 +34,230 @@
 
 #define CLOSING_PROP L"CLOSING"
 
-extern CefRefPtr<ClientHandler> g_handler;
 
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
+static std::wstring GetPathToLiveBrowser();
+static bool ConvertToShortPathName(std::wstring & path);
+
+
+///////////////////////////////////////////////////////////////////////////////
+// LiveBrowserMgrWin
+
+class LiveBrowserMgrWin
+{
+public:
+    static LiveBrowserMgrWin* GetInstance();
+    static void Shutdown();
+
+    bool IsChromeWindow(HWND hwnd);
+    bool IsAnyChromeWindowsRunning();
+    void CloseLiveBrowserKillTimers();
+    void CloseLiveBrowserFireCallback(int valToSend);
+
+    static BOOL CALLBACK EnumChromeWindowsCallback(HWND hwnd, LPARAM userParam);
+    static void CALLBACK CloseLiveBrowserTimerCallback( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime);
+    static void CALLBACK CloseLiveBrowserAsyncCallback( HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult );
+
+    CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
+    UINT GetCloseHeartbeatTimerId() { return m_closeLiveBrowserHeartbeatTimerId; }
+    UINT GetCloseTimeoutTimerId() { return m_closeLiveBrowserTimeoutTimerId; }
+
+    void SetCloseCallback(CefRefPtr<CefProcessMessage> closeLiveBrowserCallback)
+        { m_closeLiveBrowserCallback = closeLiveBrowserCallback; }
+    void SetBrowser(CefRefPtr<CefBrowser> browser)
+        { m_browser = browser; }
+    void SetCloseHeartbeatTimerId(UINT closeLiveBrowserHeartbeatTimerId)
+        { m_closeLiveBrowserHeartbeatTimerId = closeLiveBrowserHeartbeatTimerId; }
+    void SetCloseTimeoutTimerId(UINT closeLiveBrowserTimeoutTimerId)
+        { m_closeLiveBrowserTimeoutTimerId = closeLiveBrowserTimeoutTimerId; }
+
+private:
+    // private so this class cannot be instantiated externally
+    LiveBrowserMgrWin();
+    virtual ~LiveBrowserMgrWin();
+
+    UINT							m_closeLiveBrowserHeartbeatTimerId;
+    UINT							m_closeLiveBrowserTimeoutTimerId;
+    CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
+    CefRefPtr<CefBrowser>			m_browser;
+
+    static LiveBrowserMgrWin* s_instance;
+};
+
+LiveBrowserMgrWin::LiveBrowserMgrWin()
+    : m_closeLiveBrowserHeartbeatTimerId(0)
+    , m_closeLiveBrowserTimeoutTimerId(0)
+{
+}
+
+LiveBrowserMgrWin::~LiveBrowserMgrWin()
+{
+}
+
+LiveBrowserMgrWin* LiveBrowserMgrWin::GetInstance()
+{
+    if (!s_instance)
+        s_instance = new LiveBrowserMgrWin();
+    return s_instance;
+}
+
+void LiveBrowserMgrWin::Shutdown()
+{
+    delete s_instance;
+    s_instance = NULL;
+}
+
+bool LiveBrowserMgrWin::IsChromeWindow(HWND hwnd)
+{
+    if( !hwnd ) {
+        return false;
+    }
+
+    //Find the path that opened this window
+    DWORD processId = 0;
+    ::GetWindowThreadProcessId(hwnd, &processId);
+
+    HANDLE processHandle = ::OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+    if( !processHandle ) { 
+        return false;
+    }
+
+    DWORD modulePathBufSize = _MAX_PATH+1;
+    WCHAR modulePathBuf[_MAX_PATH+1];
+    DWORD modulePathSize = ::GetModuleFileNameEx(processHandle, NULL, modulePathBuf, modulePathBufSize );
+    ::CloseHandle(processHandle);
+    processHandle = NULL;
+
+    std::wstring modulePath(modulePathBuf, modulePathSize);
+
+    //See if this path is the same as what we want to launch
+    std::wstring appPath = GetPathToLiveBrowser();
+
+    if( !ConvertToShortPathName(modulePath) || !ConvertToShortPathName(appPath) ) {
+        return false;
+    }
+
+    if(0 != _wcsicmp(appPath.c_str(), modulePath.c_str()) ){
+        return false;
+    }
+
+    //looks good
+    return true;
+}
+
+struct EnumChromeWindowsCallbackData
+{
+    bool    closeWindow;
+    int     numberOfFoundWindows;
+};
+
+BOOL CALLBACK LiveBrowserMgrWin::EnumChromeWindowsCallback(HWND hwnd, LPARAM userParam)
+{
+    if( !hwnd || !s_instance) {
+        return FALSE;
+    }
+
+    EnumChromeWindowsCallbackData* cbData = reinterpret_cast<EnumChromeWindowsCallbackData*>(userParam);
+    if(!cbData) {
+        return FALSE;
+    }
+
+    if (!s_instance->IsChromeWindow(hwnd)) {
+        return TRUE;
+    }
+
+    cbData->numberOfFoundWindows++;
+    //This window belongs to the instance of the browser we're interested in, tell it to close
+    if( cbData->closeWindow ) {
+        ::SendMessageCallback(hwnd, WM_CLOSE, NULL, NULL, CloseLiveBrowserAsyncCallback, NULL);
+    }
+
+    return TRUE;
+}
+
+bool LiveBrowserMgrWin::IsAnyChromeWindowsRunning()
+{
+    EnumChromeWindowsCallbackData cbData = {0};
+    cbData.numberOfFoundWindows = 0;
+    cbData.closeWindow = false;
+    ::EnumWindows(EnumChromeWindowsCallback, (LPARAM)&cbData);
+    return( cbData.numberOfFoundWindows != 0 );
+}
+
+void LiveBrowserMgrWin::CloseLiveBrowserKillTimers()
+{
+    if (m_closeLiveBrowserHeartbeatTimerId) {
+        ::KillTimer(NULL, m_closeLiveBrowserHeartbeatTimerId);
+        m_closeLiveBrowserHeartbeatTimerId = 0;
+    }
+
+    if (m_closeLiveBrowserTimeoutTimerId) {
+        ::KillTimer(NULL, m_closeLiveBrowserTimeoutTimerId);
+        m_closeLiveBrowserTimeoutTimerId = 0;
+    }
+}
+
+void LiveBrowserMgrWin::CloseLiveBrowserFireCallback(int valToSend)
+{
+    CefRefPtr<CefListValue> responseArgs = m_closeLiveBrowserCallback->GetArgumentList();
+    
+    // kill the timers
+    CloseLiveBrowserKillTimers();
+    
+    // Set common response args (callbackId and error)
+    responseArgs->SetInt(1, valToSend);
+    
+    // Send response
+    m_browser->SendProcessMessage(PID_RENDERER, m_closeLiveBrowserCallback);
+    
+    // Clear state
+    m_closeLiveBrowserCallback = NULL;
+    m_browser = NULL;
+}
+
+void CALLBACK LiveBrowserMgrWin::CloseLiveBrowserTimerCallback( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+    if( !s_instance ) {
+        ::KillTimer(NULL, idEvent);
+        return;
+    }
+
+    int retVal =  NO_ERROR;
+    if( s_instance->IsAnyChromeWindowsRunning() )
+    {
+        retVal = ERR_UNKNOWN;
+        //if this is the heartbeat timer, wait for another beat
+        if (idEvent == s_instance->m_closeLiveBrowserHeartbeatTimerId) {
+            return;
+        }
+    }
+
+    //notify back to the app
+    s_instance->CloseLiveBrowserFireCallback(retVal);
+}
+
+void CALLBACK LiveBrowserMgrWin::CloseLiveBrowserAsyncCallback( HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult )
+{
+    if( !s_instance ) {
+        return;
+    }
+
+    //If there are no more versions of chrome, then fire the callback
+    if( !s_instance->IsAnyChromeWindowsRunning() ) {
+        s_instance->CloseLiveBrowserFireCallback(NO_ERROR);
+    }
+    else if(s_instance->m_closeLiveBrowserHeartbeatTimerId == 0){
+        //start a heartbeat timer to see if it closes after the message returned
+        s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, CloseLiveBrowserTimerCallback);
+    }
+}
+
+LiveBrowserMgrWin* LiveBrowserMgrWin::s_instance = NULL;
+
 
 static int CALLBACK SetInitialPathCallback(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
@@ -49,6 +267,97 @@ static int CALLBACK SetInitialPathCallback(HWND hWnd, UINT uMsg, LPARAM lParam, 
     }
 
     return 0;
+}
+
+static std::wstring GetPathToLiveBrowser() 
+{
+    // Chrome.exe is at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
+    TCHAR localAppPath[MAX_PATH] = {0};
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
+    std::wstring appPath(localAppPath);
+    appPath += L"\\Google\\Chrome\\Application\\chrome.exe";
+        
+    return appPath;
+}
+    
+static bool ConvertToShortPathName(std::wstring & path)
+{
+    DWORD shortPathBufSize = _MAX_PATH+1;
+    WCHAR shortPathBuf[_MAX_PATH+1];
+    DWORD finalShortPathSize = ::GetShortPathName(path.c_str(), shortPathBuf, shortPathBufSize);
+    if( finalShortPathSize == 0 ) {
+        return false;
+    }
+        
+    path.assign(shortPathBuf, finalShortPathSize);
+    return true;
+}
+
+int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
+{
+    std::wstring appPath = GetPathToLiveBrowser();
+
+    //When launching the app, we need to be careful about spaces in the path. A safe way to do this
+    //is to use the shortpath. It doesn't look as nice, but it always works and never has a space
+    if( !ConvertToShortPathName(appPath) ) {
+        //If the shortpath failed, we need to bail since we don't know what to call now
+        return ConvertWinErrorCode(GetLastError());
+    }
+
+
+    std::wstring args = appPath;
+    if (enableRemoteDebugging)
+        args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
+    else
+        args += L" ";
+    args += argURL;
+
+    // Args must be mutable
+    int argsBufSize = args.length() +1;
+    std::auto_ptr<WCHAR> argsBuf( new WCHAR[argsBufSize]);
+    wcscpy(argsBuf.get(), args.c_str());
+
+    STARTUPINFO si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+
+    //Send the whole command in through the args param. Windows will parse the first token up to a space
+    //as the processes and feed the rest in as the argument string. 
+    if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+        
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return NO_ERROR;
+}
+
+void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    LiveBrowserMgrWin* liveBrowserMgr = LiveBrowserMgrWin::GetInstance();
+    
+    if (liveBrowserMgr->GetCloseCallback() != NULL) {
+        // We can only handle a single async callback at a time. If there is already one that hasn't fired then
+        // we kill it now and get ready for the next.
+        liveBrowserMgr->CloseLiveBrowserFireCallback(ERR_UNKNOWN);
+    }
+
+    liveBrowserMgr->SetCloseCallback(response);
+    liveBrowserMgr->SetBrowser(browser);
+
+    EnumChromeWindowsCallbackData cbData = {0};
+
+    cbData.numberOfFoundWindows = 0;
+    cbData.closeWindow = true;
+    ::EnumWindows(LiveBrowserMgrWin::EnumChromeWindowsCallback, (LPARAM)&cbData);
+
+	if (cbData.numberOfFoundWindows == 0) {
+		liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
+	} else if (liveBrowserMgr->GetCloseCallback()) {
+		// set a timeout for up to 3 minutes to close the browser 
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+    }
 }
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,
@@ -341,9 +650,15 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+
+void OnBeforeShutdown()
+{
+    LiveBrowserMgrWin::Shutdown();
+}
+
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-    if (browser.get() && g_handler.get()) {
+    if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
         browser->GetHost()->CloseBrowser();
@@ -407,4 +722,5 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
         return ERR_UNKNOWN;
     }
 }
+
 

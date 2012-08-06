@@ -5,7 +5,6 @@
 {
   'variables': {
     'appname': 'Brackets',
-    'mac_sdk': '10.6',
     'chromium_code': 1,
     'conditions': [
       [ 'OS=="mac"', {
@@ -18,6 +17,15 @@
     # Bring in the source file lists for appshell.
     'appshell_paths.gypi',
   ],
+  'target_defaults':
+  {
+    'xcode_settings':
+      {
+        'SDKROOT': '',
+        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
+        'COMBINE_HIDPI_IMAGES': 'YES',
+      },
+  },
   'targets': [
     {
       'target_name': '<(appname)',
@@ -51,9 +59,11 @@
         'INFOPLIST_FILE': 'appshell/mac/Info.plist',
         # Necessary to avoid an "install_name_tool: changing install names or
         # rpaths can't be redone" error.
-        'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],            'SYMROOT': 'xcodebuild',
+        'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
         # Target build path.
         'SYMROOT': 'xcodebuild',
+        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
         ['OS=="win"', {
@@ -196,6 +206,8 @@
       'xcode_settings': {
         # Target build path.
         'SYMROOT': 'xcodebuild',
+        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
     },
   ],
@@ -242,7 +254,10 @@
             'INFOPLIST_FILE': 'appshell/mac/helper-Info.plist',
             # Necessary to avoid an "install_name_tool: changing install names or
             # rpaths can't be redone" error.
-            'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],            'SYMROOT': 'xcodebuild',
+            'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
+            'SYMROOT': 'xcodebuild',
+            'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+            'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
           },
           'postbuilds': [
             {

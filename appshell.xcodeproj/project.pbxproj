@@ -246,6 +246,7 @@
 		19CC604904E69CAEC8059933 /* request_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = request_ctocpp.h; sourceTree = "<group>"; };
 		1AA9D7B2BAC56500C33E3807 /* geolocation_callback_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = geolocation_callback_ctocpp.h; sourceTree = "<group>"; };
 		1ACCBD564EAD4B712DDAC80E /* Brackets Helper.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = "Brackets Helper.app"; sourceTree = "<group>"; };
+		1BCACF63CA4D149D11DBFA8D /* release_impl.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_impl.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/internal/release_impl.gypi"; sourceTree = "<group>"; };
 		1BE21DEA53CCCB6F82B61230 /* stream_reader_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = stream_reader_ctocpp.cc; sourceTree = "<group>"; };
 		1C2AD7D46F7259207D0ABFC5 /* download_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = download_handler_cpptoc.cc; sourceTree = "<group>"; };
 		1CB166DE5C11F00828B7B417 /* client_switches.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = client_switches.cpp; sourceTree = "<group>"; };
@@ -282,6 +283,7 @@
 		33499D33F1F9DC890F636536 /* life_span_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = life_span_handler_cpptoc.h; sourceTree = "<group>"; };
 		3458504ADE6A6AF8C60A2C67 /* domevent_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = domevent_ctocpp.cc; sourceTree = "<group>"; };
 		34EA46718B3A0AB6A5AD8EF8 /* command_callbacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = command_callbacks.h; sourceTree = "<group>"; };
+		3599000BE82B1008EC978C94 /* common.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = common.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/common.gypi"; sourceTree = "<group>"; };
 		365EDD3D82156D2204917D12 /* cef_cookie.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_cookie.h; sourceTree = "<group>"; };
 		37158D1FB9718895411FDA83 /* cef_string_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string_types.h; sourceTree = "<group>"; };
 		37D65F25F67B8FD6FB538982 /* cef_path_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_path_util.h; sourceTree = "<group>"; };
@@ -294,7 +296,6 @@
 		3CC475F841AE4C383D823582 /* scheme_registrar_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scheme_registrar_ctocpp.h; sourceTree = "<group>"; };
 		3D54FD7A210A996873EAAFC6 /* cef_response_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_response_capi.h; sourceTree = "<group>"; };
 		3DC13171A761012CCD1E0A35 /* menu_model_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = menu_model_ctocpp.h; sourceTree = "<group>"; };
-		3FE1A58D3A86DCAA30AB321F /* release_impl_official.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_impl_official.gypi; path = ../../../cef3/chromium/src/build/internal/release_impl_official.gypi; sourceTree = "<group>"; };
 		404F631C04BA625DD2D8EA94 /* cef_string_visitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string_visitor.h; sourceTree = "<group>"; };
 		40825E3D7AE48941C5160E73 /* cef_types_wrappers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_types_wrappers.h; sourceTree = "<group>"; };
 		41BC159F756E6B95822D89F1 /* cef_proxy_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_proxy_handler_capi.h; sourceTree = "<group>"; };
@@ -306,6 +307,7 @@
 		4BBCEC55DE0D8BF545B09B09 /* download_item_callback_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = download_item_callback_ctocpp.h; sourceTree = "<group>"; };
 		4BCA377BC1360958F4A30EBB /* cef_client.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_client.h; sourceTree = "<group>"; };
 		4C445BA8F89BC49321A95ABD /* zip_reader_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = zip_reader_ctocpp.cc; sourceTree = "<group>"; };
+		4C54ABD909FC81D61F53FD6F /* release.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/release.gypi"; sourceTree = "<group>"; };
 		4CB2EA8AB1FCF6554CF40027 /* cef_scheme_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_scheme_capi.h; sourceTree = "<group>"; };
 		4DB4E8FB15970721FCDF697D /* appshell.gyp */ = {isa = PBXFileReference; lastKnownFileType = text; path = appshell.gyp; sourceTree = "<group>"; };
 		4DBB14594CDA494499E58C80 /* post_data_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = post_data_ctocpp.cc; sourceTree = "<group>"; };
@@ -321,10 +323,10 @@
 		57339E50CB0656A422EF6D1F /* resource_bundle_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = resource_bundle_handler_cpptoc.h; sourceTree = "<group>"; };
 		58B75C30D7A89FCDAE335C06 /* resource_util_mac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = resource_util_mac.mm; sourceTree = "<group>"; };
 		58E3E30CB0F4B406DB37ACD9 /* cef_app_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_app_capi.h; sourceTree = "<group>"; };
+		5A30B6C9EFF181D7679E2376 /* filename_rules.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = filename_rules.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/filename_rules.gypi"; sourceTree = "<group>"; };
 		5A30D7DB3E6147CCD132BF23 /* cef_jsdialog_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_jsdialog_handler_capi.h; sourceTree = "<group>"; };
 		5C4BF2F9A653513AA5097263 /* cef_life_span_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_life_span_handler_capi.h; sourceTree = "<group>"; };
 		5CFAB8D52C1E7271A2071B62 /* resource_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = resource_handler_cpptoc.h; sourceTree = "<group>"; };
-		5DB8407EA32311CE45160621 /* common.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = common.gypi; path = ../../../cef3/chromium/src/build/common.gypi; sourceTree = "<group>"; };
 		5E34FEFA93D3CDD186EB50E6 /* cef_web_plugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_web_plugin.h; sourceTree = "<group>"; };
 		5E363187DF9DE7D019FE69A2 /* ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ctocpp.h; sourceTree = "<group>"; };
 		5EB154496C1FDAE39862F41E /* resource_bundle_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = resource_bundle_handler_cpptoc.cc; sourceTree = "<group>"; };
@@ -333,6 +335,7 @@
 		613023D3F967805E847AFC36 /* cef_runnable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_runnable.h; sourceTree = "<group>"; };
 		624941FB23CF3584A92CC166 /* cef_jsdialog_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_jsdialog_handler.h; sourceTree = "<group>"; };
 		62A902B142F614B82578BE7C /* cef_mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_mac.h; sourceTree = "<group>"; };
+		66105719C5DCC8C275D61A29 /* release_impl_official.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_impl_official.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/internal/release_impl_official.gypi"; sourceTree = "<group>"; };
 		67053B18354E8CC9611FF337 /* write_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = write_handler_cpptoc.cc; sourceTree = "<group>"; };
 		681025ADA511D62F06D077CD /* appshell_paths.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; path = appshell_paths.gypi; sourceTree = "<group>"; };
 		6827085F94359A9E0552732F /* cef_resource_bundle_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_resource_bundle_handler_capi.h; sourceTree = "<group>"; };
@@ -370,6 +373,7 @@
 		80CBC98C4853A36252F42EF2 /* cef_values_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_values_capi.h; sourceTree = "<group>"; };
 		80F31A6EF84334F8EC5BCB6F /* geolocation_callback_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = geolocation_callback_ctocpp.cc; sourceTree = "<group>"; };
 		8340C002E6222E715A4BF3B8 /* cef_path_util_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_path_util_capi.h; sourceTree = "<group>"; };
+		83DEAC677B9F4EEC93F2AA57 /* release_defaults.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_defaults.gypi; path = "../../Downloads/chromium.r147179/chrome-svn/tarball/chromium/src/build/internal/release_defaults.gypi"; sourceTree = "<group>"; };
 		845EEC823278584B42AFB2B7 /* v8accessor_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = v8accessor_cpptoc.cc; sourceTree = "<group>"; };
 		8488F4A54D9C2E3DC1CF782B /* cef_base_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_base_capi.h; sourceTree = "<group>"; };
 		85F7533AF3C47F71CA9FDFC6 /* request_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = request_ctocpp.cc; sourceTree = "<group>"; };
@@ -429,13 +433,11 @@
 		B617EB0714F29F881C46BCC3 /* frame_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = frame_ctocpp.cc; sourceTree = "<group>"; };
 		B65894845851B9D3DEE6BD03 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = libcef.dylib; sourceTree = CONFIGURATION; };
 		B6A77EE456259DB56C750847 /* cookie_visitor_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cookie_visitor_cpptoc.cc; sourceTree = "<group>"; };
-		B802C1E1200A4AB8561EA891 /* release_defaults.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_defaults.gypi; path = ../../../cef3/chromium/src/build/internal/release_defaults.gypi; sourceTree = "<group>"; };
 		B9211C221356E0B082C4816A /* transfer_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transfer_util.cpp; sourceTree = "<group>"; };
 		B9EF704C714952FC84A12099 /* list_value_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list_value_ctocpp.h; sourceTree = "<group>"; };
 		BB1ECEF8D8325E6D39B9CB86 /* v8context_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = v8context_ctocpp.h; sourceTree = "<group>"; };
 		BD8E873CE33AB866D81F7634 /* resource_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = resource_handler_cpptoc.cc; sourceTree = "<group>"; };
 		BF858856394C760CADDE6C76 /* domvisitor_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = domvisitor_cpptoc.h; sourceTree = "<group>"; };
-		C0AA655B7F6EE5290D8A87D1 /* release_impl.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release_impl.gypi; path = ../../../cef3/chromium/src/build/internal/release_impl.gypi; sourceTree = "<group>"; };
 		C257BA37696D74DBB1A51753 /* cef_dom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_dom.h; sourceTree = "<group>"; };
 		C262FF082FED71CE8963FDD5 /* client_app.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = client_app.cpp; sourceTree = "<group>"; };
 		C36233CB23734A273D2D0F79 /* libcef_dll_wrapper2.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = libcef_dll_wrapper2.cc; sourceTree = "<group>"; };
@@ -464,7 +466,6 @@
 		DBCCD68F95B5C2686B334A3E /* cef_pack_strings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_pack_strings.h; sourceTree = "<group>"; };
 		DC9B45FF3104A97A34F07E2D /* callback_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = callback_ctocpp.h; sourceTree = "<group>"; };
 		DCBE7573C3F65FFB2C708103 /* response_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = response_ctocpp.h; sourceTree = "<group>"; };
-		DDBF10F0084EED3FE02CAF45 /* release.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = release.gypi; path = ../../../cef3/chromium/src/build/release.gypi; sourceTree = "<group>"; };
 		DDE5B9937D98F3194E9E57B0 /* cef_browser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_browser.h; sourceTree = "<group>"; };
 		DE01625BB2393CCA7C48B467 /* cef_origin_whitelist_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_origin_whitelist_capi.h; sourceTree = "<group>"; };
 		DF38EBD5037F4EEEE3AFF29D /* v8value_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = v8value_ctocpp.cc; sourceTree = "<group>"; };
@@ -501,7 +502,6 @@
 		F1FE2B2760F4BBD496986BA1 /* cef_browser_process_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_browser_process_handler.h; sourceTree = "<group>"; };
 		F31B254B0DC7D754A1D4D56C /* cef_resource_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_resource_handler_capi.h; sourceTree = "<group>"; };
 		F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = appshell_extensions.cpp; sourceTree = "<group>"; };
-		F7AF4BC25240C2D0ABB7FAFF /* filename_rules.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = filename_rules.gypi; path = ../../../cef3/chromium/src/build/filename_rules.gypi; sourceTree = "<group>"; };
 		F7D894242D95F2E165D0ECF6 /* cef_request_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_request_capi.h; sourceTree = "<group>"; };
 		F7EB475CDCCC2A30AF8D4A0C /* appshell_extensions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = appshell_extensions.js; sourceTree = "<group>"; };
 		F8650F6813183C119C198C0F /* stream_writer_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stream_writer_ctocpp.h; sourceTree = "<group>"; };
@@ -709,12 +709,12 @@
 				4DB4E8FB15970721FCDF697D /* appshell.gyp */,
 				681025ADA511D62F06D077CD /* appshell_paths.gypi */,
 				4B7F088ADBCB1D96DBB5D4BB /* cef_paths.gypi */,
-				5DB8407EA32311CE45160621 /* common.gypi */,
-				F7AF4BC25240C2D0ABB7FAFF /* filename_rules.gypi */,
-				DDBF10F0084EED3FE02CAF45 /* release.gypi */,
-				B802C1E1200A4AB8561EA891 /* release_defaults.gypi */,
-				C0AA655B7F6EE5290D8A87D1 /* release_impl.gypi */,
-				3FE1A58D3A86DCAA30AB321F /* release_impl_official.gypi */,
+				3599000BE82B1008EC978C94 /* common.gypi */,
+				5A30B6C9EFF181D7679E2376 /* filename_rules.gypi */,
+				4C54ABD909FC81D61F53FD6F /* release.gypi */,
+				83DEAC677B9F4EEC93F2AA57 /* release_defaults.gypi */,
+				1BCACF63CA4D149D11DBFA8D /* release_impl.gypi */,
+				66105719C5DCC8C275D61A29 /* release_impl_official.gypi */,
 			);
 			name = Build;
 			sourceTree = "<group>";
@@ -1371,6 +1371,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1402,8 +1404,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"NDEBUG\"",
@@ -1412,8 +1415,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				INFOPLIST_FILE = appshell/mac/Info.plist;
@@ -1427,9 +1430,12 @@
 					"-Wl,-headerpad_max_install_names",
 					"-Wl,-search_paths_first",
 					"-Wl,-ObjC",
+					"-Wl,-search_paths_first",
+					"-Wl,-ObjC",
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = Brackets;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1458,6 +1464,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				EXECUTABLE_PREFIX = lib;
 				GCC_CW_ASM_SYNTAX = NO;
@@ -1490,8 +1498,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"NDEBUG\"",
@@ -1500,13 +1509,14 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				OTHER_CFLAGS = "-fno-strict-aliasing";
 				PRODUCT_NAME = cef_dll_wrapper;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1531,6 +1541,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1562,8 +1574,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"NDEBUG\"",
@@ -1572,8 +1585,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				INFOPLIST_FILE = "appshell/mac/helper-Info.plist";
@@ -1587,9 +1600,12 @@
 					"-Wl,-headerpad_max_install_names",
 					"-Wl,-search_paths_first",
 					"-Wl,-ObjC",
+					"-Wl,-search_paths_first",
+					"-Wl,-ObjC",
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = "Brackets Helper";
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1608,6 +1624,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1639,8 +1657,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"DYNAMIC_ANNOTATIONS_ENABLED=1\"",
@@ -1648,8 +1667,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				INFOPLIST_FILE = appshell/mac/Info.plist;
@@ -1666,9 +1685,12 @@
 					"-Wl,-headerpad_max_install_names",
 					"-Wl,-search_paths_first",
 					"-Wl,-ObjC",
+					"-Wl,-search_paths_first",
+					"-Wl,-ObjC",
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = Brackets;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1697,6 +1719,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_CW_ASM_SYNTAX = NO;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1728,8 +1752,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"DYNAMIC_ANNOTATIONS_ENABLED=1\"",
@@ -1737,8 +1762,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				INFOPLIST_FILE = "appshell/mac/helper-Info.plist";
@@ -1755,9 +1780,12 @@
 					"-Wl,-headerpad_max_install_names",
 					"-Wl,-search_paths_first",
 					"-Wl,-ObjC",
+					"-Wl,-search_paths_first",
+					"-Wl,-ObjC",
 					"-Wl,-pie",
 				);
 				PRODUCT_NAME = "Brackets Helper";
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
@@ -1783,6 +1811,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = lib;
 				GCC_CW_ASM_SYNTAX = NO;
@@ -1815,8 +1845,9 @@
 					"\"ENABLE_SESSION_SERVICE=1\"",
 					"\"ENABLE_THEMES=1\"",
 					"\"ENABLE_BACKGROUND=1\"",
-					"\"ENABLE_PROMO_RESOURCE_SERVICE=1\"",
 					"\"ENABLE_AUTOMATION=1\"",
+					"\"ENABLE_PRINTING=1\"",
+					"\"ENABLE_CAPTIVE_PORTAL_DETECTION=1\"",
 					"\"USING_CEF_SHARED\"",
 					"\"__STDC_FORMAT_MACROS\"",
 					"\"DYNAMIC_ANNOTATIONS_ENABLED=1\"",
@@ -1824,8 +1855,8 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_THREADSAFE_STATICS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				GCC_VERSION = 4.2;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				HEADER_SEARCH_PATHS = .;
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
@@ -1834,6 +1865,7 @@
 					"-fstack-protector-all",
 				);
 				PRODUCT_NAME = cef_dll_wrapper;
+				SDKROOT = "";
 				SHARED_PRECOMPS_DIR = "$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders";
 				SYMROOT = xcodebuild;
 				USE_HEADERMAP = NO;
