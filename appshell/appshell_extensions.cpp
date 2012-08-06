@@ -250,7 +250,11 @@ public:
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
             
-            handler->ShowDevTools(browser);
+            // The CEF-hosted dev tools do not work. Open in a separate browser window instead.
+            // handler->ShowDevTools(browser);
+            
+            ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
+            OpenURLInDefaultBrowser(url);
 
         } else if (message_name == "QuitApplication") {
             // Parameters - none
