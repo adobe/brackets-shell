@@ -254,7 +254,7 @@ public:
             // handler->ShowDevTools(browser);
             
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
-            OpenURLInDefaultBrowser(url);
+            OpenLiveBrowser(url, false);
 
         } else if (message_name == "QuitApplication") {
             // Parameters - none
