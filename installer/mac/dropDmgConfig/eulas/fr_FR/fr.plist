@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<dict>
+		<key>agree</key>
+		<string>Accepter</string>
+		<key>disagree</key>
+		<string>Refuser</string>
+		<key>localeIdentifier</key>
+		<string>fr</string>
+		<key>print</key>
+		<string>Imprimer</string>
+		<key>prompt</key>
+		<string>Si vous acceptez les termes de la présente licence, cliquez sur "Accepter" afin d'installer le logiciel. Si vous n'êtes pas d'accord avec les termes de la licence, cliquez sur "Refuser".</string>
+		<key>save</key>
+		<string>Enregistrer...</string>
+	</dict>
+	<key>documentCreator</key>
+	<string>DropDMG 3.1.3</string>
+	<key>documentType</key>
+	<string>com.c-command.DropDMG.LanguageInfo</string>
+	<key>formatVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

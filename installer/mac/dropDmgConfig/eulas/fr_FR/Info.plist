@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<dict>
+		<key>identifier</key>
+		<string>License.EE039A16-9BE6-424E-A366-A3852487114C</string>
+	</dict>
+	<key>documentCreator</key>
+	<string>DropDMG 3.1.3</string>
+	<key>documentType</key>
+	<string>com.c-command.DropDMG.License</string>
+	<key>formatVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>
