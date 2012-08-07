@@ -283,16 +283,6 @@ public:
                 
                 // No additional response args for this function
             }
-        } else if (message_name == "GetDevToolsURL") {
-            // Parameters:
-            //  0: int32 - callback id
-            if (argList->GetSize() != 1) {
-                error = ERR_INVALID_PARAMS;
-            }
-            
-            if (error == NO_ERROR) {
-                responseArgs->SetString(2, browser->GetHost()->GetDevToolsURL(true));
-            }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
