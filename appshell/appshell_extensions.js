@@ -193,14 +193,10 @@ if (!appshell.app) {
     /**
      * Invokes developer tools application
      */
-    // FIXME (jason-sanjose): https://github.com/adobe/brackets-shell/issues/16
-    // Disable "Show Developer Tools" in brackets-shell. Debug from Chrome via http://localhost:9234
-    /*
     native function ShowDeveloperTools();
     appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
     };
-    */
 
     /**
      * Reads the entire contents of a file. 
@@ -333,6 +329,19 @@ if (!appshell.app) {
         CloseLiveBrowser(callback);
     };
  
-   // Alias the appshell object to brackets. This is temporary and should be removed.
-   brackets = appshell;
+    /**
+     * Open a URL in the default OS browser window. 
+     *
+     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {string} url URL to open in the browser.
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function OpenURLInDefaultBrowser();
+    appshell.app.openURLInDefaultBrowser = function (callback, url) {
+        OpenURLInDefaultBrowser(callback, url);
+    };
+ 
+    // Alias the appshell object to brackets. This is temporary and should be removed.
+    brackets = appshell;
 })();

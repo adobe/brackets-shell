@@ -56,6 +56,8 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
 
 void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response);
 
+int32 OpenURLInDefaultBrowser(ExtensionString url);
+
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,

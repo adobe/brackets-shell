@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <CommDlg.h>
 #include <Psapi.h>
+#include <ShellAPI.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <stdio.h>
@@ -352,12 +353,24 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     cbData.closeWindow = true;
     ::EnumWindows(LiveBrowserMgrWin::EnumChromeWindowsCallback, (LPARAM)&cbData);
 
-	if (cbData.numberOfFoundWindows == 0) {
-		liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
-	} else if (liveBrowserMgr->GetCloseCallback()) {
-		// set a timeout for up to 3 minutes to close the browser 
+    if (cbData.numberOfFoundWindows == 0) {
+        liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
+    } else if (liveBrowserMgr->GetCloseCallback()) {
+        // set a timeout for up to 3 minutes to close the browser 
         liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
+}
+
+int32 OpenURLInDefaultBrowser(ExtensionString url)
+{
+    DWORD result = (DWORD)ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+
+    // If the result > 32, the function suceeded. If the result is <= 32, it is an
+    // error code.
+    if (result <= 32)
+        return ConvertWinErrorCode(result);
+
+    return NO_ERROR;
 }
 
 int32 ShowOpenDialog(bool allowMulitpleSelection,

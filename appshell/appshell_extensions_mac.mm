@@ -269,6 +269,17 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
                                          );
 }
 
+int32 OpenURLInDefaultBrowser(ExtensionString url)
+{
+    NSString* urlString = [NSString stringWithUTF8String:url.c_str()];
+    
+    if ([[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString: urlString]] == NO) {
+        return ERR_UNKNOWN;
+    }
+    
+    return NO_ERROR;
+}
+
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
