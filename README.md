@@ -8,6 +8,8 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 [Download](https://github.com/adobe/brackets-shell/downloads) the .zip file for your platform (there are separate downloads for Mac and Win). 
 
+NOTE: The downloads do **not** contain the html/css/javascript files used for Brackets. You will need to get those separately by cloning (or downloading) the [brackets repo](https://github.com/adobe/brackets).
+
 The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
 
 The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on the mac and `{USER}\AppData\Roaming\Brackets\cef_data` on Windows.
