@@ -6,7 +6,9 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 ## Running
 
-(Note - we will be posting a download soon. Promise!)
+[Download](https://github.com/adobe/brackets-shell/downloads) the .zip file for your platform (there are separate downloads for Mac and Win). 
+
+NOTE: The downloads do **not** contain the html/css/javascript files used for Brackets. You will need to get those separately by cloning (or downloading) the [brackets repo](https://github.com/adobe/brackets).
 
 The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
 
@@ -19,7 +21,7 @@ This project requires a CEF3 binary distribution in order to build.
 ### Mac
 ####Prerequisites
 
-* XCode 3.2.6 - 4.2 required to build the project (4.3.3 support coming soon)
+* XCode 3.2.6 - 4.4 required to build the project
 * CEF3 binary distribution version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
@@ -43,7 +45,7 @@ brackets-shell
 ```
 
 Open a terminal window on this directory and run `./make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
-Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4, do **not** select "Project Modernization" or you will get compile errors.
+Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4.4, you will get a couple warnings. These are harmless, and will be fixed soon.
 
 ####Generating Projects
 This is only required if you are changing the project files. **NOTE:** Don't change the xcode project files directly. Any changes should be done to the .gyp files, and new xcode projects should be generated.
