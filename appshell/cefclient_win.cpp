@@ -104,12 +104,35 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   DWORD lResult;
   #define PREF_NAME L"Software\\Brackets\\InitialURL"
 
+  // If the Control key is down, delete the prefs
+  BOOL bDeletePrefs = false;
+  if (GetAsyncKeyState(VK_CONTROL) != 0) {
+    bDeletePrefs = true;
+  }
+
   // Don't read the prefs if the shift key is down
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
     if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
-      DWORD length = MAX_PATH;
-      RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
-      RegCloseKey(hKey);
+      if (bDeletePrefs) {
+        RegDeleteKeyEx(hKey, L"", KEY_WOW64_32KEY, 0);
+      } else {
+        DWORD length = MAX_PATH;
+        RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
+        RegCloseKey(hKey);
+      }
+    }
+
+    if (!wcslen(szInitialUrl)) {
+      // Look for www/index.html in the same directory as the application
+      wchar_t appPath[MAX_PATH];
+      GetModuleFileName(NULL, appPath, MAX_PATH);
+
+      wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
+
+      // If the file exists, use it
+      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+        wcscpy(szInitialUrl, appPath);
+      }
     }
   }
 
