@@ -465,10 +465,15 @@ int main(int argc, char* argv[]) {
   
   if (startupUrl == nil) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    [openPanel setTitle:@"Choose startup file"];
+    [openPanel setTitle:@"Please select the brackets index.html file"];
     if ([openPanel runModal] == NSOKButton) {
       startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
       [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+    }
+    else {
+      // User chose cancel when selecting startup file. Exit.
+      [NSApp terminate:nil];
+      return 0;
     }
   }
     
