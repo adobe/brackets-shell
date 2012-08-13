@@ -36,6 +36,12 @@ double ClientApp::GetElapsedMilliseconds()
     return round(elapsed * 1000);
 }
 
+std::string ClientApp::GetCurrentLanguage()
+{
+    NSString* language = [[NSLocale preferredLanguages] objectAtIndex:0];
+    return [language UTF8String];
+}
+
 std::string ClientApp::GetExtensionJSSource()
 {
     std::string result;
