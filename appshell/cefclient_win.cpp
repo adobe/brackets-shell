@@ -142,6 +142,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       ofn.lpstrFile = szInitialUrl;
       ofn.nMaxFile = MAX_PATH;
       ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+      ofn.lpstrTitle = L"Please select the brackets index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
       if (GetOpenFileName(&ofn)) {
@@ -150,6 +151,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
           RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
           RegCloseKey(hKey);
         }
+      } else {
+        // User cancelled, exit the app
+        CefShutdown();
+        return 0;
       }
   }
 
