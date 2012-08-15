@@ -106,13 +106,14 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
     }
   }
 
+#if defined(OS_WIN)
   wchar_t localeName[8];
   localeName[0] = '\0';
   if (GetUserDefaultLocaleName(localeName, 8))
   {
     CefString(&settings.locale) = localeName;
   }
-
+#endif
 
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
