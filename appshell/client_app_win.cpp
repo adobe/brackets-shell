@@ -23,13 +23,14 @@
 
 #include "client_app.h"
 #include "resource.h"
+#include "include/cef_base.h"
 
 #include <MMSystem.h>
 #include <string>
 
 extern DWORD g_appStartupTime;
 
-std::wstring ClientApp::GetCurrentLanguage()
+CefString ClientApp::GetCurrentLanguage()
 {
 	// Get the user's selected language
 	// Defaults to the system installed language if not using MUI.
@@ -52,7 +53,7 @@ std::wstring ClientApp::GetCurrentLanguage()
 	delete [] lang;
 	delete [] country;
 
-	return locale;
+	return CefString(locale);
 }
 
 std::string ClientApp::GetExtensionJSSource()
