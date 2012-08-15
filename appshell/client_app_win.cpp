@@ -43,8 +43,8 @@ CefString ClientApp::GetCurrentLanguage()
 	wchar_t *lang = new wchar_t[langSize + countrySize + 1];
 	wchar_t *country = new wchar_t[countrySize];
 	
-	GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SISO639LANGNAME, lang, langSize);
-	GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SISO3166CTRYNAME, country, countrySize);
+	GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, lang, langSize);
+	GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, country, countrySize);
 
 	// add hyphen
 	wcscat(wcscat(lang, L"-"), country);
