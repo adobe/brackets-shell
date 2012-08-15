@@ -90,6 +90,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
 
+  // Set navigator.language
+  CefString(&settings.locale) = app->GetCurrentLanguage();
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
