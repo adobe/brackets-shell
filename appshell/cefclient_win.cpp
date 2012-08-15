@@ -88,7 +88,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
-  };
+  }
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
