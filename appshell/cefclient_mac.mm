@@ -433,10 +433,6 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
-  
-  // Set language
-  NSString* language = [[NSLocale preferredLanguages] objectAtIndex:0];
-  CefString(&settings.locale) = [language UTF8String];
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
