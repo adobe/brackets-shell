@@ -68,6 +68,30 @@ BEGIN
     END
 END
 
+IDC_CEFCLIENT_FR MENU 
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Quitter",                    IDM_EXIT
+    END
+    POPUP "&Ai_de"
+    BEGIN
+        MENUITEM "&A propos",                   IDM_ABOUT
+    END
+END
+
+IDC_CEFCLIENT_POPUP_FR MENU 
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Fermer",                     IDM_CLOSE
+    END
+    POPUP "&Ai_de"
+    BEGIN
+        MENUITEM "&A propos",                   IDM_ABOUT
+    END
+END
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
