@@ -434,9 +434,6 @@ int main(int argc, char* argv[]) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
   
-  // Set navigator.language
-  CefString(&settings.locale) = app->GetCurrentLanguage();
-  
   // Set language
   NSString* language = [[NSLocale preferredLanguages] objectAtIndex:0];
   CefString(&settings.locale) = [language UTF8String];
