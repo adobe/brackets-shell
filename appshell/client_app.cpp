@@ -145,10 +145,12 @@ class AppShellExtensionHandler : public CefV8Handler {
                        CefRefPtr<CefV8Value>& retval,
                        CefString& exception) {
       
-      // The only message that is handled here is getElapsedMilliseconds(). All other
-      // messages are passed to the browser process.
+      // The only messages that are handled here is getElapsedMilliseconds() and
+      // GetCurrentLanguage(). All other messages are passed to the browser process.
       if (name == "GetElapsedMilliseconds") {
           retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
+      } else if (name == "GetCurrentLanguage") {
+          retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
       } else {
           // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
           CefRefPtr<CefBrowser> browser = 

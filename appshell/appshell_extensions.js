@@ -342,6 +342,17 @@ if (!appshell.app) {
         OpenURLInDefaultBrowser(callback, url);
     };
  
+    /**
+     * Return the user's language per operating system preferences.
+     */
+    native function GetCurrentLanguage();
+    Object.defineProperty(appshell.app, "language", {
+        writeable: false,
+        get : function() { return GetCurrentLanguage(); },
+        enumerable : true,
+        configurable : false
+    });
+ 
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
 })();
