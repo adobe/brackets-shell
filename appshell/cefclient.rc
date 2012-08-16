@@ -74,7 +74,7 @@ BEGIN
     BEGIN
         MENUITEM "&Quitter",                    IDM_EXIT
     END
-    POPUP "&Ai_de"
+    POPUP "&Aide"
     BEGIN
         MENUITEM "&A propos",                   IDM_ABOUT
     END
@@ -86,7 +86,7 @@ BEGIN
     BEGIN
         MENUITEM "&Fermer",                     IDM_CLOSE
     END
-    POPUP "&Ai_de"
+    POPUP "&Aide"
     BEGIN
         MENUITEM "&A propos",                   IDM_ABOUT
     END
