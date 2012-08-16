@@ -50,7 +50,7 @@ brackets-shell
    ...
 ```
 
-Open a terminal window on this directory and run `scripts/make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open a terminal window on the `brackets-shell` directory and run `scripts/make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
 Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4.4, you will get a couple warnings. These are harmless, and will be fixed soon.
 
 ####Generating Projects
@@ -86,7 +86,7 @@ brackets-shell
    ...
 ```
 
-Open a command prompt on this directory and run `scripts\\make_symlinks.bat`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open a command prompt on the `brackets-shell` directory and run `scripts\\make_symlinks.bat`. This will create symbolic links to several folders in the `deps/cef` directory.
 
 Open appshell.sln in Visual Studio. NOTE: If you are using Visual Studio Express, you may get warnings that say some of the projects couldn't be loaded. These can be ignored.
 
