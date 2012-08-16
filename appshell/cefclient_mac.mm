@@ -442,16 +442,38 @@ int main(int argc, char* argv[]) {
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
 
-  // Only load the prefs if the shift key isn't down
-  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift)  
+  // If the Option key is down, delete any saved preferences
+  if ((modifiers & kCGEventFlagMaskAlternate) == kCGEventFlagMaskAlternate) {
+    [[NSUserDefaults standardUserDefaults] setURL:nil forKey:@"initialUrl"];
+  }
+    
+  // If the shift key is down, always let the user select the startup file
+  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
     startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
-
+    
+    // If we don't have a startup url saved in preferences, check for an index.html
+    // file in the www directory in our app package.
+    if (startupUrl == nil) {
+      NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+      NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
+      
+      if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
+        startupUrl = [NSURL fileURLWithPath:indexFile];
+      }
+    }
+  }
+  
   if (startupUrl == nil) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    [openPanel setTitle:@"Choose startup file"];
+    [openPanel setTitle:@"Please select the brackets index.html file"];
     if ([openPanel runModal] == NSOKButton) {
       startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
       [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+    }
+    else {
+      // User chose cancel when selecting startup file. Exit.
+      [NSApp terminate:nil];
+      return 0;
     }
   }
     
