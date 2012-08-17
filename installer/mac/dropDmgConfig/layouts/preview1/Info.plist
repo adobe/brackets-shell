@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>content</key>
+	<dict>
+		<key>identifier</key>
+		<string>Layout.2787195E-E530-418E-A521-356A9D365E9E</string>
+		<key>options</key>
+		<dict>
+			<key>backgroundImageName</key>
+			<string>Installer BG Image-02.png</string>
+			<key>fontSize</key>
+			<integer>12</integer>
+			<key>iconSize</key>
+			<integer>48</integer>
+			<key>layoutItems</key>
+			<array>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.41ACEC13-5995-48E6-A3F1-6C766090B2BF</string>
+					<key>name</key>
+					<string>Applications</string>
+					<key>position</key>
+					<string>{297, 143}</string>
+					<key>type</key>
+					<string>applications</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.AD9655D0-2E1F-4C7A-815A-4484B930FCE2</string>
+					<key>name</key>
+					<string>Brackets preview 1.app</string>
+					<key>position</key>
+					<string>{113, 145}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.06B71EA6-CBC5-4D35-8EA1-8BBE1E126E00</string>
+					<key>position</key>
+					<string>{365, 383}</string>
+					<key>rtf</key>
+					<string>{\rtf1\ansi\ansicpg1252\cocoartf1138\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs24 \cf0 Drag Brackets to the Applications folder to install}</string>
+					<key>size</key>
+					<string>{282, 30}</string>
+					<key>type</key>
+					<string>text</string>
+				</dict>
+			</array>
+			<key>windowOriginTopLeft</key>
+			<string>{100, 100}</string>
+		</dict>
+	</dict>
+	<key>documentCreator</key>
+	<string>DropDMG 3.1.3</string>
+	<key>documentType</key>
+	<string>com.c-command.DropDMG.Layout</string>
+	<key>formatVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

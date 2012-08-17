@@ -6,9 +6,17 @@ If you are interested in contributing to this shell, let us know on the [bracket
 
 ## Running
 
-(Note - we will be posting a download soon. Promise!)
+[Download](https://github.com/adobe/brackets-shell/downloads) the .zip file for your platform (there are separate downloads for Mac and Win). 
 
-The first time the app is run it will ask you to find the brackets index.html file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again.
+NOTE: The downloads do **not** contain the html/css/javascript files used for Brackets. You will need to get those separately by cloning (or downloading) the [brackets repo](https://github.com/adobe/brackets).
+
+When the app is launched, it first looks for an index.html file in the following location:
+* Mac - Brackets.app/Contents/www/index.html
+* Win - www/index.html (the www folder must be in the same folder as Brackets.exe)
+
+If the index.html can't be found, you'll be prompted to find the brackets index.html file. Make sure you select the brackets/src/index.html file, and *not* some other file. This location is remembered for subsequent launches. If you want to point to a *different* index.html file, hold down the shift key while launching and you will get the prompt again. If you want to clear the saved file location, hold down the Option (mac) or Control (win) key while launching. 
+
+NOTE: You need to hold down these modifier keys **before** launching Brackets. If you get a security dialog, make sure you continue to hold the modifier key after dismissing the dialog.
 
 The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on the mac and `{USER}\AppData\Roaming\Brackets\cef_data` on Windows.
 
@@ -19,7 +27,7 @@ This project requires a CEF3 binary distribution in order to build.
 ### Mac
 ####Prerequisites
 
-* XCode 3.2.6 - 4.2 required to build the project (4.3.3 support coming soon)
+* XCode 3.2.6 - 4.4 required to build the project
 * CEF3 binary distribution version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
@@ -42,14 +50,14 @@ brackets-shell
    ...
 ```
 
-Open a terminal window on this directory and run `./make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
-Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4, do **not** select "Project Modernization" or you will get compile errors.
+Open a terminal window on the `brackets-shell` directory and run `scripts/make_symlinks.sh`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open appshell.pbxproj in XCode. NOTE: If you are using XCode 4.4, you will get a couple warnings. These are harmless, and will be fixed soon.
 
 ####Generating Projects
 This is only required if you are changing the project files. **NOTE:** Don't change the xcode project files directly. Any changes should be done to the .gyp files, and new xcode projects should be generated.
 
 * Add a <code>CHROMIUM\_SRC\_PATH</code> environment variable that points to your chromium 'src' folder (without a final '/').
-* Open a terminal window on this directory and run <code>./make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
+* Open a terminal window on this directory and run <code>scripts/make\_appshell\_project.sh</code> (Note: while not required, it is a good idea to delete the old appshell.xcodeproj before generating a new one.)
 
 ### Windows
 
@@ -78,7 +86,7 @@ brackets-shell
    ...
 ```
 
-Open a command prompt on this directory and run `make_symlinks.bat`. This will create symbolic links to several folders in the `deps/cef` directory.
+Open a command prompt on the `brackets-shell` directory and run `scripts\\make_symlinks.bat`. This will create symbolic links to several folders in the `deps/cef` directory.
 
 Open appshell.sln in Visual Studio. NOTE: If you are using Visual Studio Express, you may get warnings that say some of the projects couldn't be loaded. These can be ignored.
 
@@ -86,7 +94,7 @@ Open appshell.sln in Visual Studio. NOTE: If you are using Visual Studio Express
 This is only required if you are changing the project files. **NOTE:** Don't change the Visual Studio project files directly. Any changes should be done to the .gyp files, and new Visual Studio projects should be generated.
 
 * Add a <code>CHROMIUM\_SRC\_PATH</code> environment variable that points to your chromium 'src' folder (without a final '/').
-* Open a command prompt on this directory and run <code>make\_appshell\_project.bat</code>
+* Open a command prompt on this directory and run <code>scripts\\make\_appshell\_project.bat</code>
 
 ### Linux
 

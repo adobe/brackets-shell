@@ -41,7 +41,7 @@ char szWorkingDir[MAX_PATH];  // The current working directory
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
 // Forward declarations of functions included in this code module:
-ATOM MyRegisterClass(HINSTANCE hInstance);
+ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
@@ -98,18 +98,41 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
-  MyRegisterClass(hInstance);
+  MyRegisterClass(hInstance, settings.locale);
   
   HKEY hKey;
   DWORD lResult;
   #define PREF_NAME L"Software\\Brackets\\InitialURL"
 
+  // If the Control key is down, delete the prefs
+  BOOL bDeletePrefs = false;
+  if (GetAsyncKeyState(VK_CONTROL) != 0) {
+    bDeletePrefs = true;
+  }
+
   // Don't read the prefs if the shift key is down
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
     if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
-      DWORD length = MAX_PATH;
-      RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
-      RegCloseKey(hKey);
+      if (bDeletePrefs) {
+        RegDeleteKeyEx(hKey, L"", KEY_WOW64_32KEY, 0);
+      } else {
+        DWORD length = MAX_PATH;
+        RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
+        RegCloseKey(hKey);
+      }
+    }
+
+    if (!wcslen(szInitialUrl)) {
+      // Look for www/index.html in the same directory as the application
+      wchar_t appPath[MAX_PATH];
+      GetModuleFileName(NULL, appPath, MAX_PATH);
+
+      wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
+
+      // If the file exists, use it
+      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+        wcscpy(szInitialUrl, appPath);
+      }
     }
   }
 
@@ -119,6 +142,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       ofn.lpstrFile = szInitialUrl;
       ofn.nMaxFile = MAX_PATH;
       ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+      ofn.lpstrTitle = L"Please select the brackets index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
       if (GetOpenFileName(&ofn)) {
@@ -127,6 +151,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
           RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
           RegCloseKey(hKey);
         }
+      } else {
+        // User cancelled, exit the app
+        CefShutdown();
+        return 0;
       }
   }
 
@@ -134,7 +162,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CEFCLIENT));
+  // Temporary localization hack. Default to English. Check for French.
+  DWORD menuId = IDC_CEFCLIENT;
+  if (settings.locale.str && (settings.locale.length > 0) &&
+      (CefString(settings.locale.str) == CefString("fr-FR")))
+  {
+	  menuId = IDC_CEFCLIENT_FR;
+  }
+
+  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
 
   int result = 0;
 
@@ -177,7 +213,16 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 //    function so that the application will get 'well formed' small icons
 //    associated with it.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance) {
+ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
+
+  // Temporary localization hack. Default to English. Check for French.
+  DWORD menuId = IDC_CEFCLIENT;
+  if (locale.str && (locale.length > 0) &&
+      (CefString(locale.str) == CefString("fr-FR")))
+  {
+	  menuId = IDC_CEFCLIENT_FR;
+  }
+
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -190,7 +235,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance) {
   wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
   wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = MAKEINTRESOURCE(IDC_CEFCLIENT);
+  wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
   wcex.lpszClassName = szWindowClass;
   wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
