@@ -1,10 +1,10 @@
 #!/bin/bash 
 
 # config
-releaseName="Brackets preview 1"
+releaseName="Brackets Sprint 13"
 format="bzip2"
 encryption="none"
-layoutFolder="./dropDmgConfig/layouts/preview1"
+layoutFolder="./dropDmgConfig/layouts/sprint13"
 appName=$releaseName".app"
 tempDir="tempBuild"
 
@@ -14,7 +14,9 @@ mkdir $tempDir
 cp -r ./staging/Brackets.app/ "$tempDir/$appName"
 
 
-dropdmg ./$tempDir --format $format --encryption $encryption --layout-folder $layoutFolder --volume-name "Brackets preview 1" --base-name "Brackets preview 1"
+# build the DMG
+echo "building DMG..."
+dropdmg ./$tempDir --format $format --encryption $encryption --layout-folder $layoutFolder --volume-name "$releaseName" --base-name "$releaseName"
 
-
-#rm -rf $tempDir
+# clean up
+rm -rf $tempDir

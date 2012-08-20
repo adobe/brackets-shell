@@ -17,6 +17,7 @@ xcodebuild/*
 *.suo
 *.vcxproj.user
 *.log
+*.dmg
 
 Debug
 Release
