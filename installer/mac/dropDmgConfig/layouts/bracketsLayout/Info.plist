@@ -22,9 +22,19 @@
 					<key>name</key>
 					<string>Brackets Sprint 13.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.41ACEC13-5995-48E6-A3F1-6C766090B2BF</string>
+					<key>name</key>
+					<string>Applications</string>
+					<key>position</key>
+					<string>{313, 146}</string>
+					<key>type</key>
+					<string>applications</string>
 				</dict>
 				<dict>
 					<key>identifier</key>
@@ -68,16 +78,6 @@
 				</dict>
 				<dict>
 					<key>identifier</key>
-					<string>LayoutItem.41ACEC13-5995-48E6-A3F1-6C766090B2BF</string>
-					<key>name</key>
-					<string>Applications</string>
-					<key>position</key>
-					<string>{297, 143}</string>
-					<key>type</key>
-					<string>applications</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
 					<string>LayoutItem.06B71EA6-CBC5-4D35-8EA1-8BBE1E126E00</string>
 					<key>position</key>
 					<string>{365, 383}</string>
@@ -99,7 +99,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 14.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -109,7 +109,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 15.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -119,7 +119,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 16.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -129,7 +129,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 17.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -139,7 +139,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 18.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -149,7 +149,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 19.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -159,7 +159,7 @@
 					<key>name</key>
 					<string>Brackets Sprint 20.app</string>
 					<key>position</key>
-					<string>{117.58203125, 148.38671875}</string>
+					<string>{128, 145}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
