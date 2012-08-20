@@ -4,7 +4,7 @@
 releaseName="Brackets Sprint 13"
 format="bzip2"
 encryption="none"
-layoutFolder="./dropDmgConfig/layouts/sprint13"
+layoutFolder="./dropDmgConfig/layouts/bracketsLayout"
 appName=$releaseName".app"
 tempDir="tempBuild"
 

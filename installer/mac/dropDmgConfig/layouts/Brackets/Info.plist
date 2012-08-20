@@ -18,6 +18,16 @@
 			<array>
 				<dict>
 					<key>identifier</key>
+					<string>LayoutItem.E769E339-FD2E-41FE-B10F-98654151FD1C</string>
+					<key>name</key>
+					<string>Brackets Sprint 13.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
 					<string>LayoutItem.3E1B7344-C175-4BE0-87DB-880A4A30E80F</string>
 					<key>name</key>
 					<string>.Trashes</string>
@@ -85,9 +95,69 @@
 				</dict>
 				<dict>
 					<key>identifier</key>
-					<string>LayoutItem.E769E339-FD2E-41FE-B10F-98654151FD1C</string>
+					<string>LayoutItem.902F7385-A0AE-412F-969B-46380BC8CFC6</string>
 					<key>name</key>
-					<string>Brackets Sprint 13.app</string>
+					<string>Brackets Sprint 14.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.3DC693FD-574E-48ED-8022-7CD419175D43</string>
+					<key>name</key>
+					<string>Brackets Sprint 15.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.CFC7E962-3B71-4CCD-AC57-C9AAA35F55F1</string>
+					<key>name</key>
+					<string>Brackets Sprint 16.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.11EC1452-ED4C-49A3-A8EF-21EDFAC51D9A</string>
+					<key>name</key>
+					<string>Brackets Sprint 17.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.FCC5F54D-05B6-4FFC-B8A6-C46F0E89C0AA</string>
+					<key>name</key>
+					<string>Brackets Sprint 18.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.FD5733AB-670F-4165-B894-95EF7A57FEEE</string>
+					<key>name</key>
+					<string>Brackets Sprint 19.app</string>
+					<key>position</key>
+					<string>{117.58203125, 148.38671875}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.81119758-AD8D-4006-883A-D37A6FA4E2CE</string>
+					<key>name</key>
+					<string>Brackets Sprint 20.app</string>
 					<key>position</key>
 					<string>{117.58203125, 148.38671875}</string>
 					<key>type</key>
