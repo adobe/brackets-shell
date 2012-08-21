@@ -5,7 +5,7 @@
 	<key>content</key>
 	<dict>
 		<key>identifier</key>
-		<string>Layout.2787195E-E530-418E-A521-356A9D365E9E</string>
+		<string>Layout.0E65901D-6E4F-48BE-8DD9-ECA89615E429</string>
 		<key>options</key>
 		<dict>
 			<key>backgroundImageName</key>
@@ -13,28 +13,28 @@
 			<key>fontSize</key>
 			<integer>12</integer>
 			<key>iconSize</key>
-			<integer>48</integer>
+			<integer>128</integer>
 			<key>layoutItems</key>
 			<array>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.E769E339-FD2E-41FE-B10F-98654151FD1C</string>
-					<key>name</key>
-					<string>Brackets Sprint 13.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
 				<dict>
 					<key>identifier</key>
 					<string>LayoutItem.41ACEC13-5995-48E6-A3F1-6C766090B2BF</string>
 					<key>name</key>
 					<string>Applications</string>
 					<key>position</key>
-					<string>{313, 146}</string>
+					<string>{327, 148}</string>
 					<key>type</key>
 					<string>applications</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
+					<string>LayoutItem.E769E339-FD2E-41FE-B10F-98654151FD1C</string>
+					<key>name</key>
+					<string>APPLICATION_NAME</string>
+					<key>position</key>
+					<string>{118, 148}</string>
+					<key>type</key>
+					<string>file</string>
 				</dict>
 				<dict>
 					<key>identifier</key>
@@ -42,7 +42,7 @@
 					<key>name</key>
 					<string>.Trashes</string>
 					<key>position</key>
-					<string>{136, 312}</string>
+					<string>{128, 416}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -52,7 +52,7 @@
 					<key>name</key>
 					<string>.fseventsd</string>
 					<key>position</key>
-					<string>{312, 312}</string>
+					<string>{336, 432}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -62,7 +62,7 @@
 					<key>name</key>
 					<string>.DropDMGBackground</string>
 					<key>position</key>
-					<string>{376, 312}</string>
+					<string>{400, 432}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -72,7 +72,7 @@
 					<key>name</key>
 					<string>.DS_Store</string>
 					<key>position</key>
-					<string>{72, 328}</string>
+					<string>{64, 432}</string>
 					<key>type</key>
 					<string>file</string>
 				</dict>
@@ -92,76 +92,6 @@
 					<string>{282, 30}</string>
 					<key>type</key>
 					<string>text</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.902F7385-A0AE-412F-969B-46380BC8CFC6</string>
-					<key>name</key>
-					<string>Brackets Sprint 14.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.3DC693FD-574E-48ED-8022-7CD419175D43</string>
-					<key>name</key>
-					<string>Brackets Sprint 15.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.CFC7E962-3B71-4CCD-AC57-C9AAA35F55F1</string>
-					<key>name</key>
-					<string>Brackets Sprint 16.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.11EC1452-ED4C-49A3-A8EF-21EDFAC51D9A</string>
-					<key>name</key>
-					<string>Brackets Sprint 17.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.FCC5F54D-05B6-4FFC-B8A6-C46F0E89C0AA</string>
-					<key>name</key>
-					<string>Brackets Sprint 18.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.FD5733AB-670F-4165-B894-95EF7A57FEEE</string>
-					<key>name</key>
-					<string>Brackets Sprint 19.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
-				</dict>
-				<dict>
-					<key>identifier</key>
-					<string>LayoutItem.81119758-AD8D-4006-883A-D37A6FA4E2CE</string>
-					<key>name</key>
-					<string>Brackets Sprint 20.app</string>
-					<key>position</key>
-					<string>{128, 145}</string>
-					<key>type</key>
-					<string>file</string>
 				</dict>
 			</array>
 			<key>windowOriginTopLeft</key>
