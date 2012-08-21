@@ -17,6 +17,7 @@ xcodebuild/*
 *.suo
 *.vcxproj.user
 *.log
+*.dmg
 
 Debug
 Release
@@ -26,3 +27,5 @@ include
 ipch
 libcef_dll
 tools
+
+/installer/mac/staging/
