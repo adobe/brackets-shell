@@ -22,13 +22,13 @@ The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_d
 
 ## Building
 
-This project requires a CEF3 binary distribution in order to build.
+This project requires a [CEF3 binary distribution](http://code.google.com/p/chromiumembedded/downloads/list) in order to build.
 
 ### Mac
 ####Prerequisites
 
 * XCode 3.2.6 - 4.4 required to build the project
-* CEF3 binary distribution version 3.1180.719 or newer
+* [CEF3 binary distribution](http://code.google.com/p/chromiumembedded/downloads/detail?name=cef_binary_3.1180.719_macosx.zip&can=2&q=)  version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.
@@ -64,7 +64,7 @@ This is only required if you are changing the project files. **NOTE:** Don't cha
 ####Prerequisites
 
 * Visual Studio 2010 or later required to build the project. The free Visual Studio Express works fine.
-* CEF3 binary distribution version 3.1180.719 or newer
+* [CEF3 binary distribution](http://code.google.com/p/chromiumembedded/downloads/detail?name=cef_binary_3.1180.719_windows.zip&can=2&q=) version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
   * chromium source code (at least the src/build and src/tools directories). Hopefully this is a short-term requirement.
