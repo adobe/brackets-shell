@@ -27,3 +27,5 @@ include
 ipch
 libcef_dll
 tools
+
+/installer/mac/staging/
