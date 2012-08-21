@@ -6,6 +6,12 @@
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
 
+# Make sure BRACKETS_WWW_SRC environment variable is set
+if [ "$BRACKETS_SRC" = "" ]; then
+  echo "BRACKETS_SRC environment variable is not set. Aborting."
+  exit
+fi
+
 # Set this to the branch you want to build from
 branchName=master
 
@@ -25,3 +31,17 @@ xcodebuild -project appshell.xcodeproj -config Release build
 # Package www files
 scripts/package_www_files.sh
 
+# Remove existing staging dir
+if [ -d installer/mac/staging ]; then
+  rm -rf installer/mac/staging/*
+  rmdir installer/mac/staging
+fi
+
+mkdir installer/mac/staging
+
+# Copy to installer staging folder
+cp -R xcodebuild/Release/Brackets.app installer/mac/staging/
+
+# Build the installer
+cd installer/mac
+./buildInstaller.sh

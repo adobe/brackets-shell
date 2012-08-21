@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Make sure BRACKETS_WWW_SRC environment variable is set
-if [ "$BRACKETS_WWW_SRC" = "" ]; then
-  echo "BRACKETS_WWW_SRC environment variable is not set. Aborting."
+if [ "$BRACKETS_SRC" = "" ]; then
+  echo "BRACKETS_SRC environment variable is not set. Aborting."
   exit
 fi
 
@@ -16,4 +16,4 @@ fi
 mkdir xcodebuild/Release/Brackets.app/Contents/www
 
 # Copy the source 
-cp -pR $BRACKETS_WWW_SRC/* xcodebuild/Release/Brackets.app/Contents/www
+cp -pR $BRACKETS_SRC/src/* xcodebuild/Release/Brackets.app/Contents/www
