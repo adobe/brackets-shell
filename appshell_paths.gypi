@@ -141,6 +141,8 @@
       'appshell/mac/brackets.icns',
       'appshell/mac/English.lproj/InfoPlist.strings',
       'appshell/mac/English.lproj/MainMenu.xib',
+      'appshell/mac/French.lproj/InfoPlist.strings',
+      'appshell/mac/French.lproj/MainMenu.xib',
       'appshell/mac/Info.plist',
       'appshell/appshell_extensions.js',
     ],
