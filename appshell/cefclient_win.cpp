@@ -114,7 +114,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
     if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
       if (bDeletePrefs) {
-        RegDeleteKeyEx(hKey, L"", KEY_WOW64_32KEY, 0);
+        RegDeleteKey(hKey, L"");
       } else {
         DWORD length = MAX_PATH;
         RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
