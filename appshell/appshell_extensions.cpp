@@ -295,7 +295,11 @@ public:
           
             if (error == NO_ERROR) {
                 ExtensionString appURL = argList->GetString(1);
+#ifdef OS_WIN
+                ExtensionString extensionsPath = appURL.erase(appURL.find(L"index.html")).append(L"extensions");
+#else
                 ExtensionString extensionsPath = appURL.erase(appURL.find("index.html")).append("extensions");
+#endif
                 error = ShowFolderInOSWindow(extensionsPath);
             }
         } else {
