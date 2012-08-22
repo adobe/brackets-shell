@@ -7,7 +7,7 @@
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
 
-# Make sure BRACKETS_WWW_SRC environment variable is set
+# Make sure BRACKETS_SRC environment variable is set
 if [ "$BRACKETS_SRC" = "" ]; then
   echo "BRACKETS_SRC environment variable is not set. Aborting."
   exit
