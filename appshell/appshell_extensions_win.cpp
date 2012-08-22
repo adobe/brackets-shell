@@ -736,4 +736,8 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
     }
 }
 
+int32 ShowFolderInOSWindow(ExtensionString pathname) {
+    ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    return NO_ERROR;
+}
 
