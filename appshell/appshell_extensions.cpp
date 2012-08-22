@@ -283,6 +283,21 @@ public:
                 
                 // No additional response args for this function
             }
+        } else if (message_name == "ShowExtensionsFolder") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - app URL
+            
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+          
+            if (error == NO_ERROR) {
+                ExtensionString appURL = argList->GetString(1);
+                ExtensionString extensionsPath = appURL.erase(appURL.find("index.html")).append("extensions");
+                error = ShowFolderInOSWindow(extensionsPath);
+            }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
