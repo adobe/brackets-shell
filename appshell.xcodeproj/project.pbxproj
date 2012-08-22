@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 45;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -314,6 +314,7 @@
 		4F5A3BED71B18E93D1394119 /* request_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = request_handler_cpptoc.h; sourceTree = "<group>"; };
 		50755C14EA439CC70BE8E315 /* cef_display_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_display_handler_capi.h; sourceTree = "<group>"; };
 		50A50B6A0BB3F210AA864747 /* cef_geolocation_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_geolocation_handler.h; sourceTree = "<group>"; };
+		51197AD59C704A403D067684 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		51EA89228AAB69F5A7421329 /* cef_zip_reader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_zip_reader.h; sourceTree = "<group>"; };
 		522C920B68963035E6CE38FE /* cefclient.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cefclient.cpp; sourceTree = "<group>"; };
 		526E2A18DDBBC48588F9C5D1 /* app_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = app_cpptoc.cc; sourceTree = "<group>"; };
@@ -380,6 +381,7 @@
 		8637A80D02FB4C99759A9768 /* response_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = response_ctocpp.cc; sourceTree = "<group>"; };
 		86D8D74097D19E3DD4981DCF /* cef_scheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_scheme.h; sourceTree = "<group>"; };
 		86E19C99BCCDDA939F257FE0 /* menu_model_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = menu_model_ctocpp.cc; sourceTree = "<group>"; };
+		876CB717FB3B13B947CA9690 /* French */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = French; path = French.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		8965EDE2A9D643C3DC3D3F3A /* string_visitor_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_visitor_cpptoc.h; sourceTree = "<group>"; };
 		8A3C2FC45C53580743DDD98F /* v8handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = v8handler_cpptoc.cc; sourceTree = "<group>"; };
 		8ABFDFF093F6B71602851374 /* render_process_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = render_process_handler_cpptoc.cc; sourceTree = "<group>"; };
@@ -390,8 +392,6 @@
 		8F11150C50C71F0939C665D5 /* binary_value_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = binary_value_ctocpp.cc; sourceTree = "<group>"; };
 		8FA31F2E768EEDFF39F3FCAF /* domevent_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = domevent_ctocpp.h; sourceTree = "<group>"; };
 		902F6E988B8B976585C32A30 /* cef_string_visitor_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string_visitor_capi.h; sourceTree = "<group>"; };
-		9047729315DEFDDE00B8CFC0 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		905BC52615DEFB0C00EFC23A /* French */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = French; path = French.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		90874EBCA8FAA8E9E36FFD3F /* string_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_util.h; sourceTree = "<group>"; };
 		911E95A12B592BC9F1A80668 /* urlrequest_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = urlrequest_ctocpp.h; sourceTree = "<group>"; };
 		92C96D3DB86D67B3238B1361 /* cef_callback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_callback.h; sourceTree = "<group>"; };
@@ -433,7 +433,7 @@
 		B4B09C1A48BFF86A37409501 /* cef_load_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_load_handler.h; sourceTree = "<group>"; };
 		B5F6DEF7A5E722606EFDD579 /* request_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = request_handler_cpptoc.cc; sourceTree = "<group>"; };
 		B617EB0714F29F881C46BCC3 /* frame_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = frame_ctocpp.cc; sourceTree = "<group>"; };
-		B65894845851B9D3DEE6BD03 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcef.dylib; sourceTree = CONFIGURATION; };
+		B65894845851B9D3DEE6BD03 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = libcef.dylib; sourceTree = CONFIGURATION; };
 		B6A77EE456259DB56C750847 /* cookie_visitor_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cookie_visitor_cpptoc.cc; sourceTree = "<group>"; };
 		B9211C221356E0B082C4816A /* transfer_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transfer_util.cpp; sourceTree = "<group>"; };
 		B9EF704C714952FC84A12099 /* list_value_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list_value_ctocpp.h; sourceTree = "<group>"; };
@@ -1056,14 +1056,7 @@
 			};
 			buildConfigurationList = 38D0AF58DF00CF65E3AAE9DC /* Build configuration list for PBXProject "appshell" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
 			hasScannedForEncodings = 1;
-			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
-			);
 			mainGroup = F47C63E7FD8ABDAE3E69A708;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1361,7 +1354,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				21E1788E6373ED804C2F8EF9 /* English */,
-				9047729315DEFDDE00B8CFC0 /* French */,
+				51197AD59C704A403D067684 /* French */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1370,7 +1363,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				8D044E3620D9DD898CC187C0 /* English */,
-				905BC52615DEFB0C00EFC23A /* French */,
+				876CB717FB3B13B947CA9690 /* French */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
