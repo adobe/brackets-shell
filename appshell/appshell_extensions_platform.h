@@ -82,3 +82,5 @@ void OnBeforeShutdown();
 void CloseWindow(CefRefPtr<CefBrowser> browser);
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
+
+int32 ShowFolderInOSWindow(ExtensionString pathname);

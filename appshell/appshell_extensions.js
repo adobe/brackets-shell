@@ -353,6 +353,19 @@ if (!appshell.app) {
         configurable : false
     });
  
+    /**
+     * Open the extensions folder in an OS file window.
+     *
+     * @param {string} appURL URL of the index.html file for the application
+     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function ShowExtensionsFolder();
+    appshell.app.showExtensionsFolder = function (appURL, callback) {
+        ShowExtensionsFolder(callback, appURL);
+    };
+ 
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
 })();
