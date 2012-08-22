@@ -314,6 +314,7 @@
 		4F5A3BED71B18E93D1394119 /* request_handler_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = request_handler_cpptoc.h; sourceTree = "<group>"; };
 		50755C14EA439CC70BE8E315 /* cef_display_handler_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_display_handler_capi.h; sourceTree = "<group>"; };
 		50A50B6A0BB3F210AA864747 /* cef_geolocation_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_geolocation_handler.h; sourceTree = "<group>"; };
+		51197AD59C704A403D067684 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		51EA89228AAB69F5A7421329 /* cef_zip_reader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_zip_reader.h; sourceTree = "<group>"; };
 		522C920B68963035E6CE38FE /* cefclient.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cefclient.cpp; sourceTree = "<group>"; };
 		526E2A18DDBBC48588F9C5D1 /* app_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = app_cpptoc.cc; sourceTree = "<group>"; };
@@ -380,6 +381,7 @@
 		8637A80D02FB4C99759A9768 /* response_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = response_ctocpp.cc; sourceTree = "<group>"; };
 		86D8D74097D19E3DD4981DCF /* cef_scheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_scheme.h; sourceTree = "<group>"; };
 		86E19C99BCCDDA939F257FE0 /* menu_model_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = menu_model_ctocpp.cc; sourceTree = "<group>"; };
+		876CB717FB3B13B947CA9690 /* French */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = French; path = French.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		8965EDE2A9D643C3DC3D3F3A /* string_visitor_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_visitor_cpptoc.h; sourceTree = "<group>"; };
 		8A3C2FC45C53580743DDD98F /* v8handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = v8handler_cpptoc.cc; sourceTree = "<group>"; };
 		8ABFDFF093F6B71602851374 /* render_process_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = render_process_handler_cpptoc.cc; sourceTree = "<group>"; };
@@ -1352,6 +1354,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				21E1788E6373ED804C2F8EF9 /* English */,
+				51197AD59C704A403D067684 /* French */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1360,6 +1363,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				8D044E3620D9DD898CC187C0 /* English */,
+				876CB717FB3B13B947CA9690 /* French */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
