@@ -1,6 +1,7 @@
 # SETUP
 # - Install xcode
 # - Install xcode command line tools 
+# - Install DropDMG, including the dropdmg command line tool
 # - Setup source directories as specified in README.md
 #   (copy CEF binary, run scripts/make_symlinks.sh, etc.)
 # - Set BRACKETS_SRC environment variable, pointing to the
