@@ -2,15 +2,15 @@
 
 :: Prerequisites:
 :: 1. Pull down the brackets repo
-:: 2. Set BRACKETS_WWW_SRC to the path to brackets\src inside that repo (with NO trailing slash)
+:: 2. Set BRACKETS_SRC to the root of the brackets repo (with NO trailing slash)
 :: 3. Build the Windows build of brackets-shell - see scripts\make_appshell_project.bat
 ::    (should create a brackets-shell\Release dir)
 
 
-:: Check that BRACKETS_WWW_SRC var is defined and points to a dir that exists
+:: Check that BRACKETS_SRC var is defined and points to a dir that exists
 :: (we can't only check the latter since an undefined var is "", which DOES 'exist')
-IF NOT DEFINED BRACKETS_WWW_SRC GOTO NO_WWW_SRC
-IF NOT EXIST %BRACKETS_WWW_SRC% GOTO NO_WWW_SRC
+IF NOT DEFINED BRACKETS_SRC GOTO NO_BRACKETS_SRC
+IF NOT EXIST %BRACKETS_SRC% GOTO NO_BRACKETS_SRC
 
 
 :: Folder structure before staging:
@@ -23,8 +23,8 @@ IF NOT EXIST %BRACKETS_WWW_SRC% GOTO NO_WWW_SRC
 ::         locales
 ::         ...
 ::      ...
-::   brackets
-::      src   <-- BRACKETS_WWW_SRC
+::   brackets   <-- BRACKETS_SRC
+::      src
 ::      test
 
 :: Folder structure after staging:
@@ -36,7 +36,7 @@ IF NOT EXIST %BRACKETS_WWW_SRC% GOTO NO_WWW_SRC
 ::               locales
 ::               ...
 ::               www
-::                  <contents of BRACKETS_WWW_SRC>
+::                  <contents of BRACKETS_SRC\src>
 ::      ...
 
 
@@ -84,12 +84,12 @@ xcopy ..\..\Release staging /s /i /exclude:shell_excludes.tmp
 del shell_excludes.tmp
 
 
-:: Copy BRACKETS_WWW_SRC to staging\www
+:: Copy BRACKETS_SRC\src to staging\www
 :: excluding .git*
-echo Copying brackets source from %BRACKETS_WWW_SRC% ...
+echo Copying brackets source from %BRACKETS_SRC%\src ...
 
 echo .git > www_excludes.tmp
-xcopy %BRACKETS_WWW_SRC% staging\www /s /i /exclude:www_excludes.tmp
+xcopy %BRACKETS_SRC%\src staging\www /s /i /exclude:www_excludes.tmp
 del www_excludes.tmp
 
 
@@ -100,7 +100,7 @@ GOTO END
 
 
 
-:NO_WWW_SRC
-echo Error: Unable to locate BRACKETS_WWW_SRC. Make sure environment variable is set, and is pointing to your brackets\src directory (with NO trailing slash).
+:NO_BRACKETS_SRC
+echo Error: Unable to locate BRACKETS_SRC. Make sure environment variable is set, and is pointing to the root of your brackets repo (with NO trailing slash).
 
 :END
