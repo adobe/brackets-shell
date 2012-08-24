@@ -27,7 +27,7 @@ This project requires a [CEF3 binary distribution](http://code.google.com/p/chro
 ### Mac
 ####Prerequisites
 
-* XCode 3.2.6 - 4.4 required to build the project
+* XCode 4 required to build the project
 * [CEF3 binary distribution](http://code.google.com/p/chromiumembedded/downloads/detail?name=cef_binary_3.1180.719_macosx.zip&can=2&q=)  version 3.1180.719 or newer
 * To modify the project files, you will also need:
   * python
