@@ -67,6 +67,10 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 
+int32 MakeDir(ExtensionString path, int32 mode);
+
+int32 Rename(ExtensionString oldName, ExtensionString newName);
+
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir);
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);

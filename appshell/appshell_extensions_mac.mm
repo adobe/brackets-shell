@@ -337,6 +337,28 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     return ConvertNSErrorCode(error, true);
 }
 
+int32 MakeDir(ExtensionString path, int32 mode)
+{
+    NSError* error = nil;
+    NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
+  
+    // TODO: honor mode
+    [[NSFileManager defaultManager] createDirectoryAtPath:pathStr withIntermediateDirectories:FALSE attributes:nil error:&error];
+  
+    return ConvertNSErrorCode(error, false);
+}
+
+int32 Rename(ExtensionString oldName, ExtensionString newName)
+{
+    NSError* error = nil;
+    NSString* oldPathStr = [NSString stringWithUTF8String:oldName.c_str()];
+    NSString* newPathStr = [NSString stringWithUTF8String:newName.c_str()];
+  
+    [[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:newPathStr error:&error];
+  
+    return ConvertNSErrorCode(error, false);
+}
+
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
