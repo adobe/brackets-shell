@@ -21,7 +21,7 @@ curDir=`pwd`
 cd $BRACKETS_SRC
 git checkout $branchName
 git pull origin $branchName
-git submodule update --init
+git submodule update --init --recursive
 cd $curDir
 git checkout $branchName
 git pull origin $branchName
