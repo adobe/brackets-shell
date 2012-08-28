@@ -38,8 +38,8 @@ NSURL* startupUrl = nil;
 #endif // SHOW_TOOLBAR_UI
 
 // Content area size for newly created windows.
-const int kWindowWidth = 800;
-const int kWindowHeight = 600;
+const int kWindowWidth = 1000;
+const int kWindowHeight = 700;
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
