@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Copyright (c) Microsoft Corporation.  All rights reserved.
+
+    The use and distribution terms for this software are covered by the
+    Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
+    which can be found in the file CPL.TXT at the root of this distribution.
+    By using this software in any fashion, you are agreeing to be bound by
+    the terms of this license.
+
+    You must not remove this notice, or any other, from this software.
+-->
+<WixLocalization Culture="fr-fr" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <String Id="LicenseRtf" Overridable="yes">EULA_fr-fr.rtf</String>
+    
+    <String Id="MaintenanceTypeDlgTitle" Overridable="yes">{\WixUI_Font_Title}Supprimer le logiciel installé</String>
+    <String Id="XpNotSupported">Cette application n’est prise en charge que sous Windows Vista, Windows Server 2008 et versions ultérieures.</String>
+    <String Id="ExitDialogBonjour">REMARQUE : l’application Bonjour est introuvable sur cet ordinateur. Reportez-vous au guide d’installation pour savoir comment installer ce logiciel.</String>
+    <String Id="ExitDialogCheckInstallGuide">Reportez-vous au guide d’installation pour savoir comment installer l’extension Chrome.</String>
+    <String Id="ShortcutDescription">[Lo] !é=Shortcut to Brackets=!</String>
+    <String Id="ExitDialogLaunchApp">[Ll] !é=Launch Brackets when setup exits.=!</String>
+    <String Id="UserExitTitle" Overridable="yes">[Ly] !é=[ProductName] Setup Wizard was interrupted=!</String>
+    <String Id="ExitDialogTitle" Overridable="yes">[Lx] !é=Completed the [ProductName] Setup Wizard=!</String>
+</WixLocalization>

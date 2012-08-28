@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Copyright (c) Microsoft Corporation.  All rights reserved.
+
+    The use and distribution terms for this software are covered by the
+    Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
+    which can be found in the file CPL.TXT at the root of this distribution.
+    By using this software in any fashion, you are agreeing to be bound by
+    the terms of this license.
+
+    You must not remove this notice, or any other, from this software.
+-->
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <String Id="LicenseRtf" Overridable="yes">EULA_en-us.rtf</String>   
+    <String Id="MaintenanceTypeDlgTitle" Overridable="yes">{\WixUI_Font_Title}Remove installation</String>
+    <String Id="ShortcutDescription">Shortcut to Brackets</String>
+    <String Id="ExitDialogLaunchApp">Launch Brackets when setup exits.</String>
+    <String Id="UserExitTitle" Overridable="yes">{\WixUI_Font_Title}[ProductName] Setup Wizard was interrupted</String>
+    <String Id="ExitDialogTitle" Overridable="yes">{\WixUI_Font_Title}Completed the [ProductName] Setup Wizard</String>
+</WixLocalization>
