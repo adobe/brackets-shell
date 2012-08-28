@@ -17,8 +17,8 @@
     <String Id="XpNotSupported">Cette application n’est prise en charge que sous Windows Vista, Windows Server 2008 et versions ultérieures.</String>
     <String Id="ExitDialogBonjour">REMARQUE : l’application Bonjour est introuvable sur cet ordinateur. Reportez-vous au guide d’installation pour savoir comment installer ce logiciel.</String>
     <String Id="ExitDialogCheckInstallGuide">Reportez-vous au guide d’installation pour savoir comment installer l’extension Chrome.</String>
-    <String Id="ShortcutDescription">[Lo] !é=Shortcut to Shadow=!</String>
-    <String Id="ExitDialogLaunchApp">[Ll] !é=Launch Shadow when setup exits.=!</String>
+    <String Id="ShortcutDescription">[Lo] !é=Shortcut to Brackets=!</String>
+    <String Id="ExitDialogLaunchApp">[Ll] !é=Launch Brackets when setup exits.=!</String>
     <String Id="UserExitTitle" Overridable="yes">[Ly] !é=[ProductName] Setup Wizard was interrupted=!</String>
     <String Id="ExitDialogTitle" Overridable="yes">[Lx] !é=Completed the [ProductName] Setup Wizard=!</String>
 </WixLocalization>

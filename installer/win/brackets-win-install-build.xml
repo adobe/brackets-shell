@@ -122,14 +122,6 @@ default="build.win.installer">
 
   <!-- to build a single msi for english and french -->
   <target name="build.mul" depends="build.english, build.french" >
-    <!--C:\SkyLab-Nightly\dist\ship\components\msi>msitran -g AdobeShadow.msi AdobeShadow_french.msi
-fr-fr.mst
- 
-C:\SkyLab-Nightly\dist\ship\components\msi>cscript "c:\Program Files (x86)\WiX Toolset v3.6\
-bin\WiSubStg.vbs" AdobeShadow.msi fr-fr.mst 1036
- 
-C:\SkyLab-Nightly\dist\ship\components\msi>cscript "c:\Program Files (x86)\WiX Toolset v3.6\
-bin\WiSubStg.vbs" AdobeShadow.msi -->
     <exec  executable='"${msitran.cmd}"' failonerror='true'>
       <arg line="-g 'Brackets Sprint 13.msi' brackets_fr-fr.msi fr-fr.mst"/>
     </exec>

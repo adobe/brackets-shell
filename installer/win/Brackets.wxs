@@ -70,7 +70,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
         <Directory Id='INSTALLDIR' Name='Brackets Sprint 13'/>
       </Directory>
       <Directory Id="ProgramMenuFolder">       
-        <!-- <Directory Id="ProgramMenuProductFolder" Name="Brackets Sprint 14" /> -->
+        <!-- <Directory Id="ProgramMenuProductFolder" Name="Brackets Sprint 13" /> -->
       </Directory>
     </Directory>
     
