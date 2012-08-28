@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding="UTF-8"?>
+
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'
+xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+
+
+  <Product Id='*' UpgradeCode='330ed78b-1b84-4a2d-87a6-34970c9baab7' Name='Brackets Sprint 13' Language='1033'
+            Version='0.13' Manufacturer='brackets.io'  >
+  
+  <Package Description='Brackets'
+             Comments='Installer for Brackets'
+             Manufacturer='Adobe Systems Inc.'
+             InstallerVersion='300'
+             Compressed='yes'
+             Languages="1033,1036"/>
+    
+    <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
+  
+ 
+    <Property Id="ARPPRODUCTICON" Value="brackets.ico"/>
+    <Icon Id="brackets.ico" SourceFile="brackets.ico"/>
+    <Property Id="ALLUSERS" Value="1" />
+  
+    
+    <DirectoryRef Id="INSTALLDIR">
+    </DirectoryRef>
+
+    <DirectoryRef Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="{C90B75F4-7E02-43A9-9A2C-FC1A251349EC}" Win64="no" >
+        <Shortcut Id="AppShortcut" Name="Brackets Sprint 13"
+                 Description="Shortcut to Brackets"
+                 Target="[INSTALLDIR]\Brackets.exe" />
+        <RegistryValue Root="HKCU" Key="Software\Adobe\Brackets"
+                      Name="Adobe Brackets ShortcutInstalled" Type="integer"
+                      Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Start Menu Shortcuts-->
+    <UIRef Id="WixUI_MyInstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+
+    <!-- Launch app after install -->
+
+    <Property Id="LAUNCHAPPONEXIT" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
+    <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand="" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    
+    <UI>
+      <Publish Dialog="MyExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+      <Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction" Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>
+
+    </UI>
+
+
+    <!-- Add custom eula -->
+    <!-- Commenting out eula for shadow because we don't plan to include it in installser -->
+    <!-- <WixVariable Id="WixUILicenseRtf" Value="!(loc.LicenseRtf)" /> -->
+                          
+    <!-- Delete app prefs folder during uninstall -->
+    
+    <!-- Add image assets -->
+    <WixVariable Id="WixUIDialogBmp" Value="shadow_beta_win_installer_bg_003.jpg" />
+    <WixVariable Id="WixUIBannerBmp" Value="shadow_win_install_tile_003.jpg" />
+    
+    <!--Setup Folder Structure -->
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFilesFolder'>
+        <Directory Id='INSTALLDIR' Name='Brackets Sprint 13'/>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">       
+        <!-- <Directory Id="ProgramMenuProductFolder" Name="Brackets Sprint 13" /> -->
+      </Directory>
+    </Directory>
+    
+    <!-- Set default install location -->    
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <!-- Install Files -->
+    <Feature Id="MainApplication" Title="Main Application" Level="1">
+      <!-- From devmanager.wxs -->
+      <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
+        
+      <ComponentRef  Id='StartMenuShortcut' />
+    </Feature>                  
+  </Product>
+</Wix>
+
+<!-- filD0C88F09CF264F61C7551B69762FB244 -->
+

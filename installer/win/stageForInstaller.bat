@@ -1,7 +1,7 @@
 @echo off
 
 :: Prerequisites:
-:: 1. Pull down the brackets repo
+:: 1. Pull down the brackets repo (be sure to update submodules!)
 :: 2. Set BRACKETS_SRC to the root of the brackets repo (with NO trailing slash)
 :: 3. Build the Windows build of brackets-shell - see scripts\make_appshell_project.bat
 ::    (should create a brackets-shell\Release dir)

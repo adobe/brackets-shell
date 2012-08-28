@@ -29,4 +29,9 @@ libcef_dll
 tools
 
 /installer/mac/staging/
+
 /installer/win/staging/
+*.wixpdb
+*.wixobj
+bracketsharvestmanager.wxs
+fr-fr.mst
