@@ -24,3 +24,6 @@ NOTE: You need to hold down these modifier keys **before** launching Brackets. I
 
 The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on the mac and `{USER}\AppData\Roaming\Brackets\cef_data` on Windows.
 
+## Building
+
+Information on building the app shell can be found on the [brackets-shell wiki](https://github.com/adobe/brackets-shell/wiki/Building-brackets-shell).
