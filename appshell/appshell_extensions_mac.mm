@@ -312,11 +312,13 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     
     [openPanel setAllowedFileTypes:allowedFileTypes];
     
+    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
     if ([openPanel runModal] == NSOKButton)
     {
         NSArray* files = [openPanel filenames];
         NSArrayToCefList(files, selectedFiles);
     }
+    [NSApp endSheet:openPanel];
     
     return NO_ERROR;
 }
