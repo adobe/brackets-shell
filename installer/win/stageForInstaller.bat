@@ -93,6 +93,13 @@ xcopy %BRACKETS_SRC%\src staging\www /s /i /exclude:www_excludes.tmp
 del www_excludes.tmp
 
 
+:: Copy BRACKETS_SRC\samples to staging\samples
+echo Copying sample content from %BRACKETS_SRC%\samples ...
+
+xcopy %BRACKETS_SRC%\samples staging\samples /s /i
+
+
+
 echo.
 echo Done staging Brackets for Windows! (Run installer generator script next)
 
