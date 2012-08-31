@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # config
-releaseName="${BRACKETS_APP_NAME} Sprint 14"
+releaseName="Brackets Sprint 14"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"
