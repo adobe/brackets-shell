@@ -18,6 +18,7 @@
 #include "client_handler.h"
 #include "resource.h"
 #include "string_util.h"
+#include "appname.h"
 
 #include <ShlObj.h>
 
@@ -102,7 +103,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   
   HKEY hKey;
   DWORD lResult;
-  #define PREF_NAME L"Software\\Brackets\\InitialURL"
+  #define PREF_NAME L"Software\\" APP_NAME L"\\InitialURL"
 
   // If the Control key is down, delete the prefs
   BOOL bDeletePrefs = false;
@@ -142,7 +143,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       ofn.lpstrFile = szInitialUrl;
       ofn.nMaxFile = MAX_PATH;
       ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
-      ofn.lpstrTitle = L"Please select the brackets index.html file.";
+      ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
       if (GetOpenFileName(&ofn)) {
@@ -578,7 +579,7 @@ CefString AppGetCachePath() {
   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
   
   std::wstring cachePath = dataPath;
-  cachePath += L"\\Brackets\\cef_data";
+  cachePath += L"\\" APP_NAME L"\\cef_data";
 
   return CefString(cachePath);
 }
