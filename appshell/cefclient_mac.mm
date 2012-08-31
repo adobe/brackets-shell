@@ -18,6 +18,8 @@
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 
+NSString* APP_NAME = @"Brackets";
+
 // Application startup time
 CFTimeInterval g_appStartupTime;
 
@@ -286,7 +288,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                                   NSResizableWindowMask )
                        backing:NSBackingStoreBuffered
                        defer:NO];
-  [mainWnd setTitle:@"Brackets"];
+  [mainWnd setTitle:APP_NAME];
   [mainWnd setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
@@ -465,7 +467,7 @@ int main(int argc, char* argv[]) {
   
   if (startupUrl == nil) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    [openPanel setTitle:@"Please select the brackets index.html file"];
+    [openPanel setTitle:[NSString stringWithFormat:@"Please select the %@ index.html file", APP_NAME]];
     if ([openPanel runModal] == NSOKButton) {
       startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
       [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
@@ -506,7 +508,7 @@ std::string AppGetWorkingDirectory() {
 CefString AppGetCachePath() {
   // Set persistence cache
   NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/Brackets/cef_data", libraryDirectory];
+  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/%@/cef_data", libraryDirectory, APP_NAME];
   CefString cachePath = [cefCacheDirectory UTF8String];
   
   return cachePath;
