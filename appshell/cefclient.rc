@@ -88,10 +88,6 @@ BEGIN
     BEGIN
         MENUITEM "E&xit",                       IDM_EXIT
     END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About",                      IDM_ABOUT
-    END
 END
 
 IDC_CEFCLIENT_POPUP MENU 
@@ -99,10 +95,6 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Close",                      IDM_CLOSE
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About",                      IDM_ABOUT
     END
 END
 
@@ -112,10 +104,6 @@ BEGIN
     BEGIN
         MENUITEM "&Quitter",                    IDM_EXIT
     END
-    POPUP "&Aide"
-    BEGIN
-        MENUITEM "&A propos",                   IDM_ABOUT
-    END
 END
 
 IDC_CEFCLIENT_POPUP_FR MENU 
@@ -123,10 +111,6 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Fermer",                     IDM_CLOSE
-    END
-    POPUP "&Aide"
-    BEGIN
-        MENUITEM "&A propos",                   IDM_ABOUT
     END
 END
 

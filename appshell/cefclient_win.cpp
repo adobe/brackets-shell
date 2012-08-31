@@ -404,11 +404,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       wmEvent = HIWORD(wParam);
       // Parse the menu selections:
       switch (wmId) {
-      case IDM_ABOUT:
-        if (browser) {
-            g_handler->SendJSCommand(browser, HELP_ABOUT);
-        }
-        return 0;
       case IDM_EXIT:
         if (g_handler.get()) {
           g_handler->QuittingApp(true);
