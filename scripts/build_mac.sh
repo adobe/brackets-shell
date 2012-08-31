@@ -6,8 +6,9 @@
 #   (copy CEF binary, run scripts/make_symlinks.sh, etc.)
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
-# - Optionally, set BRACKETS_APP_NAME environment variable with the full
-#   name of the application.
+# - Optionally, set BRACKETS_APP_NAME environment variable with the 
+#   name of the application. (This should match the app name built
+#   by the gyp project, and need not match the final installed build name.)
 # - Optionally, set BRACKETS_SHELL_BRANCH and BRACKETS_BRANCH
 #   to the branches you want to build.
 
