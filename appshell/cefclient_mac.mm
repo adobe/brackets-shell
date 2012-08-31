@@ -17,8 +17,7 @@
 #include "string_util.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
-
-NSString* APP_NAME = @"Brackets";
+#include "appname.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
