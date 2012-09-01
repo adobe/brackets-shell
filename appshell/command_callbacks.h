@@ -8,6 +8,7 @@
 const std::string APP_ABORT_QUIT    = "app.abort_quit";
 const std::string FILE_QUIT         = "file.quit";
 const std::string FILE_CLOSE_WINDOW = "file.close_window";
+const std::string HELP_ABOUT        = "help.about";
 
 // Base CommandCallback class
 class CommandCallback : public CefBase {
