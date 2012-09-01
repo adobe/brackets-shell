@@ -10,6 +10,9 @@
     
     You must not remove this notice, or any other, from this software.
 -->
+<!--
+    Modified from Wix 3.5 (MaintenanceWelcomeDlg.wxs) for Brackets. See https://github.com/adobe/brackets-shell/
+-->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <UI>
