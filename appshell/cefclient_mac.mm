@@ -3,7 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "config.h"
 #import <Cocoa/Cocoa.h>
 #include <sstream>
 #include "cefclient.h"
@@ -15,9 +14,9 @@
 #include "client_handler.h"
 #include "resource_util.h"
 #include "string_util.h"
+#include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
-#include "appname.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
