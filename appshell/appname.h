@@ -27,7 +27,7 @@
 
 #ifdef OS_WIN
 // Name of group (if any) that application prefs/settings/etc. are stored under
-// This must be an empty string (for no group), or a string that ends with "/"
+// This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
 #define APP_NAME L"Brackets"
 #endif 
