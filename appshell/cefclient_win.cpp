@@ -103,7 +103,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   
   HKEY hKey;
   DWORD lResult;
-  #define PREF_NAME L"Software\\" APP_NAME L"\\InitialURL"
+  #define PREF_NAME L"Software\\" GROUP_NAME APP_NAME L"\\InitialURL"
 
   // If the Control key is down, delete the prefs
   BOOL bDeletePrefs = false;
@@ -574,7 +574,7 @@ CefString AppGetCachePath() {
   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
   
   std::wstring cachePath = dataPath;
-  cachePath += L"\\" APP_NAME L"\\cef_data";
+  cachePath +=  L"\\" GROUP_NAME APP_NAME L"\\cef_data";
 
   return CefString(cachePath);
 }
