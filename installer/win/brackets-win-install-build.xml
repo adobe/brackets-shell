@@ -2,35 +2,37 @@
 <project name="Brackets" basedir="."  xmlns:antcontrib="antlib:net.sf.antcontrib"
 default="build.win.installer">
   
-  <!-- Installer properties -->
+  <!-- Key locations on disk -->
   <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
+  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
+  
+  <property name="brackets.staging" value=".\staging"/>
+  
+  
+  <!-- Version label -->
+  <property name="product.sprint.number" value="14"/>
+  <property name="product.version.number" value="0.${product.sprint.number}"/>
+  <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
+  
+  
+  <!-- Installer properties -->
   <property name="heat.cmd" value="${wix.base}/bin/heat.exe"/>
   <property name="candle.cmd" value="${wix.base}/bin/candle.exe"/>
   <property name="light.cmd" value="${wix.base}/bin/light.exe"/>
-  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
   <property name="wisubstg.cmd" value="${wix.base}/bin/WiSubStg.vbs"/>
-   
-  <!-- update version with build and cl number -->
-  <target name="update.msi.version.number" depends="" description="Updates version string in skylab.wxs with latest build number and changelist number">
-        
-    <attrib readonly="false" file="Brackets.wxs" />
-	  <replace file="Brackets.wxs" token="1BUILDVERSION1" value="1.0.${official.build.number}"/>
-    <attrib readonly="true" file="Brackets.wxs"/>
-
-  </target>
- 
   
-    <!-- Build WIX installer -->
+  
+  <!-- Build WIX installer -->
   
   <target name="build.english" >
-    <echo level="info">Begin Building Installer for build: ${official.build.number} </echo>
+    <echo level="info">Building English installer for build: ${product.version.name} </echo>
     <!-- heat, candle, light-->
-    <echo message="Generating fileset for Brackets Device Manager."/>
+    <echo message="Generating fileset."/>
     <exec dir="" executable="${heat.cmd}">
-      <arg line="dir F:\stage\Brackets\BinarySource -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
+      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
     </exec>
     
-    <echo message="Prepping Brackets source."/>
+    <echo message="Prepping installer source."/>
     <exec dir="" executable="${candle.cmd}">
       <arg line="Brackets.wxs
 		              WixUI_InstallDir.wxs
@@ -44,14 +46,16 @@ default="build.win.installer">
 		              -ext WixUtilExtension
 		              -dcodepage=1252
 		              -dProductName='Brackets'
+		              -dProductVersionNumber='${product.version.number}'
+		              -dProductVersionName='${product.version.name}'
 		              -dIconFile=brackets.ico
                   -dlicenseRtf=License.rtf"/>  <!-- Replace Brackets ico file-->
     </exec>
 
-    <echo message="Compiling Brackets installer package."/>
+    <echo message="Compiling installer package."/>
     <exec dir="" executable="${light.cmd}">
-      <arg line="-b F:\stage\Brackets\BinarySource
-		                 -dvar.Version=1.0.${build}		 
+      <arg line="-b ${brackets.staging}
+		                 -dvar.Version=${product.version.number}
 		                 -ext WixUIExtension
 		                 -ext WixUtilExtension
 		                 -cultures:en-us
@@ -64,21 +68,21 @@ default="build.win.installer">
 		                 ProgressDlg.wixobj
 		                 MaintenanceWelcomeDlg.wixobj
                      VerifyReadyDlg.wixobj
-		                 -out 'Brackets Sprint 13.msi'
+		                 -out 'Brackets ${product.version.name}.msi'
 		                 -loc Brackets_en-us.wxl"/>    
     </exec>
     
   </target>
 
   <target name="build.french" >
-    <echo level="info">Begin Building Installer for build: ${official.build.number} </echo>
+    <echo level="info">Building French installer for build: ${product.version.name} </echo>
     <!-- heat, candle, light-->
-    <echo message="Generating fileset for Brackets Device Manager."/>
+    <echo message="Generating fileset."/>
     <exec dir="" executable="${heat.cmd}">
-      <arg line="dir F:\stage\Brackets\BinarySource -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
+      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
     </exec>
 
-    <echo message="Prepping Brackets source."/>
+    <echo message="Prepping installer source."/>
     <exec dir="" executable="${candle.cmd}" >
       <arg line="Brackets.wxs
 		              WixUI_InstallDir.wxs
@@ -92,15 +96,17 @@ default="build.win.installer">
 		              -ext WixUtilExtension
 		              -dcodepage=1252
 		              -dProductName='Brackets'
-		              -dIconFile=AdobeShadow.ico
+		              -dProductVersionNumber='${product.version.number}'
+		              -dProductVersionName='${product.version.name}'
+		              -dIconFile=brackets.ico
                   -dlicenseRtf=License.rtf"/>
       <!-- Replace Brackets ico file-->
     </exec>
 
-    <echo message="Compiling Brackets installer package."/>
+    <echo message="Compiling installer package."/>
     <exec dir="" executable="${light.cmd}">
-      <arg line="-b F:\stage\Brackets\BinarySource
-		                 -dvar.Version=1.0.${build}		 
+      <arg line="-b ${brackets.staging}
+		                 -dvar.Version=${product.version.number}
 		                 -ext WixUIExtension
 		                 -ext WixUtilExtension
 		                 -cultures:fr-fr
@@ -121,17 +127,17 @@ default="build.win.installer">
 
 
   <!-- to build a single msi for english and french -->
-  <target name="build.mul" depends="build.english, build.french" >
+  <target name="build.mul" depends="build.english, build.french" description="Build the final multi-locale MSI">
     <exec  executable='"${msitran.cmd}"' failonerror='true'>
-      <arg line="-g 'Brackets Sprint 13.msi' brackets_fr-fr.msi fr-fr.mst"/>
+      <arg line="-g 'Brackets ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
     </exec>
 
     <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "Brackets Sprint 13.msi" fr-fr.mst 1036'/>
+      <arg line='"${wisubstg.cmd}" "Brackets ${product.version.name}.msi" fr-fr.mst 1036'/>
     </exec>
 
     <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "Brackets Sprint 13.msi"'/>
+      <arg line='"${wisubstg.cmd}" "Brackets ${product.version.name}.msi"'/>
     </exec>
 
   </target>
@@ -163,6 +169,23 @@ default="build.win.installer">
         <property name="cert.name" value="AdobeTestCodeSigning"/>  
     -->
 
-    <codesign.file.win file="Brackets Sprint 13.msi" cert.file="${cert.file}" cert.name="${cert.name}"/>
+    <codesign.file.win file="Brackets ${product.version.name}.msi" cert.file="${cert.file}" cert.name="${cert.name}"/>
   </target>
+    
+    
+  <!-- Cleanup targets -->
+    
+  <target name="clean" depends="clean.temp"
+      description="Remove all Wix generated files from installer\win">
+    <delete><fileset dir="." includes="*.msi" /></delete>
+  </target>
+    
+  <target name="clean.temp"
+      description="Remove intermediate Wix files from installer\win, leaving final MSI in place">
+    <delete file="bracketsharvestmanager.wxs" />
+    <delete file="fr-fr.mst" />
+    <delete><fileset dir="." includes="*.wixobj" /></delete>
+    <delete><fileset dir="." includes="*.wixpdb" /></delete>
+  </target>
+  
 </project>
