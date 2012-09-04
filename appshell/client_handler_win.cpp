@@ -118,11 +118,6 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         // Parse the menu selections:
         switch (wmId)
         {
-          case IDM_ABOUT:
-            if (browser.get()) {
-              g_handler->SendJSCommand(browser, HELP_ABOUT);
-            }
-            return 0;
           case IDM_CLOSE:
             if (g_handler.get() && browser.get()) {
               HWND browserHwnd = browser->GetHost()->GetWindowHandle();
