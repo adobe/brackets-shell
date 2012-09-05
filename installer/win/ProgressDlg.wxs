@@ -16,7 +16,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <UI>
-            <Dialog Id="MyProgressDlg" Width="370" Height="270" Title="!(loc.ProgressDlg_Title)" Modeless="yes">
+            <Dialog Id="MyProgressDlg" Width="370" Height="270" Title="!(loc.StandardDlg_Title)" Modeless="yes">
                 <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="!(loc.WixUICancel)">
                     <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
                 </Control>
@@ -27,13 +27,13 @@
                 <Control Id="TextInstalling" Type="Text" X="20" Y="65" Width="330" Height="35" Hidden="yes" NoPrefix="yes" Text="!(loc.ProgressDlgTextInstalling)">
                     <Condition Action="show">NOT Installed OR (Installed AND (RESUME OR Preselected) AND NOT PATCH)</Condition>
                 </Control>
-                <Control Id="TitleInstalling" Type="Text" X="20" Y="15" Width="330" Height="15" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.ProgressDlgTitleInstalling)">
+                <Control Id="TitleInstalling" Type="Text" X="20" Y="15" Width="350" Height="15" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.ProgressDlgTitleInstalling)">
                     <Condition Action="show">NOT Installed OR (Installed AND (RESUME OR Preselected) AND NOT PATCH)</Condition>
                 </Control>
                 <Control Id="TextRemoving" Type="Text" X="20" Y="65" Width="330" Height="35" Hidden="yes" NoPrefix="yes" Text="!(loc.ProgressDlgTextRemoving)">
                     <Condition Action="show">Installed</Condition>
                 </Control>
-                <Control Id="TitleRemoving" Type="Text" X="20" Y="15" Width="330" Height="15" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.ProgressDlgTitleRemoving)">
+                <Control Id="TitleRemoving" Type="Text" X="20" Y="15" Width="350" Height="15" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.ProgressDlgTitleRemoving)">
                     <Condition Action="show">Installed</Condition>
                 </Control>
                 <Control Id="ActionText" Type="Text" X="70" Y="100" Width="285" Height="10">
@@ -44,6 +44,11 @@
                 </Control>
                 <Control Id="StatusLabel" Type="Text" X="20" Y="100" Width="50" Height="10" Text="!(loc.ProgressDlgStatusLabel)" />
             </Dialog>
+
+            <InstallUISequence>
+                <Show Dialog="MyProgressDlg" After="ProgressDlg" Overridable="yes" />
+            </InstallUISequence>
+            
         </UI>
     </Fragment>
 </Wix>
