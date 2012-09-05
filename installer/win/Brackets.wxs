@@ -28,10 +28,10 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     <DirectoryRef Id="ProgramMenuFolder">
       <Component Id="StartMenuShortcut" Guid="{C90B75F4-7E02-43A9-9A2C-FC1A251349EC}" Win64="no" >
         <Shortcut Id="AppShortcut" Name="Brackets $(var.ProductVersionName)"
-                 Description="Shortcut to Brackets"
+                 Description="!(loc.ShortcutDescription)"
                  Target="[INSTALLDIR]\Brackets.exe" />
         <RegistryValue Root="HKCU" Key="Software\Adobe\Brackets"
-                      Name="Brackets ShortcutInstalled" Type="integer"
+                      Name="installed" Type="integer"
                       Value="1" KeyPath="yes"/>
       </Component>
     </DirectoryRef>
@@ -61,7 +61,6 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     <!-- Delete app prefs folder during uninstall -->
     
     <!-- Add image assets -->
-    <WixVariable Id="WixUIDialogBmp" Value="win_install_bg.jpg" />
     <WixVariable Id="WixUIBannerBmp" Value="win_install_banner.jpg" />
     
     <!--Setup Folder Structure -->
@@ -69,9 +68,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
       <Directory Id='ProgramFilesFolder'>
         <Directory Id='INSTALLDIR' Name='Brackets $(var.ProductVersionName)'/>
       </Directory>
-      <Directory Id="ProgramMenuFolder">       
-        <!-- <Directory Id="ProgramMenuProductFolder" Name="Brackets $(var.ProductVersionName)" /> -->
-      </Directory>
+      <Directory Id="ProgramMenuFolder"/>
     </Directory>
     
     <!-- Set default install location -->    
