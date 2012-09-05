@@ -321,7 +321,7 @@ void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
   }
 }
 
-void ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)
+bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)
 {
   CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("executeCommand");
   message->GetArgumentList()->SetString(0, commandName);
@@ -332,30 +332,44 @@ void ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
     message->GetArgumentList()->SetInt(1, callbackId);
   }
 
-  browser->SendProcessMessage(PID_RENDERER, message);
+  return browser->SendProcessMessage(PID_RENDERER, message);
 }
 
-void ClientHandler::DispatchCloseToNextBrowser() {
-  // Close the first (main) window last. On Windows, closing the main window exits the application,
-  // so make sure all other windows get a crack at saving changes first.
-  bool skipFirstOne = (browser_window_map_.size() > 1);
-  for (BrowserWindowMap::const_iterator i = browser_window_map_.begin(); 
-            i != browser_window_map_.end(); i++) {
-    if (skipFirstOne) {
+void ClientHandler::DispatchCloseToNextBrowser()
+{
+  // If the inner loop iterates thru all browsers and there's still at least one
+  // left (i.e. the first browser that was skipped), then re-start loop
+  while (browser_window_map_.size() > 0)
+  {
+    // Close the first (main) window last. On Windows, closing the main window exits the
+    // application, so make sure all other windows get a crack at saving changes first.
+    bool skipFirstOne = (browser_window_map_.size() > 1);
+
+    BrowserWindowMap::const_iterator i;
+    for (i = browser_window_map_.begin(); i != browser_window_map_.end(); i++)
+    {
+      if (skipFirstOne) {
         skipFirstOne = false;
         continue;
-	  }
-    CefRefPtr<CefBrowser> browser = i->second;
+      }
+      CefRefPtr<CefBrowser> browser = i->second;
 
-    // Bring the window to the front before sending the command
-    BringBrowserWindowToFront(browser);
+      // Bring the window to the front before sending the command
+      BringBrowserWindowToFront(browser);
     
-    // This call initiates a quit sequence. We will continue to close browser windows
-    // unless AbortQuit() is called.
-    m_quitting = true;
-    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-    SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
-    return;
+      // This call initiates a quit sequence. We will continue to close browser windows
+      // unless AbortQuit() is called.
+      m_quitting = true;
+      CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+
+      if (SendJSCommand(browser, FILE_CLOSE_WINDOW, callback)) {
+        // JS Command successfully sent, so we're done
+        return;
+      }
+
+      // Sending JS command to browser failed, so remove it from queue, continue to next browser
+      browser_window_map_.erase(i);
+    }
   }
 }
 
