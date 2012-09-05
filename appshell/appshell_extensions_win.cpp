@@ -373,7 +373,7 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
-int32 ShowOpenDialog(bool allowMulitpleSelection,
+int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
                      ExtensionString initialDirectory,
@@ -446,11 +446,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
            
         ofn.lpstrInitialDir = initialDirectory.c_str();
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-        if (allowMulitpleSelection)
+        if (allowMultipleSelection)
             ofn.Flags |= OFN_ALLOWMULTISELECT;
 
         if (GetOpenFileName(&ofn)) {
-            if (allowMulitpleSelection) {
+            if (allowMultipleSelection) {
                 // Multiple selection encodes the files differently
 
                 // If multiple files are selected, the first null terminator
