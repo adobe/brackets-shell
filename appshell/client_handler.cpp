@@ -368,7 +368,7 @@ void ClientHandler::DispatchCloseToNextBrowser()
       }
 
       // Sending JS command to browser failed, so remove it from queue, continue to next browser
-      browser_window_map_.erase(i);
+      browser_window_map_.erase(i->first);
     }
   }
 }
