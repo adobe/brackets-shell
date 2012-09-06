@@ -99,40 +99,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance, settings.locale);
-  
-  HKEY hKey;
-  DWORD lResult;
-  #define PREF_NAME L"Software\\" GROUP_NAME APP_NAME L"\\InitialURL"
+ 
 
-  // If the Control key is down, delete the prefs
-  BOOL bDeletePrefs = false;
-  if (GetAsyncKeyState(VK_CONTROL) != 0) {
-    bDeletePrefs = true;
-  }
-
-  // Don't read the prefs if the shift key is down
+  // If the shift key is down, always let the user select the index.html file
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
-    if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, KEY_READ, &hKey)) {
-      if (bDeletePrefs) {
-        RegDeleteKey(hKey, L"");
-      } else {
-        DWORD length = MAX_PATH;
-        RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)szInitialUrl, &length);
-        RegCloseKey(hKey);
-      }
-    }
+    // Look for www/index.html in the same directory as the application
+    wchar_t appPath[MAX_PATH];
+    GetModuleFileName(NULL, appPath, MAX_PATH);
 
-    if (!wcslen(szInitialUrl)) {
-      // Look for www/index.html in the same directory as the application
-      wchar_t appPath[MAX_PATH];
-      GetModuleFileName(NULL, appPath, MAX_PATH);
+    wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
 
-      wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
-
-      // If the file exists, use it
-      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-        wcscpy(szInitialUrl, appPath);
-      }
+    // If the file exists, use it
+    if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+      wcscpy(szInitialUrl, appPath);
     }
   }
 
@@ -145,13 +124,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
-      if (GetOpenFileName(&ofn)) {
-        lResult = RegCreateKeyEx(HKEY_CURRENT_USER, PREF_NAME, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-        if (lResult == ERROR_SUCCESS) {
-          RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
-          RegCloseKey(hKey);
-        }
-      } else {
+      if (!GetOpenFileName(&ofn)) {
         // User cancelled, exit the app
         CefShutdown();
         return 0;

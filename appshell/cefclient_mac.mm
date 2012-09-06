@@ -441,25 +441,15 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-
-  // If the Option key is down, delete any saved preferences
-  if ((modifiers & kCGEventFlagMaskAlternate) == kCGEventFlagMaskAlternate) {
-    [[NSUserDefaults standardUserDefaults] setURL:nil forKey:@"initialUrl"];
-  }
     
   // If the shift key is down, always let the user select the startup file
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
-    startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
+    // Check for an index.html file in the www directory in our app package.
+    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+    NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
     
-    // If we don't have a startup url saved in preferences, check for an index.html
-    // file in the www directory in our app package.
-    if (startupUrl == nil) {
-      NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
-      NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
-      
-      if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
-        startupUrl = [NSURL fileURLWithPath:indexFile];
-      }
+    if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
+      startupUrl = [NSURL fileURLWithPath:indexFile];
     }
   }
   
@@ -467,8 +457,7 @@ int main(int argc, char* argv[]) {
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
     [openPanel setTitle:[NSString stringWithFormat:@"Please select the %@ index.html file", APP_NAME]];
     if ([openPanel runModal] == NSOKButton) {
-      startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
-      [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+      startupUrl = [[openPanel URLs] objectAtIndex:0];
     }
     else {
       // User chose cancel when selecting startup file. Exit.
