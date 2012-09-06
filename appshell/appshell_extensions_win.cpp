@@ -373,7 +373,7 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
-int32 ShowOpenDialog(bool allowMulitpleSelection,
+int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
                      ExtensionString initialDirectory,
@@ -402,10 +402,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     }
     */
 
-    if (chooseDirectory) {
-        // SHBrowseForFolder can handle Windows path only, not Unix path.
-        ConvertToNativePath(initialDirectory);
+    // SHBrowseForFolder can handle Windows path only, not Unix path.
+    // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
+    ConvertToNativePath(initialDirectory);
 
+    if (chooseDirectory) {
         BROWSEINFO bi = {0};
         bi.hwndOwner = GetActiveWindow();
         bi.lpszTitle = title.c_str();
@@ -445,11 +446,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
            
         ofn.lpstrInitialDir = initialDirectory.c_str();
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-        if (allowMulitpleSelection)
+        if (allowMultipleSelection)
             ofn.Flags |= OFN_ALLOWMULTISELECT;
 
         if (GetOpenFileName(&ofn)) {
-            if (allowMulitpleSelection) {
+            if (allowMultipleSelection) {
                 // Multiple selection encodes the files differently
 
                 // If multiple files are selected, the first null terminator
