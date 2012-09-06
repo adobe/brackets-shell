@@ -40,9 +40,10 @@ default="build.win.installer">
 		              UserExit.wxs
 		              ProgressDlg.wxs
 		              MaintenanceWelcomeDlg.wxs
-                  InstallDirDlg.wxs
+		              InstallDirDlg.wxs
 		              bracketsharvestmanager.wxs
-                  VerifyReadyDlg.wxs
+		              VerifyReadyDlg.wxs
+		              BrowseDlg.wxs
 		              -ext WixUtilExtension
 		              -dcodepage=1252
 		              -dProductName='Brackets'
@@ -67,7 +68,8 @@ default="build.win.installer">
 		                 UserExit.wixobj
 		                 ProgressDlg.wixobj
 		                 MaintenanceWelcomeDlg.wixobj
-                     VerifyReadyDlg.wixobj
+		                 BrowseDlg.wixobj
+		                 VerifyReadyDlg.wixobj
 		                 -out 'Brackets ${product.version.name}.msi'
 		                 -loc Brackets_en-us.wxl"/>    
     </exec>
@@ -90,9 +92,10 @@ default="build.win.installer">
 		              UserExit.wxs
 		              ProgressDlg.wxs
 		              MaintenanceWelcomeDlg.wxs
-                  InstallDirDlg.wxs
+		              BrowseDlg.wxs
+		              InstallDirDlg.wxs
 		              bracketsharvestmanager.wxs
-                  VerifyReadyDlg.wxs
+		              VerifyReadyDlg.wxs
 		              -ext WixUtilExtension
 		              -dcodepage=1252
 		              -dProductName='Brackets'
@@ -118,7 +121,8 @@ default="build.win.installer">
 		                 UserExit.wixobj
 		                 ProgressDlg.wixobj
 		                 MaintenanceWelcomeDlg.wixobj
-                     VerifyReadyDlg.wixobj
+		                 BrowseDlg.wixobj
+		                 VerifyReadyDlg.wixobj
 		                 -out Brackets_fr-fr.msi
 		                 -loc Brackets_fr-fr.wxl"/>
     </exec>
