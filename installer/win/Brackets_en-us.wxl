@@ -16,6 +16,7 @@
 <WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
     <String Id="LicenseRtf" Overridable="yes">EULA_en-us.rtf</String>   
 
+    <!-- See also: product name definitions in brackets-win-install-build.xml -->
     <String Id="ProductName">Brackets</String>
     <String Id="ShortProductName">Brackets</String>
   
