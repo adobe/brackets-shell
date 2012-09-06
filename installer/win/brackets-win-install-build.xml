@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Brackets" basedir="."  xmlns:antcontrib="antlib:net.sf.antcontrib"
-default="build.win.installer">
+<project name="Brackets Windows installer" basedir="."  xmlns:antcontrib="antlib:net.sf.antcontrib"
+default="build.mul">
   
   <!-- Key locations on disk -->
   <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
-  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
   
   <property name="brackets.staging" value=".\staging"/>
   
   
-  <!-- Version label -->
+  <!-- Product & version labeling -->
+  <!-- See also: product name definitions in Brackets_<locale>.wxl -->
+  <property name="product.shortname" value="Brackets"/>
+  <property name="product.fullname" value="Brackets"/>
   <property name="product.sprint.number" value="14"/>
   <property name="product.version.number" value="0.${product.sprint.number}"/>
   <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
+  <property name="product.manufacturer" value="brackets.io"/>
+  <property name="product.registry.root" value="${product.shortname}"/>
   
   
   <!-- Installer properties -->
   <property name="heat.cmd" value="${wix.base}/bin/heat.exe"/>
   <property name="candle.cmd" value="${wix.base}/bin/candle.exe"/>
   <property name="light.cmd" value="${wix.base}/bin/light.exe"/>
+  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
   <property name="wisubstg.cmd" value="${wix.base}/bin/WiSubStg.vbs"/>
   
   
@@ -46,11 +51,13 @@ default="build.win.installer">
 		              BrowseDlg.wxs
 		              -ext WixUtilExtension
 		              -dcodepage=1252
-		              -dProductName='Brackets'
 		              -dProductVersionNumber='${product.version.number}'
 		              -dProductVersionName='${product.version.name}'
-		              -dIconFile=brackets.ico
-                  -dlicenseRtf=License.rtf"/>  <!-- Replace Brackets ico file-->
+		              -dProductManufacturer='${product.manufacturer}'
+		              -dRegistryRoot='${product.registry.root}'
+		              -dExeName='${product.shortname}'
+		              -dIconFile=appicon.ico
+		              -dlicenseRtf=License.rtf"/>
     </exec>
 
     <echo message="Compiling installer package."/>
@@ -70,7 +77,7 @@ default="build.win.installer">
 		                 MaintenanceWelcomeDlg.wixobj
 		                 BrowseDlg.wixobj
 		                 VerifyReadyDlg.wixobj
-		                 -out 'Brackets ${product.version.name}.msi'
+		                 -out '${product.fullname} ${product.version.name}.msi'
 		                 -loc Brackets_en-us.wxl"/>    
     </exec>
     
@@ -98,12 +105,13 @@ default="build.win.installer">
 		              VerifyReadyDlg.wxs
 		              -ext WixUtilExtension
 		              -dcodepage=1252
-		              -dProductName='Brackets'
 		              -dProductVersionNumber='${product.version.number}'
 		              -dProductVersionName='${product.version.name}'
-		              -dIconFile=brackets.ico
-                  -dlicenseRtf=License.rtf"/>
-      <!-- Replace Brackets ico file-->
+		              -dProductManufacturer='${product.manufacturer}'
+		              -dRegistryRoot='${product.registry.root}'
+		              -dExeName='${product.shortname}'
+		              -dIconFile=appicon.ico
+		              -dlicenseRtf=License.rtf"/>
     </exec>
 
     <echo message="Compiling installer package."/>
@@ -133,15 +141,15 @@ default="build.win.installer">
   <!-- to build a single msi for english and french -->
   <target name="build.mul" depends="build.english, build.french" description="Build the final multi-locale MSI">
     <exec  executable='"${msitran.cmd}"' failonerror='true'>
-      <arg line="-g 'Brackets ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
+      <arg line="-g '${product.fullname} ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
     </exec>
 
     <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "Brackets ${product.version.name}.msi" fr-fr.mst 1036'/>
+      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi" fr-fr.mst 1036'/>
     </exec>
 
     <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "Brackets ${product.version.name}.msi"'/>
+      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi"'/>
     </exec>
 
   </target>
@@ -173,7 +181,7 @@ default="build.win.installer">
         <property name="cert.name" value="AdobeTestCodeSigning"/>  
     -->
 
-    <codesign.file.win file="Brackets ${product.version.name}.msi" cert.file="${cert.file}" cert.name="${cert.name}"/>
+    <codesign.file.win file="${product.fullname} ${product.version.name}.msi" cert.file="${cert.file}" cert.name="${cert.name}"/>
   </target>
     
     
