@@ -444,12 +444,21 @@ int main(int argc, char* argv[]) {
     
   // If the shift key is down, always let the user select the startup file
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
-    // Check for an index.html file in the www directory in our app package.
     NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
-    NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
-      startupUrl = [NSURL fileURLWithPath:indexFile];
+    // First, look in our app package for /Contents/dev/src/index.html
+    NSString* devFile = [bundlePath stringByAppendingString:@"/Contents/dev/src/index.html"];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
+      startupUrl = [NSURL fileURLWithPath:devFile];
+    }
+    
+    if (startupUrl == nil) {
+      // If the dev file wasn't found, look for /Contents/www/index.html
+      NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
+      if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
+        startupUrl = [NSURL fileURLWithPath:indexFile];
+      }
     }
   }
   
