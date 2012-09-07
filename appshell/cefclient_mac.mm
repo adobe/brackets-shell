@@ -442,7 +442,7 @@ int main(int argc, char* argv[]) {
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
     
-  // If the shift key is down, always let the user select the startup file
+  // If the shift key is not pressed, look for index.html bundled in the app package
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
     NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
     
@@ -463,6 +463,8 @@ int main(int argc, char* argv[]) {
   }
   
   if (startupUrl == nil) {
+    // If we got here, either the startup file couldn't be found, or the user pressed the
+    // shift key while launching. Prompt to select the index.html file.
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
     [openPanel setTitle:[NSString stringWithFormat:@"Please select the %@ index.html file", APP_NAME]];
     if ([openPanel runModal] == NSOKButton) {
