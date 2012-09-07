@@ -107,11 +107,20 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     wchar_t appPath[MAX_PATH];
     GetModuleFileName(NULL, appPath, MAX_PATH);
 
-    wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
+    // Look for .\dev\src\index.html first
+    wcscpy(wcsrchr(appPath, '\\'), L"\\dev\\src\\index.html");
 
     // If the file exists, use it
     if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
       wcscpy(szInitialUrl, appPath);
+    }
+
+    if (!wcslen(szInitialUrl)) {
+      // Look for .\www\index.html next
+      wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
+      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+        wcscpy(szInitialUrl, appPath);
+      }
     }
   }
 
