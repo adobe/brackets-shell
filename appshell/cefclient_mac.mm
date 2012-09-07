@@ -441,22 +441,21 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-
-  // If the Option key is down, delete any saved preferences
-  if ((modifiers & kCGEventFlagMaskAlternate) == kCGEventFlagMaskAlternate) {
-    [[NSUserDefaults standardUserDefaults] setURL:nil forKey:@"initialUrl"];
-  }
     
-  // If the shift key is down, always let the user select the startup file
+  // If the shift key is not pressed, look for index.html bundled in the app package
   if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
-    startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
+    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
     
-    // If we don't have a startup url saved in preferences, check for an index.html
-    // file in the www directory in our app package.
+    // First, look in our app package for /Contents/dev/src/index.html
+    NSString* devFile = [bundlePath stringByAppendingString:@"/Contents/dev/src/index.html"];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
+      startupUrl = [NSURL fileURLWithPath:devFile];
+    }
+    
     if (startupUrl == nil) {
-      NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+      // If the dev file wasn't found, look for /Contents/www/index.html
       NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
-      
       if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
         startupUrl = [NSURL fileURLWithPath:indexFile];
       }
@@ -464,11 +463,12 @@ int main(int argc, char* argv[]) {
   }
   
   if (startupUrl == nil) {
+    // If we got here, either the startup file couldn't be found, or the user pressed the
+    // shift key while launching. Prompt to select the index.html file.
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
     [openPanel setTitle:[NSString stringWithFormat:@"Please select the %@ index.html file", APP_NAME]];
     if ([openPanel runModal] == NSOKButton) {
-      startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
-      [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+      startupUrl = [[openPanel URLs] objectAtIndex:0];
     }
     else {
       // User chose cancel when selecting startup file. Exit.
