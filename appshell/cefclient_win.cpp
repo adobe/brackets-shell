@@ -101,9 +101,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   MyRegisterClass(hInstance, settings.locale);
  
 
-  // If the shift key is down, always let the user select the index.html file
+  // If the shift key is not pressed, look for the index.html file 
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
-    // Look for www/index.html in the same directory as the application
+    // Get the full pathname for the app. We look for the index.html
+    // file relative to this location.
     wchar_t appPath[MAX_PATH];
     GetModuleFileName(NULL, appPath, MAX_PATH);
 
@@ -125,6 +126,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   }
 
   if (!wcslen(szInitialUrl)) {
+      // If we got here, either the startup file couldn't be found, or the user pressed the
+      // shift key while launching. Prompt to select the index.html file.
       OPENFILENAME ofn = {0};
       ofn.lStructSize = sizeof(ofn);
       ofn.lpstrFile = szInitialUrl;
