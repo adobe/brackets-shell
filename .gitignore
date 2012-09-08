@@ -1,37 +1,37 @@
-# Start by ignoring all
-*
-# Add appshell source
-!appshell
-!appshell/*
-!appshell/mac
-!appshell/mac/*
-!appshell/mac/English.lproj
-!appshell/mac/English.lproj/*
-!appshell/res
-!appshell/res/*
-appshell/.DS_Store
+.DS_Store*
+*.swp
+xcodebuild
+xcodebuild/*
 
-# Add gyp/gypi
-!appshell.gyp
-!appshell_paths.gypi
+*.pbxuser
+*.perspective
+*.perspective3
+*xcuserdata*
+*.esproj
+*.xcworkspace
 
-# Add .gitignore
-!.gitignore
+*.pdb
+*.ilk
+*.sdf
+*.opensdf
+*.suo
+*.vcxproj.user
+*.log
+*.dmg
 
-# Add project build scripts
-!make_appshell_project.sh
-!make_appshell_project.bat
-!make_symlinks.sh
-!make_symlinks.bat
+Debug
+Release
+Resources
+deps
+include
+ipch
+libcef_dll
+tools
 
-# Add project files
-!appshell.xcodeproj
-!appshell.xcodeproj/project.pbxproj
-!appshell.sln
-!Brackets.vcxproj
-!libcef_dll_wrapper.vcxproj
+/installer/mac/staging/
 
-# Add README
-!README.md
-
-# That's all!
+/installer/win/staging/
+*.wixpdb
+*.wixobj
+bracketsharvestmanager.wxs
+fr-fr.mst

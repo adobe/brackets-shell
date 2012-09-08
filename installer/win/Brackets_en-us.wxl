@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Copyright (c) Microsoft Corporation.  All rights reserved.
+
+    The use and distribution terms for this software are covered by the
+    Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
+    which can be found in the file CPL.TXT at the root of this distribution.
+    By using this software in any fashion, you are agreeing to be bound by
+    the terms of this license.
+
+    You must not remove this notice, or any other, from this software.
+-->
+<!--
+    Modified from Wix 3.5 for Brackets. See https://github.com/adobe/brackets-shell/
+-->
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <String Id="LicenseRtf" Overridable="yes">EULA_en-us.rtf</String>   
+
+    <!-- See also: product name definitions in brackets-win-install-build.xml -->
+    <String Id="ProductName">Brackets</String>
+    <String Id="ShortProductName">Brackets</String>
+  
+    <String Id="LanguageID" Overridable="yes">1033</String>
+        
+    <String Id="StandardDlg_Title" Overridable="yes">[ProductName] Installer</String>
+    <String Id="CancelDlg_Title" Overridable="yes">[ProductName] Installer</String>
+    
+    <String Id="InstallDirDlgTitle" Overridable="yes">{\WixUI_Font_BannerTitle}!(loc.ShortProductName) Destination Folder</String>
+    <String Id="BrowseDlgTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Change !(loc.ShortProductName) Destination Folder</String>
+    <String Id="VerifyReadyDlgInstallTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Install !(loc.ShortProductName)</String>
+    
+    <String Id="ProgressDlgTitleInstalling" Overridable="yes">{\WixUI_Font_BannerTitle}Installing !(loc.ShortProductName)</String>
+    <String Id="ProgressDlgTextInstalling" Overridable="yes">Please wait while !(loc.ShortProductName) is installed.</String>
+    <String Id="ProgressDlgTitleRemoving" Overridable="yes">{\WixUI_Font_BannerTitle}Uninstalling !(loc.ShortProductName)</String>
+    <String Id="ProgressDlgTextRemoving" Overridable="yes">Please wait while !(loc.ShortProductName) is uninstalled.</String>
+    
+    <String Id="ProgressDlgStatusLabel" Overridable="yes">Progress:</String>
+    
+    <String Id="ExitDialogTitleInstall" Overridable="yes">{\WixUI_Font_BannerTitle}!(loc.ShortProductName) was successfully installed.</String>
+    <String Id="ExitDialogTitleUninstall" Overridable="yes">{\WixUI_Font_BannerTitle}!(loc.ShortProductName) was successfully uninstalled.</String>
+    
+    <String Id="UserExitDescription1" Overridable="yes">Installation was interrupted. Your system has not been modified.</String>
+
+    <String Id="UserExitDescription2" Overridable="yes">Click Finish to exit.</String>
+    <String Id="VerifyReadyDlgRemoveTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Uninstall !(loc.ShortProductName)</String>
+    
+    <String Id="MaintenanceTypeDlgTitle" Overridable="yes">Remove installation</String>
+    <String Id="XpNotSupported">This application is only supported on Windows Vista, Windows Server 2008, or higher.</String>
+    <String Id="ExitDialogBonjour">For automated device pairing, we recommend you install Bonjour, which is in the !(loc.ShortProductName) folder at [INSTALLDIR]BonjourPSSetup.exe.</String>
+    <String Id="ExitDialogCheckInstallGuide">Check the Install Guide for further instructions on installing the Chrome Extension.</String>
+    <String Id="ShortcutDescription">Shortcut to !(loc.ShortProductName)</String>
+    <String Id="ExitDialogLaunchApp">Start !(loc.ShortProductName) when the Installer exits.</String>
+    <String Id="UserExitTitle" Overridable="yes">{\WixUI_Font_BannerTitle}!(loc.ShortProductName) installation was interrupted</String>
+    <String Id="ExitDialogTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Completed the [ProductName] Setup Wizard</String>
+    <String Id="VerifyReadyDlgInstallText" Overridable="yes">Click Install to begin, or Cancel to exit.</String>
+    <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Click Remove to uninstall !(loc.ShortProductName), or Cancel to exit.</String>
+</WixLocalization>

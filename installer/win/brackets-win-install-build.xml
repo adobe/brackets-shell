@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Brackets Windows installer" basedir="."  xmlns:antcontrib="antlib:net.sf.antcontrib"
+default="build.mul">
+  
+  <!-- Key locations on disk -->
+  <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
+  
+  <property name="brackets.staging" value=".\staging"/>
+  
+  
+  <!-- Product & version labeling -->
+  <!-- See also: product name definitions in Brackets_<locale>.wxl -->
+  <property name="product.shortname" value="Brackets"/>
+  <property name="product.fullname" value="Brackets"/>
+  <property name="product.sprint.number" value="14"/>
+  <property name="product.version.number" value="0.${product.sprint.number}"/>
+  <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
+  <property name="product.manufacturer" value="brackets.io"/>
+  <property name="product.registry.root" value="${product.shortname}"/>
+  
+  
+  <!-- Installer properties -->
+  <property name="heat.cmd" value="${wix.base}/bin/heat.exe"/>
+  <property name="candle.cmd" value="${wix.base}/bin/candle.exe"/>
+  <property name="light.cmd" value="${wix.base}/bin/light.exe"/>
+  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
+  <property name="wisubstg.cmd" value="${wix.base}/bin/WiSubStg.vbs"/>
+  
+  
+  <!-- Build WIX installer -->
+  
+  <target name="build.english" >
+    <echo level="info">Building English installer for build: ${product.version.name} </echo>
+    <!-- heat, candle, light-->
+    <echo message="Generating fileset."/>
+    <exec dir="" executable="${heat.cmd}">
+      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
+    </exec>
+    
+    <echo message="Prepping installer source."/>
+    <exec dir="" executable="${candle.cmd}">
+      <arg line="Brackets.wxs
+		              WixUI_InstallDir.wxs
+		              ExitDialog.wxs
+		              UserExit.wxs
+		              ProgressDlg.wxs
+		              MaintenanceWelcomeDlg.wxs
+		              InstallDirDlg.wxs
+		              bracketsharvestmanager.wxs
+		              VerifyReadyDlg.wxs
+		              BrowseDlg.wxs
+		              -ext WixUtilExtension
+		              -dcodepage=1252
+		              -dProductVersionNumber='${product.version.number}'
+		              -dProductVersionName='${product.version.name}'
+		              -dProductManufacturer='${product.manufacturer}'
+		              -dRegistryRoot='${product.registry.root}'
+		              -dExeName='${product.shortname}'
+		              -dIconFile=appicon.ico
+		              -dlicenseRtf=License.rtf"/>
+    </exec>
+
+    <echo message="Compiling installer package."/>
+    <exec dir="" executable="${light.cmd}">
+      <arg line="-b ${brackets.staging}
+		                 -dvar.Version=${product.version.number}
+		                 -ext WixUIExtension
+		                 -ext WixUtilExtension
+		                 -cultures:en-us
+		                 Brackets.wixobj
+		                 bracketsharvestmanager.wixobj
+		                 WixUI_InstallDir.wixobj
+		                 ExitDialog.wixobj
+		                 InstallDirDlg.wixobj
+		                 UserExit.wixobj
+		                 ProgressDlg.wixobj
+		                 MaintenanceWelcomeDlg.wixobj
+		                 BrowseDlg.wixobj
+		                 VerifyReadyDlg.wixobj
+		                 -out '${product.fullname} ${product.version.name}.msi'
+		                 -loc Brackets_en-us.wxl"/>    
+    </exec>
+    
+  </target>
+
+  <target name="build.french" >
+    <echo level="info">Building French installer for build: ${product.version.name} </echo>
+    <!-- heat, candle, light-->
+    <echo message="Generating fileset."/>
+    <exec dir="" executable="${heat.cmd}">
+      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
+    </exec>
+
+    <echo message="Prepping installer source."/>
+    <exec dir="" executable="${candle.cmd}" >
+      <arg line="Brackets.wxs
+		              WixUI_InstallDir.wxs
+		              ExitDialog.wxs
+		              UserExit.wxs
+		              ProgressDlg.wxs
+		              MaintenanceWelcomeDlg.wxs
+		              BrowseDlg.wxs
+		              InstallDirDlg.wxs
+		              bracketsharvestmanager.wxs
+		              VerifyReadyDlg.wxs
+		              -ext WixUtilExtension
+		              -dcodepage=1252
+		              -dProductVersionNumber='${product.version.number}'
+		              -dProductVersionName='${product.version.name}'
+		              -dProductManufacturer='${product.manufacturer}'
+		              -dRegistryRoot='${product.registry.root}'
+		              -dExeName='${product.shortname}'
+		              -dIconFile=appicon.ico
+		              -dlicenseRtf=License.rtf"/>
+    </exec>
+
+    <echo message="Compiling installer package."/>
+    <exec dir="" executable="${light.cmd}">
+      <arg line="-b ${brackets.staging}
+		                 -dvar.Version=${product.version.number}
+		                 -ext WixUIExtension
+		                 -ext WixUtilExtension
+		                 -cultures:fr-fr
+		                 Brackets.wixobj
+		                 bracketsharvestmanager.wixobj
+		                 WixUI_InstallDir.wixobj
+		                 ExitDialog.wixobj
+		                 InstallDirDlg.wixobj
+		                 UserExit.wixobj
+		                 ProgressDlg.wixobj
+		                 MaintenanceWelcomeDlg.wixobj
+		                 BrowseDlg.wixobj
+		                 VerifyReadyDlg.wixobj
+		                 -out Brackets_fr-fr.msi
+		                 -loc Brackets_fr-fr.wxl"/>
+    </exec>
+
+  </target>
+
+
+  <!-- to build a single msi for english and french -->
+  <target name="build.mul" depends="build.english, build.french" description="Build the final multi-locale MSI">
+    <exec  executable='"${msitran.cmd}"' failonerror='true'>
+      <arg line="-g '${product.fullname} ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
+    </exec>
+
+    <exec  executable="cscript" failonerror='true'>
+      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi" fr-fr.mst 1036'/>
+    </exec>
+
+    <exec  executable="cscript" failonerror='true'>
+      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi"'/>
+    </exec>
+
+  </target>
+
+  <!-- this gets the latest build number by looking at the last modified folder and grabbing the digits at the end of \Builds*-->
+
+  <target name='get.latest.build.dir.name'>
+    <antcontrib:timestampselector property='latest.build.dir'>
+      <path>
+        <fileset dir='\\sjshare.corp.adobe.com\edge\AdobeEdgeCode\Brackets\Win'/>
+      </path>
+    </antcontrib:timestampselector>
+    <echo>${latest.build.dir}</echo>
+    <antcontrib:propertyregex property='latest.build.number' input='${latest.build.dir}'
+                   regexp='(Build)(\d{1,})' select='\2'/>
+    <echo>${latest.build.number}</echo>
+    <antcontrib:math result='new.build.number' operand1='${latest.build.number}'
+                     operation='+' operand2='1' datatype='int'/>
+    <echo>${new.build.number}</echo>
+  </target>
+  
+  <target name="post.build" depends=""></target>
+  <!-- codesign msi file -->
+  <target name="codesign.installer.win" description="runs signtool on msi file">
+        <property name="cert.file" value="C:/Certificates/CS_Certs/Adobe_Systems_CS.cer"/>
+        <property name="cert.name" value="Adobe Systems Incorporated"/>
+    <!--
+        <property name="cert.file" value="C:/Certificates/CS_Certs/Adobe_testcodesigner.cer"/>
+        <property name="cert.name" value="AdobeTestCodeSigning"/>  
+    -->
+
+    <codesign.file.win file="${product.fullname} ${product.version.name}.msi" cert.file="${cert.file}" cert.name="${cert.name}"/>
+  </target>
+    
+    
+  <!-- Cleanup targets -->
+    
+  <target name="clean" depends="clean.temp"
+      description="Remove all Wix generated files from installer\win">
+    <delete><fileset dir="." includes="*.msi" /></delete>
+  </target>
+    
+  <target name="clean.temp"
+      description="Remove intermediate Wix files from installer\win, leaving final MSI in place">
+    <delete file="bracketsharvestmanager.wxs" />
+    <delete file="fr-fr.mst" />
+    <delete><fileset dir="." includes="*.wixobj" /></delete>
+    <delete><fileset dir="." includes="*.wixpdb" /></delete>
+  </target>
+  
+</project>

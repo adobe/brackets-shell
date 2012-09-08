@@ -2,7 +2,6 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "config.h"
 #include "cefclient.h"
 #include <windows.h>
 #include <commdlg.h>
@@ -16,6 +15,7 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
+#include "config.h"
 #include "resource.h"
 #include "string_util.h"
 
@@ -41,7 +41,7 @@ char szWorkingDir[MAX_PATH];  // The current working directory
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
 // Forward declarations of functions included in this code module:
-ATOM MyRegisterClass(HINSTANCE hInstance);
+ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
@@ -115,25 +115,53 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
-  MyRegisterClass(hInstance);
+  MyRegisterClass(hInstance, settings.locale);
+ 
 
-  #define PREF_INITIAL_URL L"InitialURL"
-
-  // Don't read the prefs if the shift key is down
+  // If the shift key is not pressed, look for the index.html file 
   if (GetAsyncKeyState(VK_SHIFT) == 0) {
-	GetRegistryString(PREF_INITIAL_URL, (LPBYTE)NULL, (LPBYTE)szInitialUrl);
+    // Get the full pathname for the app. We look for the index.html
+    // file relative to this location.
+    wchar_t appPath[MAX_PATH];
+    wchar_t *pathRoot;
+    GetModuleFileName(NULL, appPath, MAX_PATH);
+
+    // Strip the .exe filename (and preceding "\") from the appPath
+    // and store in pathRoot
+    pathRoot = wcsrchr(appPath, '\\');
+
+    // Look for .\dev\src\index.html first
+    wcscpy(pathRoot, L"\\dev\\src\\index.html");
+
+    // If the file exists, use it
+    if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+      wcscpy(szInitialUrl, appPath);
+    }
+
+    if (!wcslen(szInitialUrl)) {
+      // Look for .\www\index.html next
+      wcscpy(pathRoot, L"\\www\\index.html");
+      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+        wcscpy(szInitialUrl, appPath);
+      }
+    }
   }
 
   if (!wcslen(szInitialUrl)) {
+      // If we got here, either the startup file couldn't be found, or the user pressed the
+      // shift key while launching. Prompt to select the index.html file.
       OPENFILENAME ofn = {0};
       ofn.lStructSize = sizeof(ofn);
       ofn.lpstrFile = szInitialUrl;
       ofn.nMaxFile = MAX_PATH;
       ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+      ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
-      if (GetOpenFileName(&ofn)) {
-		WriteRegistryString(PREF_INITIAL_URL, (LPBYTE)szInitialUrl, (wcslen(szInitialUrl) + 1) * 2);
+      if (!GetOpenFileName(&ofn)) {
+        // User cancelled, exit the app
+        CefShutdown();
+        return 0;
       }
   }
 
@@ -141,7 +169,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CEFCLIENT));
+  // Temporary localization hack. Default to English. Check for French.
+  DWORD menuId = IDC_CEFCLIENT;
+  if (settings.locale.str && (settings.locale.length > 0) &&
+      (CefString(settings.locale.str) == CefString("fr-FR")))
+  {
+	  menuId = IDC_CEFCLIENT_FR;
+  }
+
+  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
 
   int result = 0;
 
@@ -315,7 +351,16 @@ void RestoreWindowRect(int& left, int& top, int& width, int& height)
 //    function so that the application will get 'well formed' small icons
 //    associated with it.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance) {
+ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
+
+  // Temporary localization hack. Default to English. Check for French.
+  DWORD menuId = IDC_CEFCLIENT;
+  if (locale.str && (locale.length > 0) &&
+      (CefString(locale.str) == CefString("fr-FR")))
+  {
+	  menuId = IDC_CEFCLIENT_FR;
+  }
+
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -328,7 +373,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance) {
   wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
   wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = MAKEINTRESOURCE(IDC_CEFCLIENT);
+  wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
   wcex.lpszClassName = szWindowClass;
   wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -504,11 +549,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       wmEvent = HIWORD(wParam);
       // Parse the menu selections:
       switch (wmId) {
-      case IDM_ABOUT:
-        if (browser) {
-            g_handler->SendJSCommand(browser, HELP_ABOUT);
-        }
-        return 0;
       case IDM_EXIT:
         if (g_handler.get()) {
           g_handler->QuittingApp(true);
@@ -682,7 +722,7 @@ CefString AppGetCachePath() {
   SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
   
   std::wstring cachePath = dataPath;
-  cachePath += L"\\Brackets\\cef_data";
+  cachePath +=  L"\\" GROUP_NAME APP_NAME L"\\cef_data";
 
   return CefString(cachePath);
 }

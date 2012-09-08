@@ -250,7 +250,11 @@ public:
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
             
-            handler->ShowDevTools(browser);
+            // The CEF-hosted dev tools do not work. Open in a separate browser window instead.
+            // handler->ShowDevTools(browser);
+            
+            ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
+            OpenLiveBrowser(url, false);
 
         } else if (message_name == "QuitApplication") {
             // Parameters - none
@@ -263,6 +267,41 @@ public:
             // Parameters - none
           
             handler->AbortQuit();
+        } else if (message_name == "OpenURLInDefaultBrowser") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - url
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString url = argList->GetString(1);
+                
+                error = OpenURLInDefaultBrowser(url);
+                
+                // No additional response args for this function
+            }
+        } else if (message_name == "ShowExtensionsFolder") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - app URL
+            
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+          
+            if (error == NO_ERROR) {
+                ExtensionString appURL = argList->GetString(1);
+#ifdef OS_WIN
+                ExtensionString extensionsPath = appURL.erase(appURL.find(L"index.html")).append(L"extensions");
+#else
+                ExtensionString extensionsPath = appURL.erase(appURL.find("index.html")).append("extensions");
+#endif
+                error = ShowFolderInOSWindow(extensionsPath);
+            }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;

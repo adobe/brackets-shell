@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <CommDlg.h>
 #include <Psapi.h>
+#include <ShellAPI.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <stdio.h>
@@ -352,15 +353,27 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     cbData.closeWindow = true;
     ::EnumWindows(LiveBrowserMgrWin::EnumChromeWindowsCallback, (LPARAM)&cbData);
 
-	if (cbData.numberOfFoundWindows == 0) {
-		liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
-	} else if (liveBrowserMgr->GetCloseCallback()) {
-		// set a timeout for up to 3 minutes to close the browser 
+    if (cbData.numberOfFoundWindows == 0) {
+        liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
+    } else if (liveBrowserMgr->GetCloseCallback()) {
+        // set a timeout for up to 3 minutes to close the browser 
         liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
 }
 
-int32 ShowOpenDialog(bool allowMulitpleSelection,
+int32 OpenURLInDefaultBrowser(ExtensionString url)
+{
+    DWORD result = (DWORD)ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+
+    // If the result > 32, the function suceeded. If the result is <= 32, it is an
+    // error code.
+    if (result <= 32)
+        return ConvertWinErrorCode(result);
+
+    return NO_ERROR;
+}
+
+int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
                      ExtensionString initialDirectory,
@@ -389,10 +402,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     }
     */
 
-    if (chooseDirectory) {
-        // SHBrowseForFolder can handle Windows path only, not Unix path.
-        ConvertToNativePath(initialDirectory);
+    // SHBrowseForFolder can handle Windows path only, not Unix path.
+    // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
+    ConvertToNativePath(initialDirectory);
 
+    if (chooseDirectory) {
         BROWSEINFO bi = {0};
         bi.hwndOwner = GetActiveWindow();
         bi.lpszTitle = title.c_str();
@@ -432,11 +446,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
            
         ofn.lpstrInitialDir = initialDirectory.c_str();
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-        if (allowMulitpleSelection)
+        if (allowMultipleSelection)
             ofn.Flags |= OFN_ALLOWMULTISELECT;
 
         if (GetOpenFileName(&ofn)) {
-            if (allowMulitpleSelection) {
+            if (allowMultipleSelection) {
                 // Multiple selection encodes the files differently
 
                 // If multiple files are selected, the first null terminator
@@ -723,4 +737,8 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
     }
 }
 
+int32 ShowFolderInOSWindow(ExtensionString pathname) {
+    ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    return NO_ERROR;
+}
 

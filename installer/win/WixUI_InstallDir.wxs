@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Copyright (c) Microsoft Corporation.  All rights reserved.
+    
+    The use and distribution terms for this software are covered by the
+    Common Public License 1.0 (http://opensource.org/licenses/cpl.php)
+    which can be found in the file CPL.TXT at the root of this distribution.
+    By using this software in any fashion, you are agreeing to be bound by
+    the terms of this license.
+    
+    You must not remove this notice, or any other, from this software.
+-->
+<!--
+First-time install dialog sequence:      Maintenance dialog sequence:
+ - WixUI_WelcomeDlg                     - WixUI_MaintenanceWelcomeDlg
+ - WixUI_LicenseAgreementDlg            - WixUI_MaintenanceTypeDlg
+ - WixUI_MyInstallDirDlg                    - WixUI_InstallDirDlg
+   - WixUI_VerifyReadyDlg                 - WixUI_VerifyReadyDlg
+   - WixUI_DiskCostDlg
+-->
+<!--
+    Modified from Wix 3.5 for Brackets. See https://github.com/adobe/brackets-shell/
+-->
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+      
+
+        <UI Id="WixUI_MyInstallDir">
+            <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
+            <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12" />
+            <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
+            <TextStyle Id="WixUI_Font_BannerTitle" FaceName="Tahoma" Size="12" Bold="no" />
+
+            <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+            <Property Id="WixUI_Mode" Value="InstallDir" />
+
+            
+            <DialogRef Id="DiskCostDlg" />
+            <DialogRef Id="ErrorDlg" />
+            <DialogRef Id="FatalError" />
+            <DialogRef Id="FilesInUse" />
+            <DialogRef Id="MyUserExit" />
+            <DialogRef Id="MyProgressDlg" />
+            <DialogRef Id="ResumeDlg" />
+            <DialogRef Id="MyMaintenanceWelcomeDlg" />
+            <DialogRef Id="MyBrowseDlg" />
+
+
+        
+            <Publish Dialog="MyBrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="3">1</Publish>
+            <Publish Dialog="MyBrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+          
+  
+          <!--
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="MyLicenseAgreementDlg">1</Publish>
+            <Publish Dialog="MyLicenseAgreementDlg" Control="Back" Event="WelcomeDlg" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+             Need to add "Back" button to MyLicenseAgreementDlg
+-->
+<!--
+          <Publish Dialog="MyLicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">LicenseAccepted = "1"</Publish>
+
+            <Publish Dialog="MyInstallDirDlg" Control="Back" Event="NewDialog" Value="MyLicenseAgreementDlg">1</Publish>
+          -->
+            <Publish Dialog="MyInstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+            <Publish Dialog="MyInstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Order="2">NOT WIXUI_DONTVALIDATEPATH</Publish>
+            <Publish Dialog="MyInstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3"><![CDATA[NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
+            <Publish Dialog="MyInstallDirDlg" Control="Next" Event="NewDialog" Value="MyVerifyReadyDlg" Order="4">WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID="1"</Publish>
+            <Publish Dialog="MyInstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1">1</Publish>
+            <Publish Dialog="MyInstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="MyBrowseDlg" Order="2">1</Publish>
+            
+            <Publish Dialog="MyVerifyReadyDlg" Control="Back" Event="NewDialog" Value="MyInstallDirDlg" Order="1">NOT Installed</Publish>
+
+            <Property Id="ARPNOMODIFY" Value="1" />
+            <Property Id="ARPNOREPAIR" Value="1" />
+        </UI>
+
+        <UIRef Id="WixUI_Common" />
+    </Fragment>
+</Wix>

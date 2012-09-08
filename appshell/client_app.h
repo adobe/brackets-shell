@@ -73,6 +73,7 @@ class ClientApp : public CefApp,
 
   // Platform-specific methods implemented in client_app_mac/client_app_win
   double GetElapsedMilliseconds();
+  CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
 
 private:

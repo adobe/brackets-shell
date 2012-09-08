@@ -183,7 +183,7 @@ class ClientHandler : public CefClient,
                         
   // Call the "executeCommand" method, passing the command name.
   // If callback is specified, it will be called with the result from the command.
-  void SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
+  bool SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
   void DispatchCloseToNextBrowser();
   void AbortQuit();

@@ -3,7 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "config.h"
 #import <Cocoa/Cocoa.h>
 #include <sstream>
 #include "cefclient.h"
@@ -15,6 +14,7 @@
 #include "client_handler.h"
 #include "resource_util.h"
 #include "string_util.h"
+#include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 
@@ -38,8 +38,8 @@ NSURL* startupUrl = nil;
 #endif // SHOW_TOOLBAR_UI
 
 // Content area size for newly created windows.
-const int kWindowWidth = 800;
-const int kWindowHeight = 600;
+const int kWindowWidth = 1000;
+const int kWindowHeight = 700;
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
@@ -286,7 +286,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                                   NSResizableWindowMask )
                        backing:NSBackingStoreBuffered
                        defer:NO];
-  [mainWnd setTitle:@"Brackets"];
+  [mainWnd setTitle:APP_NAME];
   [mainWnd setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
@@ -441,17 +441,39 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-
-  // Only load the prefs if the shift key isn't down
-  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift)  
-    startupUrl = [[NSUserDefaults standardUserDefaults] URLForKey:@"initialUrl"];
-
+    
+  // If the shift key is not pressed, look for index.html bundled in the app package
+  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
+    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+    
+    // First, look in our app package for /Contents/dev/src/index.html
+    NSString* devFile = [bundlePath stringByAppendingString:@"/Contents/dev/src/index.html"];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
+      startupUrl = [NSURL fileURLWithPath:devFile];
+    }
+    
+    if (startupUrl == nil) {
+      // If the dev file wasn't found, look for /Contents/www/index.html
+      NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
+      if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
+        startupUrl = [NSURL fileURLWithPath:indexFile];
+      }
+    }
+  }
+  
   if (startupUrl == nil) {
+    // If we got here, either the startup file couldn't be found, or the user pressed the
+    // shift key while launching. Prompt to select the index.html file.
     NSOpenPanel* openPanel = [NSOpenPanel openPanel];
-    [openPanel setTitle:@"Choose startup file"];
+    [openPanel setTitle:[NSString stringWithFormat:@"Please select the %@ index.html file", APP_NAME]];
     if ([openPanel runModal] == NSOKButton) {
-      startupUrl = [NSURL fileURLWithPath:[[openPanel filenames] objectAtIndex:0]];
-      [[NSUserDefaults standardUserDefaults] setURL:startupUrl forKey:@"initialUrl"];
+      startupUrl = [[openPanel URLs] objectAtIndex:0];
+    }
+    else {
+      // User chose cancel when selecting startup file. Exit.
+      [NSApp terminate:nil];
+      return 0;
     }
   }
     
@@ -484,7 +506,7 @@ std::string AppGetWorkingDirectory() {
 CefString AppGetCachePath() {
   // Set persistence cache
   NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/Brackets/cef_data", libraryDirectory];
+  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/%@%@/cef_data", libraryDirectory, GROUP_NAME, APP_NAME];
   CefString cachePath = [cefCacheDirectory UTF8String];
   
   return cachePath;

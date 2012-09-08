@@ -81,7 +81,10 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
 
   {
     std::string str = g_command_line->GetSwitchValue(cefclient::kLogSeverity);
-    bool invalid = false;
+
+    // Default to LOGSEVERITY_DISABLE
+    settings.log_severity = LOGSEVERITY_DISABLE;
+
     if (!str.empty()) {
       if (str == cefclient::kLogSeverity_Verbose)
         settings.log_severity = LOGSEVERITY_VERBOSE;
@@ -95,16 +98,10 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
         settings.log_severity = LOGSEVERITY_ERROR_REPORT;
       else if (str == cefclient::kLogSeverity_Disable)
         settings.log_severity = LOGSEVERITY_DISABLE;
-      else
-        invalid = true;
-    }
-    if (str.empty() || invalid) {
-#ifdef NDEBUG
-      // Only log error messages and higher in release build.
-      settings.log_severity = LOGSEVERITY_ERROR;
-#endif
     }
   }
+
+  CefString(&settings.locale) = app->GetCurrentLanguage();
 
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
