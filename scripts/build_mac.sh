@@ -61,12 +61,12 @@ mkdir installer/mac/staging
 cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
 
 # Set the build number, branch and sha on the staged build
-cat installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json \
+cat "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json" \
 |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$build_num\3:" \
 |   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$BRACKETS_BRANCH\3:" \
 |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
 > tmp_package_json.txt
-mv tmp_package_json.txt installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json
+mv tmp_package_json.txt "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json"
 
 # Build the installer
 cd installer/mac
