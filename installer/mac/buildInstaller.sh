@@ -24,6 +24,11 @@ if [ -f ./assets/VolumeIcon.icns ]; then
   customIcon="--custom-icon"
 fi
 
+# if license folder exists, use it
+if [ -d ./dropDmgConfig/licenses/bracketsLicense ]; then
+  customLicense="--license-folder ./dropDmgConfig/licenses/bracketsLicense"
+fi
+
 # create disk layout
 rm -rf $tempLayoutDir
 cp -r ./dropDmgConfig/layouts/bracketsLayout/ "$tmpLayout"
@@ -33,7 +38,7 @@ grep -rl APPLICATION_NAME "${tmpLayout}/Info.plist" | xargs sed -i -e "s/APPLICA
 
 # build the DMG
 echo "building DMG..."
-dropdmg ./$tempDir --format $format --encryption $encryption $customIcon --layout-folder "$tmpLayout" --volume-name "$releaseName" --base-name "$releaseName"
+dropdmg ./$tempDir --format $format --encryption $encryption $customIcon --layout-folder "$tmpLayout" $customLicense --volume-name "$releaseName" --base-name "$releaseName"
 
 # clean up
 rm -rf $tempDir
