@@ -66,7 +66,7 @@ cat "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json" \
 |   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$BRACKETS_BRANCH\3:" \
 |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
 > tmp_package_json.txt
-mv "tmp_package_json.txt installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json"
+mv tmp_package_json.txt "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json"
 
 # Build the installer
 cd installer/mac
