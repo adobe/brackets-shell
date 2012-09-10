@@ -517,6 +517,9 @@ int32 ConvertNSErrorCode(NSError* error, bool isReading)
         case NSFileWriteOutOfSpaceError:
             return ERR_OUT_OF_SPACE;
             break;
+        case NSFileWriteFileExistsError:
+            return ERR_FILE_EXISTS;
+            break;
     }
     
     // Unknown error

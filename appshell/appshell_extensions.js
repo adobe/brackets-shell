@@ -95,6 +95,11 @@ if (!appshell.app) {
     appshell.fs.ERR_NOT_DIRECTORY           = 9;
  
     /**
+     * @constant Specified file already exists.
+     */
+    appshell.fs.ERR_FILE_EXISTS             = 10;
+ 
+    /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
      *
