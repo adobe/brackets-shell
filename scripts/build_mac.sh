@@ -37,6 +37,8 @@ cd "$BRACKETS_SRC"
 git checkout "$BRACKETS_BRANCH"
 git pull origin "$BRACKETS_BRANCH"
 git submodule update --init --recursive
+build_num=`git log --oneline | wc -l | tr -d ' '`
+brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
 cd $curDir
 git checkout "$BRACKETS_SHELL_BRANCH"
 git pull origin "$BRACKETS_SHELL_BRANCH"
@@ -57,6 +59,14 @@ mkdir installer/mac/staging
 
 # Copy to installer staging folder
 cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
+
+# Set the build number, branch and sha on the staged build
+cat installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json \
+|   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$build_num\3:" \
+|   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$BRACKETS_BRANCH\3:" \
+|   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
+> tmp_package_json.txt
+mv tmp_package_json.txt installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www/package.json
 
 # Build the installer
 cd installer/mac
