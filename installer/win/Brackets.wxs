@@ -48,14 +48,14 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
 
     <!-- Launch app after install -->
-
+<!--
     <Property Id="LAUNCHAPPONEXIT" Value="1" />
     <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
     <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand="" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
-    
+-->
     <UI>
       <Publish Dialog="MyExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
-      <Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction" Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>
+      <!--<Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction" Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>-->
 
     </UI>
 
