@@ -98,7 +98,35 @@ echo Copying sample content from %BRACKETS_SRC%\samples ...
 
 xcopy %BRACKETS_SRC%\samples staging\samples /s /i
 
+:: Update the build number, branch and SHA in the staged package.json file.
+:: The python script depends on several environment variables. Set them here.
+set cur_dir=%cd%
+cd %BRACKETS_SRC%
 
+:: Get build number. This is the number of git log entries on the current branch.
+git log --oneline | find /c " " > staging.tmp
+set /p BUILD_NUM=< staging.tmp
+del staging.tmp
+
+:: Get branch.
+git status | find /n " " | find "[1]" > staging.tmp
+set /p BUILD_BRANCH=< staging.tmp
+del staging.tmp
+:: variable has "[1]#On branch" at the beginning; strip it off
+set BUILD_BRANCH=%BUILD_BRANCH:[1]# On branch =%
+
+:: Get the build SHA. This is from the first line in the git log
+git log | find /n " " | find "[1]" > staging.tmp
+set /p BUILD_SHA=< staging.tmp
+del staging.tmp
+:: variable has "[1]commit " at the beginning; strip it off
+set BUILD_SHA=%BUILD_SHA:[1]commit =%
+
+set STAGED_SRC=staging\www
+
+:: Call the python script to inject the build number, branch name and SHA into package.json
+cd %cur_dir%
+python set_build_number.py
 
 echo.
 echo Done staging Brackets for Windows! (Run installer generator script next)
