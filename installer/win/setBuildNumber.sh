@@ -17,6 +17,13 @@ if [ "$BRACKETS_SRC" = "" ]; then
   exit
 fi
 
+# Make sure the staged package.json file exists
+if [ ! -f "installer/win/staging/www/package.json" ]; then
+	echo "I can't find \"installer/win/staging/www/package.json\""
+	echo "This script must be run from the root brackets-shell directory"
+	exit
+fi
+
 curDir=`pwd`
 cd "$BRACKETS_SRC"
 build_num=`git log --oneline | wc -l | tr -d ' '`
