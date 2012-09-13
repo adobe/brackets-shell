@@ -68,6 +68,7 @@ echo Copying brackets-shell build from %CD%\..\..\Release ...
 
 (
     echo .pdb
+    echo \dev\
     echo \obj\
     echo \lib\
     echo avformat-54.dll
