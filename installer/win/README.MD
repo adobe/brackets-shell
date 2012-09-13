@@ -42,8 +42,10 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
       on the build machine
 3. Follow instructions in brackets-shell\installer\win\stageForInstaller.bat to run it
     * This will generate brackets-shell\installer\win\staging
-4. Update build numbers as needed (see previous section)
-5. Run `ant -f brackets-win-install-build.xml` in installer\win\staging
+4. Follow instructions in brackets-shell\installer\win\setBuildNumber.sh to run it
+    * This will inject the build number, branch, and SHA into the staged package.json file
+5. Update build numbers as needed (see previous section)
+6. Run `ant -f brackets-win-install-build.xml` in installer\win\staging
     * Output is "Brackets Sprint _NN_.msi"
     * This creates lots of intermediate files, too. To clean them up, run the `clean.temp` target
     * Note: you'll see four warning messages saying "The file ... is not a Font, and its version is not a companion file
