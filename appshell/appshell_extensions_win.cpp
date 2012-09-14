@@ -553,7 +553,10 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     WIN32_FILE_ATTRIBUTE_DATA   fad;
-    GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad);
+    if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+
     modtime = FiletimeToTime(fad.ftLastWriteTime);
 
     return NO_ERROR;
@@ -738,7 +741,15 @@ time_t FiletimeToTime(FILETIME const& ft) {
     ULARGE_INTEGER ull;
     ull.LowPart = ft.dwLowDateTime;
     ull.HighPart = ft.dwHighDateTime;
-    return ull.QuadPart / 10000000ULL - 11644473600ULL;
+
+    // Convert the FILETIME from 100 nanosecond intervals into seconds
+    // and then subtract the number of seconds between 
+    // Jan 1 1601 and Jan 1 1970
+
+    const int64 NANOSECOND_INTERVALS = 10000000ULL;
+    const int64 SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970 = 11644473600ULL;
+
+    return ull.QuadPart / NANOSECOND_INTERVALS - SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970;
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {
