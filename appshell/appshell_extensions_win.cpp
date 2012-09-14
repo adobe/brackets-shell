@@ -43,6 +43,7 @@ int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
+time_t FiletimeToTime(FILETIME const& ft);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -551,17 +552,12 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
 
     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
-    // Remove trailing "/", if present. _wstat will fail with a "file not found"
-    // error if a directory has a trailing '/' in the name.
-    if (filename[filename.length() - 1] == '/')
-        filename[filename.length() - 1] = 0;
-
-    struct _stat buffer;
-    if(_wstat(filename.c_str(), &buffer) == -1) {
-        return ConvertErrnoCode(errno); 
+    WIN32_FILE_ATTRIBUTE_DATA   fad;
+    if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
+        return ConvertWinErrorCode(GetLastError());
     }
 
-    modtime = buffer.st_mtime;
+    modtime = FiletimeToTime(fad.ftLastWriteTime);
 
     return NO_ERROR;
 }
@@ -735,6 +731,25 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
     default:
         return ERR_UNKNOWN;
     }
+}
+
+/**
+ * Convert a FILETIME (number of 100 nanosecond intervals since Jan 1 1601)
+ * to time_t (number of seconds since Jan 1 1970)
+ */
+time_t FiletimeToTime(FILETIME const& ft) {
+    ULARGE_INTEGER ull;
+    ull.LowPart = ft.dwLowDateTime;
+    ull.HighPart = ft.dwHighDateTime;
+
+    // Convert the FILETIME from 100 nanosecond intervals into seconds
+    // and then subtract the number of seconds between 
+    // Jan 1 1601 and Jan 1 1970
+
+    const int64 NANOSECOND_INTERVALS = 10000000ULL;
+    const int64 SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970 = 11644473600ULL;
+
+    return ull.QuadPart / NANOSECOND_INTERVALS - SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970;
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {
