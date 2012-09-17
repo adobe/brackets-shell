@@ -272,7 +272,27 @@ static int CALLBACK SetInitialPathCallback(HWND hWnd, UINT uMsg, LPARAM lParam, 
 
 static std::wstring GetPathToLiveBrowser() 
 {
-    // Chrome.exe is at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
+    HKEY hKey;
+
+    // First, look at the "App Paths" registry key for a "chrome.exe" entry. This only
+    // checks for installs for all users. If Chrome is only installed for the current user,
+    // we fall back to the code below.
+    if (ERROR_SUCCESS == RegOpenKeyEx(
+            HKEY_LOCAL_MACHINE, 
+            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe",
+            0, KEY_READ, &hKey)) {
+       wchar_t wpath[MAX_PATH] = {0};
+
+        DWORD length = MAX_PATH;
+        RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)wpath, &length);
+        RegCloseKey(hKey);
+
+        return std::wstring(wpath);
+    }
+
+    // We didn't get an "App Paths" entry. This could be because Chrome was only installed for
+    // the current user, or because Chrome isn't installed at all.
+    // Look for Chrome.exe at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
     TCHAR localAppPath[MAX_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
     std::wstring appPath(localAppPath);
