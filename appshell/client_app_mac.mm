@@ -49,6 +49,12 @@ CefString ClientApp::GetCurrentLanguage()
     // NSLog(@"%@", language);
   
     NSString* language = [[NSLocale preferredLanguages] objectAtIndex:0];
+    
+    // Remap zh-Hans --> zh-CN and zh-Hant --> zh-TW so that CEF3 can find the corresponding localized resources.
+    // We may need to remove these two lines in the future if CEF3 switches to the newer locale names.
+    language = [language stringByReplacingOccurrencesOfString:@"Hans" withString:@"CN"];
+    language = [language stringByReplacingOccurrencesOfString:@"Hant" withString:@"TW"];
+    
     CefString result = [language UTF8String];
     return result;
 }
