@@ -318,16 +318,8 @@ static bool ConvertToShortPathName(std::wstring & path)
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
     std::wstring appPath = GetPathToLiveBrowser();
-
-    //When launching the app, we need to be careful about spaces in the path. A safe way to do this
-    //is to use the shortpath. It doesn't look as nice, but it always works and never has a space
-    if( !ConvertToShortPathName(appPath) ) {
-        //If the shortpath failed, we need to bail since we don't know what to call now
-        return ConvertWinErrorCode(GetLastError());
-    }
-
-
     std::wstring args = appPath;
+
     if (enableRemoteDebugging)
         args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
     else
