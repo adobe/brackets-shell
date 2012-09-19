@@ -55,6 +55,10 @@ CefString ClientApp::GetCurrentLanguage()
     language = [language stringByReplacingOccurrencesOfString:@"Hans" withString:@"CN"];
     language = [language stringByReplacingOccurrencesOfString:@"Hant" withString:@"TW"];
     
+    // Remap pt --> pt-BR so that we can load the CEF3 resource for Brazilian Portuguese.
+    if ([language isEqualToString:@"pt"])
+         language = [language stringByReplacingOccurrencesOfString:@"pt" withString:@"pt-BR"];
+    
     CefString result = [language UTF8String];
     return result;
 }
