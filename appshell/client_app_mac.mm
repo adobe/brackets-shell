@@ -56,6 +56,8 @@ CefString ClientApp::GetCurrentLanguage()
     language = [language stringByReplacingOccurrencesOfString:@"Hant" withString:@"TW"];
     
     // Remap pt --> pt-BR so that we can load the CEF3 resource for Brazilian Portuguese.
+    // [rlim] I believe this is the last one that we have to remap. If we find any to reamp again,
+    // then we should just switch to CFLocaleCopyPreferredLanguages() instead of [[NSLocale preferredLanguages].
     if ([language isEqualToString:@"pt"])
          language = [language stringByReplacingOccurrencesOfString:@"pt" withString:@"pt-BR"];
     
