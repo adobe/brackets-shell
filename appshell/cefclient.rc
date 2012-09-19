@@ -178,7 +178,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "cefclient"
+    IDS_APP_TITLE           "Brackets"
     IDC_CEFCLIENT           "CEFCLIENT"
 END
 
