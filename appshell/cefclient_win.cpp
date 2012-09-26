@@ -106,10 +106,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     // Get the full pathname for the app. We look for the index.html
     // file relative to this location.
     wchar_t appPath[MAX_PATH];
+    wchar_t *pathRoot;
     GetModuleFileName(NULL, appPath, MAX_PATH);
 
+    // Strip the .exe filename (and preceding "\") from the appPath
+    // and store in pathRoot
+    pathRoot = wcsrchr(appPath, '\\');
+
     // Look for .\dev\src\index.html first
-    wcscpy(wcsrchr(appPath, '\\'), L"\\dev\\src\\index.html");
+    wcscpy(pathRoot, L"\\dev\\src\\index.html");
 
     // If the file exists, use it
     if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
@@ -118,7 +123,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     if (!wcslen(szInitialUrl)) {
       // Look for .\www\index.html next
-      wcscpy(wcsrchr(appPath, '\\'), L"\\www\\index.html");
+      wcscpy(pathRoot, L"\\www\\index.html");
       if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
         wcscpy(szInitialUrl, appPath);
       }

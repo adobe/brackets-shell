@@ -43,6 +43,7 @@ int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
+time_t FiletimeToTime(FILETIME const& ft);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -272,7 +273,27 @@ static int CALLBACK SetInitialPathCallback(HWND hWnd, UINT uMsg, LPARAM lParam, 
 
 static std::wstring GetPathToLiveBrowser() 
 {
-    // Chrome.exe is at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
+    HKEY hKey;
+
+    // First, look at the "App Paths" registry key for a "chrome.exe" entry. This only
+    // checks for installs for all users. If Chrome is only installed for the current user,
+    // we fall back to the code below.
+    if (ERROR_SUCCESS == RegOpenKeyEx(
+            HKEY_LOCAL_MACHINE, 
+            L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe",
+            0, KEY_READ, &hKey)) {
+       wchar_t wpath[MAX_PATH] = {0};
+
+        DWORD length = MAX_PATH;
+        RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)wpath, &length);
+        RegCloseKey(hKey);
+
+        return std::wstring(wpath);
+    }
+
+    // We didn't get an "App Paths" entry. This could be because Chrome was only installed for
+    // the current user, or because Chrome isn't installed at all.
+    // Look for Chrome.exe at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
     TCHAR localAppPath[MAX_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
     std::wstring appPath(localAppPath);
@@ -297,16 +318,8 @@ static bool ConvertToShortPathName(std::wstring & path)
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
     std::wstring appPath = GetPathToLiveBrowser();
-
-    //When launching the app, we need to be careful about spaces in the path. A safe way to do this
-    //is to use the shortpath. It doesn't look as nice, but it always works and never has a space
-    if( !ConvertToShortPathName(appPath) ) {
-        //If the shortpath failed, we need to bail since we don't know what to call now
-        return ConvertWinErrorCode(GetLastError());
-    }
-
-
     std::wstring args = appPath;
+
     if (enableRemoteDebugging)
         args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
     else
@@ -551,17 +564,12 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
 
     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
-    // Remove trailing "/", if present. _wstat will fail with a "file not found"
-    // error if a directory has a trailing '/' in the name.
-    if (filename[filename.length() - 1] == '/')
-        filename[filename.length() - 1] = 0;
-
-    struct _stat buffer;
-    if(_wstat(filename.c_str(), &buffer) == -1) {
-        return ConvertErrnoCode(errno); 
+    WIN32_FILE_ATTRIBUTE_DATA   fad;
+    if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
+        return ConvertWinErrorCode(GetLastError());
     }
 
-    modtime = buffer.st_mtime;
+    modtime = FiletimeToTime(fad.ftLastWriteTime);
 
     return NO_ERROR;
 }
@@ -735,6 +743,25 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
     default:
         return ERR_UNKNOWN;
     }
+}
+
+/**
+ * Convert a FILETIME (number of 100 nanosecond intervals since Jan 1 1601)
+ * to time_t (number of seconds since Jan 1 1970)
+ */
+time_t FiletimeToTime(FILETIME const& ft) {
+    ULARGE_INTEGER ull;
+    ull.LowPart = ft.dwLowDateTime;
+    ull.HighPart = ft.dwHighDateTime;
+
+    // Convert the FILETIME from 100 nanosecond intervals into seconds
+    // and then subtract the number of seconds between 
+    // Jan 1 1601 and Jan 1 1970
+
+    const int64 NANOSECOND_INTERVALS = 10000000ULL;
+    const int64 SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970 = 11644473600ULL;
+
+    return ull.QuadPart / NANOSECOND_INTERVALS - SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970;
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {

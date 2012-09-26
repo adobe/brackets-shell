@@ -46,7 +46,8 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
       on the build machine
 4. Follow instructions in brackets-shell\installer\win\stageForInstaller.bat to run it
     * This will generate brackets-shell\installer\win\staging
-5. Run installer/win/setBuildNumber.sh (in the Git Bash window)
+5. Follow instructions in brackets-shell\installer\win\setBuildNumber.sh to run it (in the Git Bash window)
+    * This will inject the build number, branch, and SHA into the staged package.json file
 6. Run `ant -f brackets-win-install-build.xml` in installer\win\staging
     * Output is "Brackets Sprint _NN_.msi"
     * This creates lots of intermediate files, too. To clean them up, run the `clean.temp` target

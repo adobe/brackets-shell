@@ -36,10 +36,11 @@
                 <Control Id="TitleInstall" Hidden="yes" Type="Text" X="15" Y="15" Width="350" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.ExitDialogTitleInstall)" >
                     <Condition Action="show">NOT Installed</Condition>
                 </Control>
-
+                <!--
                 <Control Id="LaunchCheckBox" Type="CheckBox" X="10" Y="243" Width="270" Height="17" Property="LAUNCHAPPONEXIT" Hidden="yes" CheckBoxValue="1" Text=" !(loc.ExitDialogLaunchApp)">
                     <Condition Action="show">NOT Installed</Condition>
                 </Control>
+                -->
             </Dialog>
 
             <InstallUISequence>
