@@ -29,25 +29,28 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
 11. Set `BRACKETS_SRC` to the root folder of the brackets repo
 
 
-## To rev the Brackets sprint/build number
+## To rev the Brackets sprint number
 1. Open brackets-win-install-build.xml and change `product.sprint.number`
+2. Open brackets-shell\appshell\cefclient.rc and change `FILEVERSION` and `"FileVersion"`
+2. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion`
+3. Open brackets\src\package.json and change `"version"`
 
 
 ## To build the Brackets installer
 1. Sync both the brackets and brackets-shell repos
     * Be sure to update submodules in brackets
     * Double check that your git status is clean
-2. Build brackets-shell
+2. Update sprint number as needed (see previous section)
+3. Build brackets-shell
     * This cannot be done on the build machine yet, so generate a copy elsewhere and copy it into brackets-shell\Release
       on the build machine
-3. Follow instructions in brackets-shell\installer\win\stageForInstaller.bat to run it
+4. Follow instructions in brackets-shell\installer\win\stageForInstaller.bat to run it
     * This will generate brackets-shell\installer\win\staging
-4. Follow instructions in brackets-shell\installer\win\setBuildNumber.sh to run it
+5. Follow instructions in brackets-shell\installer\win\setBuildNumber.sh to run it (in the Git Bash window)
     * This will inject the build number, branch, and SHA into the staged package.json file
-5. Update build numbers as needed (see previous section)
 6. Run `ant -f brackets-win-install-build.xml` in installer\win\staging
     * Output is "Brackets Sprint _NN_.msi"
     * This creates lots of intermediate files, too. To clean them up, run the `clean.temp` target
-    * Note: you'll see four warning messages saying "The file ... is not a Font, and its version is not a companion file
-      reference." These are safe to ignore - see issue #1471.
+    * Note: you'll see two sets of five warning messages saying "The file ... is not a Font, and its version is not a
+      companion file reference." These are safe to ignore - see issue #1471.
       (Just make sure the *end* of each chunk of output doesn't list any errors).
