@@ -32,9 +32,10 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
 ## To rev the Brackets sprint number
 1. Open brackets-win-install-build.xml and change `product.sprint.number`
 2. Open brackets-shell\appshell\cefclient.rc and change `FILEVERSION` and `"FileVersion"`
-2. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion`
-3. Open brackets\src\package.json and change `"version"`
-
+3. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion`
+4. Open brackets\src\package.json and change `"version"`
+5. For the Mac build, open brackets-shell/installer/mac/buildInstaller.sh and change `releaseName`
+6. Edit ABOUT_TEXT_LINE1 in nls/root/strings.js with the new sprint number.
 
 ## To build the Brackets installer
 1. Sync both the brackets and brackets-shell repos
