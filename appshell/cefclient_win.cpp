@@ -56,17 +56,16 @@ extern CefRefPtr<ClientHandler> g_handler;
 #endif
 
 // Registry access functions
-bool GetRegistryInt(LPCWSTR pEntry, int* pDefault, int& ret);
-bool GetRegistryString(LPCWSTR pEntry, LPBYTE pDefault, LPBYTE pRet);
-bool WriteRegistryInt (LPCWSTR pEntry, int val);
-bool WriteRegistryString(LPCWSTR pEntry, LPBYTE pValue, int len);
+bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
+bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 
 // Registry key strings
 #define PREF_BRACKETS_BASE		L"Software\\Brackets\\"
-#define PREF_WINPOS_LEFT		L"Window Position Left"
-#define PREF_WINPOS_TOP			L"Window Position Top"
-#define PREF_WINPOS_WIDTH		L"Window Position Width"
-#define PREF_WINPOS_HEIGHT		L"Window Position Height"
+#define PREF_WINPOS_FOLDER		L"Window Position"
+#define PREF_LEFT				L"Left"
+#define PREF_TOP				L"Top"
+#define PREF_WIDTH				L"Width"
+#define PREF_HEIGHT				L"Height"
 
 // Window state functions
 void SaveWindowRect();
@@ -209,19 +208,20 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 // get integer value from registry key
 // caller can either use return value to determine success/fail, or pass a default to be used on fail
-bool GetRegistryInt(LPCWSTR pEntry, int* pDefault, int& ret)
+bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
 {
 	HKEY hKey;
 	bool result = false;
 
 	std::wstring key = PREF_BRACKETS_BASE;
-	key += pEntry;
+	key += pFolder;
 
 	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, KEY_READ, &hKey))
 	{
 		DWORD dwValue = 0;
 		DWORD dwType = 0;
 		DWORD dwCount = sizeof(DWORD);
+		key = pEntry;
 		if (ERROR_SUCCESS == RegQueryValueEx(hKey, (LPCWSTR)key.c_str(), NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
 		{
 			result = true;
@@ -242,70 +242,21 @@ bool GetRegistryInt(LPCWSTR pEntry, int* pDefault, int& ret)
 	return result;
 }
 
-// get string value from registry key
-// caller can either use return value to determine success/fail, or pass a default to be used on fail
-bool GetRegistryString(LPCWSTR pEntry, LPBYTE pDefault, LPBYTE pRet)
-{
-	// return value buffer is required
-	if (!pRet)
-		return false;
-
-	std::wstring key = PREF_BRACKETS_BASE;
-	key += pEntry;
-
-	HKEY hKey;
-	bool result = false;
-
-	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, KEY_READ, &hKey))
-	{
-		result = true;
-		DWORD length = MAX_PATH;
-		RegQueryValueEx(hKey, NULL, NULL, NULL, pRet, &length);
-		RegCloseKey(hKey);
-	}
-	else
-	{
-		// couldn't read value, so use default, if specified
-		if (pDefault)
-			*pRet = *pDefault;
-	}
-
-	return result;
-}
-
 // write integer value to registry key
-bool WriteRegistryInt (LPCWSTR pEntry, int val)
+bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 {
 	HKEY hKey;
 	bool result = false;
 
 	std::wstring key = PREF_BRACKETS_BASE;
-	key += pEntry;
+	key += pFolder;
 
 	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
 	{
 		DWORD dwCount = sizeof(int);
+		key = pEntry;
 		if (ERROR_SUCCESS == RegSetValueEx(hKey, (LPCWSTR)key.c_str(), 0, REG_DWORD, (LPBYTE)&val, dwCount))
 			result = true;
-		RegCloseKey(hKey);
-	}
-
-	return result;
-}
-
-// write string value to registry key
-bool WriteRegistryString(LPCWSTR pEntry, LPBYTE pValue, int len)
-{
-	HKEY hKey;
-	bool result = false;
-
-	std::wstring key = PREF_BRACKETS_BASE;
-	key += pEntry;
-
-	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
-	{
-		result = true;
-		RegSetValueEx(hKey, NULL, 0, REG_SZ, pValue, len);
 		RegCloseKey(hKey);
 	}
 
@@ -321,20 +272,20 @@ void SaveWindowRect()
 		RECT rect;
 		if (GetWindowRect(hWnd, &rect))
 		{
-			WriteRegistryInt(PREF_WINPOS_LEFT,   rect.left);
-			WriteRegistryInt(PREF_WINPOS_TOP,    rect.top);
-			WriteRegistryInt(PREF_WINPOS_WIDTH,  rect.right  - rect.left);
-			WriteRegistryInt(PREF_WINPOS_HEIGHT, rect.bottom - rect.top);
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right  - rect.left);
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
 		}
 	}
 }
 
 void RestoreWindowRect(int& left, int& top, int& width, int& height)
 {
-	GetRegistryInt(PREF_WINPOS_LEFT,   NULL, left);
-	GetRegistryInt(PREF_WINPOS_TOP,    NULL, top);
-	GetRegistryInt(PREF_WINPOS_WIDTH,  NULL, width);
-	GetRegistryInt(PREF_WINPOS_HEIGHT, NULL, height);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   NULL, left);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    NULL, top);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  NULL, width);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, NULL, height);
 }
 
 
