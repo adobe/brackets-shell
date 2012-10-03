@@ -56,11 +56,12 @@ extern CefRefPtr<ClientHandler> g_handler;
 #endif
 
 // Registry access functions
+void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet);
 bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
 bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 
 // Registry key strings
-#define PREF_BRACKETS_BASE		L"Software\\Brackets\\"
+#define PREF_APPSHELL_BASE		L"Software"
 #define PREF_WINPOS_FOLDER		L"Window Position"
 #define PREF_LEFT				L"Left"
 #define PREF_TOP				L"Top"
@@ -206,6 +207,36 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   return result;
 }
 
+// Helper method to build Registry Key string
+void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
+{
+	// Check for required params
+	ASSERT(pBase && pApp && pRet);
+	if (!pBase || !pApp || !pRet)
+		return;
+
+	// Base
+	wcscpy(pRet, pBase);
+
+	// Group (optional)
+	if (pGroup && (pGroup[0] != '\0'))
+	{
+		wcscat(pRet, L"\\");
+		wcscat(pRet, pGroup);
+	}
+
+	// App name
+	wcscat(pRet, L"\\");
+	wcscat(pRet, pApp);
+
+	// Folder (optional)
+	if (pFolder && (pFolder[0] != '\0'))
+	{
+		wcscat(pRet, L"\\");
+		wcscat(pRet, pFolder);
+	}
+}
+
 // get integer value from registry key
 // caller can either use return value to determine success/fail, or pass a default to be used on fail
 bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
@@ -213,16 +244,16 @@ bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
 	HKEY hKey;
 	bool result = false;
 
-	std::wstring key = PREF_BRACKETS_BASE;
-	key += pFolder;
+	wchar_t key[MAX_PATH];
+	key[0] = '\0';
+	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
 
-	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, KEY_READ, &hKey))
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, KEY_READ, &hKey))
 	{
 		DWORD dwValue = 0;
 		DWORD dwType = 0;
 		DWORD dwCount = sizeof(DWORD);
-		key = pEntry;
-		if (ERROR_SUCCESS == RegQueryValueEx(hKey, (LPCWSTR)key.c_str(), NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
+		if (ERROR_SUCCESS == RegQueryValueEx(hKey, pEntry, NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
 		{
 			result = true;
 			ASSERT(dwType == REG_DWORD);
@@ -248,14 +279,14 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 	HKEY hKey;
 	bool result = false;
 
-	std::wstring key = PREF_BRACKETS_BASE;
-	key += pFolder;
+	wchar_t key[MAX_PATH];
+	key[0] = '\0';
+	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
 
-	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
 	{
 		DWORD dwCount = sizeof(int);
-		key = pEntry;
-		if (ERROR_SUCCESS == RegSetValueEx(hKey, (LPCWSTR)key.c_str(), 0, REG_DWORD, (LPBYTE)&val, dwCount))
+		if (ERROR_SUCCESS == RegSetValueEx(hKey, pEntry, 0, REG_DWORD, (LPBYTE)&val, dwCount))
 			result = true;
 		RegCloseKey(hKey);
 	}
