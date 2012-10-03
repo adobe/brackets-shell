@@ -554,6 +554,23 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     return NO_ERROR;
 }
 
+int32 MakeDir(ExtensionString path, int32 mode)
+{
+    // TODO (issue #1759): honor mode
+    if (!CreateDirectory(path.c_str(), NULL))
+        return ConvertWinErrorCode(GetLastError(), false);
+
+    return NO_ERROR;
+}
+
+int32 Rename(ExtensionString oldName, ExtensionString newName)
+{
+    if (!MoveFile(oldName.c_str(), newName.c_str()))
+        return ConvertWinErrorCode(GetLastError());
+
+    return NO_ERROR;
+}
+
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
@@ -740,6 +757,8 @@ int ConvertWinErrorCode(int errorCode, bool isReading)
         return ERR_CANT_WRITE;
     case ERROR_HANDLE_DISK_FULL:
         return ERR_OUT_OF_SPACE;
+    case ERROR_ALREADY_EXISTS:
+        return ERR_FILE_EXISTS;
     default:
         return ERR_UNKNOWN;
     }

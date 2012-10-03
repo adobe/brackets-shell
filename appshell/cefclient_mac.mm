@@ -353,23 +353,41 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   settings.web_security_disabled = true;
 
-  window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
+  [[mainWnd windowController] setShouldCascadeWindows: NO];
+  
+  // Set the initial default size of the window.
+  NSRect defSize = [mainWnd contentRectForFrameRect:[mainWnd frame]];
+  defSize.size.width = kWindowWidth;
+  defSize.size.height = kWindowHeight
+#ifdef SHOW_TOOLBAR_UI
+                      + URLBAR_HEIGHT
+#endif
+  ;
+  
+  [mainWnd setFrame:[mainWnd frameRectForContentRect:defSize] display:NO];
+  
+  // Set the "autosave" name for the window. If there is a previously stored
+  // size for the window, it will be loaded here.
+  [mainWnd setFrameAutosaveName:APP_NAME @"MainWindow"];
+  
+  // Get the actual content size of the window since setFrameAutosaveName could
+  // result in the window size changing.
+  NSRect r = [mainWnd contentRectForFrameRect:[mainWnd frame]];
+
+  window_info.SetAsChild(contentView, 0, 0,
+                         r.size.width,
+                         r.size.height
+#ifdef SHOW_TOOLBAR_UI
+                         + URLBAR_HEIGHT
+#endif
+                         );
+  
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 [[startupUrl absoluteString] UTF8String], settings);
   
   // Show the window.
+  [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
-
-  // Size the window.
-  NSRect r = [mainWnd contentRectForFrameRect:[mainWnd frame]];
-  r.size.width = kWindowWidth;
-  r.size.height = kWindowHeight
-#ifdef SHOW_TOOLBAR_UI
-	+ URLBAR_HEIGHT
-#endif
-	;
-	
-  [mainWnd setFrame:[mainWnd frameRectForContentRect:r] display:YES];
 }
 
 // Sent by the default notification center immediately before the application

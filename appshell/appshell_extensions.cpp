@@ -150,6 +150,42 @@ public:
             
             // Set response args for this function
             responseArgs->SetList(2, directoryContents);
+        } else if (message_name == "MakeDir") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - directory path
+            //  2: number - mode
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_INT) {
+                error = ERR_INVALID_PARAMS;
+            }
+          
+            if (error == NO_ERROR) {
+                ExtensionString pathname = argList->GetString(1);
+                int32 mode = argList->GetInt(2);
+              
+                error = MakeDir(pathname, mode);
+            }
+            // No additional response args for this function
+        } else if (message_name == "Rename") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - old path
+            //  2: string - new path
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+          
+            if (error == NO_ERROR) {
+                ExtensionString oldName = argList->GetString(1);
+                ExtensionString newName = argList->GetString(2);
+            
+                error = Rename(oldName, newName);
+            }
+          // No additional response args for this function
         } else if (message_name == "GetFileModificationTime") {
             // Parameters:
             //  0: int32 - callback id
