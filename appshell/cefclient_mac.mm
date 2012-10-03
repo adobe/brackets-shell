@@ -38,8 +38,8 @@ NSURL* startupUrl = nil;
 #endif // SHOW_TOOLBAR_UI
 
 // Content area size for newly created windows.
-const int kWindowWidth = 1000;
-const int kWindowHeight = 700;
+const int kContentWidth = 1000;
+const int kContentHeight = 700;
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
@@ -273,17 +273,45 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   
   // Create the delegate for control and browser window events.
   ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
+
+  CGFloat contentWidth = kContentWidth;
+  CGFloat contentHeight = kContentHeight;
+#ifdef SHOW_TOOLBAR_UI
+  contentHeight += URLBAR_HEIGHT;
+#endif
+
+  // Style mask for the window
+  NSUInteger styleMask = (NSTitledWindowMask |
+                          NSClosableWindowMask |
+                          NSMiniaturizableWindowMask |
+                          NSResizableWindowMask);
   
-  // Create the main application window.
+  // Preferred size for the content
+  NSRect content_rect = { {0, 0}, {contentWidth, contentHeight} };
+  // Necessary window size for the content_frame using the above styleMask
+  NSRect window_rect = [NSWindow frameRectForContentRect:content_rect styleMask:styleMask];
+  // Available space and position for the window, taking menu and dock size/position into account
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
-  NSRect window_rect = { {0, screen_rect.size.height - kWindowHeight},
-    {kWindowWidth, kWindowHeight} };
+
+  // Make sure the window fits into the available screen space
+  if (screen_rect.size.width < window_rect.size.width) {
+    window_rect.size.width = screen_rect.size.width;
+  }
+  if (screen_rect.size.height < window_rect.size.height) {
+    window_rect.size.height = screen_rect.size.height;
+  }
+  
+  // Make sure the window is in the center of the available screen space
+  window_rect.origin.x = screen_rect.origin.x + floor((screen_rect.size.width - window_rect.size.width) / 2);
+  window_rect.origin.y = screen_rect.origin.y + floor((screen_rect.size.height - window_rect.size.height) / 2);
+  
+  // Update the content_rect
+  content_rect = [NSWindow contentRectForFrameRect:window_rect styleMask:styleMask];
+
+  // Create the main application window.
   NSWindow* mainWnd = [[UnderlayOpenGLHostingWindow alloc]
-                       initWithContentRect:window_rect
-                       styleMask:(NSTitledWindowMask |
-                                  NSClosableWindowMask |
-                                  NSMiniaturizableWindowMask |
-                                  NSResizableWindowMask )
+                       initWithContentRect:content_rect
+                       styleMask:styleMask
                        backing:NSBackingStoreBuffered
                        defer:NO];
   [mainWnd setTitle:APP_NAME];
@@ -353,23 +381,12 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   settings.web_security_disabled = true;
 
-  window_info.SetAsChild(contentView, 0, 0, kWindowWidth, kWindowHeight);
+  window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 [[startupUrl absoluteString] UTF8String], settings);
   
   // Show the window.
   [mainWnd makeKeyAndOrderFront: nil];
-
-  // Size the window.
-  NSRect r = [mainWnd contentRectForFrameRect:[mainWnd frame]];
-  r.size.width = kWindowWidth;
-  r.size.height = kWindowHeight
-#ifdef SHOW_TOOLBAR_UI
-	+ URLBAR_HEIGHT
-#endif
-	;
-	
-  [mainWnd setFrame:[mainWnd frameRectForContentRect:r] display:YES];
 }
 
 // Sent by the default notification center immediately before the application
