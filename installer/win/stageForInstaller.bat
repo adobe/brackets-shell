@@ -68,6 +68,7 @@ echo Copying brackets-shell build from %CD%\..\..\Release ...
 
 (
     echo .pdb
+    echo \dev\
     echo \obj\
     echo \lib\
     echo avformat-54.dll
@@ -101,7 +102,7 @@ xcopy %BRACKETS_SRC%\samples staging\samples /s /i
 
 
 echo.
-echo Done staging Brackets for Windows! (Run installer generator script next)
+echo Done staging Brackets for Windows! (Ready to run setBuildNumber.sh and then build the installer)
 
 GOTO END
 

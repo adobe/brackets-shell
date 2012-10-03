@@ -169,7 +169,7 @@
   <String Id="ProgressTextWriteIniValues" Overridable="yes">Ecriture des valeurs des fichiers INI</String>
   <String Id="ProgressTextWriteRegistryValues" Overridable="yes">Ecriture des valeurs de la base de registres</String>
   <String Id="ProgressTextAdvertise" Overridable="yes">Publication d’informations sur l’application</String>
-  <String Id="ProgressTextGenerateScript" Overridable="yes">Génération d’opération de script pour l’action :</String>
+  <String Id="ProgressTextGenerateScript" Overridable="yes">Génération d’opérations de script pour l’action</String>
   <String Id="ProgressTextMsiPublishAssembliesTemplate" Overridable="yes">Contexte de l’application :[1], nom du module :[2]</String>
   <String Id="ProgressTextMsiUnpublishAssembliesTemplate" Overridable="yes">Contexte de l’application :[1], nom du module :[2]</String>
   <String Id="ProgressTextRollback" Overridable="yes">Annulation de l’action:</String>
