@@ -556,6 +556,7 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 MakeDir(ExtensionString path, int32 mode)
 {
+    // TODO (issue #1759): honor mode
     if (!CreateDirectory(path.c_str(), NULL))
         return ConvertWinErrorCode(GetLastError(), false);
 
