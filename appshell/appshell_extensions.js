@@ -95,6 +95,11 @@ if (!appshell.app) {
     appshell.fs.ERR_NOT_DIRECTORY           = 9;
  
     /**
+     * @constant Specified file already exists.
+     */
+    appshell.fs.ERR_FILE_EXISTS             = 10;
+ 
+    /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
      *
@@ -144,7 +149,35 @@ if (!appshell.app) {
     appshell.fs.readdir = function (path, callback) {
         var resultString = ReadDir(callback, path);
     };
-    
+     
+    /**
+     * Create a new directory.
+     *
+     * @param {string} path The path of the directory to create.
+     * @param {number} mode The permissions for the directory, in numeric format (ie 0777)
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument.
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     **/
+    native function MakeDir();
+    appshell.fs.makedir = function (path, mode, callback) {
+        MakeDir(callback, path, mode);
+    };
+
+    /**
+     * Rename a file or directory.
+     *
+     * @param {string} oldPath The old name of the file or directory.
+     * @param {string} newPath The new name of the file or directory.
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument.
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     **/
+    native function Rename();
+    appshell.fs.rename = function(oldPath, newPath, callback) {
+        Rename(callback, oldPath, newPath);
+    };
+ 
     /**
      * Get information for the selected file or directory.
      *

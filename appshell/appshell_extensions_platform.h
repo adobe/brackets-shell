@@ -42,6 +42,7 @@ static const int ERR_CANT_WRITE             = 6;
 static const int ERR_OUT_OF_SPACE           = 7;
 static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
+static const int ERR_FILE_EXISTS            = 10;
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
@@ -66,6 +67,10 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      CefRefPtr<CefListValue>& selectedFiles);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
+
+int32 MakeDir(ExtensionString path, int32 mode);
+
+int32 Rename(ExtensionString oldName, ExtensionString newName);
 
 int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir);
 
