@@ -101,7 +101,10 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
     }
   }
 
-  CefString(&settings.locale) = app->GetCurrentLanguage();
+  // Don't update the settings.locale with the locale that we detected from the OS.
+  // Otherwise, CEF will use it to find the resources and when it fails in finding resources
+  // for some locales that are not available in resources, it crashes.
+  //CefString(&settings.locale) = app->GetCurrentLanguage( );
 
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
