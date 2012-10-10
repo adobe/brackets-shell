@@ -275,17 +275,54 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
   
   // Create the main application window.
+  NSUInteger styleMask = (NSTitledWindowMask |
+                          NSClosableWindowMask |
+                          NSMiniaturizableWindowMask |
+                          NSResizableWindowMask );
+
+  // Get the available screen space
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
-  NSRect window_rect = { {0, screen_rect.size.height - kWindowHeight},
-    {kWindowWidth, kWindowHeight} };
+  // Start out with the content being as big as possible
+  NSRect content_rect = [NSWindow contentRectForFrameRect:screen_rect styleMask:styleMask];
+  
+  // Determine the maximum height
+  const int maxHeight = kWindowHeight
+  #ifdef SHOW_TOOLBAR_UI
+    + URLBAR_HEIGHT
+  #endif
+  ;
+  // Make the content rect fit into maxHeight and kWindowWidth
+  if (content_rect.size.height > maxHeight) {
+    // First move the window up as much as we reduce it's height so it opens in the top left corner
+    content_rect.origin.y += content_rect.size.height - maxHeight;
+    content_rect.size.height = maxHeight;
+  }
+  if (content_rect.size.width > kWindowWidth) {
+    content_rect.size.width = kWindowWidth;
+  }
+
+  // Initialize the window with the adjusted default size
   NSWindow* mainWnd = [[UnderlayOpenGLHostingWindow alloc]
-                       initWithContentRect:window_rect
-                       styleMask:(NSTitledWindowMask |
-                                  NSClosableWindowMask |
-                                  NSMiniaturizableWindowMask |
-                                  NSResizableWindowMask )
+                       initWithContentRect:content_rect
+                       styleMask:styleMask
                        backing:NSBackingStoreBuffered
                        defer:NO];
+
+  // "Preclude the window controller from changing a window’s position from the
+  // one saved in the defaults system" (NSWindow Class Reference)
+  [[mainWnd windowController] setShouldCascadeWindows: NO];
+  
+  // Set the "autosave" name for the window. If there is a previously stored
+  // size for the window, it will be loaded here and used to resize the window.
+  // It appears that if the stored size is too big for the screen,
+  // it is automatically adjusted to fit.
+  [mainWnd setFrameAutosaveName:APP_NAME @"MainWindow"];
+  
+  // Get the actual content size of the window since setFrameAutosaveName could
+  // result in the window size changing.
+  content_rect = [mainWnd contentRectForFrameRect:[mainWnd frame]];
+
+  // Configure the rest of the window
   [mainWnd setTitle:APP_NAME];
   [mainWnd setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
@@ -301,7 +338,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 #ifdef SHOW_TOOLBAR_UI
   // Create the buttons.
   NSRect button_rect = [contentView bounds];
-  button_rect.origin.y = window_rect.size.height - URLBAR_HEIGHT +
+  button_rect.origin.y = content_rect.size.height - URLBAR_HEIGHT +
       (URLBAR_HEIGHT - BUTTON_HEIGHT) / 2;
   button_rect.size.height = BUTTON_HEIGHT;
   button_rect.origin.x += BUTTON_MARGIN;
@@ -353,34 +390,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   settings.web_security_disabled = true;
 
-  [[mainWnd windowController] setShouldCascadeWindows: NO];
-  
-  // Set the initial default size of the window.
-  NSRect defSize = [mainWnd contentRectForFrameRect:[mainWnd frame]];
-  defSize.size.width = kWindowWidth;
-  defSize.size.height = kWindowHeight
-#ifdef SHOW_TOOLBAR_UI
-                      + URLBAR_HEIGHT
-#endif
-  ;
-  
-  [mainWnd setFrame:[mainWnd frameRectForContentRect:defSize] display:NO];
-  
-  // Set the "autosave" name for the window. If there is a previously stored
-  // size for the window, it will be loaded here.
-  [mainWnd setFrameAutosaveName:APP_NAME @"MainWindow"];
-  
-  // Get the actual content size of the window since setFrameAutosaveName could
-  // result in the window size changing.
-  NSRect r = [mainWnd contentRectForFrameRect:[mainWnd frame]];
-
-  window_info.SetAsChild(contentView, 0, 0,
-                         r.size.width,
-                         r.size.height
-#ifdef SHOW_TOOLBAR_UI
-                         + URLBAR_HEIGHT
-#endif
-                         );
+  window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 [[startupUrl absoluteString] UTF8String], settings);
