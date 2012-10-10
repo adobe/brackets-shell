@@ -15,6 +15,7 @@ xcodebuild/*
 *.sdf
 *.opensdf
 *.suo
+*.vcxproj.filters
 *.vcxproj.user
 *.log
 *.dmg
