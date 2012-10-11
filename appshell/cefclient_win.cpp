@@ -402,6 +402,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 		}
         return 0;
       case ID_WARN_CONSOLEMESSAGE:
+/*
         if (g_handler.get()) {
           std::wstringstream ss;
           ss << L"Console messages will be written to "
@@ -409,6 +410,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
           MessageBox(hWnd, ss.str().c_str(), L"Console Messages",
               MB_OK | MB_ICONINFORMATION);
         }
+*/
         return 0;
       case ID_WARN_DOWNLOADCOMPLETE:
       case ID_WARN_DOWNLOADERROR:
