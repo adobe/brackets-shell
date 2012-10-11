@@ -164,10 +164,12 @@ static NSAutoreleasePool* g_autopool = nil;
 }
 
 - (void)notifyConsoleMessage:(id)object {
+  /*
   std::stringstream ss;
   ss << "Console messages will be written to " << g_handler->GetLogFile();
   NSString* str = [NSString stringWithUTF8String:(ss.str().c_str())];
   [self alert:@"Console Messages" withMessage:str];
+  */
 }
 
 - (void)notifyDownloadComplete:(id)object {
