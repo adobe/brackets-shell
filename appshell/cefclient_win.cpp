@@ -68,10 +68,16 @@ bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 #define PREF_TOP				L"Top"
 #define PREF_WIDTH				L"Width"
 #define PREF_HEIGHT				L"Height"
+#define PREF_RESTORE_LEFT		L"Restore Left"
+#define PREF_RESTORE_TOP		L"Restore Top"
+#define PREF_RESTORE_RIGHT		L"Restore Right"
+#define PREF_RESTORE_BOTTOM		L"Restore Bottom"
+#define PREF_SHOWSTATE			L"Show State"
 
 // Window state functions
-void SaveWindowRect();
-void RestoreWindowRect(int& left, int& top, int& width, int& height);
+void SaveWindowRect(HWND hWnd);
+void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
+void RestoreWindowPlacement(HWND hWnd, int showCmd);
 
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
@@ -308,29 +314,90 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 	return result;
 }
 
-void SaveWindowRect()
+void SaveWindowRect(HWND hWnd)
 {
 	// Save position of active window
-	HWND hWnd = GetActiveWindow();
-	if (hWnd)
+	if (!hWnd)
+		return;
+
+	WINDOWPLACEMENT wp;
+	memset(&wp, 0, sizeof(WINDOWPLACEMENT));
+	wp.length = sizeof(WINDOWPLACEMENT);
+
+	if (GetWindowPlacement(hWnd, &wp))
 	{
-		RECT rect;
-		if (GetWindowRect(hWnd, &rect))
+		// Only save window positions for "restored" and "maximized" states.
+		// If window is closed while "minimized", we don't want it to open minimized
+		// for next session, so don't update registry so it opens in previous state.
+		if (wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_MAXIMIZE)
 		{
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right  - rect.left);
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
+			RECT rect;
+			if (GetWindowRect(hWnd, &rect))
+			{
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right - rect.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
+			}
+
+			if (wp.showCmd == SW_MAXIMIZE)
+			{
+				// When window is maximized, we also store the "restore" size
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,   wp.rcNormalPosition.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,    wp.rcNormalPosition.top);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,  wp.rcNormalPosition.right);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM, wp.rcNormalPosition.bottom);
+			}
+
+			// Maximize is the only special case we handle
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,
+							 (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
 		}
 	}
 }
 
-void RestoreWindowRect(int& left, int& top, int& width, int& height)
+void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   NULL, left);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    NULL, top);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  NULL, width);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, NULL, height);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
+}
+
+void RestoreWindowPlacement(HWND hWnd, int showCmd)
+{
+	if (!hWnd)
+		return;
+
+	// If window is maximized, set the "restore" window position
+	if (showCmd == SW_MAXIMIZE)
+	{
+		WINDOWPLACEMENT wp;
+		wp.length = sizeof(WINDOWPLACEMENT);
+
+		wp.flags	= 0;
+		wp.showCmd	= SW_MAXIMIZE;
+		wp.ptMinPosition.x	= -1;
+		wp.ptMinPosition.y	= -1;
+		wp.ptMaxPosition.x	= -1;
+		wp.ptMaxPosition.y	= -1;
+
+		wp.rcNormalPosition.left	= CW_USEDEFAULT;
+		wp.rcNormalPosition.top		= CW_USEDEFAULT;
+		wp.rcNormalPosition.right	= CW_USEDEFAULT;
+		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
+
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,	NULL, (int&)wp.rcNormalPosition.left);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,	NULL, (int&)wp.rcNormalPosition.top);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,	NULL, (int&)wp.rcNormalPosition.right);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM,	NULL, (int&)wp.rcNormalPosition.bottom);
+
+		// This returns an error code, but not sure what we could do on an error
+		SetWindowPlacement(hWnd, &wp);
+	}
+
+	ShowWindow(hWnd, showCmd);
 }
 
 
@@ -395,18 +462,22 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
 
   int left   = CW_USEDEFAULT;
-  int top    = 0;
+  int top    = CW_USEDEFAULT;
   int width  = CW_USEDEFAULT;
-  int height = 0;
-  RestoreWindowRect(left, top, width, height);
+  int height = CW_USEDEFAULT;
+  int showCmd = SW_SHOW;
+  RestoreWindowRect(left, top, width, height, showCmd);
 
-  hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+  DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+  if (showCmd == SW_MAXIMIZE)
+	  styles |= WS_MAXIMIZE;
+  hWnd = CreateWindow(szWindowClass, szTitle, styles,
                       left, top, width, height, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
     return FALSE;
 
-  ShowWindow(hWnd, nCmdShow);
+  RestoreWindowPlacement(hWnd, showCmd);
   UpdateWindow(hWnd);
 
   return TRUE;
@@ -662,7 +733,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     case WM_CLOSE:
       if (g_handler.get()) {
 
-        SaveWindowRect();
+        HWND hWnd = GetActiveWindow();
+        SaveWindowRect(hWnd);
 
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
