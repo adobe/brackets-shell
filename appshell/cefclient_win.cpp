@@ -56,6 +56,7 @@ extern CefRefPtr<ClientHandler> g_handler;
 #endif
 
 // Registry access functions
+void EnsureTrailingSeparator(LPWSTR pRet);
 void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet);
 bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
 bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
@@ -207,6 +208,19 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   return result;
 }
 
+// Add trailing separator, if necessary
+void EnsureTrailingSeparator(LPWSTR pRet)
+{
+	if (!pRet)
+		return;
+
+	int len = wcslen(pRet);
+	if (len > 0 && wcscmp(&(pRet[len-1]), L"\\") != 0)
+	{
+		wcscat(pRet, L"\\");
+	}
+}
+
 // Helper method to build Registry Key string
 void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
 {
@@ -221,18 +235,18 @@ void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR
 	// Group (optional)
 	if (pGroup && (pGroup[0] != '\0'))
 	{
-		wcscat(pRet, L"\\");
+		EnsureTrailingSeparator(pRet);
 		wcscat(pRet, pGroup);
 	}
 
 	// App name
-	wcscat(pRet, L"\\");
+	EnsureTrailingSeparator(pRet);
 	wcscat(pRet, pApp);
 
 	// Folder (optional)
 	if (pFolder && (pFolder[0] != '\0'))
 	{
-		wcscat(pRet, L"\\");
+		EnsureTrailingSeparator(pRet);
 		wcscat(pRet, pFolder);
 	}
 }
