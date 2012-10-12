@@ -55,6 +55,30 @@ extern CefRefPtr<ClientHandler> g_handler;
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  // NOLINT(whitespace/line_length)
 #endif
 
+// Registry access functions
+void EnsureTrailingSeparator(LPWSTR pRet);
+void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet);
+bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
+bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
+
+// Registry key strings
+#define PREF_APPSHELL_BASE		L"Software"
+#define PREF_WINPOS_FOLDER		L"Window Position"
+#define PREF_LEFT				L"Left"
+#define PREF_TOP				L"Top"
+#define PREF_WIDTH				L"Width"
+#define PREF_HEIGHT				L"Height"
+#define PREF_RESTORE_LEFT		L"Restore Left"
+#define PREF_RESTORE_TOP		L"Restore Top"
+#define PREF_RESTORE_RIGHT		L"Restore Right"
+#define PREF_RESTORE_BOTTOM		L"Restore Bottom"
+#define PREF_SHOWSTATE			L"Show State"
+
+// Window state functions
+void SaveWindowRect(HWND hWnd);
+void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
+void RestoreWindowPlacement(HWND hWnd, int showCmd);
+
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -190,6 +214,193 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   return result;
 }
 
+// Add trailing separator, if necessary
+void EnsureTrailingSeparator(LPWSTR pRet)
+{
+	if (!pRet)
+		return;
+
+	int len = wcslen(pRet);
+	if (len > 0 && wcscmp(&(pRet[len-1]), L"\\") != 0)
+	{
+		wcscat(pRet, L"\\");
+	}
+}
+
+// Helper method to build Registry Key string
+void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
+{
+	// Check for required params
+	ASSERT(pBase && pApp && pRet);
+	if (!pBase || !pApp || !pRet)
+		return;
+
+	// Base
+	wcscpy(pRet, pBase);
+
+	// Group (optional)
+	if (pGroup && (pGroup[0] != '\0'))
+	{
+		EnsureTrailingSeparator(pRet);
+		wcscat(pRet, pGroup);
+	}
+
+	// App name
+	EnsureTrailingSeparator(pRet);
+	wcscat(pRet, pApp);
+
+	// Folder (optional)
+	if (pFolder && (pFolder[0] != '\0'))
+	{
+		EnsureTrailingSeparator(pRet);
+		wcscat(pRet, pFolder);
+	}
+}
+
+// get integer value from registry key
+// caller can either use return value to determine success/fail, or pass a default to be used on fail
+bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
+{
+	HKEY hKey;
+	bool result = false;
+
+	wchar_t key[MAX_PATH];
+	key[0] = '\0';
+	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
+
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, KEY_READ, &hKey))
+	{
+		DWORD dwValue = 0;
+		DWORD dwType = 0;
+		DWORD dwCount = sizeof(DWORD);
+		if (ERROR_SUCCESS == RegQueryValueEx(hKey, pEntry, NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
+		{
+			result = true;
+			ASSERT(dwType == REG_DWORD);
+			ASSERT(dwCount == sizeof(dwValue));
+			ret = (int)dwValue;
+		}
+		RegCloseKey(hKey);
+	}
+
+	if (!result)
+	{
+		// couldn't read value, so use default, if specified
+		if (pDefault)
+			ret = *pDefault;
+	}
+
+	return result;
+}
+
+// write integer value to registry key
+bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
+{
+	HKEY hKey;
+	bool result = false;
+
+	wchar_t key[MAX_PATH];
+	key[0] = '\0';
+	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
+
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+	{
+		DWORD dwCount = sizeof(int);
+		if (ERROR_SUCCESS == RegSetValueEx(hKey, pEntry, 0, REG_DWORD, (LPBYTE)&val, dwCount))
+			result = true;
+		RegCloseKey(hKey);
+	}
+
+	return result;
+}
+
+void SaveWindowRect(HWND hWnd)
+{
+	// Save position of active window
+	if (!hWnd)
+		return;
+
+	WINDOWPLACEMENT wp;
+	memset(&wp, 0, sizeof(WINDOWPLACEMENT));
+	wp.length = sizeof(WINDOWPLACEMENT);
+
+	if (GetWindowPlacement(hWnd, &wp))
+	{
+		// Only save window positions for "restored" and "maximized" states.
+		// If window is closed while "minimized", we don't want it to open minimized
+		// for next session, so don't update registry so it opens in previous state.
+		if (wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_MAXIMIZE)
+		{
+			RECT rect;
+			if (GetWindowRect(hWnd, &rect))
+			{
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right - rect.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
+			}
+
+			if (wp.showCmd == SW_MAXIMIZE)
+			{
+				// When window is maximized, we also store the "restore" size
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,   wp.rcNormalPosition.left);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,    wp.rcNormalPosition.top);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,  wp.rcNormalPosition.right);
+				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM, wp.rcNormalPosition.bottom);
+			}
+
+			// Maximize is the only special case we handle
+			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,
+							 (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
+		}
+	}
+}
+
+void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
+{
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
+	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
+}
+
+void RestoreWindowPlacement(HWND hWnd, int showCmd)
+{
+	if (!hWnd)
+		return;
+
+	// If window is maximized, set the "restore" window position
+	if (showCmd == SW_MAXIMIZE)
+	{
+		WINDOWPLACEMENT wp;
+		wp.length = sizeof(WINDOWPLACEMENT);
+
+		wp.flags	= 0;
+		wp.showCmd	= SW_MAXIMIZE;
+		wp.ptMinPosition.x	= -1;
+		wp.ptMinPosition.y	= -1;
+		wp.ptMaxPosition.x	= -1;
+		wp.ptMaxPosition.y	= -1;
+
+		wp.rcNormalPosition.left	= CW_USEDEFAULT;
+		wp.rcNormalPosition.top		= CW_USEDEFAULT;
+		wp.rcNormalPosition.right	= CW_USEDEFAULT;
+		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
+
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,	NULL, (int&)wp.rcNormalPosition.left);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,	NULL, (int&)wp.rcNormalPosition.top);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,	NULL, (int&)wp.rcNormalPosition.right);
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM,	NULL, (int&)wp.rcNormalPosition.bottom);
+
+		// This returns an error code, but not sure what we could do on an error
+		SetWindowPlacement(hWnd, &wp);
+	}
+
+	ShowWindow(hWnd, showCmd);
+}
+
+
 //
 //  FUNCTION: MyRegisterClass()
 //
@@ -247,14 +458,26 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 
   hInst = hInstance;  // Store instance handle in our global variable
 
-  hWnd = CreateWindow(szWindowClass, szTitle,
-                      WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, 0,
-                      CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+  // TODO: test this cases:
+  // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
+
+  int left   = CW_USEDEFAULT;
+  int top    = CW_USEDEFAULT;
+  int width  = CW_USEDEFAULT;
+  int height = CW_USEDEFAULT;
+  int showCmd = SW_SHOW;
+  RestoreWindowRect(left, top, width, height, showCmd);
+
+  DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+  if (showCmd == SW_MAXIMIZE)
+	  styles |= WS_MAXIMIZE;
+  hWnd = CreateWindow(szWindowClass, szTitle, styles,
+                      left, top, width, height, NULL, NULL, hInstance, NULL);
 
   if (!hWnd)
     return FALSE;
 
-  ShowWindow(hWnd, nCmdShow);
+  RestoreWindowPlacement(hWnd, showCmd);
   UpdateWindow(hWnd);
 
   return TRUE;
@@ -511,6 +734,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
+
+        HWND hWnd = GetActiveWindow();
+        SaveWindowRect(hWnd);
+
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
         HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
