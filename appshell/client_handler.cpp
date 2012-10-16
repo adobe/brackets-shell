@@ -189,6 +189,11 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                                      const CefString& message,
                                      const CefString& source,
                                      int line) {
+  // Don't write the message to a console.log file. Instead, we'll just
+  // return false here so the message gets written to the console (output window
+  // in xcode, or console window in dev tools)
+  
+/*
   REQUIRE_UI_THREAD();
 
   bool first_message;
@@ -224,7 +229,7 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
     if (first_message)
       SendNotification(NOTIFY_CONSOLE_MESSAGE);
   }
-
+*/
   return false;
 }
 
