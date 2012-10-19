@@ -18,19 +18,6 @@
 #include "string_util.h"
 #include "util.h"
 
-namespace {
-
-// Return the int representation of the specified string.
-int GetIntValue(const CefString& str) {
-  if (str.empty())
-    return 0;
-
-  std::string stdStr = str;
-  return atoi(stdStr.c_str());
-}
-
-}  // namespace
-
 CefRefPtr<ClientHandler> g_handler;
 CefRefPtr<CefCommandLine> g_command_line;
 
