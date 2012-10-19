@@ -16,3 +16,9 @@ mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
 
 sed 's:SYMROOT = \([^\;]*\);:SYMROOT = xcodebuild;:' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
 mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
+
+sed 's:macosx10.7:"":' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
+mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
+
+sed 's:PRODUCT_NAME = All;:PRODUCT_NAME = All;\nCOMBINE_HIDPI_IMAGES = YES;:' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
+mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj

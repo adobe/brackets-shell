@@ -315,8 +315,10 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
     if ([openPanel runModal] == NSOKButton)
     {
-        NSArray* files = [openPanel filenames];
-        NSArrayToCefList(files, selectedFiles);
+        NSArray* urls = [openPanel URLs];
+        for (NSUInteger i = 0; i < [urls count]; i++) {
+            selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
+        }
     }
     [NSApp endSheet:openPanel];
     

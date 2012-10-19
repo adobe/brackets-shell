@@ -1478,7 +1478,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INTERMEDIATE_DIR = "$(PROJECT_DERIVED_FILE_DIR)/$(CONFIGURATION)";
-				SDKROOT = macosx10.7;
+				SDKROOT = "";
 				SHARED_INTERMEDIATE_DIR = "$(SYMROOT)/DerivedSources/$(CONFIGURATION)";
 				SYMROOT = xcodebuild;
 			};
@@ -1557,7 +1557,7 @@
 		7C2ABCD4C3747B6FA0E9648C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = All;nCOMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Debug;
 		};
@@ -1733,7 +1733,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INTERMEDIATE_DIR = "$(PROJECT_DERIVED_FILE_DIR)/$(CONFIGURATION)";
-				SDKROOT = macosx10.7;
+				SDKROOT = "";
 				SHARED_INTERMEDIATE_DIR = "$(SYMROOT)/DerivedSources/$(CONFIGURATION)";
 				SYMROOT = xcodebuild;
 			};
@@ -1827,7 +1827,7 @@
 		E1F93007A551A118BEA442B1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = All;nCOMBINE_HIDPI_IMAGES = YES;
 			};
 			name = Release;
 		};
