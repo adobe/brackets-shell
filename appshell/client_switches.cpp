@@ -8,7 +8,7 @@
 
 namespace cefclient {
   
-const char kUrl[] = "url";
+const char kStartupPath[] = "startup-path";
 
 // CefSettings attributes.
 const char kMultiThreadedMessageLoop[] = "multi-threaded-message-loop";

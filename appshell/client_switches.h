@@ -10,7 +10,7 @@
 
 namespace cefclient {
 
-extern const char kUrl[];
+extern const char kStartupPath[];
 
 // CefSettings attributes.
 extern const char kMultiThreadedMessageLoop[];
