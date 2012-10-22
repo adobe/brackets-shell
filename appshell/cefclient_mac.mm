@@ -474,8 +474,8 @@ int main(int argc, char* argv[]) {
   CFRelease(event);
   
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupURL)) {
-    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(cefclient::kStartupURL);
+  if (cmdLine->HasSwitch(cefclient::kUrl)) {
+    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(cefclient::kUrl);
     std::string startupURLStr(cmdLineStartupURL);
     NSString* str = [NSString stringWithUTF8String:startupURLStr.c_str()];
     startupUrl = [NSURL fileURLWithPath:[str stringByExpandingTildeInPath]];

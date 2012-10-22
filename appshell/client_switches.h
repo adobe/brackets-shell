@@ -10,6 +10,8 @@
 
 namespace cefclient {
 
+extern const char kUrl[];
+
 // CefSettings attributes.
 extern const char kMultiThreadedMessageLoop[];
 extern const char kCachePath[];
@@ -29,7 +31,6 @@ extern const char kGraphicsImpl_DesktopCmdBuffer[];
 extern const char kLocalStorageQuota[];
 extern const char kSessionStorageQuota[];
 extern const char kJavascriptFlags[];
-extern const char kStartupURL[];
 
 // CefBrowserSettings attributes.
 extern const char kDragDropDisabled[];

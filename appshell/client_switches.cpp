@@ -7,6 +7,8 @@
 #include "client_switches.h"  // NOLINT(build/include)
 
 namespace cefclient {
+  
+const char kUrl[] = "url";
 
 // CefSettings attributes.
 const char kMultiThreadedMessageLoop[] = "multi-threaded-message-loop";
@@ -27,7 +29,6 @@ const char kGraphicsImpl_DesktopCmdBuffer[] = "desktop-command-buffer";
 const char kLocalStorageQuota[] = "local-storage-quota";
 const char kSessionStorageQuota[] = "session-storage-quota";
 const char kJavascriptFlags[] = "javascript-flags";
-const char kStartupURL[] = "startup-url";
 
 // CefBrowserSettings attributes.
 const char kDragDropDisabled[] = "drag-drop-disabled";
