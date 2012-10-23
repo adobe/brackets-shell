@@ -544,10 +544,7 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  // Set persistence cache
-  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-  NSString *cefCacheDirectory = [NSString stringWithFormat:@"%@/%@%@/cef_data", libraryDirectory, GROUP_NAME, APP_NAME];
-  CefString cachePath = [cefCacheDirectory UTF8String];
+  std::string cachePath = ClientApp::AppGetSupportDirectory() + "cef_data";
   
-  return cachePath;
+  return CefString(cachePath);
 }

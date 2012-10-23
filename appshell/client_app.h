@@ -75,6 +75,7 @@ class ClientApp : public CefApp,
   double GetElapsedMilliseconds();
   CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
+  static std::string AppGetSupportDirectory();
 
 private:
   // Creates all of the RenderDelegate objects. Implemented in
