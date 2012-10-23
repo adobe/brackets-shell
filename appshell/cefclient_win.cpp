@@ -18,6 +18,7 @@
 #include "config.h"
 #include "resource.h"
 #include "string_util.h"
+#include "client_switches.h"
 
 #include <ShlObj.h>
 
@@ -124,34 +125,39 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance, settings.locale);
  
+  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
+	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
+  }
+  else {
+	// If the shift key is not pressed, look for the index.html file 
+	if (GetAsyncKeyState(VK_SHIFT) == 0) {
+	// Get the full pathname for the app. We look for the index.html
+	// file relative to this location.
+	wchar_t appPath[MAX_PATH];
+	wchar_t *pathRoot;
+	GetModuleFileName(NULL, appPath, MAX_PATH);
 
-  // If the shift key is not pressed, look for the index.html file 
-  if (GetAsyncKeyState(VK_SHIFT) == 0) {
-    // Get the full pathname for the app. We look for the index.html
-    // file relative to this location.
-    wchar_t appPath[MAX_PATH];
-    wchar_t *pathRoot;
-    GetModuleFileName(NULL, appPath, MAX_PATH);
+	// Strip the .exe filename (and preceding "\") from the appPath
+	// and store in pathRoot
+	pathRoot = wcsrchr(appPath, '\\');
 
-    // Strip the .exe filename (and preceding "\") from the appPath
-    // and store in pathRoot
-    pathRoot = wcsrchr(appPath, '\\');
+	// Look for .\dev\src\index.html first
+	wcscpy(pathRoot, L"\\dev\\src\\index.html");
 
-    // Look for .\dev\src\index.html first
-    wcscpy(pathRoot, L"\\dev\\src\\index.html");
+	// If the file exists, use it
+	if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+		wcscpy(szInitialUrl, appPath);
+	}
 
-    // If the file exists, use it
-    if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-      wcscpy(szInitialUrl, appPath);
-    }
-
-    if (!wcslen(szInitialUrl)) {
-      // Look for .\www\index.html next
-      wcscpy(pathRoot, L"\\www\\index.html");
-      if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-        wcscpy(szInitialUrl, appPath);
-      }
-    }
+	if (!wcslen(szInitialUrl)) {
+		// Look for .\www\index.html next
+		wcscpy(pathRoot, L"\\www\\index.html");
+		if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+		wcscpy(szInitialUrl, appPath);
+		}
+	}
+	}
   }
 
   if (!wcslen(szInitialUrl)) {
