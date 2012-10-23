@@ -17,6 +17,7 @@
 #include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
+#include "client_switches.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -471,23 +472,32 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-    
-  // If the shift key is not pressed, look for index.html bundled in the app package
-  if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
-    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
-    
-    // First, look in our app package for /Contents/dev/src/index.html
-    NSString* devFile = [bundlePath stringByAppendingString:@"/Contents/dev/src/index.html"];
-    
-    if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
-      startupUrl = [NSURL fileURLWithPath:devFile];
-    }
-    
-    if (startupUrl == nil) {
-      // If the dev file wasn't found, look for /Contents/www/index.html
-      NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
-      if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
-        startupUrl = [NSURL fileURLWithPath:indexFile];
+  
+  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
+    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+    std::string startupURLStr(cmdLineStartupURL);
+    NSString* str = [NSString stringWithUTF8String:startupURLStr.c_str()];
+    startupUrl = [NSURL fileURLWithPath:[str stringByExpandingTildeInPath]];
+  }
+  else {
+    // If the shift key is not pressed, look for index.html bundled in the app package
+    if ((modifiers & kCGEventFlagMaskShift) != kCGEventFlagMaskShift) {
+      NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+      
+      // First, look in our app package for /Contents/dev/src/index.html
+      NSString* devFile = [bundlePath stringByAppendingString:@"/Contents/dev/src/index.html"];
+      
+      if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
+        startupUrl = [NSURL fileURLWithPath:devFile];
+      }
+      
+      if (startupUrl == nil) {
+        // If the dev file wasn't found, look for /Contents/www/index.html
+        NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
+          startupUrl = [NSURL fileURLWithPath:indexFile];
+        }
       }
     }
   }
@@ -506,7 +516,7 @@ int main(int argc, char* argv[]) {
       return 0;
     }
   }
-    
+  
   // Create the application delegate and window.
   NSObject* delegate = [[ClientAppDelegate alloc] init];
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil

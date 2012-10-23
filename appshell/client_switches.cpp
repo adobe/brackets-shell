@@ -7,6 +7,8 @@
 #include "client_switches.h"  // NOLINT(build/include)
 
 namespace cefclient {
+  
+const char kStartupPath[] = "startup-path";
 
 // CefSettings attributes.
 const char kMultiThreadedMessageLoop[] = "multi-threaded-message-loop";
