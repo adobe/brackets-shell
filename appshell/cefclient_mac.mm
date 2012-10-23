@@ -396,7 +396,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-  NSLog(str);
   CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
                                 [str UTF8String], settings);
   
