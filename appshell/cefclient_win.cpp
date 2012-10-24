@@ -793,12 +793,8 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  // Brackets: Set persistance cache
-  wchar_t dataPath[MAX_PATH];
-  SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
-  
-  std::wstring cachePath = dataPath;
-  cachePath +=  L"\\" GROUP_NAME APP_NAME L"\\cef_data";
+  std::wstring cachePath = ClientApp::AppGetSupportDirectory();
+  cachePath +=  L"/cef_data";
 
   return CefString(cachePath);
 }
