@@ -393,11 +393,24 @@ if (!appshell.app) {
      *
      * @return {string} Full path of the application support directory
      */
-     native function GetApplicationSupportDirectory();
-     appshell.app.getApplicationSupportDirectory = function () {
-         return GetApplicationSupportDirectory();
-     }
+    native function GetApplicationSupportDirectory();
+    appshell.app.getApplicationSupportDirectory = function () {
+        return GetApplicationSupportDirectory();
+    }
   
+    /**
+     * Open the specified folder in an OS file window.
+     *
+     * @param {string} path Path of the folder to show.
+     * @param {function(err)} callback Asyncrhonous callback function with one argument (the error)
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function ShowOSFolder();
+    appshell.app.showOSFolder = function (path, callback) {
+        ShowOSFolder(callback, path);
+    }
+ 
     /**
      * Open the extensions folder in an OS file window.
      *
@@ -406,9 +419,8 @@ if (!appshell.app) {
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
-    native function ShowExtensionsFolder();
     appshell.app.showExtensionsFolder = function (appURL, callback) {
-        ShowExtensionsFolder(callback, appURL);
+        appshell.app.showOSFolder(GetApplicationSupportDirectory() + "/extensions", callback);
     };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
