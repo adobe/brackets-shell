@@ -319,10 +319,10 @@ public:
                 
                 // No additional response args for this function
             }
-        } else if (message_name == "ShowExtensionsFolder") {
+        } else if (message_name == "ShowOSFolder") {
             // Parameters:
             //  0: int32 - callback id
-            //  1: string - app URL
+            //  1: string - path
             
             if (argList->GetSize() != 2 ||
                 argList->GetType(1) != VTYPE_STRING) {
@@ -330,13 +330,8 @@ public:
             }
           
             if (error == NO_ERROR) {
-                ExtensionString appURL = argList->GetString(1);
-#ifdef OS_WIN
-                ExtensionString extensionsPath = appURL.erase(appURL.find(L"index.html")).append(L"extensions");
-#else
-                ExtensionString extensionsPath = appURL.erase(appURL.find("index.html")).append("extensions");
-#endif
-                error = ShowFolderInOSWindow(extensionsPath);
+                ExtensionString path = argList->GetString(1);
+                error = ShowFolderInOSWindow(path);
             }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());

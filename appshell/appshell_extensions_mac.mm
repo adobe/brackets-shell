@@ -347,7 +347,7 @@ int32 MakeDir(ExtensionString path, int32 mode)
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
   
     // TODO (issue #1759): honor mode
-    [[NSFileManager defaultManager] createDirectoryAtPath:pathStr withIntermediateDirectories:FALSE attributes:nil error:&error];
+    [[NSFileManager defaultManager] createDirectoryAtPath:pathStr withIntermediateDirectories:TRUE attributes:nil error:&error];
   
     return ConvertNSErrorCode(error, false);
 }
