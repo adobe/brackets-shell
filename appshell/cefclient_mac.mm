@@ -544,7 +544,7 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = ClientApp::AppGetSupportDirectory() + "/cef_data";
+  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
   
   return CefString(cachePath);
 }
