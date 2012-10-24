@@ -23,6 +23,7 @@
 
 #include "client_app.h"
 #include "include/cef_base.h"
+#include "config.h"
 #include <Cocoa/Cocoa.h>
 
 #include <string>
@@ -81,3 +82,12 @@ std::string ClientApp::GetExtensionJSSource()
     
     return result;
 }
+
+
+CefString ClientApp::AppGetSupportDirectory() {
+  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+  NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
+  
+  return CefString([supportDirectory UTF8String]);
+}
+
