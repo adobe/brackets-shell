@@ -388,8 +388,8 @@ if (!appshell.app) {
  
     /**
      * Returns the full path of the application support directory.
-     * On the Mac, it's /Users/<user>/Library/Application Support/GROUP_NAME/APP_NAME
-     * On Windows, it's C:\Users\<user>\AppData\Roaming\GROUP_NAME\APP_NAME
+     * On the Mac, it's /Users/<user>/Library/Application Support[/GROUP_NAME]/APP_NAME
+     * On Windows, it's C:\Users\<user>\AppData\Roaming[\GROUP_NAME]\APP_NAME
      *
      * @return {string} Full path of the application support directory
      */
@@ -414,7 +414,7 @@ if (!appshell.app) {
     /**
      * Open the extensions folder in an OS file window.
      *
-     * @param {string} appURL URL of the index.html file for the application
+     * @param {string} appURL Not used
      * @param {function(err)} callback Asynchronous callback function with one argument (the error)
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
