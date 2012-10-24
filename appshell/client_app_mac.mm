@@ -86,7 +86,7 @@ std::string ClientApp::GetExtensionJSSource()
 
 std::string ClientApp::AppGetSupportDirectory() {
   NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-  NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@/", libraryDirectory, GROUP_NAME, APP_NAME];
+  NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
   
   return std::string([supportDirectory UTF8String]);
 }
