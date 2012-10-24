@@ -24,8 +24,11 @@
 #include "client_app.h"
 #include "resource.h"
 #include "include/cef_base.h"
+#include "config.h"
 
+#include <algorithm>
 #include <MMSystem.h>
+#include <ShlObj.h>
 #include <string>
 
 extern DWORD g_appStartupTime;
@@ -85,5 +88,19 @@ std::string ClientApp::GetExtensionJSSource()
 double ClientApp::GetElapsedMilliseconds()
 {
     return (timeGetTime() - g_appStartupTime);
+}
+
+CefString ClientApp::AppGetSupportDirectory() 
+{
+    wchar_t dataPath[MAX_PATH];
+    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+  
+    std::wstring appSupportPath = dataPath;
+    appSupportPath +=  L"\\" GROUP_NAME APP_NAME;
+
+    // Convert '\\' to '/'
+    replace(appSupportPath.begin(), appSupportPath.end(), '\\', '/');
+
+    return CefString(appSupportPath);
 }
 
