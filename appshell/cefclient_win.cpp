@@ -5,7 +5,6 @@
 #include "cefclient.h"
 #include <windows.h>
 #include <commdlg.h>
-#include <shellapi.h>
 #include <direct.h>
 #include <MMSystem.h>
 #include <sstream>
