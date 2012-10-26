@@ -305,6 +305,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     [openPanel setCanChooseDirectories:canChooseDirectories];
     [openPanel setCanCreateDirectories:canChooseDirectories];
     [openPanel setAllowsMultipleSelection:allowMulitpleSelection];
+    [openPanel setShowsHiddenFiles: YES];
     [openPanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
     
     if (initialDirectory != "")
