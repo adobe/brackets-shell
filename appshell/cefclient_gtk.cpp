@@ -6,21 +6,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
-#include "cefclient/cefclient.h"
+#include "cefclient.h"
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
-#include "cefclient/binding_test.h"
-#include "cefclient/client_handler.h"
-#include "cefclient/dom_test.h"
-#include "cefclient/scheme_test.h"
-#include "cefclient/string_util.h"
+#include "client_handler.h"
+//#include "string_util.h"
 
 char szWorkingDir[512];  // The current working directory
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+//Application startup time
+time_t g_appStartupTime;
 
 void destroy(void) {
   CefQuitMessageLoop();
@@ -30,125 +30,125 @@ void TerminationSignalHandler(int signatl) {
   destroy();
 }
 
-// Callback for Debug > Get Source... menu item.
-gboolean GetSourceActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunGetSourceTest(g_handler->GetBrowser());
+// // Callback for Debug > Get Source... menu item.
+// gboolean GetSourceActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunGetSourceTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Get Source... menu item.
-gboolean GetTextActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunGetTextTest(g_handler->GetBrowser());
+// // Callback for Debug > Get Source... menu item.
+// gboolean GetTextActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunGetTextTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Request... menu item.
-gboolean RequestActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunRequestTest(g_handler->GetBrowser());
+// // Callback for Debug > Request... menu item.
+// gboolean RequestActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunRequestTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Local Storage... menu item.
-gboolean LocalStorageActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunLocalStorageTest(g_handler->GetBrowser());
+// // Callback for Debug > Local Storage... menu item.
+// gboolean LocalStorageActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunLocalStorageTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > XMLHttpRequest... menu item.
-gboolean XMLHttpRequestActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunXMLHTTPRequestTest(g_handler->GetBrowser());
+// // Callback for Debug > XMLHttpRequest... menu item.
+// gboolean XMLHttpRequestActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunXMLHTTPRequestTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Scheme Handler... menu item.
-gboolean SchemeHandlerActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    scheme_test::RunTest(g_handler->GetBrowser());
+// // Callback for Debug > Scheme Handler... menu item.
+// gboolean SchemeHandlerActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     scheme_test::RunTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > JavaScript Binding... menu item.
-gboolean BindingActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    binding_test::RunTest(g_handler->GetBrowser());
+// // Callback for Debug > JavaScript Binding... menu item.
+// gboolean BindingActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     binding_test::RunTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Plugin Info... menu item.
-gboolean PluginInfoActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunPluginInfoTest(g_handler->GetBrowser());
+// // Callback for Debug > Plugin Info... menu item.
+// gboolean PluginInfoActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunPluginInfoTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > DOM Access... menu item.
-gboolean DOMAccessActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    dom_test::RunTest(g_handler->GetBrowser());
+// // Callback for Debug > DOM Access... menu item.
+// gboolean DOMAccessActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     dom_test::RunTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Popup Window... menu item.
-gboolean PopupWindowActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunPopupTest(g_handler->GetBrowser());
+// // Callback for Debug > Popup Window... menu item.
+// gboolean PopupWindowActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunPopupTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Accelerated 2D Canvas... menu item.
-gboolean Accelerated2DCanvasActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunAccelerated2DCanvasTest(g_handler->GetBrowser());
+// // Callback for Debug > Accelerated 2D Canvas... menu item.
+// gboolean Accelerated2DCanvasActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunAccelerated2DCanvasTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > Accelerated Layers... menu item.
-gboolean AcceleratedLayersActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunAcceleratedLayersTest(g_handler->GetBrowser());
+// // Callback for Debug > Accelerated Layers... menu item.
+// gboolean AcceleratedLayersActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunAcceleratedLayersTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > WebGL... menu item.
-gboolean WebGLActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunWebGLTest(g_handler->GetBrowser());
+// // Callback for Debug > WebGL... menu item.
+// gboolean WebGLActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunWebGLTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > HTML5 Video... menu item.
-gboolean HTML5VideoActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunHTML5VideoTest(g_handler->GetBrowser());
+// // Callback for Debug > HTML5 Video... menu item.
+// gboolean HTML5VideoActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunHTML5VideoTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
-// Callback for Debug > HTML5 Drag & Drop... menu item.
-gboolean HTML5DragDropActivated(GtkWidget* widget) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    RunDragDropTest(g_handler->GetBrowser());
+// // Callback for Debug > HTML5 Drag & Drop... menu item.
+// gboolean HTML5DragDropActivated(GtkWidget* widget) {
+//   if (g_handler.get() && g_handler->GetBrowserId())
+//     RunDragDropTest(g_handler->GetBrowser());
 
-  return FALSE;  // Don't stop this message.
-}
+//   return FALSE;  // Don't stop this message.
+// }
 
 // Callback for when you click the back button.
 void BackButtonClicked(GtkButton* button) {
@@ -205,36 +205,6 @@ GtkWidget* CreateMenuBar() {
   GtkWidget* menu_bar = gtk_menu_bar_new();
   GtkWidget* debug_menu = CreateMenu(menu_bar, "Tests");
 
-  AddMenuEntry(debug_menu, "Get Source",
-               G_CALLBACK(GetSourceActivated));
-  AddMenuEntry(debug_menu, "Get Text",
-               G_CALLBACK(GetTextActivated));
-  AddMenuEntry(debug_menu, "Request",
-               G_CALLBACK(RequestActivated));
-  AddMenuEntry(debug_menu, "Local Storage",
-               G_CALLBACK(LocalStorageActivated));
-  AddMenuEntry(debug_menu, "XMLHttpRequest",
-               G_CALLBACK(XMLHttpRequestActivated));
-  AddMenuEntry(debug_menu, "Scheme Handler",
-               G_CALLBACK(SchemeHandlerActivated));
-  AddMenuEntry(debug_menu, "JavaScript Binding",
-               G_CALLBACK(BindingActivated));
-  AddMenuEntry(debug_menu, "Plugin Info",
-               G_CALLBACK(PluginInfoActivated));
-  AddMenuEntry(debug_menu, "DOM Access",
-               G_CALLBACK(DOMAccessActivated));
-  AddMenuEntry(debug_menu, "Popup Window",
-               G_CALLBACK(PopupWindowActivated));
-  AddMenuEntry(debug_menu, "Accelerated 2D Canvas",
-               G_CALLBACK(Accelerated2DCanvasActivated));
-  AddMenuEntry(debug_menu, "Accelerated Layers",
-               G_CALLBACK(AcceleratedLayersActivated));
-  AddMenuEntry(debug_menu, "WebGL",
-               G_CALLBACK(WebGLActivated));
-  AddMenuEntry(debug_menu, "HTML5 Video",
-               G_CALLBACK(HTML5VideoActivated));
-  AddMenuEntry(debug_menu, "HTML5 Drag & Drop",
-               G_CALLBACK(HTML5DragDropActivated));
   return menu_bar;
 }
 
@@ -251,6 +221,9 @@ static gboolean HandleFocus(GtkWidget* widget,
 
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
+
+  g_appStartupTime = time(NULL);
+
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
@@ -258,6 +231,7 @@ int main(int argc, char* argv[]) {
   if (exit_code >= 0)
     return exit_code;
 
+  //Retrieve the current working directory
   if (!getcwd(szWorkingDir, sizeof (szWorkingDir)))
     return -1;
 
@@ -273,11 +247,13 @@ int main(int argc, char* argv[]) {
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  // Check cache_path setting
+  if (CefString(&settings.cache_path).length() == 0) {
+    CefString(&settings.cache_path) = AppGetCachePath();
+  }
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
-
-  // Register the scheme handler.
-  scheme_test::InitTest();
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
@@ -369,4 +345,11 @@ int main(int argc, char* argv[]) {
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
+}
+
+CefString AppGetCachePath() {
+  std::string cachePath = ClientApp::AppGetSupportDirectory();
+  cachePath.append("/cef_data");
+
+  return CefString(cachePath);
 }

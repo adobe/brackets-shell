@@ -3,10 +3,14 @@
 // can be found in the LICENSE file.
 
 #include <gtk/gtk.h>
+#include <X11/Xlib.h>
 #include <string>
-#include "cefclient/client_handler.h"
+#include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
 
 // ClientHandler::ClientLifeSpanHandler implementation
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
@@ -67,8 +71,17 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 }
 
 void ClientHandler::CloseMainWindow() {
-  // TODO(port): Close main window.
+  // TODO(port): Check if this is enough
+  gtk_main_quit();
 }
+
+void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
+{
+    // TODO Finish this thing
+    browser->GetHost()->SetFocus(true);
+}
+
+//#TODO Implement window handling, e.g.: CloseWindowCallback
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 	return true;
