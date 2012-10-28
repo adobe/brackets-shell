@@ -15,6 +15,7 @@
 //#include "string_util.h"
 
 char szWorkingDir[512];  // The current working directory
+std:: string szInitialUrl;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -250,7 +251,11 @@ int main(int argc, char* argv[]) {
   // Check cache_path setting
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
+    printf("No cache_path supplied by default\n");
   }
+
+  szInitialUrl = CefString(&settings.cache_path);
+  szInitialUrl.append("/www/index.html");
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
@@ -320,12 +325,15 @@ int main(int argc, char* argv[]) {
   // Populate the settings based on command line arguments.
   AppGetBrowserSettings(browserSettings);
 
+  browserSettings.file_access_from_file_urls_allowed = true;
+  browserSettings.universal_access_from_file_urls_allowed = true;
+
   window_info.SetAsChild(vbox);
 
-  CefBrowserHost::CreateBrowserSync(
+  CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "http://www.google.com", browserSettings);
+      szInitialUrl, browserSettings);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
@@ -348,7 +356,8 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = ClientApp::AppGetSupportDirectory();
+  std::string cachePath = "file://"; //To avoid Unix paths being interpreted as http:// URLs
+  cachePath.append(ClientApp::AppGetSupportDirectory());
   cachePath.append("/cef_data");
 
   return CefString(cachePath);

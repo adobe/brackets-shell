@@ -26,6 +26,7 @@
 #include "include/cef_base.h"
 #include "config.h"
 
+#include <pwd.h>
 #include <algorithm>
 //#include <MMSystem.h>
 //#include <ShlObj.h>
@@ -68,6 +69,16 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    return CefString("/");
+    //Check environment variables first
+    char* home_dir = getenv("HOME");
+    if(home_dir == NULL)
+    {
+        //If no environment variable, use the system provided home directory
+        struct passwd *pw = getpwuid(getuid());
+        home_dir = pw->pw_dir;
+    }
+
+    // ~/.config/Brackets? ~/.Brackets ?? We'll see, later.
+    return strcat(home_dir,"/.Brackets");
 }
 
