@@ -24,12 +24,14 @@
 #include "appshell_extensions.h"
 #include "client_handler.h"
 
+#include <errno.h>
+#include <dirent.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
 
-#define CLOSING_PROP L"CLOSING"
-
+int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrLin
@@ -40,7 +42,7 @@ public:
     static LiveBrowserMgrLin* GetInstance();
     static void Shutdown();
 
-    bool IsChromeWindow(Window hwnd);
+    bool IsChromeWindow(GtkWidget* hwnd);
     bool IsAnyChromeWindowsRunning();
     void CloseLiveBrowserKillTimers();
     void CloseLiveBrowserFireCallback(int valToSend);
@@ -94,7 +96,7 @@ void LiveBrowserMgrLin::Shutdown()
     s_instance = NULL;
 }
 
-bool LiveBrowserMgrLin::IsChromeWindow(Window hwnd)
+bool LiveBrowserMgrLin::IsChromeWindow(GtkWidget* hwnd)
 {
     if( !hwnd ) {
         return false;
@@ -264,7 +266,7 @@ LiveBrowserMgrLin* LiveBrowserMgrLin::s_instance = NULL;
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-
+    printf("Gotta open Live Browser %s\n", argURL.c_str());
     //#TODO Duh!
     return NO_ERROR;
 }
@@ -335,6 +337,9 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
+    GError* error;
+    gtk_show_uri(NULL, url.c_str(), GDK_CURRENT_TIME, &error);
+    g_error_free(error);
     return NO_ERROR;
 }
 
@@ -357,184 +362,80 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
+    GtkWidget *dialog;
+     const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
+     GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
+     dialog = gtk_file_chooser_dialog_new (dialog_title,
+                          NULL,
+                          file_or_directory,
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                          GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                          NULL);
+     
+     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+       {
+         char *filename;
+     
+         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+         printf("%s\n",filename);
+         selectedFiles->SetString(0,filename);
+         g_free (filename);
+       }
+     
+     gtk_widget_destroy (dialog);
     return NO_ERROR;
 }
-
-// int32 ShowOpenDialog(bool allowMultipleSelection,
-//                      bool chooseDirectory,
-//                      ExtensionString title,
-//                      ExtensionString initialDirectory,
-//                      ExtensionString fileTypes,
-//                      CefRefPtr<CefListValue>& selectedFiles)
-// {
-//     wchar_t szFile[MAX_PATH];
-//     szFile[0] = 0;
-
-//     // TODO (issue #64) - This method should be using IFileDialog instead of the
-//     /* outdated SHGetPathFromIDList and GetOpenFileName.
-       
-//     Useful function to parse fileTypesStr:
-//     template<class T>
-//     int inline findAndReplaceString(T& source, const T& find, const T& replace)
-//     {
-//     int num=0;
-//     int fLen = find.size();
-//     int rLen = replace.size();
-//     for (int pos=0; (pos=source.find(find, pos))!=T::npos; pos+=rLen)
-//     {
-//     num++;
-//     source.replace(pos, fLen, replace);
-//     }
-//     return num;
-//     }
-//     */
-
-//     // SHBrowseForFolder can handle Windows path only, not Unix path.
-//     // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
-//     ConvertToNativePath(initialDirectory);
-
-//     if (chooseDirectory) {
-//         BROWSEINFO bi = {0};
-//         bi.hwndOwner = GetActiveWindow();
-//         bi.lpszTitle = title.c_str();
-//         bi.ulFlags = BIF_NEWDIALOGSTYLE;
-//         bi.lpfn = SetInitialPathCallback;
-//         bi.lParam = (long)initialDirectory.c_str();
-
-//         LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-//         if (pidl != 0) {
-//             if (SHGetPathFromIDList(pidl, szFile)) {
-//                 // Add directory path to the result
-//                 ExtensionString pathName(szFile);
-//                 ConvertToUnixPath(pathName);
-//                 selectedFiles->SetString(0, pathName);
-//             }
-//             IMalloc* pMalloc = NULL;
-//             SHGetMalloc(&pMalloc);
-//             if (pMalloc) {
-//                 pMalloc->Free(pidl);
-//                 pMalloc->Release();
-//             }
-//         }
-//     } else {
-//         OPENFILENAME ofn;
-
-//         ZeroMemory(&ofn, sizeof(ofn));
-//         ofn.hwndOwner = GetActiveWindow();
-//         ofn.lStructSize = sizeof(ofn);
-//         ofn.lpstrFile = szFile;
-//         ofn.nMaxFile = MAX_PATH;
-
-//         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
-//         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
-//         LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
-
-//         ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0\0";
-           
-//         ofn.lpstrInitialDir = initialDirectory.c_str();
-//         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-//         if (allowMultipleSelection)
-//             ofn.Flags |= OFN_ALLOWMULTISELECT;
-
-//         if (GetOpenFileName(&ofn)) {
-//             if (allowMultipleSelection) {
-//                 // Multiple selection encodes the files differently
-
-//                 // If multiple files are selected, the first null terminator
-//                 // signals end of directory that the files are all in
-//                 std::wstring dir(szFile);
-
-//                 // Check for two null terminators, which signal that only one file
-//                 // was selected
-//                 if (szFile[dir.length() + 1] == '\0') {
-//                     ExtensionString filePath(dir);
-//                     ConvertToUnixPath(filePath);
-//                     selectedFiles->SetString(0, filePath);
-//                 } else {
-//                     // Multiple files are selected
-//                     wchar_t fullPath[MAX_PATH];
-//                     for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
-//                         // Get the next file name
-//                         std::wstring file(&szFile[i]);
-
-//                         // Two adjacent null characters signal the end of the files
-//                         if (file.length() == 0)
-//                             break;
-
-//                         // The filename is relative to the directory that was specified as
-//                         // the first string
-//                         if (PathCombine(fullPath, dir.c_str(), file.c_str()) != NULL) {
-//                             ExtensionString filePath(fullPath);
-//                             ConvertToUnixPath(filePath);
-//                             selectedFiles->SetString(fileIndex, filePath);
-//                         }
-
-//                         // Go to the start of the next file name
-//                         i += file.length() + 1;
-//                     }
-//                 }
-
-//             } else {
-//                 // If multiple files are not allowed, add the single file
-//                 selectedFiles->SetString(0, szFile);
-//             }
-//         }
-//     }
-
-//     return NO_ERROR;
-// }
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
+    //# Add trailing /slash if neccessary
+    if (path.length() && path[path.length() - 1] != '/')
+        path += '/';
+
+    DIR *dp;
+    struct dirent *files;
+    
+    /*struct dirent
+    {
+        unsigned char  d_type; #not supported on all systems, faster than stat
+        char d_name[]
+    }*/
+    
+
+    if((dp=opendir(path.c_str()))==NULL)
+        return ConvertLinuxErrorCode(errno,true);
+
+    std::vector<ExtensionString> resultFiles;
+    std::vector<ExtensionString> resultDirs;
+
+    while((files=readdir(dp))!=NULL)
+    {
+        if(!strcmp(files->d_name,".") || !strcmp(files->d_name,".."))
+            continue;
+        if(files->d_type==DT_DIR)
+            resultDirs.push_back(ExtensionString(files->d_name));
+        else if(files->d_type==DT_REG)
+            resultFiles.push_back(ExtensionString(files->d_name));
+    }
+
+    closedir(dp);
+
+    //# List dirs first, files next
+    size_t i, total = 0;
+    for (i = 0; i < resultDirs.size(); i++)
+        directoryContents->SetString(total++, resultDirs[i]);
+    for (i = 0; i < resultFiles.size(); i++)
+        directoryContents->SetString(total++, resultFiles[i]);
+
     return NO_ERROR;
 }
 
-// int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
-// {
-//     if (path.length() && path[path.length() - 1] != '/')
-//         path += '/';
-
-//     path += '*';
-
-//     WIN32_FIND_DATA ffd;
-//     HANDLE hFind = FindFirstFile(path.c_str(), &ffd);
-
-//     std::vector<ExtensionString> resultFiles;
-//     std::vector<ExtensionString> resultDirs;
-
-//     if (hFind != INVALID_HANDLE_VALUE) {
-//         do {
-//             // Ignore '.' and '..'
-//             if (!wcscmp(ffd.cFileName, L".") || !wcscmp(ffd.cFileName, L".."))
-//                 continue;
-
-//             // Collect file and directory names separately
-//             if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-//                 resultDirs.push_back(ExtensionString(ffd.cFileName));
-//             } else {
-//                 resultFiles.push_back(ExtensionString(ffd.cFileName));
-//             }
-//         }
-//         while (FindNextFile(hFind, &ffd) != 0);
-
-//         FindClose(hFind);
-//     } 
-//     else {
-//         return ConvertWinErrorCode(GetLastError());
-//     }
-
-//     // On Windows, list directories first, then files
-//     size_t i, total = 0;
-//     for (i = 0; i < resultDirs.size(); i++)
-//         directoryContents->SetString(total++, resultDirs[i]);
-//     for (i = 0; i < resultFiles.size(); i++)
-//         directoryContents->SetString(total++, resultFiles[i]);
-
-//     return NO_ERROR;
-// }
-
-int MakeDir(ExtensionString path, int mode)
+int32 MakeDir(ExtensionString path, int mode)
 {
+    printf("in MakeDir trying to make %s\n", path.c_str());
+    if(mkdir(path.c_str(),mode)==-1)
+        return ConvertLinuxErrorCode(errno);
+
     return NO_ERROR;
 }
 
@@ -549,7 +450,8 @@ int MakeDir(ExtensionString path, int mode)
 
 int Rename(ExtensionString oldName, ExtensionString newName)
 {
-    return NO_ERROR;
+    if (rename(oldName.c_str(), newName.c_str())==-1)
+        return ConvertLinuxErrorCode(errno);
 }
 
 // int32 Rename(ExtensionString oldName, ExtensionString newName)
@@ -562,6 +464,13 @@ int Rename(ExtensionString oldName, ExtensionString newName)
 
 int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
+    struct stat buf;
+    if(stat(filename.c_str(),&buf)==-1)
+        return ConvertLinuxErrorCode(errno);
+
+    modtime = buf.st_mtime;
+    isDir = S_ISDIR(buf.st_mode);
+
     return NO_ERROR;
 }
 
@@ -587,6 +496,35 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
+
+    if(encoding != "utf8")
+        return NO_ERROR;    //#TODO ERR_UNSUPPORTED_ENCODING
+
+    struct stat buf;
+    if(stat(filename.c_str(),&buf)==-1)
+        return ConvertLinuxErrorCode(errno);
+
+    if(!S_ISREG(buf.st_mode))
+        return NO_ERROR;    //# TODO ERR_CANT_READ when cleaninp up errors
+
+    FILE* file = fopen(filename.c_str(),"r");
+    if(file == NULL)
+    {
+        return ConvertLinuxErrorCode(errno);
+    }
+
+    fseek(file, 0, SEEK_END);
+    long int size = ftell(file);
+    rewind(file);
+
+    char* content = (char*)calloc(size + 1, 1);
+
+    fread(content,1,size,file);
+    if(fclose(file)==EOF)
+        return ConvertLinuxErrorCode(errno);
+
+    contents = content;
+
     return NO_ERROR;
 }
 
@@ -631,111 +569,55 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
+    if(encoding != "utf8")
+        return NO_ERROR;    //# TODO ERR_UNSUPPORTED_ENCODING;
+
+    const char* content = contents.c_str();
+
+    FILE* file = fopen(filename.c_str(),"w");
+    if(file == NULL)
+        return ConvertLinuxErrorCode(errno);
+
+    long int size = strlen(content);
+
+    fwrite(content,1,size,file);
+
+    if(fclose(file)==EOF)
+        return ConvertLinuxErrorCode(errno);
+
     return NO_ERROR;
 }
-
-// int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
-// {
-//     if (encoding != L"utf8")
-//         return ERR_UNSUPPORTED_ENCODING;
-
-//     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
-//         0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//     int dwBytesWritten;
-//     int error = NO_ERROR;
-
-//     if (INVALID_HANDLE_VALUE == hFile)
-//         return ConvertWinErrorCode(GetLastError(), false); 
-
-//     // TODO (issue 67) -  Should write to temp file and handle encoding
-//     if (!WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL)) {
-//         error = ConvertWinErrorCode(GetLastError(), false);
-//     }
-
-//     CloseHandle(hFile);
-//     return error;
-// }
 
 int SetPosixPermissions(ExtensionString filename, int32 mode)
 {
+    if(chmod(filename.c_str(),mode)==-1)
+        return ConvertLinuxErrorCode(errno);
+
     return NO_ERROR;
 }
-
-// int32 SetPosixPermissions(ExtensionString filename, int32 mode)
-// {
-//     int dwAttr = GetFileAttributes(filename.c_str());
-
-//     if (dwAttr == INVALID_FILE_ATTRIBUTES)
-//         return ERR_NOT_FOUND;
-
-//     if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
-//         return NO_ERROR;
-
-//     bool write = (mode & 0200) != 0; 
-//     bool read = (mode & 0400) != 0;
-//     int mask = (write ? _S_IWRITE : 0) | (read ? _S_IREAD : 0);
-
-//     if (_wchmod(filename.c_str(), mask) == -1) {
-//         return ConvertErrnoCode(errno); 
-//     }
-
-//     return NO_ERROR;
-// }
 
 int DeleteFileOrDirectory(ExtensionString filename)
 {
+    if(unlink(filename.c_str())==-1)
+        return ConvertLinuxErrorCode(errno);
     return NO_ERROR;
 }
-// int32 DeleteFileOrDirectory(ExtensionString filename)
-// {
-//     int dwAttr = GetFileAttributes(filename.c_str());
-
-//     if (dwAttr == INVALID_FILE_ATTRIBUTES)
-//         return ERR_NOT_FOUND;
-
-//     if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
-//         return ERR_NOT_FILE;
-
-//     if (!DeleteFile(filename.c_str()))
-//         return ConvertWinErrorCode(GetLastError());
-
-//     return NO_ERROR;
-// }
-
-
-// void OnBeforeShutdown()
-// {
-//     LiveBrowserMgrLin::Shutdown();
-// }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-
+    if (browser.get()) {
+        browser->GetHost()->CloseBrowser();
+    }
 }
-
-// void CloseWindow(CefRefPtr<CefBrowser> browser)
-// {
-//     if (browser.get()) {
-//         Window browserHwnd = browser->GetHost()->GetWindowHandle();
-//         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
-//         browser->GetHost()->CloseBrowser();
-//     }
-// }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 {
-    
+    if (browser.get()) {
+        GtkWindow* hwnd = GTK_WINDOW(browser->GetHost()->GetWindowHandle());
+        if (hwnd) 
+            gtk_window_present(hwnd);
+    }
 }
-
-// void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
-// {
-//     if (browser.get()) {
-//         Window hwnd = browser->GetHost()->GetWindowHandle();
-//         // if (hwnd) 
-//         //     ::BringWindowToTop(hwnd);
-//         // TODO
-//     }
-// }
 
 // void ConvertToNativePath(ExtensionString& filename)
 // {
@@ -809,11 +691,35 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
+    GError *error;
+    gtk_show_uri(NULL, pathname.c_str(), GDK_CURRENT_TIME, &error);
+    
+    if(error != NULL)
+        g_warning ("%s %s", "Error launching preview", error->message);
+    
+    g_error_free(error);
+
     return NO_ERROR;
 }
 
-// int32 ShowFolderInOSWindow(ExtensionString pathname) {
-//     ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
-//     return NO_ERROR;
-// }
-
+int ConvertLinuxErrorCode(int errorCode, bool isReading)
+{
+    // switch (errorCode) {
+    // case NO_ERROR:
+    //     return NO_ERROR;
+    // case ENOENT:
+    // case ERROR_FILE_NOT_FOUND:
+    //     return ERR_NOT_FOUND;
+    // case EACCESS:
+    //     return isReading ? ERR_CANT_READ : ERR_CANT_WRITE;
+    // case ERROR_WRITE_PROTECT:
+    //     return ERR_CANT_WRITE;
+    // case ERROR_HANDLE_DISK_FULL:
+    //     return ERR_OUT_OF_SPACE;
+    // case ERROR_ALREADY_EXISTS:
+    //     return ERR_FILE_EXISTS;
+    // default:
+    //     return ERR_UNKNOWN;
+    // }
+    return errorCode;
+}

@@ -40,6 +40,14 @@
       ],
       'include_dirs': [
         '.',
+        '/usr/include/gtk-2.0/',
+        '/usr/include/glib-2.0/',
+        '/usr/include/gdk-pixbuf-2.0/',
+        '/usr/include/atk-1.0/',
+        '/usr/include/cairo/',
+        '/usr/include/pango-1.0/',
+        '/usr/lib/glib-2.0/include/',
+        '/usr/lib/gtk-2.0/include/',
       ],
       'sources': [
         '<@(includes_common)',
@@ -164,6 +172,17 @@
           ],
         }],
         [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+          'include_dirs': [
+            '.',
+            '/usr/include/gtk-2.0/',
+            '/usr/include/glib-2.0/',
+            '/usr/include/gdk-pixbuf-2.0/',
+            '/usr/include/atk-1.0/',
+            '/usr/include/cairo/',
+            '/usr/include/pango-1.0/',
+            '/usr/lib/glib-2.0/include/',
+            '/usr/lib/gtk-2.0/include/',
+          ],
           'copies': [
             {
               'destination': '<(PRODUCT_DIR)/files',
@@ -195,6 +214,14 @@
       },
       'include_dirs': [
         '.',
+        '/usr/include/gtk-2.0/',
+        '/usr/include/glib-2.0/',
+        '/usr/include/gdk-pixbuf-2.0/',
+        '/usr/include/atk-1.0/',
+        '/usr/include/cairo/',
+        '/usr/include/pango-1.0/',
+        '/usr/lib/glib-2.0/include/',
+        '/usr/lib/gtk-2.0/include/',
       ],
       'sources': [
         '<@(includes_common)',
@@ -279,3 +306,7 @@
     }],  # OS=="mac"
   ],
 }
+
+
+# Custom linker command:
+# g++   -o out/Default/Brackets -Wl,--start-group out/Default/obj.target/Brackets/appshell/appshell_extensions.o out/Default/obj.target/Brackets/appshell/appshell_extensions_gtk.o out/Default/obj.target/Brackets/appshell/cefclient.o out/Default/obj.target/Brackets/appshell/client_app.o out/Default/obj.target/Brackets/appshell/client_app_delegates.o out/Default/obj.target/Brackets/appshell/client_handler.o out/Default/obj.target/Brackets/appshell/client_switches.o out/Default/obj.target/Brackets/appshell/string_util.o out/Default/obj.target/Brackets/appshell/cefclient_gtk.o out/Default/obj.target/Brackets/appshell/client_handler_gtk.o out/Default/obj.target/Brackets/appshell/client_app_gtk.o out/Default/obj.target/Brackets/appshell/resource_util_linux.o out/Default/obj.target/libcef_dll_wrapper.a deps/cef/Release/lib.target/libcef.so -lgtk-x11-2.0  -lgobject-2.0 -lpthread.so -lglib-2.0 -Wl,--end-group
