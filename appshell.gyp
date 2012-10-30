@@ -5,6 +5,7 @@
 {
   'variables': {
     'appname': 'Brackets',
+    'pkg-config': 'pkg-config',
     'chromium_code': 1,
     'conditions': [
       [ 'OS=="mac"', {
@@ -40,14 +41,6 @@
       ],
       'include_dirs': [
         '.',
-        '/usr/include/gtk-2.0/',
-        '/usr/include/glib-2.0/',
-        '/usr/include/gdk-pixbuf-2.0/',
-        '/usr/include/atk-1.0/',
-        '/usr/include/cairo/',
-        '/usr/include/pango-1.0/',
-        '/usr/lib/glib-2.0/include/',
-        '/usr/lib/gtk-2.0/include/',
       ],
       'sources': [
         '<@(includes_common)',
@@ -171,21 +164,21 @@
             '<@(appshell_sources_mac)',
           ],
         }],
-        [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+        ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+          'cflags': [
+            '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+          ],
           'include_dirs': [
             '.',
-            '/usr/include/gtk-2.0/',
-            '/usr/include/glib-2.0/',
-            '/usr/include/gdk-pixbuf-2.0/',
-            '/usr/include/atk-1.0/',
-            '/usr/include/cairo/',
-            '/usr/include/pango-1.0/',
-            '/usr/lib/glib-2.0/include/',
-            '/usr/lib/gtk-2.0/include/',
-          ],
+            ],
+          'default_configuration': 'Release',
+          'configurations': {
+            'Release': {},
+            'Debug': {},
+          },
           'copies': [
             {
-              'destination': '<(PRODUCT_DIR)/files',
+              'destination': '<(PRODUCT_DIR)',
               'files': [
                 '<@(appshell_bundle_resources_linux)',
               ],
@@ -195,6 +188,15 @@
             '<@(includes_linux)',
             '<@(appshell_sources_linux)',
           ],
+          'link_settings': {
+            'ldflags': [
+              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
+              '$(BUILDTYPE)/lib.target/libcef.so',
+            ],
+            'libraries': [
+              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
+            ],
+          },
         }],
       ],
     },
@@ -214,14 +216,6 @@
       },
       'include_dirs': [
         '.',
-        '/usr/include/gtk-2.0/',
-        '/usr/include/glib-2.0/',
-        '/usr/include/gdk-pixbuf-2.0/',
-        '/usr/include/atk-1.0/',
-        '/usr/include/cairo/',
-        '/usr/include/pango-1.0/',
-        '/usr/lib/glib-2.0/include/',
-        '/usr/lib/gtk-2.0/include/',
       ],
       'sources': [
         '<@(includes_common)',
@@ -235,6 +229,18 @@
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
+      'conditions': [
+       ['OS=="linux"', {
+          'cflags': [
+          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+          ],
+          'default_configuration': 'Release',
+          'configurations': {
+            'Release': {},
+            'Debug': {},
+          },
+        }]
+      ]
     },
   ],
   'conditions': [
@@ -306,7 +312,3 @@
     }],  # OS=="mac"
   ],
 }
-
-
-# Custom linker command:
-# g++   -o out/Default/Brackets -Wl,--start-group out/Default/obj.target/Brackets/appshell/appshell_extensions.o out/Default/obj.target/Brackets/appshell/appshell_extensions_gtk.o out/Default/obj.target/Brackets/appshell/cefclient.o out/Default/obj.target/Brackets/appshell/client_app.o out/Default/obj.target/Brackets/appshell/client_app_delegates.o out/Default/obj.target/Brackets/appshell/client_handler.o out/Default/obj.target/Brackets/appshell/client_switches.o out/Default/obj.target/Brackets/appshell/string_util.o out/Default/obj.target/Brackets/appshell/cefclient_gtk.o out/Default/obj.target/Brackets/appshell/client_handler_gtk.o out/Default/obj.target/Brackets/appshell/client_app_gtk.o out/Default/obj.target/Brackets/appshell/resource_util_linux.o out/Default/obj.target/libcef_dll_wrapper.a deps/cef/Release/lib.target/libcef.so -lgtk-x11-2.0  -lgobject-2.0 -lpthread.so -lglib-2.0 -Wl,--end-group

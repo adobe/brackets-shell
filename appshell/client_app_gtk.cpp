@@ -44,8 +44,9 @@ CefString ClientApp::GetCurrentLanguage()
 std::string ClientApp::GetExtensionJSSource()
 {
     //Another bloody TODO here.
-    printf("in GetExtensionJSSource\n");
-    FILE* file = fopen("appshell_extensions.js","r");
+    std:: string extensionJSPath(AppGetSupportDirectory());
+    extensionJSPath.append("/appshell_extensions.js");
+    FILE* file = fopen(extensionJSPath.c_str(),"r");
     if(file == NULL)
     {
         return "";
@@ -69,9 +70,10 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    //Check environment variables first
-    char* home_dir = getenv("HOME");
-    if(home_dir == NULL)
+    //Check environment variables first;
+    std:: string home_dir(getenv("HOME"));
+
+    if(home_dir.length()==0)
     {
         //If no environment variable, use the system provided home directory
         struct passwd *pw = getpwuid(getuid());
@@ -79,6 +81,6 @@ CefString ClientApp::AppGetSupportDirectory()
     }
 
     // ~/.config/Brackets? ~/.Brackets ?? We'll see, later.
-    return strcat(home_dir,"/.Brackets");
+    return home_dir.append("/.Brackets");
 }
 

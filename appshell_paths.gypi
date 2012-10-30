@@ -154,6 +154,7 @@
       'appshell/resource_util_linux.cpp',
     ],
     'appshell_bundle_resources_linux': [
+      '$(BUILDTYPE)/locales',
     ],
   },
 }

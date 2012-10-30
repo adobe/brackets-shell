@@ -220,6 +220,42 @@ LiveBrowserMgrLin* LiveBrowserMgrLin::s_instance = NULL;
 //     return 0;
 // }
 
+static const char* GetPathToLiveBrowser() 
+{
+    //#TODO Use execlp and be done with it! No need to reinvent the wheel; so badly that too!
+    char *envPath = getenv( "PATH" ), *path, *dir, *currentPath;
+
+    //# copy PATH and not modify the original
+    path=(char *)malloc(strlen(envPath)+1);
+    strcpy(path, envPath);
+
+    // Prepend a forward-slash. For convenience
+    const char* executable="/google-chrome";
+    struct stat buf;
+    int len;
+ 
+    for ( dir = strtok( path, ":" ); dir; dir = strtok( NULL, ":" ) )
+    {
+        len=strlen(dir)+strlen(executable);
+        // if((strrchr(dir,'/')-dir)==strlen(dir))
+        // {
+        //     currentPath = (char*)malloc(len);
+        //     strcpy(currentPath,dir);
+        // } else
+        // {
+        // stat handles consecutive forward slashes automatically. No need for above
+            currentPath = (char *)malloc(len+1);
+            strncpy(currentPath,dir,len);
+        //}
+        strcat(currentPath,executable);
+    
+        if(stat(currentPath,&buf)==0 && S_ISREG(buf.st_mode))
+            return currentPath;
+    }
+
+    return "";
+}
+
 // static std::wstring GetPathToLiveBrowser() 
 // {
 //     HKEY hKey;
@@ -265,9 +301,36 @@ LiveBrowserMgrLin* LiveBrowserMgrLin::s_instance = NULL;
 // }
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
-{
-    printf("Gotta open Live Browser %s\n", argURL.c_str());
-    //#TODO Duh!
+{    
+    //# COnsider using execlp and avoid all this path mess!
+    const char  *appPath = GetPathToLiveBrowser(),
+                *arg1 = "--allow-file-access-from-files";
+    std::string arg2(" ");
+
+    if(enableRemoteDebugging)
+        arg2.assign("--remote-debugging-port=9222");
+
+    short int error=0;
+    /* Using vfork() 'coz I need a shared variable for the error passing.
+     * Do not replace with fork() unless you have a better way. */
+    pid_t pid = vfork();
+    switch(pid)
+    {
+        case -1:    //# Something went wrong
+                return ConvertLinuxErrorCode(errno);
+        case 0:     //# I'm the child. When I successfully exec, parent is resumed. Or when I _exec()
+                execl(appPath, arg1, argURL.c_str(), arg2.c_str(),(char *)0);
+
+                error=errno;
+                _exit(0);
+        default:
+                if(error!=0)
+                {
+                    printf("Error!! %s\n", strerror(error));
+                    return ConvertLinuxErrorCode(error);
+                }
+    }
+
     return NO_ERROR;
 }
 
