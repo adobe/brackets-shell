@@ -22,6 +22,7 @@
  */ 
 
 #include "appshell_extensions.h"
+#include "appshell_extensions_platform.h"
 #include "client_handler.h"
 
 #include <errno.h>
@@ -65,8 +66,8 @@ private:
     LiveBrowserMgrLin();
     virtual ~LiveBrowserMgrLin();
 
-    int							m_closeLiveBrowserHeartbeatTimerId;
-    int							m_closeLiveBrowserTimeoutTimerId;
+    int							    m_closeLiveBrowserHeartbeatTimerId;
+    int							    m_closeLiveBrowserTimeoutTimerId;
     CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>			m_browser;
 
@@ -682,18 +683,6 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
-// void ConvertToNativePath(ExtensionString& filename)
-// {
-//     // Convert '/' to '\'
-//     replace(filename.begin(), filename.end(), '/', '\\');
-// }
-
-// void ConvertToUnixPath(ExtensionString& filename)
-// {
-//     // Convert '\\' to '/'
-//     replace(filename.begin(), filename.end(), '\\', '/');
-// }
-
 // // Maps errors from errno.h to the brackets error codes
 // // found in brackets_extensions.js
 // int ConvertErrnoCode(int errorCode, bool isReading)
@@ -767,22 +756,22 @@ int ShowFolderInOSWindow(ExtensionString pathname)
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading)
 {
-    // switch (errorCode) {
-    // case NO_ERROR:
-    //     return NO_ERROR;
-    // case ENOENT:
-    // case ERROR_FILE_NOT_FOUND:
-    //     return ERR_NOT_FOUND;
-    // case EACCESS:
-    //     return isReading ? ERR_CANT_READ : ERR_CANT_WRITE;
-    // case ERROR_WRITE_PROTECT:
-    //     return ERR_CANT_WRITE;
-    // case ERROR_HANDLE_DISK_FULL:
-    //     return ERR_OUT_OF_SPACE;
-    // case ERROR_ALREADY_EXISTS:
-    //     return ERR_FILE_EXISTS;
-    // default:
-    //     return ERR_UNKNOWN;
-    // }
-    return errorCode;
+    switch (errorCode) {
+    case NO_ERROR:
+        return NO_ERROR;
+    case ENOENT:
+        return ERR_NOT_FOUND;
+    case EACCES:
+        return isReading ? ERR_CANT_READ : ERR_CANT_WRITE;
+    case ENOTDIR:
+        return ERR_NOT_DIRECTORY;
+//    case ERROR_WRITE_PROTECT:
+//        return ERR_CANT_WRITE;
+//    case ERROR_HANDLE_DISK_FULL:
+//        return ERR_OUT_OF_SPACE;
+//    case ERROR_ALREADY_EXISTS:
+//        return ERR_FILE_EXISTS;
+    default:
+        return ERR_UNKNOWN;
+    }
 }

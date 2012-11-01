@@ -6,6 +6,7 @@
   'variables': {
     'appname': 'Brackets',
     'pkg-config': 'pkg-config',
+    'target_arch%': 'environment',
     'chromium_code': 1,
     'conditions': [
       [ 'OS=="mac"', {
@@ -165,18 +166,48 @@
           ],
         }],
         ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+          'actions': [
+            {
+              'action_name': 'appshell_extensions_js',
+              'inputs': [
+                'appshell/appshell_extensions.js',
+              ],
+              'outputs': [
+                'appshell_extensions_js.o',
+              ],
+              'action': [
+                'objcopy',
+                '--input',
+                'binary',
+                '--output',
+                '<(output_bfd)',
+                '--binary-architecture',
+                'i386',
+                '<@(_inputs)',
+                '<@(_outputs)',
+              ],
+              'message': 'compiling js resource'
+            },
+          ],
           'cflags': [
             '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+            '<(march)',
           ],
           'include_dirs': [
             '.',
-            ],
+          ],
           'default_configuration': 'Release',
           'configurations': {
             'Release': {},
             'Debug': {},
           },
           'copies': [
+            {
+              'destination': '<(PRODUCT_DIR)/lib',
+              'files': [
+                '<@(appshell_bundle_libraries_linux)',
+              ],
+            },
             {
               'destination': '<(PRODUCT_DIR)',
               'files': [
@@ -191,10 +222,13 @@
           'link_settings': {
             'ldflags': [
               '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
-              '$(BUILDTYPE)/lib.target/libcef.so',
+              '-Wl,-rpath,\$$ORIGIN/lib',
+              '<(march)'
             ],
             'libraries': [
               '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
+              '$(BUILDTYPE)/lib.target/libcef.so',
+              'appshell_extensions_js.o',
             ],
           },
         }],
@@ -230,9 +264,10 @@
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
-       ['OS=="linux"', {
+        ['OS=="linux"', {
           'cflags': [
           '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+          '<(march)',
           ],
           'default_configuration': 'Release',
           'configurations': {
@@ -310,5 +345,23 @@
         },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
+    ['target_arch=="ia32"', {
+      'variables': {
+        'output_bfd': 'elf32-i386',
+        'march': '-m32',
+      },
+    }],
+    ['target_arch=="x64"', {
+      'variables': {
+        'output_bfd': 'elf64-x86-64',
+        'march': '-m64',
+      },
+    }],
+    ['target_arch=="environment"', {
+      'variables': {
+        'output_bfd': '<!(uname -m | sed "s/x86_64/elf64-x86-64/;s/i.86/elf32-i386/")',
+        'march': ' ',
+      },
+    }],
   ],
 }

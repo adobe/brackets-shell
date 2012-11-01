@@ -156,5 +156,8 @@
     'appshell_bundle_resources_linux': [
       '$(BUILDTYPE)/locales',
     ],
+    'appshell_bundle_libraries_linux': [
+      '$(BUILDTYPE)/lib.target/libcef.so',
+    ],
   },
 }

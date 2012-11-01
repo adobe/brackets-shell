@@ -31,6 +31,11 @@ void TerminationSignalHandler(int signatl) {
   destroy();
 }
 
+//Callback for File > Exit... menu item.
+gboolean ExitActivated(GtkWidget* widget) {
+  destroy();
+}
+
 // // Callback for Debug > Get Source... menu item.
 // gboolean GetSourceActivated(GtkWidget* widget) {
 //   if (g_handler.get() && g_handler->GetBrowserId())
@@ -204,7 +209,10 @@ GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
 
 GtkWidget* CreateMenuBar() {
   GtkWidget* menu_bar = gtk_menu_bar_new();
-  GtkWidget* debug_menu = CreateMenu(menu_bar, "Tests");
+  GtkWidget* debug_menu = CreateMenu(menu_bar, "File");
+
+  AddMenuEntry(debug_menu, "Exit",
+               G_CALLBACK(ExitActivated));
 
   return menu_bar;
 }

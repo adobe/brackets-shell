@@ -33,6 +33,7 @@
 #include <string>
 
 extern time_t g_appStartupTime;
+extern char _binary_appshell_appshell_extensions_js_start;
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -43,22 +44,25 @@ CefString ClientApp::GetCurrentLanguage()
 
 std::string ClientApp::GetExtensionJSSource()
 {
-    //Another bloody TODO here.
-    std:: string extensionJSPath(AppGetSupportDirectory());
-    extensionJSPath.append("/appshell_extensions.js");
-    FILE* file = fopen(extensionJSPath.c_str(),"r");
-    if(file == NULL)
-    {
-        return "";
-    }
+    //# We objcopy the appshell/appshell_extensions.js file, and link it directly into the binary.
+    //# See http://www.linuxjournal.com/content/embedding-file-executable-aka-hello-world-version-5967
+    const char* p = &_binary_appshell_appshell_extensions_js_start;
+    std:: string content(p);
+    // std:: string extensionJSPath(AppGetSupportDirectory());
+    // extensionJSPath.append("/appshell_extensions.js");
+    // FILE* file = fopen(extensionJSPath.c_str(),"r");
+    // if(file == NULL)
+    // {
+    //     return "";
+    // }
 
-    fseek(file, 0, SEEK_END);
-    long int size = ftell(file);
-    rewind(file);
+    // fseek(file, 0, SEEK_END);
+    // long int size = ftell(file);
+    // rewind(file);
 
-    char* content = (char*)calloc(size + 1, 1);
+    // char* content = (char*)calloc(size + 1, 1);
 
-    fread(content,1,size,file);
+    // fread(content,1,size,file);
 
     return content;
 }
