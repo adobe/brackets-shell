@@ -525,8 +525,9 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
     if (hFind != INVALID_HANDLE_VALUE) {
         do {
-            // Ignore '.' and '..'
-            if (!wcscmp(ffd.cFileName, L".") || !wcscmp(ffd.cFileName, L".."))
+            // Ignore '.' and '..' and system files
+            if (!wcscmp(ffd.cFileName, L".") || !wcscmp(ffd.cFileName, L"..") ||
+                (ffd.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
                 continue;
 
             // Collect file and directory names separately
