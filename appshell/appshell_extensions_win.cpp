@@ -321,9 +321,9 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     std::wstring args = appPath;
 
     if (enableRemoteDebugging)
-        args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
+        args += L" --remote-debugging-port=9222 --allow-file-access-from-files --restore-last-session ";
     else
-        args += L" ";
+        args += L" --allow-file-access-from-files --restore-last-session ";
     args += argURL;
 
     // Args must be mutable

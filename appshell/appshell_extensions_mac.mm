@@ -190,12 +190,14 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
             parameters = [NSArray arrayWithObjects:
                            @"--remote-debugging-port=9222", 
                            @"--allow-file-access-from-files",
+						   @"--restore-last-session",
                            urlString,
                            nil];
         }
         else {
             parameters = [NSArray arrayWithObjects:
                            @"--allow-file-access-from-files",
+						   @"--restore-last-session",
                            urlString,
                            nil];
         }
