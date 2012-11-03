@@ -423,7 +423,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         BROWSEINFO bi = {0};
         bi.hwndOwner = GetActiveWindow();
         bi.lpszTitle = title.c_str();
-        bi.ulFlags = BIF_NEWDIALOGSTYLE;
+        bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
         bi.lpfn = SetInitialPathCallback;
         bi.lParam = (LPARAM)initialDirectory.c_str();
 
