@@ -226,6 +226,7 @@
               '<(march)'
             ],
             'libraries': [
+              '<!@(<(pkg-config) --libs-only-l udev)',
               '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
               '$(BUILDTYPE)/lib.target/libcef.so',
               'appshell_extensions_js.o',
