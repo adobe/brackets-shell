@@ -6,16 +6,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
+#include <sys/stat.h>
 #include "cefclient.h"
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
-//#include "string_util.h"
+#include "gtk/appicon.h"
 
 char szWorkingDir[512];  // The current working directory
 std:: string szInitialUrl;
+std:: string szRunningDir;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -24,6 +26,7 @@ extern CefRefPtr<ClientHandler> g_handler;
 time_t g_appStartupTime;
 
 void destroy(void) {
+  printf("Gonna die! \n");
   CefQuitMessageLoop();
 }
 
@@ -31,201 +34,60 @@ void TerminationSignalHandler(int signatl) {
   destroy();
 }
 
-//Callback for File > Exit... menu item.
-gboolean ExitActivated(GtkWidget* widget) {
-  destroy();
+int GetInitialUrl() {
+  GtkWidget *dialog;
+     const char* dialog_title = "Please select the index.html file";
+     GtkFileChooserAction file_or_directory = GTK_FILE_CHOOSER_ACTION_OPEN ;
+     dialog = gtk_file_chooser_dialog_new (dialog_title,
+                          NULL,
+                          file_or_directory,
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                          GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                          NULL);
+     
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+      {
+        szInitialUrl = "file://";
+        szInitialUrl.append(gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog)));
+        gtk_widget_destroy (dialog);
+        return 0;
+      }
+    return -1;
 }
 
-// // Callback for Debug > Get Source... menu item.
-// gboolean GetSourceActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunGetSourceTest(g_handler->GetBrowser());
+// Global functions
 
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Get Source... menu item.
-// gboolean GetTextActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunGetTextTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Request... menu item.
-// gboolean RequestActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunRequestTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Local Storage... menu item.
-// gboolean LocalStorageActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunLocalStorageTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > XMLHttpRequest... menu item.
-// gboolean XMLHttpRequestActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunXMLHTTPRequestTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Scheme Handler... menu item.
-// gboolean SchemeHandlerActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     scheme_test::RunTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > JavaScript Binding... menu item.
-// gboolean BindingActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     binding_test::RunTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Plugin Info... menu item.
-// gboolean PluginInfoActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunPluginInfoTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > DOM Access... menu item.
-// gboolean DOMAccessActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     dom_test::RunTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Popup Window... menu item.
-// gboolean PopupWindowActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunPopupTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Accelerated 2D Canvas... menu item.
-// gboolean Accelerated2DCanvasActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunAccelerated2DCanvasTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > Accelerated Layers... menu item.
-// gboolean AcceleratedLayersActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunAcceleratedLayersTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > WebGL... menu item.
-// gboolean WebGLActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunWebGLTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > HTML5 Video... menu item.
-// gboolean HTML5VideoActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunHTML5VideoTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// // Callback for Debug > HTML5 Drag & Drop... menu item.
-// gboolean HTML5DragDropActivated(GtkWidget* widget) {
-//   if (g_handler.get() && g_handler->GetBrowserId())
-//     RunDragDropTest(g_handler->GetBrowser());
-
-//   return FALSE;  // Don't stop this message.
-// }
-
-// Callback for when you click the back button.
-void BackButtonClicked(GtkButton* button) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->GoBack();
+std::string AppGetWorkingDirectory() {
+  return szWorkingDir;
 }
 
-// Callback for when you click the forward button.
-void ForwardButtonClicked(GtkButton* button) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->GoForward();
-}
+std::string AppGetRunningDirectory() {
+  if(szRunningDir.length() > 0)
+    return szRunningDir;
 
-// Callback for when you click the stop button.
-void StopButtonClicked(GtkButton* button) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->StopLoad();
-}
+  szRunningDir = "file://";
+  char buf[512];
+  int len = readlink("/proc/self/exe", buf, 512);
 
-// Callback for when you click the reload button.
-void ReloadButtonClicked(GtkButton* button) {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->Reload();
-}
+  if(len < 0)
+    return AppGetWorkingDirectory();  //# Well, can't think of any real-world case where this would be happen
 
-// Callback for when you press enter in the URL box.
-void URLEntryActivate(GtkEntry* entry) {
-  if (!g_handler.get() || !g_handler->GetBrowserId())
-    return;
-
-  const gchar* url = gtk_entry_get_text(entry);
-  g_handler->GetBrowser()->GetMainFrame()->LoadURL(std::string(url).c_str());
-}
-
-// GTK utility functions ----------------------------------------------
-
-GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
-                        GCallback callback) {
-  GtkWidget* entry = gtk_menu_item_new_with_label(text);
-  g_signal_connect(entry, "activate", callback, NULL);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_widget), entry);
-  return entry;
-}
-
-GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
-  GtkWidget* menu_widget = gtk_menu_new();
-  GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
-  return menu_widget;
-}
-
-GtkWidget* CreateMenuBar() {
-  GtkWidget* menu_bar = gtk_menu_bar_new();
-  GtkWidget* debug_menu = CreateMenu(menu_bar, "File");
-
-  AddMenuEntry(debug_menu, "Exit",
-               G_CALLBACK(ExitActivated));
-
-  return menu_bar;
-}
-
-// WebViewDelegate::TakeFocus in the test webview delegate.
-static gboolean HandleFocus(GtkWidget* widget,
-                            GdkEventFocus* focus) {
-  if (g_handler.get() && g_handler->GetBrowserId()) {
-    // Give focus to the browser window.
-    g_handler->GetBrowser()->GetHost()->SetFocus(true);
+  for(; len >= 0; len--){
+    if(buf[len] == '/'){
+      buf[len] = '\0';
+      szRunningDir.append(buf);
+      printf("szRunningDir: %s\n", szRunningDir.c_str());
+      return szRunningDir;
+    }
   }
+}
 
-  return TRUE;
+CefString AppGetCachePath() {
+  std::string cachePath = "file://"; //To avoid Unix paths being interpreted as http:// URLs
+  cachePath.append(ClientApp::AppGetSupportDirectory());
+  cachePath.append("/cef_data");
+
+  return CefString(cachePath);
 }
 
 int main(int argc, char* argv[]) {
@@ -262,57 +124,31 @@ int main(int argc, char* argv[]) {
     printf("No cache_path supplied by default\n");
   }
 
-  szInitialUrl = CefString(&settings.cache_path);
+  szInitialUrl = AppGetRunningDirectory();
   szInitialUrl.append("/www/index.html");
+
+  {
+    struct stat buf;
+    if(!(stat(szInitialUrl.c_str()+7, &buf) >= 0) || !(S_ISREG(buf.st_mode)))
+      if(GetInitialUrl() < 0)
+        return 0;
+  }
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
-
-  g_signal_connect(window, "focus", G_CALLBACK(&HandleFocus), NULL);
+  gtk_window_set_icon(GTK_WINDOW(window), gdk_pixbuf_new_from_inline(-1, appicon, FALSE, NULL));
 
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
 
-  GtkWidget* menu_bar = CreateMenuBar();
-
-  gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
-
-  GtkWidget* toolbar = gtk_toolbar_new();
-  // Turn off the labels on the toolbar buttons.
-  gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-
-  GtkToolItem* back = gtk_tool_button_new_from_stock(GTK_STOCK_GO_BACK);
-  g_signal_connect(back, "clicked",
-                   G_CALLBACK(BackButtonClicked), NULL);
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), back, -1 /* append */);
-
-  GtkToolItem* forward = gtk_tool_button_new_from_stock(GTK_STOCK_GO_FORWARD);
-  g_signal_connect(forward, "clicked",
-                   G_CALLBACK(ForwardButtonClicked), NULL);
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), forward, -1 /* append */);
-
-  GtkToolItem* reload = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
-  g_signal_connect(reload, "clicked",
-                   G_CALLBACK(ReloadButtonClicked), NULL);
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), reload, -1 /* append */);
-
-  GtkToolItem* stop = gtk_tool_button_new_from_stock(GTK_STOCK_STOP);
-  g_signal_connect(stop, "clicked",
-                   G_CALLBACK(StopButtonClicked), NULL);
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), stop, -1 /* append */);
+  GtkToolItem* back = gtk_tool_button_new(NULL, NULL);
+  GtkToolItem* forward = gtk_tool_button_new(NULL, NULL);
+  GtkToolItem* reload = gtk_tool_button_new(NULL, NULL);
+  GtkToolItem* stop = gtk_tool_button_new(NULL, NULL);
 
   GtkWidget* m_editWnd = gtk_entry_new();
-  g_signal_connect(G_OBJECT(m_editWnd), "activate",
-                   G_CALLBACK(URLEntryActivate), NULL);
-
-  GtkToolItem* tool_item = gtk_tool_item_new();
-  gtk_container_add(GTK_CONTAINER(tool_item), m_editWnd);
-  gtk_tool_item_set_expand(tool_item, TRUE);
-  gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_item, -1);  // append
-
-  gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 
   g_signal_connect(G_OBJECT(window), "destroy",
                    G_CALLBACK(gtk_widget_destroyed), &window);
@@ -355,18 +191,4 @@ int main(int argc, char* argv[]) {
   CefShutdown();
 
   return 0;
-}
-
-// Global functions
-
-std::string AppGetWorkingDirectory() {
-  return szWorkingDir;
-}
-
-CefString AppGetCachePath() {
-  std::string cachePath = "file://"; //To avoid Unix paths being interpreted as http:// URLs
-  cachePath.append(ClientApp::AppGetSupportDirectory());
-  cachePath.append("/cef_data");
-
-  return CefString(cachePath);
 }

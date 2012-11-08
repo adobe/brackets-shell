@@ -155,6 +155,7 @@
     ],
     'appshell_bundle_resources_linux': [
       '$(BUILDTYPE)/locales',
+      'appshell/res/brackets.ico',
     ],
     'appshell_bundle_libraries_linux': [
       '$(BUILDTYPE)/lib.target/libcef.so',

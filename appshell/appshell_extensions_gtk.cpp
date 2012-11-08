@@ -34,193 +34,6 @@
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 
-///////////////////////////////////////////////////////////////////////////////
-// LiveBrowserMgrLin
-
-class LiveBrowserMgrLin
-{
-public:
-    static LiveBrowserMgrLin* GetInstance();
-    static void Shutdown();
-
-    bool IsChromeWindow(GtkWidget* hwnd);
-    bool IsAnyChromeWindowsRunning();
-    void CloseLiveBrowserKillTimers();
-    void CloseLiveBrowserFireCallback(int valToSend);
-
-    CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
-    int GetCloseHeartbeatTimerId() { return m_closeLiveBrowserHeartbeatTimerId; }
-    int GetCloseTimeoutTimerId() { return m_closeLiveBrowserTimeoutTimerId; }
-
-    void SetCloseCallback(CefRefPtr<CefProcessMessage> closeLiveBrowserCallback)
-        { m_closeLiveBrowserCallback = closeLiveBrowserCallback; }
-    void SetBrowser(CefRefPtr<CefBrowser> browser)
-        { m_browser = browser; }
-    void SetCloseHeartbeatTimerId(int closeLiveBrowserHeartbeatTimerId)
-        { m_closeLiveBrowserHeartbeatTimerId = closeLiveBrowserHeartbeatTimerId; }
-    void SetCloseTimeoutTimerId(int closeLiveBrowserTimeoutTimerId)
-        { m_closeLiveBrowserTimeoutTimerId = closeLiveBrowserTimeoutTimerId; }
-
-private:
-    // private so this class cannot be instantiated externally
-    LiveBrowserMgrLin();
-    virtual ~LiveBrowserMgrLin();
-
-    int							    m_closeLiveBrowserHeartbeatTimerId;
-    int							    m_closeLiveBrowserTimeoutTimerId;
-    CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
-    CefRefPtr<CefBrowser>			m_browser;
-
-    static LiveBrowserMgrLin* s_instance;
-};
-
-LiveBrowserMgrLin::LiveBrowserMgrLin()
-    : m_closeLiveBrowserHeartbeatTimerId(0)
-    , m_closeLiveBrowserTimeoutTimerId(0)
-{
-}
-
-LiveBrowserMgrLin::~LiveBrowserMgrLin()
-{
-}
-
-LiveBrowserMgrLin* LiveBrowserMgrLin::GetInstance()
-{
-    if (!s_instance)
-        s_instance = new LiveBrowserMgrLin();
-    return s_instance;
-}
-
-void LiveBrowserMgrLin::Shutdown()
-{
-    delete s_instance;
-    s_instance = NULL;
-}
-
-bool LiveBrowserMgrLin::IsChromeWindow(GtkWidget* hwnd)
-{
-    if( !hwnd ) {
-        return false;
-    }
-
-    //TODO be!!
-    return true;
-}
-
-struct EnumChromeWindowsCallbackData
-{
-    bool    closeWindow;
-    int     numberOfFoundWindows;
-};
-
-// bool CALLBACK LiveBrowserMgrLin::EnumChromeWindowsCallback(Window hwnd, long userParam)
-// {
-//     if( !hwnd || !s_instance) {
-//         return FALSE;
-//     }
-
-//     EnumChromeWindowsCallbackData* cbData = reinterpret_cast<EnumChromeWindowsCallbackData*>(userParam);
-//     if(!cbData) {
-//         return FALSE;
-//     }
-
-//     if (!s_instance->IsChromeWindow(hwnd)) {
-//         return TRUE;
-//     }
-
-//     cbData->numberOfFoundWindows++;
-//     //This window belongs to the instance of the browser we're interested in, tell it to close
-//     if( cbData->closeWindow ) {
-//         ::SendMessageCallback(hwnd, WM_CLOSE, NULL, NULL, CloseLiveBrowserAsyncCallback, NULL);
-//     }
-
-//     return TRUE;
-// }
-
-bool LiveBrowserMgrLin::IsAnyChromeWindowsRunning()
-{
-    return false;
-}
-
-void LiveBrowserMgrLin::CloseLiveBrowserKillTimers()
-{
-    if (m_closeLiveBrowserHeartbeatTimerId) {
-        m_closeLiveBrowserHeartbeatTimerId = 0;
-    }
-
-    if (m_closeLiveBrowserTimeoutTimerId) {
-        m_closeLiveBrowserTimeoutTimerId = 0;
-    }
-}
-
-void LiveBrowserMgrLin::CloseLiveBrowserFireCallback(int valToSend)
-{
-    CefRefPtr<CefListValue> responseArgs = m_closeLiveBrowserCallback->GetArgumentList();
-    
-    // kill the timers
-    CloseLiveBrowserKillTimers();
-    
-    // Set common response args (callbackId and error)
-    responseArgs->SetInt(1, valToSend);
-    
-    // Send response
-    m_browser->SendProcessMessage(PID_RENDERER, m_closeLiveBrowserCallback);
-    
-    // Clear state
-    m_closeLiveBrowserCallback = NULL;
-    m_browser = NULL;
-}
-
-// void CALLBACK LiveBrowserMgrLin::CloseLiveBrowserTimerCallback( Window hwnd, int uMsg, int idEvent, int dwTime)
-// {
-//     if( !s_instance ) {
-//         ::KillTimer(NULL, idEvent);
-//         return;
-//     }
-
-//     int retVal =  NO_ERROR;
-//     if( s_instance->IsAnyChromeWindowsRunning() )
-//     {
-//         retVal = ERR_UNKNOWN;
-//         //if this is the heartbeat timer, wait for another beat
-//         if (idEvent == s_instance->m_closeLiveBrowserHeartbeatTimerId) {
-//             return;
-//         }
-//     }
-
-//     //notify back to the app
-//     s_instance->CloseLiveBrowserFireCallback(retVal);
-// }
-
-// void CALLBACK LiveBrowserMgrLin::CloseLiveBrowserAsyncCallback( Window hwnd, int uMsg, ULONG_PTR dwData, LRESULT lResult )
-// {
-//     if( !s_instance ) {
-//         return;
-//     }
-
-//     //If there are no more versions of chrome, then fire the callback
-//     if( !s_instance->IsAnyChromeWindowsRunning() ) {
-//         s_instance->CloseLiveBrowserFireCallback(NO_ERROR);
-//     }
-//     else if(s_instance->m_closeLiveBrowserHeartbeatTimerId == 0){
-//         //start a heartbeat timer to see if it closes after the message returned
-//         s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, CloseLiveBrowserTimerCallback);
-//     }
-// }
-
-LiveBrowserMgrLin* LiveBrowserMgrLin::s_instance = NULL;
-
-
-// static int CALLBACK SetInitialPathCallback(Window hWnd, int uMsg, long lParam, long lpData)
-// {
-//     if (BFFM_INITIALIZED == uMsg && NULL != lpData)
-//     {
-//         SendMessage(hWnd, BFFM_SETSELECTION, TRUE, lpData);
-//     }
-
-//     return 0;
-// }
-
 static const char* GetPathToLiveBrowser() 
 {
     //#TODO Use execlp and be done with it! No need to reinvent the wheel; so badly that too!
@@ -257,50 +70,6 @@ static const char* GetPathToLiveBrowser()
     return "";
 }
 
-// static std::wstring GetPathToLiveBrowser() 
-// {
-//     HKEY hKey;
-
-//     // First, look at the "App Paths" registry key for a "chrome.exe" entry. This only
-//     // checks for installs for all users. If Chrome is only installed for the current user,
-//     // we fall back to the code below.
-//     if (ERROR_SUCCESS == RegOpenKeyEx(
-//             HKEY_LOCAL_MACHINE, 
-//             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe",
-//             0, KEY_READ, &hKey)) {
-//        wchar_t wpath[MAX_PATH] = {0};
-
-//         int length = MAX_PATH;
-//         RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)wpath, &length);
-//         RegCloseKey(hKey);
-
-//         return std::wstring(wpath);
-//     }
-
-//     // We didn't get an "App Paths" entry. This could be because Chrome was only installed for
-//     // the current user, or because Chrome isn't installed at all.
-//     // Look for Chrome.exe at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
-//     TCHAR localAppPath[MAX_PATH] = {0};
-//     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
-//     std::wstring appPath(localAppPath);
-//     appPath += L"\\Google\\Chrome\\Application\\chrome.exe";
-        
-//     return appPath;
-// }
-    
-// static bool ConvertToShortPathName(std::wstring & path)
-// {
-//     int shortPathBufSize = _MAX_PATH+1;
-//     WCHAR shortPathBuf[_MAX_PATH+1];
-//     int finalShortPathSize = ::GetShortPathName(path.c_str(), shortPathBuf, shortPathBufSize);
-//     if( finalShortPathSize == 0 ) {
-//         return false;
-//     }
-        
-//     path.assign(shortPathBuf, finalShortPathSize);
-//     return true;
-// }
-
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {    
     //# COnsider using execlp and avoid all this path mess!
@@ -334,38 +103,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
     return NO_ERROR;
 }
-
-// int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
-// {
-//     std::wstring appPath = GetPathToLiveBrowser();
-//     std::wstring args = appPath;
-
-//     if (enableRemoteDebugging)
-//         args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
-//     else
-//         args += L" ";
-//     args += argURL;
-
-//     // Args must be mutable
-//     int argsBufSize = args.length() +1;
-//     std::auto_ptr<WCHAR> argsBuf( new WCHAR[argsBufSize]);
-//     wcscpy(argsBuf.get(), args.c_str());
-
-//     STARTUPINFO si = {0};
-//     si.cb = sizeof(si);
-//     PROCESS_INFORMATION pi = {0};
-
-//     //Send the whole command in through the args param. Windows will parse the first token up to a space
-//     //as the processes and feed the rest in as the argument string. 
-//     if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-//         return ConvertWinErrorCode(GetLastError());
-//     }
-        
-//     CloseHandle(pi.hProcess);
-//     CloseHandle(pi.hThread);
-
-//     return NO_ERROR;
-// }
 
 void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
@@ -401,23 +138,11 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
-    GError* error;
+    GError* error = NULL;
     gtk_show_uri(NULL, url.c_str(), GDK_CURRENT_TIME, &error);
     g_error_free(error);
     return NO_ERROR;
 }
-
-// int32 OpenURLInDefaultBrowser(ExtensionString url)
-// {
-//     int result = (int)ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
-//     // If the result > 32, the function suceeded. If the result is <= 32, it is an
-//     // error code.
-//     if (result <= 32)
-//         return ConvertWinErrorCode(result);
-
-//     return NO_ERROR;
-// }
 
 int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
@@ -439,9 +164,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
      if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
        {
          char *filename;
-     
          filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-         printf("%s\n",filename);
          selectedFiles->SetString(0,filename);
          g_free (filename);
        }
@@ -496,35 +219,26 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 MakeDir(ExtensionString path, int mode)
 {
-    printf("in MakeDir trying to make %s\n", path.c_str());
-    if(mkdir(path.c_str(),mode)==-1)
-        return ConvertLinuxErrorCode(errno);
+    static int mkdirError = NO_ERROR;
+    mode = mode | 0777;     //#TODO make Brackets set mode != 0
 
+    struct stat buf;
+    if((stat(path.substr(0, path.find_last_of('/')).c_str(), &buf) < 0) && errno==ENOENT)
+        MakeDir(path.substr(0, path.find_last_of('/')), mode);
+
+    if(mkdirError != 0)
+        return mkdirError;
+
+    if(mkdir(path.c_str(),mode)==-1)
+        mkdirError = ConvertLinuxErrorCode(errno);
     return NO_ERROR;
 }
-
-// int32 MakeDir(ExtensionString path, int32 mode)
-// {
-//     // TODO (issue #1759): honor mode
-//     ConvertToNativePath(path);
-//     int err = SHCreateDirectoryEx(NULL, path.c_str(), NULL);
-
-//     return ConvertWinErrorCode(err);
-// }
 
 int Rename(ExtensionString oldName, ExtensionString newName)
 {
     if (rename(oldName.c_str(), newName.c_str())==-1)
         return ConvertLinuxErrorCode(errno);
 }
-
-// int32 Rename(ExtensionString oldName, ExtensionString newName)
-// {
-//     if (!MoveFile(oldName.c_str(), newName.c_str()))
-//         return ConvertWinErrorCode(GetLastError());
-
-//     return NO_ERROR;
-// }
 
 int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
 {
@@ -537,26 +251,6 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
     return NO_ERROR;
 }
-
-// int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
-// {
-//     int dwAttr = GetFileAttributes(filename.c_str());
-
-//     if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-//         return ConvertWinErrorCode(GetLastError()); 
-//     }
-
-//     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
-
-//     WIN32_FILE_ATTRIBUTE_DATA   fad;
-//     if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
-//         return ConvertWinErrorCode(GetLastError());
-//     }
-
-//     modtime = FiletimeToTime(fad.ftLastWriteTime);
-
-//     return NO_ERROR;
-// }
 
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
@@ -591,45 +285,6 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
 
     return NO_ERROR;
 }
-
-// int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
-// {
-//     if (encoding != L"utf8")
-//         return ERR_UNSUPPORTED_ENCODING;
-
-//     int dwAttr;
-//     dwAttr = GetFileAttributes(filename.c_str());
-//     if (INVALID_FILE_ATTRIBUTES == dwAttr)
-//         return ConvertWinErrorCode(GetLastError());
-
-//     if (dwAttr & FILE_ATTRIBUTE_DIRECTORY)
-//         return ERR_CANT_READ;
-
-//     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ,
-//         0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-//     int32 error = NO_ERROR;
-
-//     if (INVALID_HANDLE_VALUE == hFile)
-//         return ConvertWinErrorCode(GetLastError()); 
-
-//     int dwFileSize = GetFileSize(hFile, NULL);
-//     int dwBytesRead;
-//     char* buffer = (char*)malloc(dwFileSize);
-//     if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-//         contents = std::string(buffer, dwFileSize);
-//     }
-//     else {
-//         if (!buffer)
-//             error = ERR_UNKNOWN;
-//         else
-//             error = ConvertWinErrorCode(GetLastError());
-//     }
-//     CloseHandle(hFile);
-//     if (buffer)
-//         free(buffer);
-
-//     return error; 
-// }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
@@ -683,64 +338,6 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
-// // Maps errors from errno.h to the brackets error codes
-// // found in brackets_extensions.js
-// int ConvertErrnoCode(int errorCode, bool isReading)
-// {
-//     switch (errorCode) {
-//     case NO_ERROR:
-//         return NO_ERROR;
-//     case EINVAL:
-//         return ERR_INVALID_PARAMS;
-//     case ENOENT:
-//         return ERR_NOT_FOUND;
-//     default:
-//         return ERR_UNKNOWN;
-//     }
-// }
-
-// // Maps errors from  WinError.h to the brackets error codes
-// // found in brackets_extensions.js
-// int ConvertWinErrorCode(int errorCode, bool isReading)
-// {
-//     switch (errorCode) {
-//     case NO_ERROR:
-//         return NO_ERROR;
-//     case ERROR_PATH_NOT_FOUND:
-//     case ERROR_FILE_NOT_FOUND:
-//         return ERR_NOT_FOUND;
-//     case ERROR_ACCESS_DENIED:
-//         return isReading ? ERR_CANT_READ : ERR_CANT_WRITE;
-//     case ERROR_WRITE_PROTECT:
-//         return ERR_CANT_WRITE;
-//     case ERROR_HANDLE_DISK_FULL:
-//         return ERR_OUT_OF_SPACE;
-//     case ERROR_ALREADY_EXISTS:
-//         return ERR_FILE_EXISTS;
-//     default:
-//         return ERR_UNKNOWN;
-//     }
-// }
-
-// /**
-//  * Convert a FILETIME (number of 100 nanosecond intervals since Jan 1 1601)
-//  * to time_t (number of seconds since Jan 1 1970)
-//  */
-// time_t FiletimeToTime(FILETIME const& ft) {
-//     ULARGE_INTEGER ull;
-//     ull.LowPart = ft.dwLowDateTime;
-//     ull.HighPart = ft.dwHighDateTime;
-
-//     // Convert the FILETIME from 100 nanosecond intervals into seconds
-//     // and then subtract the number of seconds between 
-//     // Jan 1 1601 and Jan 1 1970
-
-//     const int64 NANOSECOND_INTERVALS = 10000000ULL;
-//     const int64 SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970 = 11644473600ULL;
-
-//     return ull.QuadPart / NANOSECOND_INTERVALS - SECONDS_FROM_JAN_1_1601_TO_JAN_1_1970;
-// }
-
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
     GError *error;
@@ -756,6 +353,7 @@ int ShowFolderInOSWindow(ExtensionString pathname)
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading)
 {
+//    printf("LINUX ERROR! %d %s\n", errorCode, strerror(errorCode));
     switch (errorCode) {
     case NO_ERROR:
         return NO_ERROR;

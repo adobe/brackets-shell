@@ -188,6 +188,17 @@
               ],
               'message': 'compiling js resource'
             },
+            {
+              'action_name': 'appicon',
+              'inputs': [
+                'appshell/res/brackets.ico',
+              ],
+              'outputs': [
+                'appshell/gtk/appicon.h',
+              ],
+              'action': '<!(gdk-pixbuf-csource --name=appicon appshell/res/brackets.ico > appshell/gtk/appicon.h)',
+              #Such a hack. GYP let me do bash redirections!
+            },
           ],
           'cflags': [
             '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
@@ -226,7 +237,6 @@
               '<(march)'
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l udev)',
               '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
               '$(BUILDTYPE)/lib.target/libcef.so',
               'appshell_extensions_js.o',
