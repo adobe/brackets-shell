@@ -34,6 +34,8 @@
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 
+extern bool isReallyClosing;
+
 static const char* GetPathToLiveBrowser() 
 {
     //#TODO Use execlp and be done with it! No need to reinvent the wheel; so badly that too!
@@ -325,7 +327,13 @@ int DeleteFileOrDirectory(ExtensionString filename)
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
-        browser->GetHost()->CloseBrowser();
+        isReallyClosing = true;
+        // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
+        // GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
+        // if(gtk_widget_is_toplevel (hwnd))
+        //     gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
+        // else
+            browser->GetHost()->CloseBrowser();
     }
 }
 

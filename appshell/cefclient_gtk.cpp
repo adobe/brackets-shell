@@ -18,6 +18,7 @@
 char szWorkingDir[512];  // The current working directory
 std:: string szInitialUrl;
 std:: string szRunningDir;
+bool isReallyClosing = false;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -26,11 +27,20 @@ extern CefRefPtr<ClientHandler> g_handler;
 time_t g_appStartupTime;
 
 void destroy(void) {
-  printf("Gonna die! \n");
   CefQuitMessageLoop();
 }
 
 void TerminationSignalHandler(int signatl) {
+  destroy();
+}
+
+static gboolean HandleQuit(int signatl) {
+  if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
+    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
+    
+    g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
+    return TRUE;
+  }
   destroy();
 }
 
@@ -76,7 +86,6 @@ std::string AppGetRunningDirectory() {
     if(buf[len] == '/'){
       buf[len] = '\0';
       szRunningDir.append(buf);
-      printf("szRunningDir: %s\n", szRunningDir.c_str());
       return szRunningDir;
     }
   }
@@ -150,10 +159,12 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* m_editWnd = gtk_entry_new();
 
+  g_signal_connect(G_OBJECT(window), "delete_event",
+                   G_CALLBACK(HandleQuit), NULL);
   g_signal_connect(G_OBJECT(window), "destroy",
                    G_CALLBACK(gtk_widget_destroyed), &window);
-  g_signal_connect(G_OBJECT(window), "destroy",
-                   G_CALLBACK(destroy), NULL);
+  // g_signal_connect(G_OBJECT(window), "destroy",
+  //                  G_CALLBACK(destroy), NULL);
 
   // Create the handler.
   g_handler = new ClientHandler();
