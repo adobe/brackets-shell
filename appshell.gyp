@@ -196,7 +196,7 @@
               'outputs': [
                 'appshell/gtk/appicon.h',
               ],
-              'action': '<!(gdk-pixbuf-csource --name=appicon appshell/res/brackets.ico > appshell/gtk/appicon.h)',
+              'action': '<!(mkdir -p appshell/gtk; gdk-pixbuf-csource --name=appicon appshell/res/brackets.ico > appshell/gtk/appicon.h)',
               #Such a hack. GYP let me do bash redirections!
             },
           ],
