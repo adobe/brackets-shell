@@ -108,7 +108,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
 void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    //#TODO Duh,
+    system("killall -9 google-chrome &");
 }
 
 // void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
