@@ -92,9 +92,7 @@ std::string AppGetRunningDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = "file://"; //To avoid Unix paths being interpreted as http:// URLs
-  cachePath.append(ClientApp::AppGetSupportDirectory());
-  cachePath.append("/cef_data");
+  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
 
   return CefString(cachePath);
 }
