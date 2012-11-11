@@ -148,12 +148,14 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
 
+#ifdef SHOW_TOOLBAR_UI
   GtkToolItem* back = gtk_tool_button_new(NULL, NULL);
   GtkToolItem* forward = gtk_tool_button_new(NULL, NULL);
   GtkToolItem* reload = gtk_tool_button_new(NULL, NULL);
   GtkToolItem* stop = gtk_tool_button_new(NULL, NULL);
 
   GtkWidget* m_editWnd = gtk_entry_new();
+#endif // SHOW_TOOLBAR_UI
 
   g_signal_connect(G_OBJECT(window), "delete_event",
                    G_CALLBACK(HandleQuit), NULL);
@@ -165,9 +167,11 @@ int main(int argc, char* argv[]) {
   // Create the handler.
   g_handler = new ClientHandler();
   g_handler->SetMainHwnd(vbox);
+#ifdef SHOW_TOOLBAR_UI
   g_handler->SetEditHwnd(m_editWnd);
   g_handler->SetButtonHwnds(GTK_WIDGET(back), GTK_WIDGET(forward),
                             GTK_WIDGET(reload), GTK_WIDGET(stop));
+#endif // SHOW_TOOLBAR_UI
 
   // Create the browser view.
   CefWindowInfo window_info;
@@ -199,3 +203,4 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+

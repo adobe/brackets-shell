@@ -27,6 +27,7 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
+#ifdef SHOW_TOOLBAR_UI
   REQUIRE_UI_THREAD();
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
@@ -34,6 +35,7 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
     std::string urlStr(url);
     gtk_entry_set_text(GTK_ENTRY(m_EditHwnd), urlStr.c_str());
   }
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -52,13 +54,16 @@ void ClientHandler::SendNotification(NotificationType type) {
 }
 
 void ClientHandler::SetLoading(bool isLoading) {
+#ifdef SHOW_TOOLBAR_UI
   if (isLoading)
     gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), true);
   else
     gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), false);
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
+#ifdef SHOW_TOOLBAR_UI
   if (canGoBack)
     gtk_widget_set_sensitive(GTK_WIDGET(m_BackHwnd), true);
   else
@@ -68,6 +73,7 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
     gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), true);
   else
     gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), false);
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::CloseMainWindow() {
@@ -86,3 +92,4 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 	return true;
 }
+

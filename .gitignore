@@ -42,3 +42,6 @@ Makefile
 appshell.Makefile
 Brackets.target.mk
 libcef_dll_wrapper.target.mk
+appshell/gtk
+appshell/gtk/*
+
