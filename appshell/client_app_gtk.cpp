@@ -37,6 +37,7 @@ extern char _binary_appshell_appshell_extensions_js_start;
 
 CefString ClientApp::GetCurrentLanguage()
 {
+<<<<<<< HEAD
     //TODO proper locale in GTK
     printf("in GetCurrentLanguage: ");
     const char* locconst =  pango_language_to_string( gtk_get_default_language() );
@@ -47,6 +48,17 @@ CefString ClientApp::GetCurrentLanguage()
         if ( (loc[i] == '-') || (loc[i] == '_') ) { loc[i] = 0; break; }
     printf( "%s\n",  loc ); // here it prints just "en"
 	return CefString(loc);
+=======
+    const char* locconst =  pango_language_to_string( gtk_get_default_language() );
+    //Rado: for me it prints "en-us", so I have to strip everything after the "-"
+    char loc[10] = {0};
+    strncpy(loc, locconst, 9);
+    for(int i=0; i<8; i++)
+        if ( (loc[i] == '-') || (loc[i] == '_') ) { loc[i] = 0; break; }
+
+    //TODO Explore possibility of using locale as-is, without stripping
+    return CefString(loc);
+>>>>>>> linux/linux
 }
 
 std::string ClientApp::GetExtensionJSSource()
