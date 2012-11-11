@@ -57,7 +57,6 @@ int GetInitialUrl() {
      
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
       {
-        szInitialUrl = "file://";
         szInitialUrl.append(gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog)));
         gtk_widget_destroy (dialog);
         return 0;
@@ -75,7 +74,6 @@ std::string AppGetRunningDirectory() {
   if(szRunningDir.length() > 0)
     return szRunningDir;
 
-  szRunningDir = "file://";
   char buf[512];
   int len = readlink("/proc/self/exe", buf, 512);
 
@@ -92,9 +90,7 @@ std::string AppGetRunningDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = "file://"; //To avoid Unix paths being interpreted as http:// URLs
-  cachePath.append(ClientApp::AppGetSupportDirectory());
-  cachePath.append("/cef_data");
+  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
 
   return CefString(cachePath);
 }
@@ -138,7 +134,7 @@ int main(int argc, char* argv[]) {
 
   {
     struct stat buf;
-    if(!(stat(szInitialUrl.c_str()+7, &buf) >= 0) || !(S_ISREG(buf.st_mode)))
+    if(!(stat(szInitialUrl.c_str(), &buf) >= 0) || !(S_ISREG(buf.st_mode)))
       if(GetInitialUrl() < 0)
         return 0;
   }
@@ -188,7 +184,7 @@ int main(int argc, char* argv[]) {
   CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      szInitialUrl, browserSettings);
+      "file://"+szInitialUrl, browserSettings);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
