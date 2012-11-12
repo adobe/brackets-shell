@@ -305,6 +305,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     [openPanel setCanChooseDirectories:canChooseDirectories];
     [openPanel setCanCreateDirectories:canChooseDirectories];
     [openPanel setAllowsMultipleSelection:allowMulitpleSelection];
+    [openPanel setShowsHiddenFiles: YES];
     [openPanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
     
     if (initialDirectory != "")
@@ -477,7 +478,7 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {
     for (NSUInteger i = 0; i < [array count]; i++) {
-        list->SetString(i, [[array objectAtIndex:i] UTF8String]);
+        list->SetString(i, [[[array objectAtIndex:i] precomposedStringWithCanonicalMapping] UTF8String]);
     }
 }
 
