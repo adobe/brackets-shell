@@ -32,7 +32,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     </DirectoryRef>
 
     <DirectoryRef Id="ProgramMenuFolder">
-      <Component Id="StartMenuShortcut" Guid="{3C6EAEA9-C8EB-49A4-91EF-5D9E8037FAF6}" Win64="no" >
+      <Component Id="StartMenuShortcut" Guid="{4BEB5C69-F540-49C1-B29F-76D18BCC1D35}" Win64="no" >
         <Shortcut Id="AppShortcut" Name="!(loc.ProductName) $(var.ProductVersionName)"
                  Description="!(loc.ShortcutDescription)"
                  Target="[INSTALLDIR]\$(var.ExeName).exe" />
