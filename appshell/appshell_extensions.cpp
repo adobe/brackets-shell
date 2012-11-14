@@ -137,7 +137,7 @@ public:
             //  1: string - title
             //  2: string - initialPath
             //  3: string - fileTypes (space-delimited string)
-            if (argList->GetSize() != 6 ||
+            if (argList->GetSize() != 4 ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_STRING ||
                 argList->GetType(3) != VTYPE_STRING) {

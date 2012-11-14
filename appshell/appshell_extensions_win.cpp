@@ -537,8 +537,7 @@ int32 ShowSaveDialog(ExtensionString title,
     }
     */
 
-    // SHBrowseForFolder can handle Windows path only, not Unix path.
-    // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
+    // ofn.lpstrInitialDir needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
 
     OPENFILENAME ofn;
