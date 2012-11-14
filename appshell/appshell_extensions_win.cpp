@@ -510,11 +510,10 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     return NO_ERROR;
 }
 
-int32 ShowSaveDialog(bool chooseDirectory,
-                     ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     std::string& selectedFile)
+                     CefRefPtr<CefListValue>& selectedFile)
 {
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
@@ -542,50 +541,25 @@ int32 ShowSaveDialog(bool chooseDirectory,
     // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
 
-    if (chooseDirectory) {
-        BROWSEINFO bi = {0};
-        bi.hwndOwner = GetActiveWindow();
-        bi.lpszTitle = title.c_str();
-        bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
-        bi.lpfn = SetInitialPathCallback;
-        bi.lParam = (LPARAM)initialDirectory.c_str();
+    OPENFILENAME ofn;
 
-        LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-        if (pidl != 0) {
-            if (SHGetPathFromIDList(pidl, szFile)) {
-                // Add directory path to the result
-                ExtensionString pathName(szFile);
-                ConvertToUnixPath(pathName);
-                selectedFile->SetString(0, pathName);
-            }
-            IMalloc* pMalloc = NULL;
-            SHGetMalloc(&pMalloc);
-            if (pMalloc) {
-                pMalloc->Free(pidl);
-                pMalloc->Release();
-            }
-        }
-    } else {
-        OPENFILENAME ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.hwndOwner = GetActiveWindow();
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
 
-        ZeroMemory(&ofn, sizeof(ofn));
-        ofn.hwndOwner = GetActiveWindow();
-        ofn.lStructSize = sizeof(ofn);
-        ofn.lpstrFile = szFile;
-        ofn.nMaxFile = MAX_PATH;
+    // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
+    /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
+    LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
 
-        // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
-        /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
-        LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
+    ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0\0";
+       
+    ofn.lpstrInitialDir = initialDirectory.c_str();
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
-        ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0\0";
-           
-        ofn.lpstrInitialDir = initialDirectory.c_str();
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-
-        if (GetSaveFileName(&ofn)) {
-            selectedFile->SetString(0, szFile);
-        }
+    if (GetSaveFileName(&ofn)) {
+        selectedFile->SetString(0, szFile);
     }
 
     return NO_ERROR;

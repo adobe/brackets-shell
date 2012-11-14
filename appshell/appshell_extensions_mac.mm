@@ -326,8 +326,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     return NO_ERROR;
 }
 
-int32 ShowSaveDialog(bool chooseDirectory,
-                     ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFile)

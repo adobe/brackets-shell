@@ -66,11 +66,10 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles);
 
-int32 ShowSaveDialog(bool chooseDirectory,
-                     ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     std::string& selectedFile);
+                     CefRefPtr<CefListValue>& selectedFile);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 

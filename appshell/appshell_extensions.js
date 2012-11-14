@@ -133,8 +133,6 @@ if (!appshell.app) {
      * Display the OS File Save dialog, allowing the user to select
      * a file or directory.
      *
-     * @param {boolean} chooseDirectory If true, only directories can be selected. If false, only 
-     *        files can be selected.
      * @param {string} title Tile of the save dialog.
      * @param {string} initialPath Initial path to display in the dialog. Pass NULL or "" to 
      *        display the last path chosen.
@@ -150,9 +148,9 @@ if (!appshell.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function ShowSaveDialog();
-    appshell.fs.showSaveDialog = function (chooseDirectory, title, initialPath, fileTypes, callback) {
+    appshell.fs.showSaveDialog = function (title, initialPath, fileTypes, callback) {
         setTimeout(function () {
-            ShowSaveDialog(callback, chooseDirectory,
+            ShowSaveDialog(callback,
                              title || 'Save As', initialPath || '',
                              fileTypes ? fileTypes.join(' ') : '');
         }, 10);
