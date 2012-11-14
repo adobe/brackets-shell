@@ -556,7 +556,7 @@ int32 ShowSaveDialog(ExtensionString title,
     ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0\0";
        
     ofn.lpstrInitialDir = initialDirectory.c_str();
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
     if (GetSaveFileName(&ofn)) {
         selectedFile->SetString(0, szFile);
