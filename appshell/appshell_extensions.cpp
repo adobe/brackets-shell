@@ -131,6 +131,39 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
+        } else if (message_name == "ShowSaveDialog") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  2: bool - chooseDirectory
+            //  3: string - title
+            //  4: string - initialPath
+            //  5: string - fileTypes (space-delimited string)
+            if (argList->GetSize() != 6 ||
+                argList->GetType(1) != VTYPE_BOOL ||
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING ||
+                argList->GetType(4) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            std::wstring selectedFile = new std::wstring;
+           
+            if (error == NO_ERROR) {
+                bool allowMultipleSelection = argList->GetBool(1);
+                bool chooseDirectory = argList->GetBool(2);
+                ExtensionString title = argList->GetString(3);
+                ExtensionString initialPath = argList->GetString(4);
+                ExtensionString fileTypes = argList->GetString(5);
+                
+                error = ShowSaveDialog(chooseDirectory,
+                                       title,
+                                       initialPath,
+                                       fileTypes,
+                                       selectedFile);
+            }
+
+            // Set response args for this function
+            responseArgs->SetString(2, selectedFile);
         } else if (message_name == "ReadDir") {
             // Parameters:
             //  0: int32 - callback id
