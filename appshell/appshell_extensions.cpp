@@ -158,7 +158,7 @@ public:
             }
 
             // Set response args for this function
-            responseArgs->SetList(2, selectedFile);
+			responseArgs->SetString(2, selectedFile->GetString(0));
         } else if (message_name == "ReadDir") {
             // Parameters:
             //  0: int32 - callback id
