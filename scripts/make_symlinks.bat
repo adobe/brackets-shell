@@ -1,3 +1,5 @@
+@echo off
+
 REM Remove existing links
 rmdir Debug include lib libcef_dll Release tools
 
