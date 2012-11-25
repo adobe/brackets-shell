@@ -491,20 +491,33 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
     
-    // Contrary to the name of this function, we don't actually delete directories
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
+        // Contrary to the name of this function, we don't actually delete directories
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {                    
         if (isDirectory) {
-            return ERR_NOT_FILE;
-        }
+            return ERR_NOT_FILE;    
+        }            
     } else {
         return ERR_NOT_FOUND;
-    }    
-    
+    }
+        
     if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
+        return NO_ERROR;       
+    
+    return ConvertNSErrorCode(error, false);
+}
+
+int32 MoveFileOrDirectoryToTrash(ExtensionString filename)
+{
+    NSError* error = nil;
+    
+    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
+    
+    if ([[NSFileManager defaultManager] moveItemAtPath:path toPath:[[@"~/.Trash/" stringByStandardizingPath] stringByAppendingPathComponent:[path lastPathComponent]] error:&error])        
         return NO_ERROR;
     
     return ConvertNSErrorCode(error, false);
 }
+
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {

@@ -302,6 +302,22 @@ public:
                 
                 // No additional response args for this function
             }
+        } else if (message_name == "MoveFileOrDirectoryToTrash") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - filename
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString filename = argList->GetString(1);
+                
+                error = MoveFileOrDirectoryToTrash(filename);
+                
+                // No additional response args for this function
+            }
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
             
