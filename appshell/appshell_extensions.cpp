@@ -271,15 +271,17 @@ public:
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
-            if (argList->GetSize() != 2 ||
+            //  2: bool - permanent
+            if (argList->GetSize() != 3 ||
                 argList->GetType(1) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
+                bool permanent = argList->GetBool(2);
                 
-                error = DeleteFileOrDirectory(filename);
+                error = DeleteFileOrDirectory(filename, permanent);
                 
                 // No additional response args for this function
             }

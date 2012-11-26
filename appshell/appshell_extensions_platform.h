@@ -80,7 +80,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
-int32 DeleteFileOrDirectory(ExtensionString filename);
+int32 DeleteFileOrDirectory(ExtensionString filename, bool permanent);
 
 void OnBeforeShutdown();
 

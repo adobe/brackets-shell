@@ -453,7 +453,7 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 DeleteFileOrDirectory(ExtensionString filename)
+int32 DeleteFileOrDirectory(ExtensionString filename, bool permanent)
 {
     NSError* error = nil;
     
@@ -461,16 +461,16 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     BOOL isDirectory;
     
     // Contrary to the name of this function, we don't actually delete directories
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
-        if (isDirectory) {
-            return ERR_NOT_FILE;
-        }
-    } else {
-        return ERR_NOT_FOUND;
-    }    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) 
+        return ERR_NOT_FOUND; 
     
-    if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
-        return NO_ERROR;
+    if(permanent) {
+        if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
+            return NO_ERROR;        
+    } else {
+        if ([[NSFileManager defaultManager] moveItemAtPath:path toPath:[[@"~/.Trash/" stringByStandardizingPath] stringByAppendingPathComponent:[path lastPathComponent]] error:&error])        
+            return NO_ERROR;
+    }
     
     return ConvertNSErrorCode(error, false);
 }

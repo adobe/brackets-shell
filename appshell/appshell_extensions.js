@@ -19,7 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  * 
- */ 
+ */
 
 // This is the JavaScript code for bridging to native functionality
 // See appshell_extentions_[platform] for implementation of native methods.
@@ -40,7 +40,7 @@ if (!appshell.fs) {
 if (!appshell.app) {
     appshell.app = {};
 }
-(function () {    
+(function () {
     // Error values. These MUST be in sync with the error values
     // at the top of appshell_extensions_platform.h.
     
@@ -310,7 +310,7 @@ if (!appshell.app) {
      */
     native function DeleteFileOrDirectory();
     appshell.fs.unlink = function (path, callback) {
-        DeleteFileOrDirectory(callback, path);
+        DeleteFileOrDirectory(callback, path, false);
     };
 
     /**
