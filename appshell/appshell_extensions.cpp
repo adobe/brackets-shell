@@ -144,12 +144,12 @@ public:
                 error = ERR_INVALID_PARAMS;
             }
 
-            CefRefPtr<CefListValue> selectedFile = CefListValue::Create();
+            ExtensionString selectedFile;
            
             if (error == NO_ERROR) {
-                ExtensionString title = argList->GetString(3);
-                ExtensionString initialPath = argList->GetString(4);
-                ExtensionString fileTypes = argList->GetString(5);
+                ExtensionString title = argList->GetString(1);
+                ExtensionString initialPath = argList->GetString(2);
+                ExtensionString fileTypes = argList->GetString(3);
                 
                 error = ShowSaveDialog(title,
                                        initialPath,
@@ -158,7 +158,7 @@ public:
             }
 
             // Set response args for this function
-			responseArgs->SetString(2, selectedFile->GetString(0));
+			responseArgs->SetString(2, selectedFile);
         } else if (message_name == "ReadDir") {
             // Parameters:
             //  0: int32 - callback id

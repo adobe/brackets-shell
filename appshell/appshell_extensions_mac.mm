@@ -329,7 +329,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFile)
+                     ExtensionString& selectedFile)
 {
     NSArray* allowedFileTypes = nil;
     
@@ -340,6 +340,8 @@ int32 ShowSaveDialog(ExtensionString title,
         [[NSString stringWithUTF8String:fileTypes.c_str()] 
          componentsSeparatedByString:@" "];
     }
+    
+    selectedFile = "";
     
     // Initialize the dialog
     NSSavePanel* savePanel = [NSSavePanel savePanel];
@@ -353,12 +355,11 @@ int32 ShowSaveDialog(ExtensionString title,
     [savePanel setAllowedFileTypes:allowedFileTypes];
     
     [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+    
     if ([savePanel runModal] == NSOKButton)
     {
         NSArray* urls = [savePanel URLs];
-        for (NSUInteger i = 0; i < [urls count]; i++) {
-            selectedFile->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
-        }
+        selectedFile = [[[urls objectAtIndex:0] path] UTF8String];
     }
     [NSApp endSheet:savePanel];
     

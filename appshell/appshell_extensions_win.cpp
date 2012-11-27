@@ -513,29 +513,10 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFile)
+                     ExtensionString& selectedFile)
 {
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
-
-    // TODO (issue #64) - This method should be using IFileDialog instead of the
-    /* outdated SHGetPathFromIDList and GetOpenFileName.
-       
-    Useful function to parse fileTypesStr:
-    template<class T>
-    int inline findAndReplaceString(T& source, const T& find, const T& replace)
-    {
-    int num=0;
-    int fLen = find.size();
-    int rLen = replace.size();
-    for (int pos=0; (pos=source.find(find, pos))!=T::npos; pos+=rLen)
-    {
-    num++;
-    source.replace(pos, fLen, replace);
-    }
-    return num;
-    }
-    */
 
     // ofn.lpstrInitialDir needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
@@ -557,8 +538,9 @@ int32 ShowSaveDialog(ExtensionString title,
     ofn.lpstrInitialDir = initialDirectory.c_str();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
+	selectedFile = L"";
     if (GetSaveFileName(&ofn)) {
-        selectedFile->SetString(0, szFile);
+        selectedFile = szFile;
     }
 
     return NO_ERROR;

@@ -69,7 +69,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFile);
+                     ExtensionString& selectedFile);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 
