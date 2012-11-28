@@ -425,6 +425,15 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     return YES;
 }
 
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication {
+    if (!g_isTerminating && g_handler.get() && !g_handler->AppIsQuitting()) {
+        g_handler->DispatchCloseToNextBrowser();
+        return NSTerminateCancel;
+    }
+    g_isTerminating = true;
+    return NSTerminateNow;
+}
+
 @end
 
 
