@@ -130,17 +130,15 @@ if (!appshell.app) {
     };
     
     /**
-     * Display the OS File Save dialog, allowing the user to select
-     * a file or directory.
+     * Display the OS File Save dialog, allowing the user to save a file.
      *
      * @param {string} title Tile of the save dialog.
      * @param {string} initialPath Initial path to display in the dialog. Pass NULL or "" to 
      *        display the last path chosen.
      * @param {Array.<string>} fileTypes Array of strings specifying the selectable file extensions. 
-     *        These strings should not contain '.'. This parameter is ignored when 
-     *        chooseDirectory=true.
+     *        These strings should not contain '.'.
      * @param {function(err, selection)} callback Asynchronous callback function. The callback gets two arguments 
-     *        (err, selection) where selection is an array of the names of the selected files.
+     *        (err, selection) where selection is the name of the file to save.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
