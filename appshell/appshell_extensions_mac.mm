@@ -345,7 +345,7 @@ int32 ShowSaveDialog(ExtensionString title,
     
     // Initialize the dialog
     NSSavePanel* savePanel = [NSSavePanel savePanel];
-    [savePanel setCanCreateDirectories:canChooseDirectories];
+    [savePanel setCanCreateDirectories: YES];
     [savePanel setShowsHiddenFiles: YES];
     [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
     
@@ -358,8 +358,7 @@ int32 ShowSaveDialog(ExtensionString title,
     
     if ([savePanel runModal] == NSOKButton)
     {
-        NSArray* urls = [savePanel URLs];
-        selectedFile = [[[urls objectAtIndex:0] path] UTF8String];
+        selectedFile = [[[savePanel URL] path] UTF8String];
     }
     [NSApp endSheet:savePanel];
     
