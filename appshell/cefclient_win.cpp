@@ -183,7 +183,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Temporary localization hack. Default to English. Check for French.
   DWORD menuId = IDC_CEFCLIENT;
-  std::string lang = app->GetCurrentLanguage().ToString();
   if (app->GetCurrentLanguage() == CefString("fr-FR"))
   {
 	  menuId = IDC_CEFCLIENT_FR;
