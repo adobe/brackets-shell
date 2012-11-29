@@ -82,10 +82,10 @@ private:
     LiveBrowserMgrWin();
     virtual ~LiveBrowserMgrWin();
 
-    UINT							m_closeLiveBrowserHeartbeatTimerId;
-    UINT							m_closeLiveBrowserTimeoutTimerId;
-    CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
-    CefRefPtr<CefBrowser>			m_browser;
+    UINT                            m_closeLiveBrowserHeartbeatTimerId;
+    UINT                            m_closeLiveBrowserTimeoutTimerId;
+    CefRefPtr<CefProcessMessage>    m_closeLiveBrowserCallback;
+    CefRefPtr<CefBrowser>           m_browser;
 
     static LiveBrowserMgrWin* s_instance;
 };
@@ -515,11 +515,11 @@ int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString fileTypes,
                      ExtensionString& selectedFile)
 {
-    wchar_t szFile[MAX_PATH];
-    szFile[0] = 0;
+    wchar_t* szFile = new wchar_t[MAX_PATH];
 
     // ofn.lpstrInitialDir needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
+    wcscpy(szFile, initialDirectory.c_str());
 
     OPENFILENAME ofn;
 
@@ -538,7 +538,7 @@ int32 ShowSaveDialog(ExtensionString title,
     ofn.lpstrInitialDir = initialDirectory.c_str();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
-	selectedFile = L"";
+    selectedFile = L"";
     if (GetSaveFileName(&ofn)) {
         selectedFile = szFile;
     }
