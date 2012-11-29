@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -270,6 +270,8 @@
 		253F4B9FF4F66890C0F139E7 /* cef_v8_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_v8_capi.h; sourceTree = "<group>"; };
 		26049B47F404C3F1C50C2D66 /* process_message_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = process_message_ctocpp.h; sourceTree = "<group>"; };
 		2652CE5DE434A7F76318E0E1 /* urlrequest_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = urlrequest_ctocpp.cc; sourceTree = "<group>"; };
+		26D9BF041667F62C0077E74D /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		26D9BF051667F62C0077E74D /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		2A8AA28318CAFF68ABFAD297 /* urlrequest_client_cpptoc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = urlrequest_client_cpptoc.h; sourceTree = "<group>"; };
 		2AB635C6500A7B6F5FF96611 /* callback_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = callback_ctocpp.cc; sourceTree = "<group>"; };
 		2B3DCD932088538C6B67BF9D /* focus_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = focus_handler_cpptoc.cc; sourceTree = "<group>"; };
@@ -438,7 +440,7 @@
 		B4B09C1A48BFF86A37409501 /* cef_load_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_load_handler.h; sourceTree = "<group>"; };
 		B5F6DEF7A5E722606EFDD579 /* request_handler_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = request_handler_cpptoc.cc; sourceTree = "<group>"; };
 		B617EB0714F29F881C46BCC3 /* frame_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = frame_ctocpp.cc; sourceTree = "<group>"; };
-		B65894845851B9D3DEE6BD03 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = libcef.dylib; sourceTree = CONFIGURATION; };
+		B65894845851B9D3DEE6BD03 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcef.dylib; sourceTree = CONFIGURATION; };
 		B6A77EE456259DB56C750847 /* cookie_visitor_cpptoc.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cookie_visitor_cpptoc.cc; sourceTree = "<group>"; };
 		B9211C221356E0B082C4816A /* transfer_util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transfer_util.cpp; sourceTree = "<group>"; };
 		B9EF704C714952FC84A12099 /* list_value_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list_value_ctocpp.h; sourceTree = "<group>"; };
@@ -1072,7 +1074,12 @@
 			};
 			buildConfigurationList = 38D0AF58DF00CF65E3AAE9DC /* Build configuration list for PBXProject "appshell" */;
 			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+				de,
+			);
 			mainGroup = F47C63E7FD8ABDAE3E69A708;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1375,6 +1382,7 @@
 			children = (
 				21E1788E6373ED804C2F8EF9 /* English */,
 				51197AD59C704A403D067684 /* French */,
+				26D9BF041667F62C0077E74D /* de */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -1384,6 +1392,7 @@
 			children = (
 				8D044E3620D9DD898CC187C0 /* English */,
 				876CB717FB3B13B947CA9690 /* French */,
+				26D9BF051667F62C0077E74D /* de */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -1557,7 +1566,8 @@
 		7C2ABCD4C3747B6FA0E9648C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = All; COMBINE_HIDPI_IMAGES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				PRODUCT_NAME = All;
 			};
 			name = Debug;
 		};
@@ -1827,7 +1837,8 @@
 		E1F93007A551A118BEA442B1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = All; COMBINE_HIDPI_IMAGES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				PRODUCT_NAME = All;
 			};
 			name = Release;
 		};
