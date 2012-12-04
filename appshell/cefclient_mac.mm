@@ -326,7 +326,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   content_rect = [mainWnd contentRectForFrameRect:[mainWnd frame]];
 
   // Configure the rest of the window
-  [mainWnd setTitle:APP_NAME];
+  [mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 

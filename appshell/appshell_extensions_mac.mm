@@ -32,6 +32,9 @@
 - (void)timeoutTimer:(NSTimer*)timer;
 @end
 
+// App ID for either Chrome or Chrome Canary (commented out)
+NSString *const appId = @"com.google.Chrome";
+//NSString *const appId = @"com.google.Chrome.canary";
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac
@@ -103,7 +106,6 @@ void LiveBrowserMgrMac::Shutdown()
 
 bool LiveBrowserMgrMac::IsChromeRunning()
 {
-    NSString *appId = @"com.google.Chrome";
     NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
     for (NSUInteger i = 0; i < apps.count; i++) {
         NSRunningApplication* curApp = [apps objectAtIndex:i];
@@ -176,7 +178,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     NSURL *url = [NSURL URLWithString:urlString];
     
     // Find instances of the Browser
-    NSString *appId = @"com.google.Chrome";
     NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
     NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation;
@@ -233,7 +234,6 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     liveBrowserMgr->SetCloseCallback(response);
     
     // Find instances of the Browser and terminate them
-    NSString *appId = @"com.google.Chrome";
     NSArray *apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:appId];
     
     if (apps.count == 0) {

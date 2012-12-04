@@ -363,11 +363,68 @@ void SaveWindowRect(HWND hWnd)
 
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
+	// Start with Registry data
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
+
+	// If window size has changed, we may need to alter window size
+	HMONITOR	hMonitor;
+	MONITORINFO	mi;
+	RECT		rcOrig, rcMax;
+
+	// Get the nearest monitor to the passed rect
+	rcOrig.left   = left;
+	rcOrig.top    = top;
+	rcOrig.right  = left + width;
+	rcOrig.bottom = top  + height;
+	hMonitor = MonitorFromRect(&rcOrig, MONITOR_DEFAULTTONEAREST);
+
+	// Get the monitor rect
+	mi.cbSize = sizeof(mi);
+	GetMonitorInfo(hMonitor, &mi);
+	rcMax = mi.rcMonitor;
+
+	if (showCmd == SW_MAXIMIZE)
+	{
+		// For maximized case, just use monitor dimensions
+		left   = rcMax.left;
+		top    = rcMax.top;
+		width  = rcMax.right  - rcMax.left;
+		height = rcMax.bottom - rcMax.top;
+	}
+	else
+	{
+		// For non-maximized case, adjust window to fit on screen
+
+		// make sure width fits
+		int rcMaxWidth = static_cast<int>(rcMax.right - rcMax.left);
+		if (width > rcMaxWidth)
+			width = rcMaxWidth;
+
+		// make sure left is on screen
+		if (left < rcMax.left)
+			left = static_cast<int>(rcMax.left);
+
+		// make sure right is on screen
+		if ((left + width) > rcMax.right)
+			left = static_cast<int>(rcMax.right) - width;
+
+		// make sure height fits
+		int rcMaxHeight = static_cast<int>(rcMax.bottom - rcMax.top);
+		if (height > rcMaxHeight)
+			height = rcMaxHeight;
+
+		// make sure top is on screen
+		if (top < rcMax.top)
+			top = static_cast<int>(rcMax.top);
+
+		// make sure bottom is on screen
+		if ((top + height) > rcMax.bottom)
+			top = static_cast<int>(rcMax.bottom) - height;
+	}
 }
 
 void RestoreWindowPlacement(HWND hWnd, int showCmd)
