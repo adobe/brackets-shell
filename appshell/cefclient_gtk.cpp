@@ -18,6 +18,7 @@
 char szWorkingDir[512];  // The current working directory
 std:: string szInitialUrl;
 std:: string szRunningDir;
+int add_handler_id;
 bool isReallyClosing = false;
 
 // The global ClientHandler reference.
@@ -32,6 +33,18 @@ void destroy(void) {
 
 void TerminationSignalHandler(int signatl) {
   destroy();
+}
+void HandleAdd(GtkContainer *container,
+               GtkWidget *widget,
+               gpointer user_data) {
+  g_signal_handler_disconnect(container, add_handler_id);
+  if(gtk_widget_get_can_focus(widget)) {
+    gtk_widget_grab_focus(widget);
+  }
+  else {
+    add_handler_id = g_signal_connect(G_OBJECT(widget), "add",
+                                      G_CALLBACK(HandleAdd), NULL);
+  }
 }
 
 static gboolean HandleQuit(int signatl) {
@@ -161,6 +174,8 @@ int main(int argc, char* argv[]) {
                    G_CALLBACK(HandleQuit), NULL);
   g_signal_connect(G_OBJECT(window), "destroy",
                    G_CALLBACK(gtk_widget_destroyed), &window);
+  add_handler_id = g_signal_connect(G_OBJECT(window), "add",
+                                      G_CALLBACK(HandleAdd), NULL);
   // g_signal_connect(G_OBJECT(window), "destroy",
   //                  G_CALLBACK(destroy), NULL);
 
