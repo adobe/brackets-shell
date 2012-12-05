@@ -271,17 +271,31 @@ public:
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
-            //  2: bool - permanent
-            if (argList->GetSize() != 3 ||
+            if (argList->GetSize() != 2 ||
                 argList->GetType(1) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
-                bool permanent = argList->GetBool(2);
                 
-                error = DeleteFileOrDirectory(filename, permanent);
+                error = DeleteFileOrDirectory(filename);
+                
+                // No additional response args for this function
+            }
+        } else if (message_name == "DeleteFileOrDirectoryToTrash") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - filename
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString filename = argList->GetString(1);
+                
+                error = DeleteFileOrDirectoryToTrash(filename);
                 
                 // No additional response args for this function
             }

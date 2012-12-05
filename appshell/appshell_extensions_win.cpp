@@ -690,6 +690,23 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+int32 DeleteFileOrDirectoryToTrash(ExtensionString filename)
+{
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        return ERR_NOT_FOUND;
+
+    SHFILEOPSTRUCT operation;
+    operation.wFunc = FO_DELETE;
+    operation.pFrom = filename.c_str();
+    operation.fFlags = FOF_ALLOWUNDO;
+
+    if (SHFileOperation(&operation))
+        return ConvertWinErrorCode(GetLastError());
+
+    return NO_ERROR;
+}
 
 void OnBeforeShutdown()
 {

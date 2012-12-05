@@ -295,7 +295,7 @@ if (!appshell.app) {
     };
     
     /**
-     * Delete a file.
+     * Delete a file permanently.
      *
      * @param {string} path The path of the file to delete
      * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
@@ -310,8 +310,27 @@ if (!appshell.app) {
      */
     native function DeleteFileOrDirectory();
     appshell.fs.unlink = function (path, callback) {
-        DeleteFileOrDirectory(callback, path, false);
+        DeleteFileOrDirectory(callback, path);
     };
+    
+    /**
+     * Delete a file non-permanently (to trash).
+     *
+     * @param {string} path The path of the file to delete
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *          ERR_NOT_FILE
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function DeleteFileOrDirectoryToTrash();
+    appshell.fs.moveToTrash = function (path, callback) {
+        DeleteFileOrDirectoryToTrash(callback, path);
+    };    
 
     /**
      * Return the number of milliseconds that have elapsed since the application

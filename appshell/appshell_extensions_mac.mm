@@ -453,27 +453,40 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 DeleteFileOrDirectory(ExtensionString filename, bool permanent)
+int32 DeleteFileOrDirectory(ExtensionString filename)
 {
     NSError* error = nil;
     
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
     
-    // Contrary to the name of this function, we don't actually delete directories
-    if (![[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) 
-        return ERR_NOT_FOUND; 
-    
-    if(permanent) {
-        if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
-            return NO_ERROR;        
+        // Contrary to the name of this function, we don't actually delete directories
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {                    
+        if (isDirectory) {
+            return ERR_NOT_FILE;    
+        }            
     } else {
-        if ([[NSFileManager defaultManager] moveItemAtPath:path toPath:[[@"~/.Trash/" stringByStandardizingPath] stringByAppendingPathComponent:[path lastPathComponent]] error:&error])        
-            return NO_ERROR;
+        return ERR_NOT_FOUND;
     }
+        
+    if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
+        return NO_ERROR;       
     
     return ConvertNSErrorCode(error, false);
 }
+
+int32 DeleteFileOrDirectoryToTrash(ExtensionString filename)
+{
+    NSError* error = nil;
+    
+    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
+    
+    if ([[NSFileManager defaultManager] moveItemAtPath:path toPath:[[@"~/.Trash/" stringByStandardizingPath] stringByAppendingPathComponent:[path lastPathComponent]] error:&error])        
+        return NO_ERROR;
+    
+    return ConvertNSErrorCode(error, false);
+}
+
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {
