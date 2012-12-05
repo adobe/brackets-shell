@@ -123,13 +123,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
   MyRegisterClass(hInstance, settings.locale);
- 
+
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
 	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
   }
   else {
-	// If the shift key is not pressed, look for the index.html file 
+	// If the shift key is not pressed, look for the index.html file
 	if (GetAsyncKeyState(VK_SHIFT) == 0) {
 	// Get the full pathname for the app. We look for the index.html
 	// file relative to this location.
@@ -181,12 +181,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
-  // Temporary localization hack. Default to English. Check for French.
+  // Temporary localization hack. Default to English. Check for French and German.
   DWORD menuId = IDC_CEFCLIENT;
-  if (settings.locale.str && (settings.locale.length > 0) &&
-      (CefString(settings.locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
+  if (settings.locale.str && (settings.locale.length > 0)) {
+    if (CefString(settings.locale.str) == CefString("fr-FR")) {
+        menuId = IDC_CEFCLIENT_FR;
+    } else if (CefString(settings.locale.str) == CefString("de-DE")) {
+        menuId = IDC_CEFCLIENT_DE;
+    }
   }
 
   hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
@@ -478,12 +480,14 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 
-  // Temporary localization hack. Default to English. Check for French.
+  // Temporary localization hack. Default to English. Check for French and German.
   DWORD menuId = IDC_CEFCLIENT;
-  if (locale.str && (locale.length > 0) &&
-      (CefString(locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
+  if (locale.str && (locale.length > 0)) {
+    if (CefString(locale.str) == CefString("fr-FR")) {
+      menuId = IDC_CEFCLIENT_FR;
+    } else if (CefString(locale.str) == CefString("de-DE")) {
+      menuId = IDC_CEFCLIENT_DE;
+    }
   }
 
   WNDCLASSEX wcex;

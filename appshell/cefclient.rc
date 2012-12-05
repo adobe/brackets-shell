@@ -114,6 +114,21 @@ BEGIN
     END
 END
 
+IDC_CEFCLIENT_DE MENU 
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Beenden",                    IDM_EXIT
+    END
+END
+IDC_CEFCLIENT_POPUP_DE MENU 
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Schließen",                  IDM_CLOSE
+    END
+END
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
