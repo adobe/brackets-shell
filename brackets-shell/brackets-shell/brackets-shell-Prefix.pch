@@ -1,5 +1,0 @@
-//
-// Prefix header for all source files of the 'brackets-shell' target in the 'brackets-shell' project
-//
-
-#include <CoreFoundation/CoreFoundation.h>
