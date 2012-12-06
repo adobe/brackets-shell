@@ -40,6 +40,7 @@
 		33DFAF72856D1C2413D7B6B9 /* transfer_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9211C221356E0B082C4816A /* transfer_util.cpp */; };
 		35493B82E5737B74D3E44111 /* resource_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = BD8E873CE33AB866D81F7634 /* resource_handler_cpptoc.cc */; };
 		3890087136F92F0B103CBCD6 /* cef_xml_object.cc in Sources */ = {isa = PBXBuildFile; fileRef = D9EB25BB75762E0033E42719 /* cef_xml_object.cc */; };
+		3F06970E3993F876A4F16315 /* appshell.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0F679226CAE5AC8A981F546E /* appshell.icns */; };
 		405A20C4CF0C9F20E55F30F1 /* client_app_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = FC33590C4ECC150F9CD14493 /* client_app_mac.mm */; };
 		4079CA4A17A94D657652623F /* render_process_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8ABFDFF093F6B71602851374 /* render_process_handler_cpptoc.cc */; };
 		417F6B36C36D062B316FBABE /* read_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B6B1C35B41FBDC6DDEFF52E /* read_handler_cpptoc.cc */; };
@@ -72,6 +73,7 @@
 		77685EBA5A165F0F61F9C786 /* browser_host_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8ED02D6DE78A19F90319F518 /* browser_host_ctocpp.cc */; };
 		77C44E47C702069B819917D9 /* appshell_extensions_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95AC844F2FA9D42891B3B718 /* appshell_extensions_mac.mm */; };
 		7A48AE5B9B811E27F6E44D50 /* command_line_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = EB60AE270B721E13CF1126AD /* command_line_ctocpp.cc */; };
+		7B317CA9808D0E8EB3D28FCB /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 40F32D89ED94DDACCD7C74D6 /* MainMenu.xib */; };
 		7D9D3231B501EC01A16FCEDF /* list_value_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = A167053C08AFAC8B2282066C /* list_value_ctocpp.cc */; };
 		831D69597EEDF26A4B6D1752 /* string_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7D96382DCC9DC64414EC6E05 /* string_util.cpp */; };
 		86CF44A268CD098163F82DE0 /* client_handler_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = E93F80CFC491C3C09AFDD87B /* client_handler_mac.mm */; };
@@ -87,7 +89,7 @@
 		A2677862C5ACB18E5619E8B0 /* zip_reader_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4C445BA8F89BC49321A95ABD /* zip_reader_ctocpp.cc */; };
 		A50F0F8DD995B14582D9E510 /* string_visitor_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 728F974FA38A31AFD1EBA1ED /* string_visitor_cpptoc.cc */; };
 		A666E53E510816C52AC77969 /* web_plugin_info_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 0C66A0123DAA2BBD73A2939C /* web_plugin_info_ctocpp.cc */; };
-		AB7F5B6BF2CE329090C7F6E7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A6C96CFAE44706745E1F375C /* InfoPlist.strings */; };
+		A84363385F3428E362A094DB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A6C96CFAE44706745E1F375C /* InfoPlist.strings */; };
 		AC9D4310FC12CFC56366EFC8 /* quota_callback_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = A4257A4F1149784C99C8F42C /* quota_callback_ctocpp.cc */; };
 		B2DA1B5B817A2821493DCE0B /* web_plugin_info_visitor_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 7892D5DE433CE5794C1C52FC /* web_plugin_info_visitor_cpptoc.cc */; };
 		B70D88A96C47FD1C9A07B144 /* domnode_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 7644365DE7CC78D2DEA79A85 /* domnode_ctocpp.cc */; };
@@ -128,10 +130,8 @@
 		EF2701ABE624A80875394EF5 /* load_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = 02CADD4DAEB5003DEC0C3285 /* load_handler_cpptoc.cc */; };
 		EF6AB21EB7A6B1ABF798980D /* resource_util_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 58B75C30D7A89FCDAE335C06 /* resource_util_mac.mm */; };
 		EF8098B3052988F9A5669FE2 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 117371CDDB44775B39107AA8 /* AppKit.framework */; };
-		F2AD7C577B1B278D7CA3437A /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 40F32D89ED94DDACCD7C74D6 /* MainMenu.xib */; };
 		F416EE3E3A51D333AD23EA54 /* menu_model_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 86E19C99BCCDDA939F257FE0 /* menu_model_ctocpp.cc */; };
 		F6C1EA44E245FEC8CF867BFB /* browser_ctocpp.cc in Sources */ = {isa = PBXBuildFile; fileRef = 380F6E9056AE039AA8A492DD /* browser_ctocpp.cc */; };
-		F701C486C69B923DCB075E8A /* brackets.icns in Resources */ = {isa = PBXBuildFile; fileRef = 749E5239635519A330E75891 /* brackets.icns */; };
 		F7962BBCBA53491410BF96B2 /* geolocation_handler_cpptoc.cc in Sources */ = {isa = PBXBuildFile; fileRef = D54DFF5854667E9D9399E732 /* geolocation_handler_cpptoc.cc */; };
 		F82704780E5056A512924BA3 /* appshell_extensions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */; };
 /* End PBXBuildFile section */
@@ -235,6 +235,7 @@
 		0DB6E8CF0676F4D04B961D9E /* xml_reader_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = xml_reader_ctocpp.h; sourceTree = "<group>"; };
 		0F0B5B015FB741304D68B250 /* cef_frame_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_frame_capi.h; sourceTree = "<group>"; };
 		0F2C70569B37286FDD2B333C /* cef_stream_resource_handler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_stream_resource_handler.h; sourceTree = "<group>"; };
+		0F679226CAE5AC8A981F546E /* appshell.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = appshell.icns; sourceTree = "<group>"; };
 		11209664E0495813D6CF3363 /* cef_process_util_capi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_process_util_capi.h; sourceTree = "<group>"; };
 		117371CDDB44775B39107AA8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		11BD41FDAADD41AC4C67ACE1 /* cef_string_multimap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_string_multimap.h; sourceTree = "<group>"; };
@@ -357,7 +358,6 @@
 		73BD18BBE14A6CD1DE6E5E57 /* process_helper_mac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = process_helper_mac.cpp; sourceTree = "<group>"; };
 		73D701875C12409A5CB2C57A /* cef_v8.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cef_v8.h; sourceTree = "<group>"; };
 		74466CF496C01301F55D21A2 /* common.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; name = common.gypi; path = ../cef/chromium/src/build/common.gypi; sourceTree = "<group>"; };
-		749E5239635519A330E75891 /* brackets.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = brackets.icns; sourceTree = "<group>"; };
 		7590A687CA84D82F1AA48562 /* cookie_manager_ctocpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cookie_manager_ctocpp.h; sourceTree = "<group>"; };
 		75E06D66214371724B2F925A /* before_download_callback_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = before_download_callback_ctocpp.cc; sourceTree = "<group>"; };
 		7644365DE7CC78D2DEA79A85 /* domnode_ctocpp.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = domnode_ctocpp.cc; sourceTree = "<group>"; };
@@ -830,7 +830,7 @@
 		4FFABAA881FC53425477E934 /* appshell */ = {
 			isa = PBXGroup;
 			children = (
-				7618CB71D30E7C12D9C55B32 /* mac */,
+				6099BEA5C8145C7BA7070D36 /* mac */,
 				F41FB3563A8DCA978ABCB8F0 /* appshell_extensions.cpp */,
 				2C6200DAA24D72696664A534 /* appshell_extensions.h */,
 				F7EB475CDCCC2A30AF8D4A0C /* appshell_extensions.js */,
@@ -910,6 +910,17 @@
 			path = capi;
 			sourceTree = "<group>";
 		};
+		6099BEA5C8145C7BA7070D36 /* mac */ = {
+			isa = PBXGroup;
+			children = (
+				ADAED968E71A7516652B8254 /* Info.plist */,
+				A6C96CFAE44706745E1F375C /* InfoPlist.strings */,
+				40F32D89ED94DDACCD7C74D6 /* MainMenu.xib */,
+				0F679226CAE5AC8A981F546E /* appshell.icns */,
+			);
+			path = mac;
+			sourceTree = "<group>";
+		};
 		7271D6A44478BC96D6BB2BBA /* CONFIGURATION */ = {
 			isa = PBXGroup;
 			children = (
@@ -917,17 +928,6 @@
 			);
 			name = CONFIGURATION;
 			sourceTree = CONFIGURATION;
-		};
-		7618CB71D30E7C12D9C55B32 /* mac */ = {
-			isa = PBXGroup;
-			children = (
-				ADAED968E71A7516652B8254 /* Info.plist */,
-				A6C96CFAE44706745E1F375C /* InfoPlist.strings */,
-				40F32D89ED94DDACCD7C74D6 /* MainMenu.xib */,
-				749E5239635519A330E75891 /* brackets.icns */,
-			);
-			path = mac;
-			sourceTree = "<group>";
 		};
 		7964EE7D45B92778B3E35497 /* Source */ = {
 			isa = PBXGroup;
@@ -1092,9 +1092,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F701C486C69B923DCB075E8A /* brackets.icns in Resources */,
-				AB7F5B6BF2CE329090C7F6E7 /* InfoPlist.strings in Resources */,
-				F2AD7C577B1B278D7CA3437A /* MainMenu.xib in Resources */,
+				3F06970E3993F876A4F16315 /* appshell.icns in Resources */,
+				A84363385F3428E362A094DB /* InfoPlist.strings in Resources */,
+				7B317CA9808D0E8EB3D28FCB /* MainMenu.xib in Resources */,
 				D6449132FF34CBD39EF0E24E /* appshell_extensions.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

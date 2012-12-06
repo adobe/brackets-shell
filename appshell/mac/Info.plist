@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
-	<string>brackets.icns</string>
+	<string>appshell.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.brackets.appshell</string>
 	<key>CFBundleInfoDictionaryVersion</key>
