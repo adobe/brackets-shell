@@ -103,6 +103,7 @@
     'appshell_sources_win': [
       'appshell/appshell_extensions_win.cpp',
       'appshell/cefclient.rc',
+      'appshell/version.rc',
       'appshell/cefclient_win.cpp',
       'appshell/client_app_win.cpp',
       'appshell/client_handler_win.cpp',
