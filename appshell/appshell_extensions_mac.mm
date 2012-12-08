@@ -331,6 +331,10 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
     NSError* error = nil;
     
+    if ([pathStr length] == 0) {
+      return ERR_INVALID_PARAMS;
+    }
+
     NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:pathStr error:&error];
     
     if (contents != nil)
