@@ -122,7 +122,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
-  MyRegisterClass(hInstance, settings.locale);
+  MyRegisterClass(hInstance, *(app->GetCurrentLanguage().GetStruct()));
  
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
@@ -183,8 +183,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Temporary localization hack. Default to English. Check for French.
   DWORD menuId = IDC_CEFCLIENT;
-  if (settings.locale.str && (settings.locale.length > 0) &&
-      (CefString(settings.locale.str) == CefString("fr-FR")))
+  if (app->GetCurrentLanguage() == CefString("fr-FR"))
   {
 	  menuId = IDC_CEFCLIENT_FR;
   }

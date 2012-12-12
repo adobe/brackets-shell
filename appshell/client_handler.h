@@ -191,6 +191,7 @@ class ClientHandler : public CefClient,
 
   void QuittingApp(bool quitting) { m_quitting = quitting; }
   bool AppIsQuitting() { return m_quitting; }
+  bool HasWindows() const { return !browser_window_map_.empty(); }
 
  protected:
   void SetLoading(bool isLoading);
