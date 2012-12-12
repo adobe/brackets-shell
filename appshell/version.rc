@@ -64,5 +64,5 @@ BEGIN
     END
 END
 
-#endif 
+#endif // !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 
