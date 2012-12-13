@@ -18,27 +18,26 @@
 
 # Make sure BRACKETS_SRC environment variable is set
 if [ "$BRACKETS_SRC" = "" ]; then
-  echo "The BRACKETS_SRC environment variable must be set to the location of the Brackets source folder. Aborting."
-  exit
+    echo "The BRACKETS_SRC environment variable must be set to the location of the Brackets source folder. Aborting."
+    exit
 fi
 
 # Default the app name to "Brackets", but override with $BRACKETS_APP_NAME if set
 if [ "$BRACKETS_APP_NAME" = "" ]; then
-  export BRACKETS_APP_NAME="Brackets"
+    export BRACKETS_APP_NAME="Brackets"
 fi
 
 # Default the branches to "master"
 # You can set either branch name to "NO_FETCH" to skip the checkout and fetching for that repo
 if [ "$BRACKETS_SHELL_BRANCH" = "" ]; then
-  export BRACKETS_SHELL_BRANCH="master"
+    export BRACKETS_SHELL_BRANCH="master"
 fi
 if [ "$BRACKETS_BRANCH" = "" ]; then
-  export BRACKETS_BRANCH="master"
+    export BRACKETS_BRANCH="master"
 fi
 
-# Pull the latest code
-curDir=`pwd`
-cd "$BRACKETS_SRC"
+# Pull the latest brackets code
+pushd "$BRACKETS_SRC"
 if [ "$BRACKETS_BRANCH" != "NO_FETCH" ]; then
     git checkout "$BRACKETS_BRANCH"
     git pull origin "$BRACKETS_BRANCH"
@@ -46,9 +45,14 @@ if [ "$BRACKETS_BRANCH" != "NO_FETCH" ]; then
 else
     echo "Skipping fetch for brackets repo"
 fi
-build_num=`git log --oneline | wc -l | tr -d ' '`
+# Calculate the build number if it's not already set.
+if [ "$BRACKETS_BUILD_NUM" = "" ]; then
+    export BRACKETS_BUILD_NUM=`git log --oneline | wc -l | tr -d ' '`
+fi
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
-cd $curDir
+popd
+
+# Pull the latest brackets-shell code
 if [ "$BRACKETS_SHELL_BRANCH" != "NO_FETCH" ]; then
     git checkout "$BRACKETS_SHELL_BRANCH"
     git pull origin "$BRACKETS_SHELL_BRANCH"
@@ -95,7 +99,7 @@ fi
 
 # Set the build number, branch and sha on the staged build
 cat "$packageLocation/package.json" \
-|   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$build_num\3:" \
+|   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
 |   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$BRACKETS_BRANCH\3:" \
 |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
 > tmp_package_json.txt
