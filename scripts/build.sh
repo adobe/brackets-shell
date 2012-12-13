@@ -27,6 +27,7 @@ if [ "$BRACKETS_APP_NAME" = "" ]; then
 fi
 
 # Default the branches to "master"
+# You can set either branch name to "NO_FETCH" to skip the fetching for that repo
 if [ "$BRACKETS_SHELL_BRANCH" = "" ]; then
   export BRACKETS_SHELL_BRANCH="master"
 fi
@@ -37,14 +38,22 @@ fi
 # Pull the latest code
 curDir=`pwd`
 cd "$BRACKETS_SRC"
-git checkout "$BRACKETS_BRANCH"
-git pull origin "$BRACKETS_BRANCH"
-git submodule update --init --recursive
+if [ "$BRACKETS_BRANCH" != "NO_FETCH" ]; then
+    git checkout "$BRACKETS_BRANCH"
+    git pull origin "$BRACKETS_BRANCH"
+    git submodule update --init --recursive
+else
+    echo "Skipping fetch for brackets repo"
+fi
 build_num=`git log --oneline | wc -l | tr -d ' '`
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
 cd $curDir
-git checkout "$BRACKETS_SHELL_BRANCH"
-git pull origin "$BRACKETS_SHELL_BRANCH"
+if [ "$BRACKETS_SHELL_BRANCH" != "NO_FETCH" ]; then
+    git checkout "$BRACKETS_SHELL_BRANCH"
+    git pull origin "$BRACKETS_SHELL_BRANCH"
+else
+    echo "Skipping fetch for brackets-shell repo"
+fi
 
 os=${OSTYPE//[0-9.]/}
 
