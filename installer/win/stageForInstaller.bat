@@ -90,19 +90,19 @@ del shell_excludes.tmp
 echo Copying brackets source from %BRACKETS_SRC%\src ...
 
 echo .git > www_excludes.tmp
-xcopy %BRACKETS_SRC%\src staging\www /s /i /exclude:www_excludes.tmp
+xcopy "%BRACKETS_SRC%\src" staging\www /s /i /exclude:www_excludes.tmp
 del www_excludes.tmp
 
 
 :: Copy BRACKETS_SRC\samples to staging\samples
 echo Copying sample content from %BRACKETS_SRC%\samples ...
 
-xcopy %BRACKETS_SRC%\samples staging\samples /s /i
+xcopy "%BRACKETS_SRC%\samples" staging\samples /s /i
 
 
 
 echo.
-echo Done staging Brackets for Windows! (Ready to run setBuildNumber.sh and then build the installer)
+echo Done staging Brackets for Windows! (Ready to build the installer)
 
 GOTO END
 
