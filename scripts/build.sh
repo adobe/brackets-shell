@@ -13,7 +13,8 @@
 #   name of the application. (This should match the app name built
 #   by the gyp project, and need not match the final installed build name.)
 # - Optionally, set BRACKETS_SHELL_BRANCH and BRACKETS_BRANCH
-#   to the branches you want to build.
+#   to the branches you want to build. You can set either of these to 
+#   NO_FETCH to skip the checkout and fetching for that repo.
 
 # Make sure BRACKETS_SRC environment variable is set
 if [ "$BRACKETS_SRC" = "" ]; then
@@ -27,7 +28,7 @@ if [ "$BRACKETS_APP_NAME" = "" ]; then
 fi
 
 # Default the branches to "master"
-# You can set either branch name to "NO_FETCH" to skip the fetching for that repo
+# You can set either branch name to "NO_FETCH" to skip the checkout and fetching for that repo
 if [ "$BRACKETS_SHELL_BRANCH" = "" ]; then
   export BRACKETS_SHELL_BRANCH="master"
 fi
