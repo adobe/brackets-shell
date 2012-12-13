@@ -102,7 +102,7 @@ xcopy "%BRACKETS_SRC%\samples" staging\samples /s /i
 
 
 echo.
-echo Done staging Brackets for Windows! (Ready to run setBuildNumber.sh and then build the installer)
+echo Done staging Brackets for Windows! (Ready to build the installer)
 
 GOTO END
 
