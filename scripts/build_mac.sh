@@ -1,3 +1,6 @@
+# IMPORTANT: THIS FILE WILL BE GOING AWAY SOON! USE scripts/build.sh INSTEAD! 
+# YOU HAVE BEEN WARNED!
+
 # SETUP
 # - Install xcode
 # - Install xcode command line tools 
