@@ -937,8 +937,8 @@
 #    'sas_dll_exists': '<!(python <(DEPTH)/build/dir_exists.py <(sas_dll_path))',
 #    'wix_exists': '<!(python <(DEPTH)/build/dir_exists.py <(wix_path))',
 
-#    'windows_sdk_default_path': '<(DEPTH)/third_party/platformsdk_win8/files',
-#    'directx_sdk_default_path': '<(DEPTH)/third_party/directxsdk/files',
+     'windows_sdk_default_path': '<(DEPTH)/third_party/platformsdk_win8/files',
+     'directx_sdk_default_path': '<(DEPTH)/third_party/directxsdk/files',
 
     # Whether rlz is enabled.
     'enable_rlz%': 0,
@@ -951,10 +951,11 @@
          'windows_sdk_path%': 'C:/Program Files (x86)/Windows Kits/8.0',
        }],
  #     ['OS=="win" and "<!(python <(DEPTH)/build/dir_exists.py <(directx_sdk_default_path))"=="True"', {
- #       'directx_sdk_path%': '<(directx_sdk_default_path)',
- #     }, {
- #       'directx_sdk_path%': '$(DXSDK_DIR)',
- #     }],
+       ['OS=="win"', {
+         'directx_sdk_path%': '<(directx_sdk_default_path)',
+       }, {
+         'directx_sdk_path%': '$(DXSDK_DIR)',
+       }],
       ['OS=="win"', {
         'windows_driver_kit_path%': '$(WDK_DIR)',
       }],
