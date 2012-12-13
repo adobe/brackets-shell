@@ -1,3 +1,6 @@
+# NOTE: THIS SCRIPT WILL BE GOING AWAY SOON. IT HAS BEEN SUPERSEDED BY 
+# /scripts/build.sh
+#
 # Injects the build number, branch, and SHA into the staged package.json file.
 #
 # INSTRUCTIONS FOR RUNNING
