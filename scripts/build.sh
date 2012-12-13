@@ -66,7 +66,27 @@ if [ "$os" = "darwin" ]; then # Building on mac
     # Copy to installer staging folder
     cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
     packageLocation="installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
+
+elif [ "$os" = "msys" ]; then # Building on Windows
+
+    # Clean and build the Visual Studio project
+    cmd /k "scripts\build_projects.bat"
+
+    # Stage files for installer
+    echo "cd installer/win
+    call stageForInstaller.bat
+    cd ../..
+    exit" > temp_staging.bat
+    cmd /k temp_staging.bat
+    rm temp_staging.bat
+
+    packageLocation="installer/win/staging/www"
+
+else 
+    echo "Unknown platform \"$os\". I don't know how to build this."
+    exit;
 fi
+
 
 # Set the build number, branch and sha on the staged build
 cat "$packageLocation/package.json" \
@@ -80,4 +100,6 @@ mv tmp_package_json.txt "$packageLocation/package.json"
 if [ "$os" = "darwin" ]; then # Build mac installer
     cd installer/mac
     ./buildInstaller.sh
+
+# TODO: Build windows installer
 fi
