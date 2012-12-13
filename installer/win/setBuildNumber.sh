@@ -1,5 +1,5 @@
 # NOTE: THIS SCRIPT WILL BE GOING AWAY SOON. IT HAS BEEN SUPERSEDED BY 
-# /scripts/build_win.sh
+# /scripts/build.sh
 #
 # Injects the build number, branch, and SHA into the staged package.json file.
 #
