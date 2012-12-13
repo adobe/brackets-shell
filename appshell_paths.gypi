@@ -157,7 +157,6 @@
       '$(BUILDTYPE)/locales',
       'appshell/res/brackets.ico',
       '$(BUILDTYPE)/cef.pak',
-      '$(BUILDTYPE)/cef_resources.pak',
       '$(BUILDTYPE)/devtools_resources.pak',
     ],
     'appshell_bundle_libraries_linux': [
