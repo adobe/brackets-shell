@@ -73,12 +73,7 @@ elif [ "$os" = "msys" ]; then # Building on Windows
     cmd /k "scripts\build_projects.bat"
 
     # Stage files for installer
-    echo "cd installer/win
-    call stageForInstaller.bat
-    cd ../..
-    exit" > temp_staging.bat
-    cmd /k temp_staging.bat
-    rm temp_staging.bat
+    cmd /k "scripts\stage_for_installer.bat"
 
     packageLocation="installer/win/staging/www"
 
