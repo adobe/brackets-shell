@@ -42,6 +42,22 @@ else
     echo "$zipName" > "$root_dir/deps/cef/$zipName.txt"
     
     # Make the symlinks
-    "$root_dir/scripts/make_symlinks.sh"
+    pushd "$root_dir"
+    if [ "$os" = "msys" ]; then
+        # Call batch file to make directory junctions
+        cmd /k "scripts\make_symlinks.bat"
+    else
+        # Make symlinks to deps/cef directories
+        ln -s deps/cef/Debug/ Debug
+        ln -s deps/cef/include/ include
+        ln -s deps/cef/libcef_dll/ libcef_dll
+        ln -s deps/cef/Release/ Release
+        ln -s deps/cef/Resources/ Resources
+        ln -s deps/cef/tools/ tools
+
+        # Make sure scripts in deps/cef/tools are executable
+        chmod u+x deps/cef/tools/*
+    fi
+    popd
 fi
 
