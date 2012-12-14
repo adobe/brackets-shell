@@ -50,6 +50,7 @@ if [ "$BRACKETS_BUILD_NUM" = "" ]; then
     export BRACKETS_BUILD_NUM=`git log --oneline | wc -l | tr -d ' '`
 fi
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
+brackets_branch_name=`git status | head -1 | sed -e 's/# On branch \(.*\)/\1/'`
 popd
 
 # Pull the latest brackets-shell code
@@ -100,7 +101,7 @@ fi
 # Set the build number, branch and sha on the staged build
 cat "$packageLocation/package.json" \
 |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
-|   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$BRACKETS_BRANCH\3:" \
+|   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_branch_name\3:" \
 |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
 > tmp_package_json.txt
 mv tmp_package_json.txt "$packageLocation/package.json"
