@@ -3,7 +3,7 @@
 os=${OSTYPE//[0-9.]/}
 
 # Build the project
-echo "Building xcode project."
+echo "Building project files"
 gyp/gyp appshell.gyp -I common.gypi --depth=.
 
 if [ "$os" = "darwin" ]; then
