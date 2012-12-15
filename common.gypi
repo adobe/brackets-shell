@@ -3522,7 +3522,7 @@
             'msvs_settings': {
               'VCLinkerTool': {
                 # Explicitly required when using the ATL with express
-                'AdditionalDependencies': ['atlthunk.lib'],
+                #'AdditionalDependencies': ['atlthunk.lib'],
 
                 # ATL 8.0 included in WDK 7.1 makes the linker to generate
                 # almost eight hundred LNK4254 and LNK4078 warnings:
