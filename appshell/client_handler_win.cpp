@@ -9,6 +9,8 @@
 #include "include/cef_frame.h"
 #include "resource.h"
 
+#include <ShellAPI.h>
+
 #define CLOSING_PROP L"CLOSING"
 
 // The global ClientHandler reference.
