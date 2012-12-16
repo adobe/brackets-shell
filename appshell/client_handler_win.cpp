@@ -14,6 +14,10 @@
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
+// WM_DROPFILES handler, defined in cefclient_win.cpp
+extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
+
+
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,
                                   CefWindowInfo& windowInfo,
@@ -149,6 +153,12 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
  		return 0;
       }
       break;
+
+    case WM_DROPFILES:
+      if (g_handler.get() && browser.get()) {
+        return HandleDropFiles((HDROP)wParam, g_handler, browser);
+      }
+      break;
   }
 
   if (g_popupWndOldProc) 
@@ -202,6 +212,7 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
     HWND hWnd = browser->GetHost()->GetWindowHandle();
     AttachWindProcToPopup(hWnd);
     LoadWindowsIcons(hWnd);
+    DragAcceptFiles(hWnd, true);
     browser->GetHost()->SetFocus(true);
 }
 
