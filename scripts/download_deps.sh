@@ -14,10 +14,11 @@ root_dir=${full_path%/*/*}
 
 #### CEF
 
+cefVersion="3.1180.823"
 if [ "$os" = "darwin" ]; then # Building on mac
-    zipName="cef_binary_3.1180.823_macosx"
+    zipName="cef_binary_""$cefVersion""_macosx"
 elif [ "$os" = "msys" ]; then # Building on win
-    zipName="cef_binary_3.1180.823_windows"
+    zipName="cef_binary_""$cefVersion""_windows"
 fi
 
 # See if we already have the correct version
@@ -47,6 +48,8 @@ else
         # Call batch file to make directory junctions
         cmd /k "scripts\make_symlinks.bat"
     else
+        rm Debug include libcef_dll Release Resources tools
+        
         # Make symlinks to deps/cef directories
         ln -s deps/cef/Debug/ Debug
         ln -s deps/cef/include/ include
