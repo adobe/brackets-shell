@@ -82,10 +82,10 @@ private:
     LiveBrowserMgrWin();
     virtual ~LiveBrowserMgrWin();
 
-    UINT							m_closeLiveBrowserHeartbeatTimerId;
-    UINT							m_closeLiveBrowserTimeoutTimerId;
-    CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
-    CefRefPtr<CefBrowser>			m_browser;
+    UINT                            m_closeLiveBrowserHeartbeatTimerId;
+    UINT                            m_closeLiveBrowserTimeoutTimerId;
+    CefRefPtr<CefProcessMessage>    m_closeLiveBrowserCallback;
+    CefRefPtr<CefBrowser>           m_browser;
 
     static LiveBrowserMgrWin* s_instance;
 };
@@ -505,6 +505,42 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                 selectedFiles->SetString(0, szFile);
             }
         }
+    }
+
+    return NO_ERROR;
+}
+
+int32 ShowSaveDialog(ExtensionString title,
+                     ExtensionString initialDirectory,
+                     ExtensionString fileTypes,
+                     ExtensionString& selectedFile)
+{
+    wchar_t* szFile = new wchar_t[MAX_PATH];
+
+    // ofn.lpstrInitialDir needs Windows path on XP and not Unix path.
+    ConvertToNativePath(initialDirectory);
+    wcscpy(szFile, initialDirectory.c_str());
+
+    OPENFILENAME ofn;
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.hwndOwner = GetActiveWindow();
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+
+    // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
+    /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
+    LPCWSTR allFilesFilter = L"All Files\0*.*\0\0";*/
+
+    ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0\0";
+       
+    ofn.lpstrInitialDir = initialDirectory.c_str();
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR | OFN_EXPLORER;
+
+    selectedFile = L"";
+    if (GetSaveFileName(&ofn)) {
+        selectedFile = szFile;
     }
 
     return NO_ERROR;

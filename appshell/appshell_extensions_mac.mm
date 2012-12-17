@@ -326,6 +326,45 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     return NO_ERROR;
 }
 
+int32 ShowSaveDialog(ExtensionString title,
+                     ExtensionString initialDirectory,
+                     ExtensionString fileTypes,
+                     ExtensionString& selectedFile)
+{
+    NSArray* allowedFileTypes = nil;
+    
+    if (fileTypes != "")
+    {
+        // fileTypes is a Space-delimited string
+        allowedFileTypes = 
+        [[NSString stringWithUTF8String:fileTypes.c_str()] 
+         componentsSeparatedByString:@" "];
+    }
+    
+    selectedFile = "";
+    
+    // Initialize the dialog
+    NSSavePanel* savePanel = [NSSavePanel savePanel];
+    [savePanel setCanCreateDirectories: YES];
+    [savePanel setShowsHiddenFiles: YES];
+    [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
+    
+    if (initialDirectory != "")
+        [savePanel setDirectoryURL:[NSURL URLWithString:[NSString stringWithUTF8String:initialDirectory.c_str()]]];
+    
+    [savePanel setAllowedFileTypes:allowedFileTypes];
+    
+    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+    
+    if ([savePanel runModal] == NSOKButton)
+    {
+        selectedFile = [[[savePanel URL] path] UTF8String];
+    }
+    [NSApp endSheet:savePanel];
+    
+    return NO_ERROR;
+}
+
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
