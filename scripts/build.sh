@@ -51,6 +51,9 @@ if [ "$BRACKETS_BUILD_NUM" = "" ]; then
 fi
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
 brackets_branch_name=`git status | head -1 | sed -e 's/# On branch \(.*\)/\1/'`
+if [ "$brackets_branch_name" = "# Not currently on any branch." ]; then
+    brackets_branch_name="SHA"
+fi
 popd
 
 # Pull the latest brackets-shell code
