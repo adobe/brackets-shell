@@ -5,8 +5,8 @@
 # SETUP - WIN
 # - Install Visual Studio 2010 (Express is fine)
 # SETUP - COMMON
-# - Setup source directories as specified in README.md
-#   (copy CEF binary, run scripts/make_symlinks.sh, etc.)
+# - Run scripts/setup.sh from a Bash prompt (Terminal on Mac,
+#   GitBash on Windows).
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
 # - Optionally, set BRACKETS_APP_NAME environment variable with the 
