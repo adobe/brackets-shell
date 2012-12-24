@@ -558,3 +558,17 @@ CefString AppGetCachePath() {
   
   return CefString(cachePath);
 }
+
+CefString AppGetProductVersionString() {
+  NSMutableString *s = [[NSMutableString alloc] initWithString:APP_NAME];
+  [s replaceOccurrencesOfString:@" "
+                     withString:@""
+                        options:NSLiteralSearch
+                          range:NSMakeRange(0, [s length])];
+  [s appendString:@"/"];
+  [s appendString:(NSString*)[[NSBundle mainBundle]
+                              objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
+  CefString result = CefString([s UTF8String]);
+  [s dealloc];
+  return result;
+}
