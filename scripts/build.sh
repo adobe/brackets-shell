@@ -5,8 +5,8 @@
 # SETUP - WIN
 # - Install Visual Studio 2010 (Express is fine)
 # SETUP - COMMON
-# - Setup source directories as specified in README.md
-#   (copy CEF binary, run scripts/make_symlinks.sh, etc.)
+# - Run scripts/setup.sh from a Bash prompt (Terminal on Mac,
+#   GitBash on Windows).
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
 # - Optionally, set BRACKETS_APP_NAME environment variable with the 
@@ -51,6 +51,9 @@ if [ "$BRACKETS_BUILD_NUM" = "" ]; then
 fi
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
 brackets_branch_name=`git status | head -1 | sed -e 's/# On branch \(.*\)/\1/'`
+if [ "$brackets_branch_name" = "# Not currently on any branch." ]; then
+    brackets_branch_name="SHA"
+fi
 popd
 
 # Pull the latest brackets-shell code
