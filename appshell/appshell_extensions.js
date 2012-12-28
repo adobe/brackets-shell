@@ -327,9 +327,9 @@ if (!appshell.app) {
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
-    native function DeleteFileOrDirectoryToTrash();
+    native function MoveFileOrDirectoryToTrash();
     appshell.fs.moveToTrash = function (path, callback) {
-        DeleteFileOrDirectoryToTrash(callback, path);
+        MoveFileOrDirectoryToTrash(callback, path);
     };    
 
     /**

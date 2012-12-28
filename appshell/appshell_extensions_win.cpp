@@ -690,7 +690,7 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
-int32 DeleteFileOrDirectoryToTrash(ExtensionString filename)
+int32 MoveFileOrDirectoryToTrash(ExtensionString filename)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
@@ -702,10 +702,25 @@ int32 DeleteFileOrDirectoryToTrash(ExtensionString filename)
     operation.pFrom = filename.c_str();
     operation.fFlags = FOF_ALLOWUNDO;
 
-    if (SHFileOperation(&operation))
-        return ConvertWinErrorCode(GetLastError());
+    int result = SHFileOperation(&operation);
 
-    return NO_ERROR;
+    switch( result ) {
+        case NO_ERROR:
+            return NO_ERROR;
+        case DE_ROOTDIR:
+        case DE_ACCESSDENIEDSRC:            
+        case DE_SRC_IS_CDROM:            
+        case DE_SRC_IS_DVD:            
+        case DE_SRC_IS_CDRECORD:            
+            return ERROR_ACCESS_DENIED;
+        case DE_INVALIDFILES:        
+            return ERROR_WRITE_PROTECT;
+        case DE_FILE_TOO_LARGE:
+            return ERROR_HANDLE_DISK_FULL;
+        default:
+            return ERR_UNKNOWN;
+        }            
+    }
 }
 
 void OnBeforeShutdown()

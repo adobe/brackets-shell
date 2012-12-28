@@ -82,7 +82,7 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
 
-int32 DeleteFileOrDirectoryToTrash(ExtensionString filename);
+int32 MoveFileOrDirectoryToTrash(ExtensionString filename);
 
 void OnBeforeShutdown();
 

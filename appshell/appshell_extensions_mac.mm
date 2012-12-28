@@ -475,7 +475,7 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 DeleteFileOrDirectoryToTrash(ExtensionString filename)
+int32 MoveFileOrDirectoryToTrash(ExtensionString filename)
 {
     NSError* error = nil;
     
