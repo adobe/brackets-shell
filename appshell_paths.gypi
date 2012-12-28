@@ -103,11 +103,12 @@
     'appshell_sources_win': [
       'appshell/appshell_extensions_win.cpp',
       'appshell/cefclient.rc',
+      'appshell/version.rc',
       'appshell/cefclient_win.cpp',
       'appshell/client_app_win.cpp',
       'appshell/client_handler_win.cpp',
       'appshell/resource.h',
-      'appshell/res/brackets.ico',
+      'appshell/res/appshell.ico',
       'appshell/resource_util_win.cpp',
     ],
     'appshell_sources_mac': [
@@ -138,7 +139,7 @@
       'appshell/util.h',
     ],
     'appshell_bundle_resources_mac': [
-      'appshell/mac/brackets.icns',
+      'appshell/mac/appshell.icns',
       'appshell/mac/English.lproj/InfoPlist.strings',
       'appshell/mac/English.lproj/MainMenu.xib',
       'appshell/mac/French.lproj/InfoPlist.strings',

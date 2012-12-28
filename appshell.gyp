@@ -4,7 +4,6 @@
 
 {
   'variables': {
-    'appname': 'Brackets',
     'chromium_code': 1,
     'conditions': [
       [ 'OS=="mac"', {
@@ -14,6 +13,8 @@
     ]
   },
   'includes': [
+    # Bring in the configuration vars
+    'appshell_config.gypi',
     # Bring in the source file lists for appshell.
     'appshell_paths.gypi',
   ],
