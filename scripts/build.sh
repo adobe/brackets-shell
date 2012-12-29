@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # SETUP - MAC
 # - Install xcode
 # - Install xcode command line tools 
