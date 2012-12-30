@@ -284,9 +284,9 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     NSString* js;
     
     if([[NSFileManager defaultManager] fileExistsAtPath:file isDirectory:&isDir] && isDir){
-        js = [NSString stringWithFormat:@"(function() {  ProjectManager = require('project/ProjectManager'); ProjectManager.openProject('%@') })();", file];
+        js = [NSString stringWithFormat:@"(function() { var ProjectManager = require('project/ProjectManager'); ProjectManager.openProject('%@') })();", file];
     } else {
-        js = [NSString stringWithFormat:@"(function() { FileViewController = require('project/FileViewController'); FileViewController.openAndSelectDocument('%@', FileViewController.WORKING_SET_VIEW) })();", file];
+        js = [NSString stringWithFormat:@"(function() { var FileViewController = require('project/FileViewController'); FileViewController.openAndSelectDocument('%@', FileViewController.WORKING_SET_VIEW) })();", file];
     }
 
     const char* fileString = [js cStringUsingEncoding:NSASCIIStringEncoding];
