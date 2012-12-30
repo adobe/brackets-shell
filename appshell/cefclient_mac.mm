@@ -18,6 +18,7 @@
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 #include "client_switches.h"
+#include "appshell_extensions_platform.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -76,6 +77,7 @@ static NSAutoreleasePool* g_autopool = nil;
 - (void)setIsReallyClosing;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
+
 #ifdef SHOW_TOOLBAR_UI
 - (IBAction)goBack:(id)sender;
 - (IBAction)goForward:(id)sender;
@@ -116,6 +118,9 @@ static NSAutoreleasePool* g_autopool = nil;
   */
   g_handler->DispatchCloseToNextBrowser();
 }
+
+
+
 
 #ifdef SHOW_TOOLBAR_UI
 - (IBAction)goBack:(id)sender {
@@ -262,9 +267,33 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
 - (void)createApp:(id)object;
+- (BOOL)processFile:(NSString *)file;
 @end
 
 @implementation ClientAppDelegate
+
+
+- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
+{
+    return [self processFile:filename];
+}
+
+- (BOOL)processFile:(NSString *)file
+{
+    BOOL isDir;
+    NSString* js;
+    
+    if([[NSFileManager defaultManager] fileExistsAtPath:file isDirectory:&isDir] && isDir){
+        js = [NSString stringWithFormat:@"(function() {  ProjectManager = require('project/ProjectManager'); ProjectManager.openProject('%@') })();", file];
+    } else {
+        js = [NSString stringWithFormat:@"(function() { FileViewController = require('project/FileViewController'); FileViewController.openAndSelectDocument('%@', FileViewController.WORKING_SET_VIEW) })();", file];
+    }
+
+    const char* fileString = [js cStringUsingEncoding:NSASCIIStringEncoding];
+    g_handler->GetBrowser()->GetMainFrame()->ExecuteJavaScript(fileString, "about:blank", 0);
+
+    return  YES; 
+}
 
 // Create the application on the UI thread.
 - (void)createApp:(id)object {
