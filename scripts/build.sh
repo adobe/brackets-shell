@@ -66,6 +66,9 @@ else
     echo "Skipping fetch for brackets-shell repo"
 fi
 
+# Rebuild project files after potentially checking out new code
+scripts/make_appshell_project.sh
+
 os=${OSTYPE//[0-9.]/}
 
 if [ "$os" = "darwin" ]; then # Building on mac
