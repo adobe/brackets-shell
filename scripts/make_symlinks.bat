@@ -28,3 +28,4 @@ ECHO manually place the results in brackets-shell\Release.
 
 
 :Exit
+exit /b

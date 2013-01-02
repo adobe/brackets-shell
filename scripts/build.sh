@@ -88,10 +88,10 @@ if [ "$os" = "darwin" ]; then # Building on mac
 elif [ "$os" = "msys" ]; then # Building on Windows
 
     # Clean and build the Visual Studio project
-    cmd /k "scripts\build_projects.bat"
+    cmd.exe /c "scripts\build_projects.bat"
 
     # Stage files for installer
-    cmd /k "scripts\stage_for_installer.bat"
+    cmd.exe /c "scripts\stage_for_installer.bat"
 
     packageLocation="installer/win/staging/www"
 
