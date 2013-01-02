@@ -4,4 +4,4 @@
 call "%VS100COMNTOOLS%/vsvars32.bat"
 msbuild.exe appshell.sln /t:Clean /p:Platform=Win32 /p:Configuration=Release
 msbuild.exe appshell.sln /t:Build /p:Platform=Win32 /p:Configuration=Release
-exit
+exit /b
