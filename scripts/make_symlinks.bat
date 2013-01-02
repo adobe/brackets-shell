@@ -5,6 +5,9 @@ REM   Running it on XP may delete the entire Brackets repo if 'Release\dev' is a
 ver | findstr /i "5\.1\." > nul
 IF %ERRORLEVEL% EQU 0 GOTO XPNotSupported
 
+REM Remove existing links to dev folder
+rmdir Release\dev
+rmdir Debug\dev
 
 REM Remove existing links
 rmdir Debug include lib libcef_dll Release
@@ -25,3 +28,4 @@ ECHO manually place the results in brackets-shell\Release.
 
 
 :Exit
+exit /b

@@ -46,7 +46,7 @@ else
     pushd "$root_dir"
     if [ "$os" = "msys" ]; then
         # Call batch file to make directory junctions
-        cmd /k "scripts\make_symlinks.bat"
+        cmd.exe /c "scripts\make_symlinks.bat"
     else
         rm Debug include libcef_dll Release Resources tools
         
