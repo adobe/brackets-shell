@@ -23,6 +23,19 @@
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
+	<string>NSApplication</string>    
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.plain-text</string>
+                <string>com.netscape.javascript-​source</string>
+                <string>public.folder</string>
+                <string>public.html</string>
+                <string>public.source-code</string>
+            </array>
+        </dict>        
+    </array>    
 </dict>
 </plist>
