@@ -40,6 +40,17 @@
 #define WINDOW_TITLE APP_NAME
 #endif
 
+// Product version string that gets added to the end of the user agent
+// TODO: Ideally, this would include a version number in addition to the
+// product name (something like "Brackets/0.18.0"). But, we don't currently
+// have a good cross-platform way to get appshell version numbers into
+// the build process. Once we do, we should change this.
+// Filed as bug #2442
+#ifndef PRODUCT_VERSION_STRING
+#define PRODUCT_VERSION_STRING "Brackets"
+#endif
+
+#define REMOTE_DEBUGGING_PORT 9234
 
 // Un-comment this line to show the toolbar UI at the top of the appshell window
 // #define SHOW_TOOLBAR_UI
