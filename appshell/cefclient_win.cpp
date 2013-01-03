@@ -853,3 +853,58 @@ CefString AppGetCachePath() {
 
   return CefString(cachePath);
 }
+
+// Helper function for AppGetProductVersionString. Reads version info from
+// VERSIONINFO and writes it into the passed in std::wstring.
+void GetFileVersionString(std::wstring &retVersion) {
+  DWORD dwSize = 0;
+  BYTE *pVersionInfo = NULL;
+  VS_FIXEDFILEINFO *pFileInfo = NULL;
+  UINT pLenFileInfo = 0;
+
+  HMODULE module = GetModuleHandle(NULL);
+  TCHAR executablePath[MAX_PATH];
+  GetModuleFileName(module, executablePath, MAX_PATH);
+
+  dwSize = GetFileVersionInfoSize(executablePath, NULL);
+  if (dwSize == 0) {
+    return;
+  }
+
+  pVersionInfo = new BYTE[dwSize];
+
+  if (!GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo)) 	{
+    delete[] pVersionInfo;
+    return;
+  }
+
+  if (!VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo)) {
+    delete[] pVersionInfo;
+    return;
+  }
+
+  int major  = (pFileInfo->dwFileVersionMS >> 16) & 0xffff ;
+  int minor  = (pFileInfo->dwFileVersionMS) & 0xffff;
+  int hotfix = (pFileInfo->dwFileVersionLS >> 16) & 0xffff;
+  int other  = (pFileInfo->dwFileVersionLS) & 0xffff;
+
+  delete[] pVersionInfo;
+
+  std::wostringstream versionStream(L"");
+  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
+  retVersion = versionStream.str();
+}
+
+CefString AppGetProductVersionString() {
+  std::wstring s(APP_NAME);
+  size_t i = s.find(L" ");
+  while (i != std::wstring::npos) {
+    s.erase(i, 1);
+    i = s.find(L" ");
+  }
+  std::wstring version(L"");
+  GetFileVersionString(version);
+  s.append(L"/");
+  s.append(version);
+  return CefString(s);
+}
