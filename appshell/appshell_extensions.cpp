@@ -283,7 +283,7 @@ public:
                 
                 // No additional response args for this function
             }
-        } else if (message_name == "DeleteFileOrDirectoryToTrash") {
+        } else if (message_name == "MoveFileOrDirectoryToTrash") {
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
@@ -295,7 +295,7 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
                 
-                error = DeleteFileOrDirectoryToTrash(filename);
+                error = MoveFileOrDirectoryToTrash(filename);
                 
                 // No additional response args for this function
             }
