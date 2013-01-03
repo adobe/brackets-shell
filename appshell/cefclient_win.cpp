@@ -866,7 +866,7 @@ void GetFileVersionString(std::wstring &retVersion) {
   TCHAR executablePath[MAX_PATH];
   GetModuleFileName(module, executablePath, MAX_PATH);
 
-  dwSize = GetFileVersionInfoSize( executablePath, NULL );
+  dwSize = GetFileVersionInfoSize(executablePath, NULL);
   if (dwSize == 0) {
     return;
   }
