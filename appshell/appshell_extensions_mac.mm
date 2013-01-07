@@ -771,11 +771,11 @@ int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool &checked, 
 {
     int32 tag = NativeMenuModel::getInstance().getTag(commandId);
     if (tag == -1) {
-        return ERR_FILE_NOT_FOUND;
+        return ERR_NOT_FOUND;
     }
     NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
     if (item == NULL) {
-        return ERR_FILE_NOT_FOUND;
+        return ERR_NOT_FOUND;
     }
     if ([item respondsToSelector:@selector(menu)]) {
         //get the main window
@@ -811,11 +811,11 @@ int32 GetMenuTitle(ExtensionString commandId, ExtensionString& title)
 {
     int32 tag = NativeMenuModel::getInstance().getTag(commandId);
     if (tag == -1) {
-        return ERR_FILE_NOT_FOUND;
+        return ERR_NOT_FOUND;
     }
     NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
     if (item == NULL) {
-        return ERR_FILE_NOT_FOUND;
+        return ERR_NOT_FOUND;
     }
     title = [[item title] UTF8String];
     
