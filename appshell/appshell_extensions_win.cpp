@@ -789,3 +789,473 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
     return NO_ERROR;
 }
 
+
+// Return index where menu or menu item should be placed.
+// -1 indicates append. -2 indicates 'before' - WINAPI supports 
+// placing a menu before an item without needing the position.
+int32 getMenuPosition(const ExtensionString& position, const ExtensionString& relativeId)
+{    
+    if (position.size() == 0)
+    {
+        return -1;
+    }
+    if (position == L"first") {
+        return 0;
+    }
+    if (position == L"before" && relativeId.size() > 0) {
+        return -2;
+    }
+    int32 positionIdx = -1;
+    if (position == L"after" && relativeId.size() > 0) {
+        int32 relativeTag = NativeMenuModel::getInstance().getTag(relativeId);
+
+        if (relativeTag != -1) {
+            HMENU parentMenu = (HMENU)NativeMenuModel::getInstance().getOsItem(relativeTag);
+            if (parentMenu == NULL) {
+                parentMenu = GetMenu(hWndMain);
+            }
+            int len = GetMenuItemCount(parentMenu);
+            for (int i = 0; i < len; i++) {
+                MENUITEMINFO parentItemInfo;
+                memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
+                parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+                parentItemInfo.fMask = MIIM_ID;
+                
+                BOOL res = GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo);
+                if (res == 0) {
+                    int err = GetLastError();
+                    return ConvertErrnoCode(err);
+                }
+                if (parentItemInfo.wID == (UINT)relativeTag) {
+                    positionIdx = i + 1;                    
+                    break;
+                }
+            }
+        }
+    }
+
+    return positionIdx;
+}
+
+int32 AddMenu(ExtensionString itemTitle, ExtensionString command,
+              ExtensionString position, ExtensionString relativeId)
+{
+    HMENU mainMenu = GetMenu(hWndMain);
+
+    int32 tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1) {
+        tag = NativeMenuModel::getInstance().getOrCreateTag(command);
+        NativeMenuModel::getInstance().setOsItem(tag, (void*)mainMenu);
+    } else {
+        // menu is already there
+        return NO_ERROR;
+    }
+
+    bool inserted = false;    
+    int32 positionIdx = getMenuPosition(position, relativeId);
+    if (positionIdx >= 0 || positionIdx == -2) 
+    {
+        MENUITEMINFO menuInfo;
+        memset(&menuInfo, 0, sizeof(MENUITEMINFO));
+        HMENU newMenu = CreateMenu();
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.wID = (UINT)tag;
+        menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING;    
+        menuInfo.fType = MFT_STRING;
+        menuInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
+        menuInfo.cch = itemTitle.size();        
+        if (positionIdx >= 0) {
+            InsertMenuItem(mainMenu, positionIdx, TRUE, &menuInfo);
+            inserted = true;
+        }
+        else
+        {
+            int32 relativeTag = NativeMenuModel::getInstance().getTag(relativeId);
+            if (relativeTag >= 0 && positionIdx == -2) {
+                InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo);
+                inserted = true;
+            } else {
+                // menu is already there
+                return NO_ERROR;
+            }
+        }
+    }
+   
+   if (inserted == false)
+   {
+        BOOL res = AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str());
+        
+        if (res == 0) {
+            return ConvertErrnoCode(GetLastError());
+        }
+   }
+    return NO_ERROR;
+}
+
+void UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
+{
+    int keyStrLen = keyStr.length();
+    if (keyStrLen) {
+        LPACCEL lpaccelNew;             // pointer to new accelerator table
+        HACCEL haccelOld;               // handle to old accelerator table
+        int numAccelerators = 0;        // number of accelerators in table
+        BYTE fAccelFlags = FVIRTKEY;    // fVirt flags for ACCEL structure 
+
+        // Save the current accelerator table. 
+        haccelOld = hAccelTable; 
+
+        // Count the number of entries in the current 
+        // table, allocate a buffer for the table, and 
+        // then copy the table into the buffer.
+        numAccelerators = CopyAcceleratorTable(haccelOld, NULL, 0); 
+        numAccelerators++; // need room for one more
+        lpaccelNew = (LPACCEL) LocalAlloc(LPTR, numAccelerators * sizeof(ACCEL)); 
+
+        if (lpaccelNew != NULL) 
+        {
+            CopyAcceleratorTable(hAccelTable, lpaccelNew, numAccelerators); 
+        }
+
+        // look at the passed-in key, pull out modifiers, etc.
+        if (keyStrLen > 1) {
+            std::transform(keyStr.begin(), keyStr.end(), keyStr.begin(), ::toupper);
+            if (keyStr.find(L"CMD") != ExtensionString::npos ||
+                keyStr.find(L"CTRL") != ExtensionString::npos) {
+                    fAccelFlags |= FCONTROL;
+            }
+
+            if (keyStr.find(L"ALT") != ExtensionString::npos) {
+                fAccelFlags |= FALT;
+            }
+
+            if (keyStr.find(L"SHIFT") != ExtensionString::npos) {
+                fAccelFlags |= FSHIFT;
+            }
+        }
+
+        // Add the new accelerator to the end of the table
+        UINT newItem = numAccelerators - 1;
+
+        lpaccelNew[newItem].cmd = (WORD) tag;
+        lpaccelNew[newItem].fVirt = fAccelFlags;
+        if (keyStr.find(L"BACKSPACE")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_BACK;
+        } else if (keyStr.find(L"DEL")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_DELETE;
+        } else if (keyStr.find(L"TAB")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_TAB;
+        } else if (keyStr.find(L"ENTER")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_RETURN;
+        }  else if (keyStr.find(L"UP")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_UP;
+        }  else if (keyStr.find(L"DOWN")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_DOWN;
+        }  else if (keyStr.find(L"LEFT")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_LEFT;
+        }  else if (keyStr.find(L"RIGHT")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_RIGHT;
+        }  else if (keyStr.find(L"INSERT")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_INSERT;
+        }  else if (keyStr.find(L"HOME")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_HOME;
+        }  else if (keyStr.find(L"END")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_END;
+        }  else if (keyStr.find(L"ESC")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_ESCAPE;
+        } else if (keyStr.find(L",")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_OEM_COMMA;
+        } else if (keyStr.at(keyStrLen-1) == '-') {
+            lpaccelNew[newItem].key = VK_OEM_MINUS;
+        }  else if (keyStr.find(L".")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_OEM_PERIOD;
+        }  else if (keyStr.find(L"+")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_OEM_PLUS;
+        } else if (keyStr.find(L"*")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_MULTIPLY;
+        } else if (keyStr.find(L"/")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_DIVIDE;
+        } else {
+            int ascii = keyStr.at(keyStrLen-1);
+            lpaccelNew[newItem].key = ascii;
+        }
+        // Create the new accelerator table, and 
+        // destroy the old one.
+
+        DestroyAcceleratorTable(haccelOld); 
+        hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+    }
+}
+
+int32 RemoveKeyFromAcceleratorTable(int32 tag)
+{
+    LPACCEL lpaccelNew;             // pointer to new accelerator table
+    HACCEL haccelOld;               // handle to old accelerator table
+    int numAccelerators = 0;        // number of accelerators in table
+
+    // Save the current accelerator table. 
+    haccelOld = hAccelTable; 
+
+    // Count the number of entries in the current 
+    // table, allocate a buffer for the table, and 
+    // then copy the table into the buffer.
+    numAccelerators = CopyAcceleratorTable(haccelOld, NULL, 0);
+    lpaccelNew = (LPACCEL) LocalAlloc(LPTR, numAccelerators * sizeof(ACCEL)); 
+
+    if (lpaccelNew != NULL) 
+    {
+        CopyAcceleratorTable(hAccelTable, lpaccelNew, numAccelerators); 
+    }
+
+    // Move accelerator to the end of the table
+    UINT newItem = numAccelerators - 1;
+    for (int i = 0; i < numAccelerators; i++) {
+        if (lpaccelNew[i].cmd = (WORD) tag) {
+            lpaccelNew[i] = lpaccelNew[newItem];
+            DestroyAcceleratorTable(haccelOld); 
+            hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators - 1);
+            return NO_ERROR;
+        }
+    }
+    LocalFree(lpaccelNew);
+    return ERR_NOT_FOUND;
+}
+
+int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle,
+                  ExtensionString command, ExtensionString key,
+                  ExtensionString position, ExtensionString relativeId)
+{
+    int32 parentTag = NativeMenuModel::getInstance().getTag(parentCommand);
+    if (parentTag == -1) {
+        return NO_ERROR;
+    }
+
+    HMENU menu = (HMENU) NativeMenuModel::getInstance().getOsItem(parentTag);
+    if (menu == NULL)
+        return ERR_NOT_FOUND;
+
+    bool isSeparator = (itemTitle == L"---");
+    HMENU submenu = NULL;
+    MENUITEMINFO parentItemInfo;
+
+    memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
+    parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+    parentItemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+    //get the menuitem containing this one, see if it has a sub menu. If it doesn't, add one.
+    BOOL res = GetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo);
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());
+    }
+    if (parentItemInfo.hSubMenu == NULL) {
+        parentItemInfo.hSubMenu = CreateMenu();
+        parentItemInfo.fMask = MIIM_SUBMENU;
+        res = SetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo);
+        if (res == 0) {
+            return ConvertErrnoCode(GetLastError());        
+        }
+    }
+    submenu = parentItemInfo.hSubMenu;
+    int32 tag = -1;
+    ExtensionString title;
+    ExtensionString keyStr;
+
+    tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1) {
+        tag = NativeMenuModel::getInstance().getOrCreateTag(command);
+    } else {
+        return NO_ERROR;
+    }
+
+    title = itemTitle.c_str();
+    keyStr = key.c_str();
+
+    if (key.length() > 0) {
+        title = title + L"\t" + keyStr;
+    }
+    int32 positionIdx = getMenuPosition(position, relativeId);
+    bool inserted = false;
+    if (positionIdx >= 0 || positionIdx == -2) 
+    {
+        MENUITEMINFO menuInfo;
+        memset(&menuInfo, 0, sizeof(MENUITEMINFO));        
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.wID = (UINT)tag;
+        menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING;    
+        menuInfo.fType = MFT_STRING;
+        if (isSeparator) {
+            menuInfo.fType = MFT_SEPARATOR;
+        }
+        menuInfo.dwTypeData = (LPWSTR)title.c_str();
+        menuInfo.cch = itemTitle.size();        
+        if (positionIdx >= 0) {
+            InsertMenuItem(submenu, positionIdx, TRUE, &menuInfo);
+            inserted = true;
+        }
+        else
+        {
+            int32 relativeTag = NativeMenuModel::getInstance().getTag(relativeId);
+            if (relativeTag >= 0 && positionIdx == -2) {
+                InsertMenuItem(submenu, relativeTag, FALSE, &menuInfo);
+                inserted = true;
+            } else {
+                // menu is already there
+                return NO_ERROR;
+            }
+        }
+    }
+    if (!inserted)
+    {
+        if (isSeparator) 
+        {
+            res = AppendMenu(submenu, MF_SEPARATOR, NULL, NULL);
+        } else {
+            res = AppendMenu(submenu, MF_STRING, tag, title.c_str());
+        }
+    }
+    
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());
+    }
+
+    NativeMenuModel::getInstance().setOsItem(tag, (void*)submenu);
+    DrawMenuBar(hWndMain);
+
+    UpdateAcceleratorTable(tag, keyStr);
+
+    return NO_ERROR;
+}
+
+int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool& checked, int& index) {
+    static WCHAR titleBuf[MAX_LOADSTRING];  
+    int32 tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_NOT_FOUND;
+    }
+    HMENU menu = (HMENU) NativeMenuModel::getInstance().getOsItem(tag);
+    if (menu == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    SendMessage(hWndMain, WM_INITMENUPOPUP, (WPARAM)menu, 0);
+    MENUITEMINFO itemInfo;
+    memset(&itemInfo, 0, sizeof(MENUITEMINFO));
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_STATE;
+    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());
+    }
+    enabled = (itemInfo.fState & MFS_DISABLED) == 0;
+    checked = (itemInfo.fState & MFS_CHECKED) != 0;
+
+    // For finding the index, we'll just walk through the menu items
+    // until we find this one. Not super efficient, but this is just
+    // intended for testing, anyway.
+
+    int len = GetMenuItemCount(menu);
+    for (int i = 0; i < len; i++) {
+        memset(&itemInfo, 0, sizeof(MENUITEMINFO));
+        itemInfo.cbSize = sizeof(MENUITEMINFO);
+        itemInfo.fMask = MIIM_ID;
+
+        BOOL res = GetMenuItemInfo(menu, i, TRUE, &itemInfo);
+        if (res == 0) {
+            int err = GetLastError();
+            return ConvertErrnoCode(err);
+        }
+        if (itemInfo.wID == (UINT)tag) {
+            index = i;
+            break;
+        }
+        index = -1;
+    }
+
+    return NO_ERROR;
+}
+
+int32 SetMenuTitle(ExtensionString command, ExtensionString itemTitle) {
+
+    // find the item
+    int32 tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1)
+        return ERR_NOT_FOUND;
+
+    HMENU menu = (HMENU) NativeMenuModel::getInstance().getOsItem(tag);
+    if (menu == NULL)
+        return ERR_NOT_FOUND;
+
+    // change the title
+    MENUITEMINFO itemInfo;
+    memset(&itemInfo, 0, sizeof(MENUITEMINFO));
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());
+    }
+
+    itemInfo.fType = MFT_STRING; // just to make sure
+    itemInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
+    itemInfo.cch = itemTitle.size();
+
+    res = SetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());        
+    }
+
+    return NO_ERROR;
+}
+
+int32 GetMenuTitle(ExtensionString commandId, ExtensionString& title) {
+    static WCHAR titleBuf[MAX_LOADSTRING];  
+    int32 tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_NOT_FOUND;
+    }
+    HMENU menu = (HMENU) NativeMenuModel::getInstance().getOsItem(tag);
+    if (menu == NULL) {
+        return ERR_NOT_FOUND;
+    }
+
+    MENUITEMINFO itemInfo;
+    memset(&itemInfo, 0, sizeof(MENUITEMINFO));
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_DATA | MIIM_STRING;
+    itemInfo.dwTypeData = NULL;
+    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+    if (res == 0) {
+        return ConvertErrnoCode(GetLastError());
+    }
+
+    // To get the title, we have to call GetMenuItemInfo again
+    // if we have room in titleBuf, now get the menu item title
+    if (++itemInfo.cch < MAX_LOADSTRING) {
+        itemInfo.dwTypeData = titleBuf;
+        res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+        if (res && itemInfo.dwTypeData)
+            title = itemInfo.dwTypeData;
+    }
+    return NO_ERROR;
+}
+
+int32 RemoveMenu(const ExtensionString& commandId)
+{
+    return RemoveMenuItem(commandId);
+}
+
+//Remove menu or menu item associated with commandId
+int32 RemoveMenuItem(const ExtensionString& commandId)
+{
+    int tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_NOT_FOUND;
+    }
+    HMENU mainMenu = (HMENU)NativeMenuModel::getInstance().getOsItem(tag);
+    if (mainMenu == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    DeleteMenu(mainMenu, tag, MF_BYCOMMAND);
+    NativeMenuModel::getInstance().removeMenuItem(commandId);
+    RemoveKeyFromAcceleratorTable(tag);
+    return NO_ERROR;
+}
+
+

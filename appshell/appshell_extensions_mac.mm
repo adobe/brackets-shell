@@ -23,6 +23,7 @@
 
 #include "appshell_extensions_platform.h"
 #include "appshell_extensions.h"
+#include "native_menu_model.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -584,3 +585,274 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
     [script release];
     return NO_ERROR;
 }
+
+
+// Return index where menu or menu item should be placed.
+// -1 indicates append.
+NSInteger getMenuPosition(const ExtensionString& position, const ExtensionString& relativeId)
+{
+    NSInteger positionIdx = -1;
+    if (position.size() == 0)
+    {
+        return positionIdx;
+    }
+    if ((position == "before" || position == "after") && relativeId.size() > 0) {
+        int32 relativeTag = NativeMenuModel::getInstance().getTag(relativeId);
+
+        if (relativeTag != -1) {
+            NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(relativeTag);
+            NSMenu* parentMenu = NULL;
+            if (item != NULL) {
+                parentMenu = [item menu];
+            } else {
+                parentMenu = [NSApp mainMenu];
+            }
+            positionIdx = [parentMenu indexOfItemWithTag:relativeTag];
+            if (positionIdx >= 0 && position == "after") {
+                positionIdx += 1;
+            }
+        }
+    } else if (position == "first") {
+        positionIdx = 0;
+    }
+
+    return positionIdx;
+}
+
+int32 AddMenu(ExtensionString itemTitle, ExtensionString command, ExtensionString position, ExtensionString relativeId) {
+
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    NSMenuItem *testItem = nil;
+    int32 tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1) {
+        tag = NativeMenuModel::getInstance().getOrCreateTag(command);
+    } else {
+        // menu already there
+        return NO_ERROR;
+    }
+    NSInteger menuIdx = [[NSApp mainMenu] indexOfItemWithTag:tag];
+    if (menuIdx >= 0) {
+        // if we didn't find the tag, we shouldn't already have an item with this tag
+        return ERR_UNKNOWN;
+    } else {
+        testItem = [[[NSMenuItem alloc] initWithTitle:itemTitleStr action:nil keyEquivalent:@""] autorelease];
+        [testItem setTag:tag];
+        NativeMenuModel::getInstance().setOsItem(tag, (void*)testItem);
+    }
+    NSMenu *subMenu = [testItem submenu];
+    if (subMenu == nil) {
+        subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
+        [testItem setSubmenu:subMenu];
+    }
+   
+    NSInteger positionIdx = getMenuPosition(position, relativeId);
+    if (positionIdx > -1) {
+        [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
+    } else {
+        [[NSApp mainMenu] addItem:testItem];
+    }
+   
+    return NO_ERROR;
+}
+
+//Replace keyStroke with replaceString 
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+    size_t idx = key.find(keyStroke, 0);
+    if (idx != ExtensionString::npos) {
+        key = key.replace(idx, keyStroke.size(), replaceString);
+        return true;
+    }
+    return false;
+}
+
+// Looks at modifiers and special keys in "key",
+// removes then and returns an unsigned int mask
+// that can be used by setKeyEquivalentModifierMask
+NSUInteger processKeyString(ExtensionString& key)
+{
+    NSUInteger mask = 0;
+    if (fixupKey(key, "Cmd-", "")) {
+        mask |= NSCommandKeyMask;
+    }
+    if (fixupKey(key, "Ctrl-", "")) {
+        mask |= NSControlKeyMask;
+    }
+    if (fixupKey(key, "Shift-", "")) {
+        mask |= NSShiftKeyMask;
+    }
+    if (fixupKey(key, "Alt-", "") ||
+        fixupKey(key, "Opt-", "")) {
+        mask |= NSAlternateKeyMask;
+    }
+    //replace special keys with ones expected by keyEquivalent
+    ExtensionString del, backspace, tab, enter;
+    del += NSDeleteCharacter;
+    backspace += NSBackspaceCharacter;
+    tab += NSTabCharacter;
+    enter += NSEnterCharacter;
+    
+    fixupKey(key, "Delete", del);
+    fixupKey(key, "Backspace", backspace);
+    fixupKey(key, "Tab", tab);
+    fixupKey(key, "Enter", enter);
+    fixupKey(key, "Up", "↑");
+    fixupKey(key, "Down", "↓");
+    fixupKey(key, "Left", "←");
+    fixupKey(key, "Right", "→");
+
+    return mask;
+}
+
+int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString position, ExtensionString relativeId) {
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    NSMenuItem *testItem = nil;
+    int32 parentTag = NativeMenuModel::getInstance().getTag(parentCommand);
+    bool isSeparator = (itemTitle == "---");
+    if (parentTag == -1) {
+        return NO_ERROR;
+    }
+    int32 tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1) {
+        tag = NativeMenuModel::getInstance().getOrCreateTag(command);
+    } else {
+        return NO_ERROR;
+    }
+
+    NSInteger menuIdx;
+    testItem = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(parentTag);
+    
+    if (testItem != nil) {
+        NSMenu* subMenu = nil;
+        if (![testItem hasSubmenu]) {
+            subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
+            [testItem setSubmenu:subMenu];
+        }
+        subMenu = [testItem submenu];
+        if (subMenu != nil) {
+            if (isSeparator) {
+                menuIdx = -1;
+            }
+            else {
+                menuIdx = [subMenu indexOfItemWithTag:tag];
+            }
+            
+            if (menuIdx < 0) {
+                NSUInteger mask = processKeyString(key);
+                NSMenuItem* newItem = nil;
+                if (isSeparator) {
+                    newItem = [NSMenuItem separatorItem];
+                }
+                else {
+                    NSString* keyStr = [[NSString alloc] initWithUTF8String:key.c_str()];
+                    keyStr = [keyStr lowercaseString];
+                    newItem = [NSMenuItem alloc];
+                    [newItem setTitle:itemTitleStr];
+                    [newItem setAction:NSSelectorFromString(@"handleMenuAction:")];
+                    [newItem setKeyEquivalent:keyStr];
+                    [newItem setKeyEquivalentModifierMask:mask];
+                    [newItem setTag:tag];
+                    NativeMenuModel::getInstance().setOsItem(tag, (void*)newItem);
+                }
+                NSInteger positionIdx = getMenuPosition(position, relativeId);
+                if (positionIdx > -1) {
+                    [subMenu insertItem:newItem atIndex:positionIdx];
+                } else {
+                    [subMenu addItem:newItem];
+                }
+            }
+        }
+    }
+
+    return NO_ERROR;
+}
+
+int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool &checked, int& index)
+{
+    int32 tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_FILE_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
+    if (item == NULL) {
+        return ERR_FILE_NOT_FOUND;
+    }
+    if ([item respondsToSelector:@selector(menu)]) {
+        //get the main window
+        //nsapp mainwindow will point to current window (unit test), not the main one.
+        //for a multi-window case, get the right NSWindow on which the menus are being tested.
+        NSWindow* mainWindow = [[NSApp windows] objectAtIndex:0];
+        //menu item's enabled status is dependent on the selector's return value.
+        //[item enabled] will only be correct if we use manual menu enablement.
+        enabled = [(NSObject*)[mainWindow delegate] performSelector:@selector(validateMenuItem:) withObject:item];
+        checked = ([item state] == NSOnState);
+        index = [[item menu] indexOfItemWithTag:tag];
+    }
+    return NO_ERROR;
+}
+
+int32 SetMenuTitle(ExtensionString command, ExtensionString itemTitle) {
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    int32 tag = NativeMenuModel::getInstance().getTag(command);
+    if (tag == -1) {
+        return ERR_NOT_FOUND;
+    }
+
+    NSMenuItem* menuItem = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
+    if (menuItem == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    [menuItem setTitle:itemTitleStr];
+    
+    return NO_ERROR;
+}
+
+int32 GetMenuTitle(ExtensionString commandId, ExtensionString& title)
+{
+    int32 tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_FILE_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
+    if (item == NULL) {
+        return ERR_FILE_NOT_FOUND;
+    }
+    title = [[item title] UTF8String];
+    
+    return NO_ERROR;
+}
+
+//Remove menu item associated with commandId
+int32 RemoveMenu(const ExtensionString& commandId)
+{
+    //works for menu and menu item
+    return RemoveMenuItem(commandId);
+}
+
+//Remove menu item associated with commandId
+int32 RemoveMenuItem(const ExtensionString& commandId)
+{
+    int tag = NativeMenuModel::getInstance().getTag(commandId);
+    if (tag == -1) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance().getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    
+    NSMenu* parentMenu = NULL;
+    if ([item respondsToSelector:@selector(menu)]) {
+        parentMenu = [item menu];
+        if (parentMenu == NULL) {
+            return ERR_NOT_FOUND;
+        }
+        [parentMenu removeItem:item];
+        NativeMenuModel::getInstance().removeMenuItem(commandId);
+    } else {
+        return ERR_NOT_FOUND;
+    }
+    
+    return NO_ERROR;
+}
+

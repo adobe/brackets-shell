@@ -89,3 +89,21 @@ void CloseWindow(CefRefPtr<CefBrowser> browser);
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
 
 int32 ShowFolderInOSWindow(ExtensionString pathname);
+
+int32 AddMenu(ExtensionString title, ExtensionString command,
+              ExtensionString position, ExtensionString relativeId);
+
+int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle,
+                  ExtensionString command, ExtensionString key,
+                  ExtensionString position, ExtensionString relativeId);
+
+int32 RemoveMenu(const ExtensionString& commandId);
+
+int32 RemoveMenuItem(const ExtensionString& commandId);
+
+int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool& checked, int& index);
+
+int32 SetMenuTitle(std::string commandId, ExtensionString menuTitle);
+
+int32 GetMenuTitle(std::string commandId, ExtensionString& menuTitle);
+

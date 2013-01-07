@@ -95,6 +95,8 @@
       'appshell/client_handler.h',
       'appshell/client_switches.cpp',
       'appshell/client_switches.h',
+      'appshell/native_menu_model.cpp',
+      'appshell/native_menu_model.h',
       'appshell/resource_util.h',
       'appshell/string_util.cpp',
       'appshell/string_util.h',

@@ -18,6 +18,7 @@
 #include "resource.h"
 #include "string_util.h"
 #include "client_switches.h"
+#include "native_menu_model.h"
 
 #include <ShlObj.h>
 
@@ -731,6 +732,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
           browser->StopLoad();
         return 0;
 #endif // SHOW_TOOLBAR_UI
+      default:
+          ExtensionString commandId = NativeMenuModel::getInstance().getCommandId(wmId);
+          if (commandId.size() > 0) {
+              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId);
+          }
       }
       break;
     }
@@ -817,6 +823,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance().isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED : MF_DISABLED;
+            EnableMenuItem(menu, id,  flagEnabled | MF_BYCOMMAND);
+
+            bool checked = NativeMenuModel::getInstance().isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED : MF_UNCHECKED;
+            CheckMenuItem(menu, id, flagChecked | MF_BYCOMMAND);
+        }
+        break;
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
