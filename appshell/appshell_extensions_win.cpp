@@ -22,6 +22,7 @@
  */ 
 
 #include "appshell_extensions.h"
+#include "native_menu_model.h"
 #include "client_handler.h"
 
 #include <algorithm>
@@ -45,6 +46,12 @@ static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
 time_t FiletimeToTime(FILETIME const& ft);
 
+extern HWND hWndMain;
+extern HINSTANCE hInst;
+extern HACCEL hAccelTable;
+
+// constants
+#define MAX_LOADSTRING 100
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrWin

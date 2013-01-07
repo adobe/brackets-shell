@@ -35,6 +35,8 @@
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
+HACCEL hAccelTable;
+HWND hWndMain;
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -117,8 +119,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
-
-  HACCEL hAccelTable;
 
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -516,8 +516,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 //        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
-  HWND hWnd;
-
   hInst = hInstance;  // Store instance handle in our global variable
 
   // TODO: test this cases:
@@ -533,14 +531,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
   if (showCmd == SW_MAXIMIZE)
 	  styles |= WS_MAXIMIZE;
-  hWnd = CreateWindow(szWindowClass, szTitle, styles,
+  hWndMain = CreateWindow(szWindowClass, szTitle, styles,
                       left, top, width, height, NULL, NULL, hInstance, NULL);
 
-  if (!hWnd)
+  if (!hWndMain)
     return FALSE;
 
-  RestoreWindowPlacement(hWnd, showCmd);
-  UpdateWindow(hWnd);
+  RestoreWindowPlacement(hWndMain, showCmd);
+  UpdateWindow(hWndMain);
 
   return TRUE;
 }

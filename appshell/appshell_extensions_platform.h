@@ -103,7 +103,7 @@ int32 RemoveMenuItem(const ExtensionString& commandId);
 
 int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool& checked, int& index);
 
-int32 SetMenuTitle(std::string commandId, ExtensionString menuTitle);
+int32 SetMenuTitle(ExtensionString commandId, ExtensionString menuTitle);
 
-int32 GetMenuTitle(std::string commandId, ExtensionString& menuTitle);
+int32 GetMenuTitle(ExtensionString commandId, ExtensionString& menuTitle);
 
