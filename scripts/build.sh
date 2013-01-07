@@ -76,9 +76,6 @@ if [ "$os" = "darwin" ]; then # Building on mac
     xcodebuild -project appshell.xcodeproj -config Release clean
     xcodebuild -project appshell.xcodeproj -config Release build
     
-    # Package www files
-    scripts/package_www_files.sh
-    
     # Remove existing staging dir
     if [ -d installer/mac/staging ]; then
       rm -rf installer/mac/staging
@@ -88,6 +85,10 @@ if [ "$os" = "darwin" ]; then # Building on mac
     
     # Copy to installer staging folder
     cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
+     
+    # Package www files
+    scripts/package_www_files.sh
+
     packageLocation="installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
 
 elif [ "$os" = "msys" ]; then # Building on Windows
