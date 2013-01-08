@@ -7,23 +7,23 @@ if [ "$BRACKETS_SRC" = "" ]; then
 fi
 
 # Remove existing www directory contents
-if [ -d "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/www" ]; then
-  rm -rf "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/www"
+if [ -d "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www" ]; then
+  rm -rf "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
 fi
 
 # Remove existing samples directory contents
-if [ -d "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/samples" ]; then
-  rm -rf "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/samples"
+if [ -d "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/samples" ]; then
+  rm -rf "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/samples"
 fi
 
 # Make the ${BRACKETS_APP_NAME}.app/Contents/www directory
-mkdir "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/www"
+mkdir "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
 
 # Copy the source 
-cp -pR "${BRACKETS_SRC}"/src/* "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/www"
+cp -pR "${BRACKETS_SRC}"/src/* "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
 
 # Make the ${BRACKETS_APP_NAME}.app/Contents/samples directory
-mkdir "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/samples"
+mkdir "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/samples"
 
 # Copy the source 
-cp -pR "${BRACKETS_SRC}"/samples/* "xcodebuild/Release/${BRACKETS_APP_NAME}.app/Contents/samples"
+cp -pR "${BRACKETS_SRC}"/samples/* "installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/samples"
