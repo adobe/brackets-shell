@@ -65,8 +65,8 @@ private:
     }
 public:
     //not at all threadsafe
-    static void resetMenus() { NativeMenuModel::getInstance(true); };
-    static NativeMenuModel& getInstance(bool reset = false);
+    static void resetMenus(void* menuParent) { NativeMenuModel::getInstance(menuParent, true); };
+    static NativeMenuModel& getInstance(void* menuParent, bool reset = false);
     
     bool isMenuItemEnabled(int tag);
     bool isMenuItemChecked(int tag);

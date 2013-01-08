@@ -30,16 +30,23 @@ const ExtensionString WINDOW_COMMAND    = L"window";
 const ExtensionString WINDOW_COMMAND    = "window";
 #endif
 
-NativeMenuModel& NativeMenuModel::getInstance(bool reset)
+// map of menuParent --> NativeMenuModel instance
+typedef std::map<void*, NativeMenuModel*> menuModelMap;
+menuModelMap instanceMap;
+
+NativeMenuModel& NativeMenuModel::getInstance(void* menuParent, bool reset)
 {
-    static menu m;
-    static NativeMenuModel instance(m);
-    if (reset) {
-        instance.commandMap.clear();
-        instance.menuItems.clear();
+    menuModelMap::iterator foundItem = instanceMap.find(menuParent);
+
+    if (foundItem != instanceMap.end()) {
+        return *(foundItem->second);
     }
-    instance.setTag(WINDOW_COMMAND, WINDOW_MENUITEMTAG);
-    return instance;
+
+    menu m;
+    NativeMenuModel* instance = new NativeMenuModel(m);
+    instance->setTag(WINDOW_COMMAND, WINDOW_MENUITEMTAG);
+    instanceMap[menuParent] = instance;
+    return *(instance);
 }
 
 

@@ -731,7 +731,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
         return 0;
 #endif // SHOW_TOOLBAR_UI
       default:
-          ExtensionString commandId = NativeMenuModel::getInstance().getCommandId(wmId);
+          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
           if (commandId.size() > 0) {
               g_handler->SendJSCommand(g_handler->GetBrowser(), commandId);
           }
@@ -828,11 +828,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
         for (int i = 0; i < count; i++) {
             UINT id = GetMenuItemID(menu, i);
 
-            bool enabled = NativeMenuModel::getInstance().isMenuItemEnabled(id);
+            bool enabled = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).isMenuItemEnabled(id);
             UINT flagEnabled = enabled ? MF_ENABLED : MF_DISABLED;
             EnableMenuItem(menu, id,  flagEnabled | MF_BYCOMMAND);
 
-            bool checked = NativeMenuModel::getInstance().isMenuItemChecked(id);
+            bool checked = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).isMenuItemChecked(id);
             UINT flagChecked = checked ? MF_CHECKED : MF_UNCHECKED;
             CheckMenuItem(menu, id, flagChecked | MF_BYCOMMAND);
         }

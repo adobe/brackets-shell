@@ -46,8 +46,10 @@ static const int ERR_FILE_EXISTS            = 10;
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
+inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return GetForegroundWindow();}
 #else
 typedef std::string ExtensionString;
+inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return null;} // Mac uses a shared menu bar
 #endif
 
 
@@ -90,20 +92,20 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
 
 int32 ShowFolderInOSWindow(ExtensionString pathname);
 
-int32 AddMenu(ExtensionString title, ExtensionString command,
+int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId);
 
-int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle,
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key,
                   ExtensionString position, ExtensionString relativeId);
 
-int32 RemoveMenu(const ExtensionString& commandId);
+int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
 
-int32 RemoveMenuItem(const ExtensionString& commandId);
+int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
 
-int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool& checked, int& index);
+int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index);
 
-int32 SetMenuTitle(ExtensionString commandId, ExtensionString menuTitle);
+int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
 
-int32 GetMenuTitle(ExtensionString commandId, ExtensionString& menuTitle);
+int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
 

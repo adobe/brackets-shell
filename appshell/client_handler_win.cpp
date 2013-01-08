@@ -8,6 +8,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "resource.h"
+#include "native_menu_model.h"
 
 #define CLOSING_PROP L"CLOSING"
 
@@ -131,7 +132,12 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
  		      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
 			}
 			return 0;
-          }
+          default:
+            ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(wmId);
+            if (commandId.size() > 0) {
+              g_handler->SendJSCommand(browser, commandId);
+            }
+        }
 	  }
       break;
 
@@ -149,6 +155,22 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
  		return 0;
       }
       break;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance(getMenuParent(browser)).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED : MF_DISABLED;
+            EnableMenuItem(menu, id,  flagEnabled | MF_BYCOMMAND);
+
+            bool checked = NativeMenuModel::getInstance(getMenuParent(browser)).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED : MF_UNCHECKED;
+            CheckMenuItem(menu, id, flagChecked | MF_BYCOMMAND);
+        }
+        break;
   }
 
   if (g_popupWndOldProc) 
