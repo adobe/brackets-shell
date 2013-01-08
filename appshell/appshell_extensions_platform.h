@@ -49,7 +49,7 @@ typedef std::wstring ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return GetForegroundWindow();}
 #else
 typedef std::string ExtensionString;
-inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return null;} // Mac uses a shared menu bar
+inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac uses a shared menu bar
 #endif
 
 

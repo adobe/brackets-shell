@@ -136,14 +136,15 @@ void ClientHandler::CloseMainWindow() {
         CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
         NSMenuItem* senderItem = sender;
         NSUInteger tag = [senderItem tag];
-        clientHandler->SendJSCommand(clientHandler->GetBrowser(), NativeMenuModel::getInstance().getCommandId(tag));
+        clientHandler->SendJSCommand(browser, NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag));
     }
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
-    NativeMenuModel menus = NativeMenuModel::getInstance();
+    NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(browser));
     if (menus.isMenuItemChecked(tag)) {
         menuState = NSOnState;
     }

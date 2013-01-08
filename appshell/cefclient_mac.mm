@@ -113,14 +113,14 @@ static NSAutoreleasePool* g_autopool = nil;
     if (g_handler.get() && g_handler->GetBrowserId()) {
         NSMenuItem* senderItem = sender;
         NSUInteger tag = [senderItem tag];
-        g_handler->SendJSCommand(g_handler->GetBrowser(), NativeMenuModel::getInstance().getCommandId(tag));
+        g_handler->SendJSCommand(g_handler->GetBrowser(), NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag));
     }
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
-    NativeMenuModel menus = NativeMenuModel::getInstance();
+    NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser()));
     if (menus.isMenuItemChecked(tag)) {
         menuState = NSOnState;
     }
