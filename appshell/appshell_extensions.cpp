@@ -511,5 +511,16 @@ public:
 void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
-  
+
+//Replace keyStroke with replaceString 
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+	size_t idx = key.find(keyStroke, 0);
+	if (idx != ExtensionString::npos) {
+		key = key.replace(idx, keyStroke.size(), replaceString);
+		return true;
+	}
+	return false;
+}
+
 } // namespace appshell_extensions

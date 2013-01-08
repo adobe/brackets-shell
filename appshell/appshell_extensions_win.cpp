@@ -1027,6 +1027,16 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     return ERR_NOT_FOUND;
 }
 
+// Looks at modifiers and special keys in "key",
+// removes then and returns an unsigned int mask
+// that can be used by setKeyEquivalentModifierMask
+void fixupKeyString(ExtensionString& key)
+{
+    appshell_extensions::fixupKey(key, L"Ctrl-",  L"Ctrl+");
+    appshell_extensions::fixupKey(key, L"Shift-", L"Shift+");
+    appshell_extensions::fixupKey(key, L"Alt-",   L"Alt+");
+}
+
 int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key,
                   ExtensionString position, ExtensionString relativeId)
@@ -1076,6 +1086,7 @@ int32 AddMenuItem(ExtensionString parentCommand, ExtensionString itemTitle,
     keyStr = key.c_str();
 
     if (key.length() > 0) {
+        fixupKeyString(keyStr);
         title = title + L"\t" + keyStr;
     }
     int32 positionIdx = getMenuPosition(position, relativeId);

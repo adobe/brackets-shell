@@ -655,34 +655,23 @@ int32 AddMenu(ExtensionString itemTitle, ExtensionString command, ExtensionStrin
     return NO_ERROR;
 }
 
-//Replace keyStroke with replaceString 
-bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
-{
-    size_t idx = key.find(keyStroke, 0);
-    if (idx != ExtensionString::npos) {
-        key = key.replace(idx, keyStroke.size(), replaceString);
-        return true;
-    }
-    return false;
-}
-
 // Looks at modifiers and special keys in "key",
 // removes then and returns an unsigned int mask
 // that can be used by setKeyEquivalentModifierMask
 NSUInteger processKeyString(ExtensionString& key)
 {
     NSUInteger mask = 0;
-    if (fixupKey(key, "Cmd-", "")) {
+    if (appshell_extensions::fixupKey(key, "Cmd-", "")) {
         mask |= NSCommandKeyMask;
     }
-    if (fixupKey(key, "Ctrl-", "")) {
+    if (appshell_extensions::fixupKey(key, "Ctrl-", "")) {
         mask |= NSControlKeyMask;
     }
-    if (fixupKey(key, "Shift-", "")) {
+    if (appshell_extensions::fixupKey(key, "Shift-", "")) {
         mask |= NSShiftKeyMask;
     }
-    if (fixupKey(key, "Alt-", "") ||
-        fixupKey(key, "Opt-", "")) {
+    if (appshell_extensions::fixupKey(key, "Alt-", "") ||
+        appshell_extensions::fixupKey(key, "Opt-", "")) {
         mask |= NSAlternateKeyMask;
     }
     //replace special keys with ones expected by keyEquivalent
@@ -692,14 +681,14 @@ NSUInteger processKeyString(ExtensionString& key)
     tab += NSTabCharacter;
     enter += NSEnterCharacter;
     
-    fixupKey(key, "Delete", del);
-    fixupKey(key, "Backspace", backspace);
-    fixupKey(key, "Tab", tab);
-    fixupKey(key, "Enter", enter);
-    fixupKey(key, "Up", "↑");
-    fixupKey(key, "Down", "↓");
-    fixupKey(key, "Left", "←");
-    fixupKey(key, "Right", "→");
+    appshell_extensions::fixupKey(key, "Delete", del);
+    appshell_extensions::fixupKey(key, "Backspace", backspace);
+    appshell_extensions::fixupKey(key, "Tab", tab);
+    appshell_extensions::fixupKey(key, "Enter", enter);
+    appshell_extensions::fixupKey(key, "Up", "↑");
+    appshell_extensions::fixupKey(key, "Down", "↓");
+    appshell_extensions::fixupKey(key, "Left", "←");
+    appshell_extensions::fixupKey(key, "Right", "→");
 
     return mask;
 }
