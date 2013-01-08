@@ -778,10 +778,7 @@ int32 GetMenuItemState(ExtensionString commandId, bool& enabled, bool &checked, 
         return ERR_NOT_FOUND;
     }
     if ([item respondsToSelector:@selector(menu)]) {
-        //get the main window
-        //nsapp mainwindow will point to current window (unit test), not the main one.
-        //for a multi-window case, get the right NSWindow on which the menus are being tested.
-        NSWindow* mainWindow = [[NSApp windows] objectAtIndex:0];
+        NSWindow* mainWindow = [NSApp mainWindow];
         //menu item's enabled status is dependent on the selector's return value.
         //[item enabled] will only be correct if we use manual menu enablement.
         enabled = [(NSObject*)[mainWindow delegate] performSelector:@selector(validateMenuItem:) withObject:item];

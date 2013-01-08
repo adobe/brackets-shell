@@ -133,6 +133,8 @@
       'appshell/client_handler_mac.mm',
       'appshell/client_switches.cpp',
       'appshell/client_switches.h',
+      'appshell/native_menu_model.cpp',
+      'appshell/native_menu_model.h',
       'appshell/process_helper_mac.cpp',
       'appshell/resource_util.h',
       'appshell/resource_util_mac.mm',

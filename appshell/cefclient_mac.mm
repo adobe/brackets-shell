@@ -76,6 +76,7 @@ static NSAutoreleasePool* g_autopool = nil;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
