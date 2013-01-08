@@ -355,7 +355,7 @@ public:
                 ExtensionString position = CefString(argList->GetString(3));
                 ExtensionString relativeId = CefString(argList->GetString(4));
                 
-                error = AddMenu(menuTitle, command, position, relativeId);
+                error = AddMenu(browser, menuTitle, command, position, relativeId);
                 // No additional response args for this function
             }
         } else if (message_name == "AddMenuItem") {
@@ -385,7 +385,7 @@ public:
                 ExtensionString position = CefString(argList->GetString(5));
                 ExtensionString relativeId = CefString(argList->GetString(6));
 
-                error = AddMenuItem(parentCommand, menuTitle, command, key, position, relativeId);
+                error = AddMenuItem(browser, parentCommand, menuTitle, command, key, position, relativeId);
                 // No additional response args for this function
             }
         } else if (message_name == "RemoveMenu") {
@@ -400,7 +400,7 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString commandId;
                 commandId = argList->GetString(1);
-                error = RemoveMenu(commandId);
+                error = RemoveMenu(browser, commandId);
             }
             // No response args for this function
         } else if (message_name == "RemoveMenuItem") {
@@ -415,7 +415,7 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString commandId;
                 commandId = argList->GetString(1);
-                error = RemoveMenuItem(commandId);
+                error = RemoveMenuItem(browser, commandId);
             }
             // No response args for this function
         } else if (message_name == "GetMenuItemState") {
@@ -432,7 +432,7 @@ public:
                 ExtensionString menuTitle;
                 bool checked, enabled;
                 int index;
-                error = GetMenuItemState(commandId, enabled, checked, index);
+                error = GetMenuItemState(browser, commandId, enabled, checked, index);
                 responseArgs->SetBool(2, enabled);
                 responseArgs->SetBool(3, checked);
                 responseArgs->SetInt(4, index);
@@ -455,7 +455,7 @@ public:
                 ExtensionString command = argList->GetString(1);
                 bool enabled = argList->GetBool(2);
                 bool checked = argList->GetBool(3);
-                error = NativeMenuModel::getInstance().setMenuItemState(command, enabled, checked);
+                error = NativeMenuModel::getInstance(getMenuParent(browser)).setMenuItemState(command, enabled, checked);
             }
         } else if (message_name == "SetMenuTitle") {
             // Parameters:
@@ -472,7 +472,7 @@ public:
                 ExtensionString command = CefString(argList->GetString(1));
                 ExtensionString menuTitle = argList->GetString(2);
 
-                error = SetMenuTitle(command, menuTitle);
+                error = SetMenuTitle(browser, command, menuTitle);
                 // No additional response args for this function
             }
         }  else if (message_name == "GetMenuTitle") {
@@ -487,7 +487,7 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString commandId = CefString(argList->GetString(1));
                 ExtensionString menuTitle;
-                error = GetMenuTitle(commandId, menuTitle);
+                error = GetMenuTitle(browser, commandId, menuTitle);
                 responseArgs->SetString(2, menuTitle);
             }
         } else {
