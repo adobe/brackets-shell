@@ -81,6 +81,10 @@ int NativeMenuModel::setMenuItemState (ExtensionString command, bool enabled, bo
 }
 
 ExtensionString NativeMenuModel::getCommandId(int tag) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return "";
+    }
     return menuItems[tag].commandId;
 }
 
@@ -116,10 +120,18 @@ int NativeMenuModel::getTag(ExtensionString command)
 }
 
 void NativeMenuModel::setOsItem (int tag, void* theItem) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return;
+    }
     menuItems[tag].osItem = theItem;
 }
 
 void* NativeMenuModel::getOsItem (int tag) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return NULL;
+    }
 	 return menuItems[tag].osItem;
 }
 
