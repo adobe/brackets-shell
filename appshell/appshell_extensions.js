@@ -376,6 +376,140 @@ if (!appshell.app) {
     };
  
     /**
+     * Set menu enabled/checked state.
+     * @param {string} command ID of the menu item.
+     * @param {bool} enabled bool to enable or disable the command
+     * @param {bool} checked bool to set the 'checked' attribute of the menu item.
+     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function SetMenuItemState();
+    appshell.app.setMenuItemState = function (commandid, enabled, checked, callback) {
+        SetMenuItemState(callback, commandid, enabled, checked);
+    };
+
+    /**
+     * Get menu enabled/checked state. For tests.
+     * @param {string} command ID of the menu item.
+     * @param {function(integer, bool, bool)} callback Asynchronous callback function.
+     *      The callback gets three arguments, error code, enabled, checked.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function GetMenuItemState();
+    appshell.app.getMenuItemState = function (commandid, callback) {
+        GetMenuItemState(callback, commandid);
+    };
+
+    /**
+     * Add a top level menu.
+     * @param {string} title Menu title to display, e.g. "File"
+     * @param {string} id Menu ID, e.g. "file"
+     * @param {string} position Where to put the item; values are "before", "after", "first", "last", and ""
+     * @param {string} relativeId The ID of the menu to which is this relative, for position "before" and "after"
+     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function AddMenu();
+    appshell.app.addMenu = function (title, id, position, relativeId, callback) {
+        position = position || '';
+        relativeId = relativeId || '';
+        AddMenu(callback, title, id, position, relativeId);
+    };
+
+    /**
+     * Add a menu item.
+     * @param {string} parentId ID of containing menu
+     * @param {string} title Menu title to display, e.g. "Open"
+     * @param {string} id Command ID, e.g. "file.open"
+     * @param {string} key Shortcut, e.g. "Cmd-O"
+     * @param {string} position Where to put the item; values are "before", "after", "first", "last", and ""
+     * @param {string} relativeId The ID of the menu item to which is this relative, for position "before" and "after"
+     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function AddMenuItem();
+    appshell.app.addMenuItem = function (parentId, title, id, key, position, relativeId, callback) {
+        key = key || '';
+        position = position || '';
+        relativeId = relativeId || '';
+        AddMenuItem(callback, parentId, title, id, key, position, relativeId);
+    };
+
+    /**
+     * Change the title of a menu or menu item.
+     * @param {string} commandid Menu/Command ID, e.g. "file" or "file.open"
+     * @param {string} title Menu title to display, e.g. "File" or "Open"
+     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS, ERR_NOT_FOUND, ERR_UNKNOWN
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function SetMenuTitle();
+    appshell.app.setMenuTitle = function (commandid, title, callback) {
+        SetMenuTitle(callback, commandid, title);
+    };
+ 
+    /**
+     * Get menu title. For tests.
+     * @param {string} commandid ID of the menu item.
+     * @param {function(integer, string)} callback Asynchronous callback function.
+     *      The callback gets two arguments, error code, title.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     * @return None. This is an asynchronous call that is not meant to have a return
+     */
+    native function GetMenuTitle();
+    appshell.app.getMenuTitle = function (commandid, callback) {
+        GetMenuTitle(callback, commandid);
+    };
+
+    /**
+     * Remove menu associated with commandId.
+     * @param {string} commandid ID of the menu item.
+     * @param {function(err)} callback Asynchronous callback function. The callback gets an error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function RemoveMenu();
+    appshell.app.removeMenu = function (commandId, callback) {
+        RemoveMenu(callback, commandId);
+    };
+
+    /**
+     * Remove menuitem associated with commandId.
+     * @param {string} commandid ID of the menu item.
+     * @param {function(err)} callback Asynchronous callback function. The callback gets an error code.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function RemoveMenuItem();
+    appshell.app.removeMenuItem = function (commandId, callback) {
+        RemoveMenuItem(callback, commandId);
+    };
+ 
+    /**
      * Return the user's language per operating system preferences.
      */
     native function GetCurrentLanguage();
