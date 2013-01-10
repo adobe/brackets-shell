@@ -15,6 +15,9 @@
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
+// Additional globals
+extern HACCEL hAccelTable;
+
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,
                                   CefWindowInfo& windowInfo,
@@ -253,4 +256,18 @@ bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
   }
 
   return true;
+}
+
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                    const CefKeyEvent& event,
+                                    CefEventHandle os_event,
+                                    bool* is_keyboard_shortcut) {
+    ::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event);
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                                const CefKeyEvent& event,
+                                CefEventHandle os_event) {
+  return false;
 }

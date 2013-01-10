@@ -851,6 +851,10 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
               ExtensionString position, ExtensionString relativeId)
 {
     HMENU mainMenu = GetMenu((HWND)getMenuParent(browser));
+    if (mainMenu == NULL) {
+        mainMenu = CreateMenu();
+        SetMenu((HWND)getMenuParent(browser), mainMenu);
+    }
 
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
@@ -1030,16 +1034,6 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     return ERR_NOT_FOUND;
 }
 
-// Looks at modifiers and special keys in "key",
-// removes then and returns an unsigned int mask
-// that can be used by setKeyEquivalentModifierMask
-void fixupKeyString(ExtensionString& key)
-{
-    appshell_extensions::fixupKey(key, L"Ctrl-",  L"Ctrl+");
-    appshell_extensions::fixupKey(key, L"Shift-", L"Shift+");
-    appshell_extensions::fixupKey(key, L"Alt-",   L"Alt+");
-}
-
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key,
                   ExtensionString position, ExtensionString relativeId)
@@ -1077,6 +1071,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     int32 tag = -1;
     ExtensionString title;
     ExtensionString keyStr;
+    ExtensionString displayKeyStr;
 
     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
@@ -1089,8 +1084,14 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     keyStr = key.c_str();
 
     if (key.length() > 0) {
-        fixupKeyString(keyStr);
-        title = title + L"\t" + keyStr;
+        // We get a keyStr that looks like "Ctrl-O", which is the format we
+        // need for the accelerator table. For displaying in the menu, though,
+        // we have to change it to "Ctrl+O". Careful not to change the final
+        // character, though, so "Ctrl--" ends up as "Ctrl+-".
+        displayKeyStr = keyStr;
+        replace(displayKeyStr.begin(), displayKeyStr.end() - 1, '-', '+');
+
+        title = title + L"\t" + displayKeyStr;
     }
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
     bool inserted = false;
