@@ -29,7 +29,7 @@
 #include <string>
 
 // Extension error codes. These MUST be in sync with the error
-// codes in brackets_extensions.js
+// codes in appshell_extensions.js
 #if !defined(OS_WIN) // NO_ERROR is defined on windows
 static const int NO_ERROR                   = 0;
 #endif
@@ -89,6 +89,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
+
+int32 GetNodeState(int32& state);
 
 void OnBeforeShutdown();
 

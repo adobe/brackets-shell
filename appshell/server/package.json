@@ -1,0 +1,11 @@
+{
+  "name": "appshell-node-server",
+  "version": "0.0.1",
+  "description": "Node server for app shell",
+  "main": "Launcher.js",
+  "author": "Joel Brandt <joelrbrandt@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "ws-deploy": "git+https://github.com/joelrbrandt/ws-deploy.git#7a3bdc6b21ebd66d4b360003391257945ab0585f"
+  }
+}
