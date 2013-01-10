@@ -24,6 +24,7 @@
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "native_menu_model.h"
+#include "appshell_node_process.h"
 
 namespace appshell_extensions {
 
@@ -293,6 +294,25 @@ public:
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
             OpenLiveBrowser(url, false);
 
+        } else if (message_name == "GetNodeState") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                int32 port = 0;
+                int32 portOrErr = getNodeState();
+                if (portOrErr < 0) { // there is an error
+                    error = portOrErr;
+                } else {
+                    port = portOrErr;
+                    error = NO_ERROR;
+                }
+                responseArgs->SetInt(2, port);
+            }
+            
         } else if (message_name == "QuitApplication") {
             // Parameters - none
 
