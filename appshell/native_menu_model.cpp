@@ -114,7 +114,7 @@ int NativeMenuModel::getTag(ExtensionString command)
 {
     menuTag::iterator foundItem = commandMap.find(command);
     if(foundItem == commandMap.end()) {
-        return -1;
+        return kTagNotFound;
     }
     return foundItem->second;
 }

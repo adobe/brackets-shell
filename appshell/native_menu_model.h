@@ -58,6 +58,9 @@ typedef std::map<int, NativeMenuItemModel> menu;
 //tag id for the first native menu item. This is incremented for each new item.
 const int kInitialTagCount = 5001;
 
+//value for tags that cannot be found
+const int kTagNotFound = -1;
+
 class NativeMenuModel {
 private:
     menu menuItems;
