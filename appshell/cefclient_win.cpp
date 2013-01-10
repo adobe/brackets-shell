@@ -825,16 +825,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     case WM_INITMENUPOPUP:
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
+        void* menuParent = getMenuParent(g_handler->GetBrowser());
         for (int i = 0; i < count; i++) {
             UINT id = GetMenuItemID(menu, i);
 
-            bool enabled = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED : MF_DISABLED;
-            EnableMenuItem(menu, id,  flagEnabled | MF_BYCOMMAND);
+            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            EnableMenuItem(menu, id,  flagEnabled);
 
-            bool checked = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).isMenuItemChecked(id);
-            UINT flagChecked = checked ? MF_CHECKED : MF_UNCHECKED;
-            CheckMenuItem(menu, id, flagChecked | MF_BYCOMMAND);
+            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
+            CheckMenuItem(menu, id, flagChecked);
         }
         break;
     }

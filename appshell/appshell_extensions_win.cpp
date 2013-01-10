@@ -799,23 +799,27 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
 // Return index where menu or menu item should be placed.
 // -1 indicates append. -2 indicates 'before' - WINAPI supports 
 // placing a menu before an item without needing the position.
+
+const int kAppend = -1;
+const int kBefore = -2;
+
 int32 getMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId)
 {    
     if (position.size() == 0)
     {
-        return -1;
+        return kAppend;
     }
     if (position == L"first") {
         return 0;
     }
     if (position == L"before" && relativeId.size() > 0) {
-        return -2;
+        return kBefore;
     }
-    int32 positionIdx = -1;
+    int32 positionIdx = kAppend;
     if (position == L"after" && relativeId.size() > 0) {
         int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
 
-        if (relativeTag != -1) {
+        if (relativeTag != kTagNotFound) {
             HMENU parentMenu = (HMENU)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(relativeTag);
             if (parentMenu == NULL) {
                 parentMenu = GetMenu((HWND)getMenuParent(browser));
@@ -849,7 +853,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     HMENU mainMenu = GetMenu((HWND)getMenuParent(browser));
 
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
-    if (tag == -1) {
+    if (tag == kTagNotFound) {
         tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
         NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
     } else {
@@ -859,7 +863,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
 
     bool inserted = false;    
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
-    if (positionIdx >= 0 || positionIdx == -2) 
+    if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
         memset(&menuInfo, 0, sizeof(MENUITEMINFO));
@@ -877,7 +881,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         else
         {
             int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-            if (relativeTag >= 0 && positionIdx == -2) {
+            if (relativeTag >= 0 && positionIdx == kBefore) {
                 InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo);
                 inserted = true;
             } else {
@@ -1041,7 +1045,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                   ExtensionString position, ExtensionString relativeId)
 {
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
-    if (parentTag == -1) {
+    if (parentTag == kTagNotFound) {
         return NO_ERROR;
     }
 
@@ -1075,7 +1079,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     ExtensionString keyStr;
 
     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
-    if (tag == -1) {
+    if (tag == kTagNotFound) {
         tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
     } else {
         return NO_ERROR;
@@ -1090,7 +1094,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
     bool inserted = false;
-    if (positionIdx >= 0 || positionIdx == -2) 
+    if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
         memset(&menuInfo, 0, sizeof(MENUITEMINFO));        
@@ -1110,7 +1114,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         else
         {
             int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-            if (relativeTag >= 0 && positionIdx == -2) {
+            if (relativeTag >= 0 && positionIdx == kBefore) {
                 InsertMenuItem(submenu, relativeTag, FALSE, &menuInfo);
                 inserted = true;
             } else {
@@ -1144,7 +1148,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index) {
     static WCHAR titleBuf[MAX_LOADSTRING];  
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
-    if (tag == -1) {
+    if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     HMENU menu = (HMENU) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
@@ -1192,7 +1196,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
 
     // find the item
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
-    if (tag == -1)
+    if (tag == kTagNotFound)
         return ERR_NOT_FOUND;
 
     HMENU menu = (HMENU) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
@@ -1224,7 +1228,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& title) {
     static WCHAR titleBuf[MAX_LOADSTRING];  
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
-    if (tag == -1) {
+    if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     HMENU menu = (HMENU) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
@@ -1262,7 +1266,7 @@ int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId
 int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
     int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
-    if (tag == -1) {
+    if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     HMENU mainMenu = (HMENU)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);

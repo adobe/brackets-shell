@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -81,6 +81,10 @@ int NativeMenuModel::setMenuItemState (ExtensionString command, bool enabled, bo
 }
 
 ExtensionString NativeMenuModel::getCommandId(int tag) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return ExtensionString();
+    }
     return menuItems[tag].commandId;
 }
 
@@ -110,16 +114,24 @@ int NativeMenuModel::getTag(ExtensionString command)
 {
     menuTag::iterator foundItem = commandMap.find(command);
     if(foundItem == commandMap.end()) {
-        return -1;
+        return kTagNotFound;
     }
     return foundItem->second;
 }
 
 void NativeMenuModel::setOsItem (int tag, void* theItem) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return;
+    }
     menuItems[tag].osItem = theItem;
 }
 
 void* NativeMenuModel::getOsItem (int tag) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return NULL;
+    }
 	 return menuItems[tag].osItem;
 }
 
