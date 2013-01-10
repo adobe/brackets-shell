@@ -690,6 +690,9 @@ NSUInteger processKeyString(ExtensionString& key)
     appshell_extensions::fixupKey(key, "Left", "←");
     appshell_extensions::fixupKey(key, "Right", "→");
 
+    // from unicode display char to ascii hyphen
+    appshell_extensions::fixupKey(key, "−", "-");
+
     return mask;
 }
 
