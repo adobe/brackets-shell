@@ -83,7 +83,7 @@ int NativeMenuModel::setMenuItemState (ExtensionString command, bool enabled, bo
 ExtensionString NativeMenuModel::getCommandId(int tag) {
     menu::iterator foundItem = menuItems.find(tag);
     if(foundItem == menuItems.end()) {
-        return "";
+        return ExtensionString();
     }
     return menuItems[tag].commandId;
 }
