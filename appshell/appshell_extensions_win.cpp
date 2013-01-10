@@ -1276,6 +1276,7 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     DeleteMenu(mainMenu, tag, MF_BYCOMMAND);
     NativeMenuModel::getInstance(getMenuParent(browser)).removeMenuItem(commandId);
     RemoveKeyFromAcceleratorTable(tag);
+    DrawMenuBar((HWND)getMenuParent(browser));
     return NO_ERROR;
 }
 
