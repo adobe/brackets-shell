@@ -19,6 +19,7 @@
 #include "string_util.h"
 #include "client_switches.h"
 #include "native_menu_model.h"
+#include "appshell_node_process.h"
 
 #include <ShlObj.h>
 
@@ -190,6 +191,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   }
 
   hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
+
+  // Start the node server process
+  startNodeProcess();
 
   int result = 0;
 

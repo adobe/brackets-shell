@@ -96,6 +96,24 @@
             '<@(includes_win)',
             '<@(appshell_sources_win)',
           ],
+          'copies': [
+            {
+              # Copy node executable to the output directory
+              'destination': '<(PRODUCT_DIR)',
+              'files': ['deps/node/node.exe'],
+            },
+            {
+              # Copy node server files to the output directory
+              # The '/' at the end of the 'files' directory is very important and magically
+              # causes 'xcopy' to get used instead of 'copy' for recursive copies.
+              # This seems to be an undocumented feature of gyp.
+              # Also, the ../ before the PRODUCT_DIR variable is correct. Gyp doesn't seem to
+              # munge paths properly when copying a nested subdirectory. This seems to be
+              # an undocumented 'feature' of gyp.
+              'destination': '../<(PRODUCT_DIR)',
+              'files': ['appshell/server/'],
+            },
+          ],
         }],
         [ 'OS=="mac"', {
           'product_name': '<(appname)',
@@ -134,6 +152,23 @@
                 '@executable_path/libcef.dylib',
                 '@executable_path/../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
+              ],
+            },
+            {
+              'postbuild_name': 'Copy node server resources',
+              'action': [
+                'rsync',
+                '-a',
+                './appshell/server/',
+                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/../Resources/server/',
+              ],
+            },
+            {
+              'postbuild_name': 'Copy node executable',
+              'action': [
+                'cp',
+                './deps/node/bin/node',
+                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/../Resources/node',
               ],
             },
             {
