@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,16 +30,18 @@
 class NativeMenuItemModel
 {
     public:
-    NativeMenuItemModel() {
-        this->enabled = false;
-        this->checked = false;
-        this->osItem = NULL;
+    NativeMenuItemModel() :
+        checked(false),
+        enabled(false),
+        osItem(NULL)
+    {
     }
-    NativeMenuItemModel(const ExtensionString& commandId, bool enabled, bool checked) {
-        this->commandId = commandId;
-        this->enabled = enabled;
-        this->checked = checked;
-        this->osItem = NULL;
+    NativeMenuItemModel(const ExtensionString& commandId, bool enabled, bool checked) :
+        checked(checked),
+        enabled(enabled),
+        osItem(NULL),
+        commandId(commandId)
+    {
     }
     bool checked;
     bool enabled;
@@ -53,15 +55,18 @@ typedef std::map<ExtensionString, int> menuTag;
 //menu tag to item model
 typedef std::map<int, NativeMenuItemModel> menu;
 
+//tag id for the first native menu item. This is incremented for each new item.
+const int kInitialTagCount = 5001;
 
 class NativeMenuModel {
 private:
     menu menuItems;
     menuTag commandMap;
     int tagCount;
-    NativeMenuModel(menu items) {
-        tagCount = 5001;
-        menuItems = items;
+    NativeMenuModel(menu items) :
+        menuItems(items),
+        tagCount(kInitialTagCount)
+    {
     }
 public:
     //not at all threadsafe
@@ -75,8 +80,8 @@ public:
     int getTag(ExtensionString command);
     int setTag(ExtensionString command, int tag);
     ExtensionString getCommandId(int tag);
-	void setOsItem (int tag, void* theItem);
-	void* getOsItem (int tag);
+    void setOsItem (int tag, void* theItem);
+    void* getOsItem (int tag);
     
     int removeMenuItem(const ExtensionString& command);
 };

@@ -799,19 +799,23 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
 // Return index where menu or menu item should be placed.
 // -1 indicates append. -2 indicates 'before' - WINAPI supports 
 // placing a menu before an item without needing the position.
+
+const int kAppend = -1;
+const int kBefore = -2;
+
 int32 getMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId)
 {    
     if (position.size() == 0)
     {
-        return -1;
+        return kAppend;
     }
     if (position == L"first") {
         return 0;
     }
     if (position == L"before" && relativeId.size() > 0) {
-        return -2;
+        return kBefore;
     }
-    int32 positionIdx = -1;
+    int32 positionIdx = kAppend;
     if (position == L"after" && relativeId.size() > 0) {
         int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
 
@@ -859,7 +863,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
 
     bool inserted = false;    
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
-    if (positionIdx >= 0 || positionIdx == -2) 
+    if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
         memset(&menuInfo, 0, sizeof(MENUITEMINFO));
@@ -1090,7 +1094,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
     bool inserted = false;
-    if (positionIdx >= 0 || positionIdx == -2) 
+    if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
         memset(&menuInfo, 0, sizeof(MENUITEMINFO));        

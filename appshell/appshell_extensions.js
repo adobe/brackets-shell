@@ -388,12 +388,6 @@ if (!appshell.app) {
      */
     native function SetMenuItemState();
     appshell.app.setMenuItemState = function (commandid, enabled, checked, callback) {
-        if (enabled === undefined) {
-            enabled = false;
-        }
-        if (checked === undefined) {
-            checked = false;
-        }
         SetMenuItemState(callback, commandid, enabled, checked);
     };
 

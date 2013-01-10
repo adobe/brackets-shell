@@ -675,11 +675,10 @@ NSUInteger processKeyString(ExtensionString& key)
         mask |= NSAlternateKeyMask;
     }
     //replace special keys with ones expected by keyEquivalent
-    ExtensionString del, backspace, tab, enter;
-    del += NSDeleteCharacter;
-    backspace += NSBackspaceCharacter;
-    tab += NSTabCharacter;
-    enter += NSEnterCharacter;
+    const ExtensionString del("" + NSDeleteCharacter);
+    const ExtensionString backspace("" + NSBackspaceCharacter);
+    const ExtensionString tab("" + NSTabCharacter);
+    const ExtensionString enter("" + NSEnterCharacter);
     
     appshell_extensions::fixupKey(key, "Delete", del);
     appshell_extensions::fixupKey(key, "Backspace", backspace);

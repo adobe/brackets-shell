@@ -364,7 +364,7 @@ public:
             //  1: string - parent menu this is part of
             //  2: string - menuTitle to display
             //  3: string - command ID
-            //  4: key - keyboard shortcut
+            //  4: string - keyboard shortcut
             //  5: string - position - first, last, before, after
             //  6: string - relativeID - ID of other element relative to which this should be positioned (for position before and after)
             if (argList->GetSize() != 7 ||
@@ -444,7 +444,6 @@ public:
             //  2: bool - enabled
             //  3: bool - checked
             if (argList->GetSize() != 4 ||
-                argList->GetType(0) != VTYPE_INT ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_BOOL ||
                 argList->GetType(3) != VTYPE_BOOL) {
