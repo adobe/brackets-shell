@@ -8,6 +8,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "cefclient.h"
+#include "native_menu_model.h"
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -93,6 +94,8 @@ void ClientHandler::CloseMainWindow() {
   BOOL isReallyClosing;
 }
 - (IBAction)quit:(id)sender;
+- (IBAction)handleMenuAction:(id)sender;
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
@@ -126,6 +129,27 @@ void ClientHandler::CloseMainWindow() {
   }
   */
   clientHandler->DispatchCloseToNextBrowser();
+}
+
+- (IBAction)handleMenuAction:(id)sender {
+    if (clientHandler.get() && clientHandler->GetBrowserId()) {
+        CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+        NSMenuItem* senderItem = sender;
+        NSUInteger tag = [senderItem tag];
+        clientHandler->SendJSCommand(browser, NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag));
+    }
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+    NSInteger menuState = NSOffState;
+    NSUInteger tag = [menuItem tag];
+    NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(browser));
+    if (menus.isMenuItemChecked(tag)) {
+        menuState = NSOnState;
+    }
+    [menuItem setState:menuState];
+    return menus.isMenuItemEnabled(tag);
 }
 
 - (void)setClientHandler:(CefRefPtr<ClientHandler>) handler {

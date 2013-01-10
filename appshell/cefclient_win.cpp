@@ -18,6 +18,7 @@
 #include "resource.h"
 #include "string_util.h"
 #include "client_switches.h"
+#include "native_menu_model.h"
 
 #include <ShlObj.h>
 
@@ -34,6 +35,8 @@
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
+HACCEL hAccelTable;
+HWND hWndMain;
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -116,8 +119,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
-
-  HACCEL hAccelTable;
 
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -515,8 +516,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 //        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
-  HWND hWnd;
-
   hInst = hInstance;  // Store instance handle in our global variable
 
   // TODO: test this cases:
@@ -532,14 +531,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
   if (showCmd == SW_MAXIMIZE)
 	  styles |= WS_MAXIMIZE;
-  hWnd = CreateWindow(szWindowClass, szTitle, styles,
+  hWndMain = CreateWindow(szWindowClass, szTitle, styles,
                       left, top, width, height, NULL, NULL, hInstance, NULL);
 
-  if (!hWnd)
+  if (!hWndMain)
     return FALSE;
 
-  RestoreWindowPlacement(hWnd, showCmd);
-  UpdateWindow(hWnd);
+  RestoreWindowPlacement(hWndMain, showCmd);
+  UpdateWindow(hWndMain);
 
   return TRUE;
 }
@@ -731,6 +730,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
           browser->StopLoad();
         return 0;
 #endif // SHOW_TOOLBAR_UI
+      default:
+          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
+          if (commandId.size() > 0) {
+              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId);
+          }
       }
       break;
     }
@@ -817,6 +821,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        void* menuParent = getMenuParent(g_handler->GetBrowser());
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            EnableMenuItem(menu, id,  flagEnabled);
+
+            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
+            CheckMenuItem(menu, id, flagChecked);
+        }
+        break;
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);

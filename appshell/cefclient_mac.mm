@@ -18,6 +18,7 @@
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 #include "client_switches.h"
+#include "native_menu_model.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -74,6 +75,8 @@ static NSAutoreleasePool* g_autopool = nil;
   BOOL isReallyClosing;
 }
 - (void)setIsReallyClosing;
+- (IBAction)handleMenuAction:(id)sender;
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
@@ -104,6 +107,25 @@ static NSAutoreleasePool* g_autopool = nil;
 - (IBAction)showAbout:(id)sender {
   if (g_handler.get() && g_handler->GetBrowserId())
     g_handler->SendJSCommand(g_handler->GetBrowser(), HELP_ABOUT);
+}
+
+- (IBAction)handleMenuAction:(id)sender {
+    if (g_handler.get() && g_handler->GetBrowserId()) {
+        NSMenuItem* senderItem = sender;
+        NSUInteger tag = [senderItem tag];
+        g_handler->SendJSCommand(g_handler->GetBrowser(), NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag));
+    }
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    NSInteger menuState = NSOffState;
+    NSUInteger tag = [menuItem tag];
+    NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser()));
+    if (menus.isMenuItemChecked(tag)) {
+        menuState = NSOnState;
+    }
+    [menuItem setState:menuState];
+    return menus.isMenuItemEnabled(tag);
 }
 
 - (IBAction)quit:(id)sender {

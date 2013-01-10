@@ -23,6 +23,7 @@
 
 #include "appshell_extensions_platform.h"
 #include "appshell_extensions.h"
+#include "native_menu_model.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -584,3 +585,266 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
     [script release];
     return NO_ERROR;
 }
+
+
+// Return index where menu or menu item should be placed.
+// -1 indicates append.
+NSInteger getMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId)
+{
+    NSInteger positionIdx = -1;
+    if (position.size() == 0)
+    {
+        return positionIdx;
+    }
+    if ((position == "before" || position == "after") && relativeId.size() > 0) {
+        int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+
+        if (relativeTag != kTagNotFound) {
+            NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(relativeTag);
+            NSMenu* parentMenu = NULL;
+            if (item != NULL) {
+                parentMenu = [item menu];
+            } else {
+                parentMenu = [NSApp mainMenu];
+            }
+            positionIdx = [parentMenu indexOfItemWithTag:relativeTag];
+            if (positionIdx >= 0 && position == "after") {
+                positionIdx += 1;
+            }
+        }
+    } else if (position == "first") {
+        positionIdx = 0;
+    }
+
+    return positionIdx;
+}
+
+int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, ExtensionString command, ExtensionString position, ExtensionString relativeId) {
+
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    NSMenuItem *testItem = nil;
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
+    } else {
+        // menu already there
+        return NO_ERROR;
+    }
+    NSInteger menuIdx = [[NSApp mainMenu] indexOfItemWithTag:tag];
+    if (menuIdx >= 0) {
+        // if we didn't find the tag, we shouldn't already have an item with this tag
+        return ERR_UNKNOWN;
+    } else {
+        testItem = [[[NSMenuItem alloc] initWithTitle:itemTitleStr action:nil keyEquivalent:@""] autorelease];
+        [testItem setTag:tag];
+        NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)testItem);
+    }
+    NSMenu *subMenu = [testItem submenu];
+    if (subMenu == nil) {
+        subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
+        [testItem setSubmenu:subMenu];
+    }
+   
+    NSInteger positionIdx = getMenuPosition(browser, position, relativeId);
+    if (positionIdx > -1) {
+        [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
+    } else {
+        [[NSApp mainMenu] addItem:testItem];
+    }
+   
+    return NO_ERROR;
+}
+
+// Looks at modifiers and special keys in "key",
+// removes then and returns an unsigned int mask
+// that can be used by setKeyEquivalentModifierMask
+NSUInteger processKeyString(ExtensionString& key)
+{
+    // Bail early if empty string is passed
+    if (key == "") {
+        return 0;
+    }
+    NSUInteger mask = 0;
+    if (appshell_extensions::fixupKey(key, "Cmd-", "")) {
+        mask |= NSCommandKeyMask;
+    }
+    if (appshell_extensions::fixupKey(key, "Ctrl-", "")) {
+        mask |= NSControlKeyMask;
+    }
+    if (appshell_extensions::fixupKey(key, "Shift-", "")) {
+        mask |= NSShiftKeyMask;
+    }
+    if (appshell_extensions::fixupKey(key, "Alt-", "") ||
+        appshell_extensions::fixupKey(key, "Opt-", "")) {
+        mask |= NSAlternateKeyMask;
+    }
+    //replace special keys with ones expected by keyEquivalent
+    const ExtensionString del("" + NSDeleteCharacter);
+    const ExtensionString backspace("" + NSBackspaceCharacter);
+    const ExtensionString tab("" + NSTabCharacter);
+    const ExtensionString enter("" + NSEnterCharacter);
+    
+    appshell_extensions::fixupKey(key, "Delete", del);
+    appshell_extensions::fixupKey(key, "Backspace", backspace);
+    appshell_extensions::fixupKey(key, "Tab", tab);
+    appshell_extensions::fixupKey(key, "Enter", enter);
+    appshell_extensions::fixupKey(key, "Up", "↑");
+    appshell_extensions::fixupKey(key, "Down", "↓");
+    appshell_extensions::fixupKey(key, "Left", "←");
+    appshell_extensions::fixupKey(key, "Right", "→");
+
+    // from unicode display char to ascii hyphen
+    appshell_extensions::fixupKey(key, "−", "-");
+
+    return mask;
+}
+
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString position, ExtensionString relativeId) {
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    NSMenuItem *testItem = nil;
+    int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
+    bool isSeparator = (itemTitle == "---");
+    if (parentTag == kTagNotFound) {
+        return NO_ERROR;
+    }
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
+    } else {
+        return NO_ERROR;
+    }
+
+    NSInteger menuIdx;
+    testItem = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
+    
+    if (testItem != nil) {
+        NSMenu* subMenu = nil;
+        if (![testItem hasSubmenu]) {
+            subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
+            [testItem setSubmenu:subMenu];
+        }
+        subMenu = [testItem submenu];
+        if (subMenu != nil) {
+            if (isSeparator) {
+                menuIdx = -1;
+            }
+            else {
+                menuIdx = [subMenu indexOfItemWithTag:tag];
+            }
+            
+            if (menuIdx < 0) {
+                NSMenuItem* newItem = nil;
+                if (isSeparator) {
+                    newItem = [NSMenuItem separatorItem];
+                }
+                else {
+                    NSUInteger mask = processKeyString(key);
+                    NSString* keyStr = [[NSString alloc] initWithUTF8String:key.c_str()];
+                    keyStr = [keyStr lowercaseString];
+                    newItem = [NSMenuItem alloc];
+                    [newItem setTitle:itemTitleStr];
+                    [newItem setAction:NSSelectorFromString(@"handleMenuAction:")];
+                    [newItem setKeyEquivalent:keyStr];
+                    [newItem setKeyEquivalentModifierMask:mask];
+                    [newItem setTag:tag];
+                    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
+                }
+                NSInteger positionIdx = getMenuPosition(browser, position, relativeId);
+                if (positionIdx > -1) {
+                    [subMenu insertItem:newItem atIndex:positionIdx];
+                } else {
+                    [subMenu addItem:newItem];
+                }
+            }
+        }
+    }
+
+    return NO_ERROR;
+}
+
+int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool &checked, int& index)
+{
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    if ([item respondsToSelector:@selector(menu)]) {
+        NSWindow* mainWindow = [NSApp mainWindow];
+        //menu item's enabled status is dependent on the selector's return value.
+        //[item enabled] will only be correct if we use manual menu enablement.
+        enabled = [(NSObject*)[mainWindow delegate] performSelector:@selector(validateMenuItem:) withObject:item];
+        checked = ([item state] == NSOnState);
+        index = [[item menu] indexOfItemWithTag:tag];
+    }
+    return NO_ERROR;
+}
+
+int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
+    NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    NSMenuItem* menuItem = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (menuItem == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    [menuItem setTitle:itemTitleStr];
+    
+    return NO_ERROR;
+}
+
+int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& title)
+{
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    title = [[item title] UTF8String];
+    
+    return NO_ERROR;
+}
+
+//Remove menu item associated with commandId
+int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    //works for menu and menu item
+    return RemoveMenuItem(browser, commandId);
+}
+
+//Remove menu item associated with commandId
+int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    
+    NSMenu* parentMenu = NULL;
+    if ([item respondsToSelector:@selector(menu)]) {
+        parentMenu = [item menu];
+        if (parentMenu == NULL) {
+            return ERR_NOT_FOUND;
+        }
+        [parentMenu removeItem:item];
+        NativeMenuModel::getInstance(getMenuParent(browser)).removeMenuItem(commandId);
+    } else {
+        return ERR_NOT_FOUND;
+    }
+    
+    return NO_ERROR;
+}
+
