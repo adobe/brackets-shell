@@ -645,6 +645,13 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         [testItem setSubmenu:subMenu];
     }
    
+    // Positioning hack. If position and relativeId are both "", put the menu
+    // before the window menu *except* if it is the Help menu.
+    if (position.size() == 0 && relativeId.size() == 0 && command != "help-menu") {
+        position = "before";
+        relativeId = "window";
+    }
+    
     NSInteger positionIdx = getMenuPosition(browser, position, relativeId);
     if (positionIdx > -1) {
         [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
