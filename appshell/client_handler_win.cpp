@@ -24,15 +24,6 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefString& url,
                                   CefRefPtr<CefClient>& client,
                                   CefBrowserSettings& settings) {
-  REQUIRE_UI_THREAD();
-
-  std::string urlStr = url;
-  
-  //ensure all non-dev tools windows get a menu bar
-  if (windowInfo.menu == NULL && urlStr.find("chrome-devtools:") == std::string::npos) {
-    windowInfo.menu = ::LoadMenu( GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CEFCLIENT_POPUP) );
-  }
-
   return false;
 }
 
@@ -186,10 +177,6 @@ void AttachWindProcToPopup(HWND wnd)
 {
   if (!wnd) {
     return;
-  }
-
-  if (!::GetMenu(wnd)) {
-    return; //no menu, no need for the proc
   }
 
   WNDPROC curProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(wnd, GWLP_WNDPROC));

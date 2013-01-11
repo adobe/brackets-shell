@@ -1026,6 +1026,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
         // destroy the old one.
         DestroyAcceleratorTable(haccelOld); 
         hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        LocalFree(lpaccelNew);
     }
 
     return true;

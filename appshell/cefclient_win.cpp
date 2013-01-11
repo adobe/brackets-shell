@@ -469,14 +469,6 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (locale.str && (locale.length > 0) &&
-      (CefString(locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
