@@ -252,12 +252,8 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     //+ Communicating between the shell and JS is async, so there's no easy way for the JS to decided what to do
     //    in the middle of the key event, unless we introduce promises there, but that is a lot of work now
     
-    //Given those above contraints and my time spent on this, I bow to this dance and handle tab here so that
-    //the keyboard shortcut for tab always gets a chance to fire on mac if it's enabled.
-    if (event.character == NSTabCharacter) {
-        if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
-            return true;
-        }
+    if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
+        return true;
     }
     return false;
 }
