@@ -182,15 +182,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (app->GetCurrentLanguage() == CefString("fr-FR"))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
-
   int result = 0;
 
   if (!settings.multi_threaded_message_loop) {
@@ -478,14 +469,6 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (locale.str && (locale.length > 0) &&
-      (CefString(locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -498,7 +481,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
   wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
   wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
+  wcex.lpszMenuName  = NULL;
   wcex.lpszClassName = szWindowClass;
   wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
