@@ -645,6 +645,13 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         [testItem setSubmenu:subMenu];
     }
    
+    // Positioning hack. If position and relativeId are both "", put the menu
+    // before the window menu *except* if it is the Help menu.
+    if (position.size() == 0 && relativeId.size() == 0 && command != "help-menu") {
+        position = "before";
+        relativeId = "window";
+    }
+    
     NSInteger positionIdx = getMenuPosition(browser, position, relativeId);
     if (positionIdx > -1) {
         [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
@@ -679,10 +686,10 @@ NSUInteger processKeyString(ExtensionString& key)
         mask |= NSAlternateKeyMask;
     }
     //replace special keys with ones expected by keyEquivalent
-    const ExtensionString del("" + NSDeleteCharacter);
-    const ExtensionString backspace("" + NSBackspaceCharacter);
-    const ExtensionString tab("" + NSTabCharacter);
-    const ExtensionString enter("" + NSEnterCharacter);
+    const ExtensionString del = (ExtensionString() += NSDeleteCharacter);
+    const ExtensionString backspace = (ExtensionString() += NSBackspaceCharacter);
+    const ExtensionString tab = (ExtensionString() += NSTabCharacter);
+    const ExtensionString enter = (ExtensionString() += NSEnterCharacter);
     
     appshell_extensions::fixupKey(key, "Delete", del);
     appshell_extensions::fixupKey(key, "Backspace", backspace);

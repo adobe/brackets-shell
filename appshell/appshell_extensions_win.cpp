@@ -851,6 +851,10 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
               ExtensionString position, ExtensionString relativeId)
 {
     HMENU mainMenu = GetMenu((HWND)getMenuParent(browser));
+    if (mainMenu == NULL) {
+        mainMenu = CreateMenu();
+        SetMenu((HWND)getMenuParent(browser), mainMenu);
+    }
 
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
@@ -902,7 +906,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     return NO_ERROR;
 }
 
-void UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
+bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 {
     int keyStrLen = keyStr.length();
     if (keyStrLen) {
@@ -972,28 +976,60 @@ void UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             lpaccelNew[newItem].key = VK_END;
         }  else if (keyStr.find(L"ESC")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_ESCAPE;
-        } else if (keyStr.find(L",")  != ExtensionString::npos) {
-            lpaccelNew[newItem].key = VK_OEM_COMMA;
-        } else if (keyStr.at(keyStrLen-1) == '-') {
-            lpaccelNew[newItem].key = VK_OEM_MINUS;
-        }  else if (keyStr.find(L".")  != ExtensionString::npos) {
-            lpaccelNew[newItem].key = VK_OEM_PERIOD;
-        }  else if (keyStr.find(L"+")  != ExtensionString::npos) {
-            lpaccelNew[newItem].key = VK_OEM_PLUS;
-        } else if (keyStr.find(L"*")  != ExtensionString::npos) {
-            lpaccelNew[newItem].key = VK_MULTIPLY;
-        } else if (keyStr.find(L"/")  != ExtensionString::npos) {
-            lpaccelNew[newItem].key = VK_DIVIDE;
         } else {
-            int ascii = keyStr.at(keyStrLen-1);
-            lpaccelNew[newItem].key = ascii;
+            bool isFunctionKey = false;
+            WCHAR fKey[4];
+
+            // Check for F1 to F15 function key. Note that we have to count down here because 
+            // we want F12 and such to be found before F1 and so on.
+            for (int i = VK_F15; i >= VK_F1; i--) {
+                swprintf(fKey, sizeof(fKey), L"F%d", (i - VK_F1 + 1));
+			
+                if (keyStr.find(fKey) != ExtensionString::npos) {
+                    lpaccelNew[newItem].key = i;
+                    isFunctionKey = true;
+                    break;
+                }
+            }
+
+            if (!isFunctionKey) {
+                int ascii = keyStr.at(keyStrLen-1);
+                
+                if (ascii > 127 || isalnum(ascii)) {
+                    lpaccelNew[newItem].key = ascii;
+                } else {
+                    // Get the virtual key code for non-alpha-numeric low-ascii characters.
+                    int keyCode = ::VkKeyScan(ascii);
+                    WORD vKey = (short)(keyCode & 0x000000FF);
+
+                    // Get unshifted key from keyCode so that we can determine whether the 
+                    // key is a shifted one or not.
+                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);	
+                    bool isDeadChar = ((unshiftedChar & 0x80000000) == 0x80000000);
+
+                    // If key code is -1 or if the key is a shifted key sharing with one of the 
+                    // number keys on the keyboard, then we don't have a functionable shortcut. 
+                    // So don't update the accelerator table. Just return false here so that the
+                    // caller can remove the shortcut string from the menu title. An example of this 
+                    // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
+                    if (keyCode == -1 || isDeadChar || (unshiftedChar >= '0' && unshiftedChar <= '9')) {
+                        LocalFree(lpaccelNew);
+                        return false;
+                    }
+
+                    lpaccelNew[newItem].key = vKey;
+                }
+            }
         }
+
         // Create the new accelerator table, and 
         // destroy the old one.
-
         DestroyAcceleratorTable(haccelOld); 
         hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        LocalFree(lpaccelNew);
     }
+
+    return true;
 }
 
 int32 RemoveKeyFromAcceleratorTable(int32 tag)
@@ -1028,16 +1064,6 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     }
     LocalFree(lpaccelNew);
     return ERR_NOT_FOUND;
-}
-
-// Looks at modifiers and special keys in "key",
-// removes then and returns an unsigned int mask
-// that can be used by setKeyEquivalentModifierMask
-void fixupKeyString(ExtensionString& key)
-{
-    appshell_extensions::fixupKey(key, L"Ctrl-",  L"Ctrl+");
-    appshell_extensions::fixupKey(key, L"Shift-", L"Shift+");
-    appshell_extensions::fixupKey(key, L"Alt-",   L"Alt+");
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
@@ -1077,6 +1103,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     int32 tag = -1;
     ExtensionString title;
     ExtensionString keyStr;
+    ExtensionString displayKeyStr;
 
     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
@@ -1089,8 +1116,14 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     keyStr = key.c_str();
 
     if (key.length() > 0) {
-        fixupKeyString(keyStr);
-        title = title + L"\t" + keyStr;
+        // We get a keyStr that looks like "Ctrl-O", which is the format we
+        // need for the accelerator table. For displaying in the menu, though,
+        // we have to change it to "Ctrl+O". Careful not to change the final
+        // character, though, so "Ctrl--" ends up as "Ctrl+-".
+        displayKeyStr = keyStr;
+        replace(displayKeyStr.begin(), displayKeyStr.end() - 1, '-', '+');
+
+        title = title + L"\t" + displayKeyStr;
     }
     int32 positionIdx = getMenuPosition(browser, position, relativeId);
     bool inserted = false;
@@ -1140,7 +1173,10 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
     DrawMenuBar((HWND)getMenuParent(browser));
 
-    UpdateAcceleratorTable(tag, keyStr);
+    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
+        title = title.substr(0, title.find('\t'));
+        SetMenuTitle(browser, command, title);
+    }
 
     return NO_ERROR;
 }

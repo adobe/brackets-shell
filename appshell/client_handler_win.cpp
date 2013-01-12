@@ -15,21 +15,15 @@
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
+// Additional globals
+extern HACCEL hAccelTable;
+
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,
                                   CefWindowInfo& windowInfo,
                                   const CefString& url,
                                   CefRefPtr<CefClient>& client,
                                   CefBrowserSettings& settings) {
-  REQUIRE_UI_THREAD();
-
-  std::string urlStr = url;
-  
-  //ensure all non-dev tools windows get a menu bar
-  if (windowInfo.menu == NULL && urlStr.find("chrome-devtools:") == std::string::npos) {
-    windowInfo.menu = ::LoadMenu( GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CEFCLIENT_POPUP) );
-  }
-
   return false;
 }
 
@@ -185,10 +179,6 @@ void AttachWindProcToPopup(HWND wnd)
     return;
   }
 
-  if (!::GetMenu(wnd)) {
-    return; //no menu, no need for the proc
-  }
-
   WNDPROC curProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(wnd, GWLP_WNDPROC));
 
   //if this is the first time, assume the above checks are all we need, otherwise
@@ -253,4 +243,21 @@ bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
   }
 
   return true;
+}
+
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                    const CefKeyEvent& event,
+                                    CefEventHandle os_event,
+                                    bool* is_keyboard_shortcut) {
+    if (::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                                const CefKeyEvent& event,
+                                CefEventHandle os_event) {
+  return false;
 }
