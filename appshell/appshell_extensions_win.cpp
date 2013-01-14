@@ -35,6 +35,9 @@
 #include <sys/stat.h>
 
 #define CLOSING_PROP L"CLOSING"
+#define UNICODE_MINUS 0x2212
+#define UNICODE_LEFT_ARROW 0x2190
+#define UNICODE_DOWN_ARROW 0x2193
 
 
 // Forward declarations for functions at the bottom of this file
@@ -906,6 +909,14 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     return NO_ERROR;
 }
 
+// Return true if the unicode character is one of the symbols that can be used 
+// directly as an accelerator key without converting it to its virtual key code.
+// Currently, we have the unicode minus symbol and up/down, left/right arrow keys.
+bool canBeUsedAsShortcutKey(int unicode)
+{
+    return (unicode == UNICODE_MINUS || (unicode >= UNICODE_LEFT_ARROW && unicode <= UNICODE_DOWN_ARROW));
+}
+
 bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 {
     int keyStrLen = keyStr.length();
@@ -980,7 +991,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             bool isFunctionKey = false;
             WCHAR fKey[4];
 
-            // Check for F1 to F15 function key. Note that we have to count down here because 
+            // Check for F1 to F15 function keys. Note that we have to count down here because 
             // we want F12 and such to be found before F1 and so on.
             for (int i = VK_F15; i >= VK_F1; i--) {
                 swprintf(fKey, sizeof(fKey), L"F%d", (i - VK_F1 + 1));
@@ -994,29 +1005,30 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 
             if (!isFunctionKey) {
                 int ascii = keyStr.at(keyStrLen-1);
-                
-                if (ascii > 127 || isalnum(ascii)) {
+ 
+                if  ( canBeUsedAsShortcutKey(ascii) || (ascii < 128 && isalnum(ascii)) ) {
                     lpaccelNew[newItem].key = ascii;
                 } else {
-                    // Get the virtual key code for non-alpha-numeric low-ascii characters.
+                    // Get the virtual key code for non-alpha-numeric characters.
                     int keyCode = ::VkKeyScan(ascii);
                     WORD vKey = (short)(keyCode & 0x000000FF);
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
                     UINT unshiftedChar = ::MapVirtualKey(vKey, 2);	
-                    bool isDeadChar = ((unshiftedChar & 0x80000000) == 0x80000000);
-
-                    // If key code is -1 or if the key is a shifted key sharing with one of the 
-                    // number keys on the keyboard, then we don't have a functionable shortcut. 
+                    bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
+  
+                    // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with
+                    // one of the number keys on the keyboard, then we don't have a functionable shortcut. 
                     // So don't update the accelerator table. Just return false here so that the
                     // caller can remove the shortcut string from the menu title. An example of this 
                     // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
-                    if (keyCode == -1 || isDeadChar || (unshiftedChar >= '0' && unshiftedChar <= '9')) {
+                    if (keyCode == -1 || isDeadKey || unshiftedChar == 0 ||
+                        (unshiftedChar >= '0' && unshiftedChar <= '9')) {
                         LocalFree(lpaccelNew);
                         return false;
                     }
-
+                    
                     lpaccelNew[newItem].key = vKey;
                 }
             }
@@ -1072,7 +1084,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 {
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
     if (parentTag == kTagNotFound) {
-        return NO_ERROR;
+        return ERR_NOT_FOUND;
     }
 
     HMENU menu = (HMENU) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
