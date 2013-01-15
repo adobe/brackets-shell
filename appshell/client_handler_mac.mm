@@ -136,7 +136,9 @@ void ClientHandler::CloseMainWindow() {
         CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
         NSMenuItem* senderItem = sender;
         NSUInteger tag = [senderItem tag];
-        clientHandler->SendJSCommand(browser, NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag));
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+        clientHandler->SendJSCommand(browser, commandId, callback);
     }
 }
 
