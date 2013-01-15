@@ -10,6 +10,13 @@ const std::string FILE_QUIT         = "file.quit";
 const std::string FILE_CLOSE_WINDOW = "file.close_window";
 const std::string HELP_ABOUT        = "help.about";
 
+const ExtensionString EDIT_UNDO         = "edit.undo";
+const ExtensionString EDIT_REDO         = "edit.redo";
+const ExtensionString EDIT_CUT          = "edit.cut";
+const ExtensionString EDIT_COPY         = "edit.copy";
+const ExtensionString EDIT_PASTE        = "edit.paste";
+const ExtensionString EDIT_SELECT_ALL   = "edit.selectAll";
+
 // Base CommandCallback class
 class CommandCallback : public CefBase {
   
@@ -39,4 +46,21 @@ public:
   }
 private:
   CefRefPtr<CefBrowser> browser_;
+};
+
+class EditCommandCallback : public CommandCallback {
+public:
+    EditCommandCallback(CefRefPtr<CefBrowser> browser, ExtensionString commandId)
+    : browser_(browser)
+    , commandId_(commandId) {
+    }
+    
+    virtual void CommandComplete(bool handled) {
+        if (!handled) {
+            HandleEditCommand(browser_, commandId_);
+        }
+    }
+private:
+    CefRefPtr<CefBrowser> browser_;
+    ExtensionString commandId_;
 };
