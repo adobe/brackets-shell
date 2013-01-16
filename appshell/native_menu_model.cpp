@@ -112,7 +112,7 @@ int NativeMenuModel::setTag(ExtensionString command, int tag)
     menuTag::iterator foundItem = commandMap.find(command);
     if(foundItem == commandMap.end()) {
         commandMap[command] = tag;
-        menuItems[tag] = NativeMenuItemModel(command, L"", true, false);
+        menuItems[tag] = NativeMenuItemModel(command, ExtensionString(), true, false);
         return tagCount;
     }
     return foundItem->second;
