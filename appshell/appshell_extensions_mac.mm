@@ -589,7 +589,7 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
 {
     index = -1;
-    parentId = L"";
+    parentId = ExtensionString();
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
     
     if (tag == kTagNotFound) {
@@ -639,7 +639,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     NSMenuItem *testItem = nil;
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, L"");
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
     } else {
         // menu already there
         return NO_ERROR;
