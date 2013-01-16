@@ -510,6 +510,25 @@ if (!appshell.app) {
     };
  
     /**
+     * Get the position of the menu or menu item associated with commandId.
+     * @param {string} command ID of the menu or menu item.
+     * @param {function(err, parentId, index)} callback Asynchronous callback function. The callback gets an error code,
+     *     the ID of the immediate parent and the index of the menu or menu item. If the command is a top level menu,
+     *     it does not have a parent and parentId will be NULL. The returned index will be -1 if the command is not found.
+     *     In those not-found cases, the error value will also be ERR_NOT_FOUND.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetMenuPosition();
+    appshell.app.getMenuPosition = function (commandId, callback) {
+        GetMenuPosition(callback, commandId);
+    };
+ 
+    /**
      * Return the user's language per operating system preferences.
      */
     native function GetCurrentLanguage();
