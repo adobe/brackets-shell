@@ -1228,6 +1228,17 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
+const DWORD kMenuRedrawTimeout = 100;
+UINT_PTR redrawTimerId = NULL;
+CefRefPtr<CefBrowser> redrawBrowser;
+
+void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD dwTime) {
+    DrawMenuBar((HWND)getMenuParent(redrawBrowser));
+    KillTimer(NULL, redrawTimerId);
+    redrawTimerId = NULL;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
 
     // find the item
@@ -1256,6 +1267,15 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     res = SetMenuItemInfo(menu, tag, FALSE, &itemInfo);
     if (res == 0) {
         return ConvertErrnoCode(GetLastError());        
+    }
+
+    // The menu bar needs to be redrawn, but we don't want to redraw with
+    // *every* title change since that causes flicker if we're changing a 
+    // bunch of titles in a row (like at app startup). 
+    // Set a timer here so we only do a single redraw.
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
     }
 
     return NO_ERROR;
