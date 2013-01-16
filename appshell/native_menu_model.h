@@ -36,17 +36,19 @@ class NativeMenuItemModel
         osItem(NULL)
     {
     }
-    NativeMenuItemModel(const ExtensionString& commandId, bool enabled, bool checked) :
+    NativeMenuItemModel(const ExtensionString& commandId, const ExtensionString& parentId, bool enabled, bool checked) :
         checked(checked),
         enabled(enabled),
         osItem(NULL),
-        commandId(commandId)
+        commandId(commandId),
+        parentId(parentId)
     {
     }
     bool checked;
     bool enabled;
     void *osItem;
     ExtensionString commandId;
+    ExtensionString parentId;
 };
 
 //command name -> menutag
@@ -79,10 +81,11 @@ public:
     bool isMenuItemEnabled(int tag);
     bool isMenuItemChecked(int tag);
     int setMenuItemState(ExtensionString command, bool enabled, bool checked);
-    int getOrCreateTag(ExtensionString command);
+    int getOrCreateTag(ExtensionString command, ExtensionString parent);
     int getTag(ExtensionString command);
     int setTag(ExtensionString command, int tag);
     ExtensionString getCommandId(int tag);
+    ExtensionString getParentId(int tag);
     void setOsItem (int tag, void* theItem);
     void* getOsItem (int tag);
     

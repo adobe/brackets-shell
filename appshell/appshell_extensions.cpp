@@ -489,6 +489,24 @@ public:
                 error = GetMenuTitle(browser, commandId, menuTitle);
                 responseArgs->SetString(2, menuTitle);
             }
+        } else if (message_name == "GetMenuPosition") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId;
+                ExtensionString parentId;
+                int index;
+                commandId = argList->GetString(1);
+                error = GetMenuPosition(browser, commandId, parentId, index);
+                responseArgs->SetString(2, parentId);
+                responseArgs->SetInt(3, index);
+            }
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
