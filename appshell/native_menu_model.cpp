@@ -44,7 +44,7 @@ NativeMenuModel& NativeMenuModel::getInstance(void* menuParent, bool reset)
 
     menu m;
     NativeMenuModel* instance = new NativeMenuModel(m);
-    instance->setTag(WINDOW_COMMAND, WINDOW_MENUITEMTAG);
+    instance->setTag(WINDOW_COMMAND, ExtensionString(), WINDOW_MENUITEMTAG);
     instanceMap[menuParent] = instance;
     return *(instance);
 }
@@ -107,12 +107,12 @@ int NativeMenuModel::getOrCreateTag(ExtensionString command, ExtensionString par
     return foundItem->second;
 }
 
-int NativeMenuModel::setTag(ExtensionString command, int tag)
+int NativeMenuModel::setTag(ExtensionString command, ExtensionString parent, int tag)
 {
     menuTag::iterator foundItem = commandMap.find(command);
     if(foundItem == commandMap.end()) {
         commandMap[command] = tag;
-        menuItems[tag] = NativeMenuItemModel(command, L"", true, false);
+        menuItems[tag] = NativeMenuItemModel(command, parent, true, false);
         return tagCount;
     }
     return foundItem->second;

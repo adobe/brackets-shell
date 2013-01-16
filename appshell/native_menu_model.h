@@ -83,7 +83,7 @@ public:
     int setMenuItemState(ExtensionString command, bool enabled, bool checked);
     int getOrCreateTag(ExtensionString command, ExtensionString parent);
     int getTag(ExtensionString command);
-    int setTag(ExtensionString command, int tag);
+    int setTag(ExtensionString command, ExtensionString parent, int tag);
     ExtensionString getCommandId(int tag);
     ExtensionString getParentId(int tag);
     void setOsItem (int tag, void* theItem);

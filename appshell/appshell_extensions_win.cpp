@@ -809,7 +809,7 @@ const int kBefore = -2;
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
 {
     index = -1;
-    parentId = L"";
+    parentId = ExtensionString();
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
 
     if (tag == kTagNotFound) {
@@ -880,7 +880,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
 
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, L"");
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
         NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
     } else {
         // menu is already there
