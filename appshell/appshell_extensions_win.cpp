@@ -1320,33 +1320,22 @@ void HandleEditCommand(CefRefPtr<CefBrowser> browser, const ExtensionString& com
 {
     REQUIRE_UI_THREAD();
 
-    WPARAM wParam = 0;
-    LPARAM lParam = 0;
+	CefRefPtr<CefFrame> frame = browser->GetFocusedFrame();
+	if (!frame)
+		return;
 
-    if (commandId == EDIT_UNDO) {
-        wParam = 0x5a;
-        lParam = 0x2c0001;
-    } else if (commandId == EDIT_REDO) {
-        // 
-    } else if (commandId == EDIT_CUT) {
-        wParam = 0x58;
-        lParam = 0x2d0001;
-    } else if (commandId == EDIT_COPY) {
-        wParam = 0x43;
-        lParam = 0x2e0001;
-    } else if (commandId == EDIT_PASTE) {
-        wParam = 0x56;
-        lParam = 0x2f0001;
-    } else if (commandId == EDIT_SELECT_ALL) {
-        //
-    }
-    
-    if (wParam && lParam) {
-        HWND hWnd = GetFocus();
-        if (hWnd) {
-            SendMessage(hWnd, WM_KEYDOWN, wParam, lParam);
-        }
-    }
-
+	if (commandId == EDIT_UNDO) {
+		frame->Undo();
+	} else if (commandId == EDIT_REDO) {
+		frame->Redo();
+	} else if (commandId == EDIT_CUT) {
+		frame->Cut();
+	} else if (commandId == EDIT_COPY) {
+		frame->Copy();
+	} else if (commandId == EDIT_PASTE) {
+		frame->Paste();
+	} else if (commandId == EDIT_SELECT_ALL) {
+		frame->SelectAll();
+	}
 }
 
