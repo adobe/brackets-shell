@@ -10,12 +10,21 @@ const std::string FILE_QUIT         = "file.quit";
 const std::string FILE_CLOSE_WINDOW = "file.close_window";
 const std::string HELP_ABOUT        = "help.about";
 
-const std::string EDIT_UNDO         = "edit.undo";
-const std::string EDIT_REDO         = "edit.redo";
-const std::string EDIT_CUT          = "edit.cut";
-const std::string EDIT_COPY         = "edit.copy";
-const std::string EDIT_PASTE        = "edit.paste";
-const std::string EDIT_SELECT_ALL   = "edit.selectAll";
+#if defined(OS_WIN)
+const ExtensionString EDIT_UNDO         = L"edit.undo";
+const ExtensionString EDIT_REDO         = L"edit.redo";
+const ExtensionString EDIT_CUT          = L"edit.cut";
+const ExtensionString EDIT_COPY         = L"edit.copy";
+const ExtensionString EDIT_PASTE        = L"edit.paste";
+const ExtensionString EDIT_SELECT_ALL   = L"edit.selectAll";
+#else
+const ExtensionString EDIT_UNDO         = "edit.undo";
+const ExtensionString EDIT_REDO         = "edit.redo";
+const ExtensionString EDIT_CUT          = "edit.cut";
+const ExtensionString EDIT_COPY         = "edit.copy";
+const ExtensionString EDIT_PASTE        = "edit.paste";
+const ExtensionString EDIT_SELECT_ALL   = "edit.selectAll";
+#endif
 
 // Base CommandCallback class
 class CommandCallback : public CefBase {
