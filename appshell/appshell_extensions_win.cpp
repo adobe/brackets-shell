@@ -35,6 +35,9 @@
 #include <sys/stat.h>
 
 #define CLOSING_PROP L"CLOSING"
+#define UNICODE_MINUS 0x2212
+#define UNICODE_LEFT_ARROW 0x2190
+#define UNICODE_DOWN_ARROW 0x2193
 
 
 // Forward declarations for functions at the bottom of this file
@@ -803,48 +806,66 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
 const int kAppend = -1;
 const int kBefore = -2;
 
-int32 getMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId)
+int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
+{
+    index = -1;
+    parentId = ExtensionString();
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
+
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    HMENU parentMenu = (HMENU)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (parentMenu == NULL) {
+        parentMenu = GetMenu((HWND)getMenuParent(browser));
+     } else {
+        parentId = NativeMenuModel::getInstance(getMenuParent(browser)).getParentId(tag);
+    }
+
+    int len = GetMenuItemCount(parentMenu);
+    for (int i = 0; i < len; i++) {
+        MENUITEMINFO parentItemInfo;
+        memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
+        parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+        parentItemInfo.fMask = MIIM_ID;
+                
+        BOOL res = GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo);
+        if (res == 0) {
+            int err = GetLastError();
+            return ConvertErrnoCode(err);
+        }
+        if (parentItemInfo.wID == (UINT)tag) {
+            index = i;
+            return NO_ERROR;
+        }
+    }
+
+    return ERR_NOT_FOUND;
+}
+
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {    
+    int32 errCode = NO_ERROR;
     if (position.size() == 0)
     {
-        return kAppend;
-    }
-    if (position == L"first") {
-        return 0;
-    }
-    if (position == L"before" && relativeId.size() > 0) {
-        return kBefore;
-    }
-    int32 positionIdx = kAppend;
-    if (position == L"after" && relativeId.size() > 0) {
-        int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-
-        if (relativeTag != kTagNotFound) {
-            HMENU parentMenu = (HMENU)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(relativeTag);
-            if (parentMenu == NULL) {
-                parentMenu = GetMenu((HWND)getMenuParent(browser));
-            }
-            int len = GetMenuItemCount(parentMenu);
-            for (int i = 0; i < len; i++) {
-                MENUITEMINFO parentItemInfo;
-                memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
-                parentItemInfo.cbSize = sizeof(MENUITEMINFO);
-                parentItemInfo.fMask = MIIM_ID;
-                
-                BOOL res = GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo);
-                if (res == 0) {
-                    int err = GetLastError();
-                    return ConvertErrnoCode(err);
-                }
-                if (parentItemInfo.wID == (UINT)relativeTag) {
-                    positionIdx = i + 1;                    
-                    break;
-                }
+        positionIdx = kAppend;
+    } else if (position == L"first") {
+        positionIdx = 0;
+    } else if (position == L"before" && relativeId.size() > 0) {
+        positionIdx = kBefore;
+    } else {
+        int32 positionIdx = kAppend;
+        if (position == L"after" && relativeId.size() > 0) {
+            ExtensionString parentId;   // unused variable
+            errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+            if (positionIdx != -1) {
+                positionIdx++;
             }
         }
     }
 
-    return positionIdx;
+    return errCode;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, ExtensionString command,
@@ -858,7 +879,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
 
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
         NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
     } else {
         // menu is already there
@@ -866,7 +887,11 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     }
 
     bool inserted = false;    
-    int32 positionIdx = getMenuPosition(browser, position, relativeId);
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+    if (errCode != NO_ERROR) {
+        return errCode;
+    }
     if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
@@ -904,6 +929,14 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         }
    }
     return NO_ERROR;
+}
+
+// Return true if the unicode character is one of the symbols that can be used 
+// directly as an accelerator key without converting it to its virtual key code.
+// Currently, we have the unicode minus symbol and up/down, left/right arrow keys.
+bool canBeUsedAsShortcutKey(int unicode)
+{
+    return (unicode == UNICODE_MINUS || (unicode >= UNICODE_LEFT_ARROW && unicode <= UNICODE_DOWN_ARROW));
 }
 
 bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
@@ -980,7 +1013,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             bool isFunctionKey = false;
             WCHAR fKey[4];
 
-            // Check for F1 to F15 function key. Note that we have to count down here because 
+            // Check for F1 to F15 function keys. Note that we have to count down here because 
             // we want F12 and such to be found before F1 and so on.
             for (int i = VK_F15; i >= VK_F1; i--) {
                 swprintf(fKey, sizeof(fKey), L"F%d", (i - VK_F1 + 1));
@@ -994,29 +1027,30 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 
             if (!isFunctionKey) {
                 int ascii = keyStr.at(keyStrLen-1);
-                
-                if (ascii > 127 || isalnum(ascii)) {
+ 
+                if  ( canBeUsedAsShortcutKey(ascii) || (ascii < 128 && isalnum(ascii)) ) {
                     lpaccelNew[newItem].key = ascii;
                 } else {
-                    // Get the virtual key code for non-alpha-numeric low-ascii characters.
+                    // Get the virtual key code for non-alpha-numeric characters.
                     int keyCode = ::VkKeyScan(ascii);
                     WORD vKey = (short)(keyCode & 0x000000FF);
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
                     UINT unshiftedChar = ::MapVirtualKey(vKey, 2);	
-                    bool isDeadChar = ((unshiftedChar & 0x80000000) == 0x80000000);
-
-                    // If key code is -1 or if the key is a shifted key sharing with one of the 
-                    // number keys on the keyboard, then we don't have a functionable shortcut. 
+                    bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
+  
+                    // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with
+                    // one of the number keys on the keyboard, then we don't have a functionable shortcut. 
                     // So don't update the accelerator table. Just return false here so that the
                     // caller can remove the shortcut string from the menu title. An example of this 
                     // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
-                    if (keyCode == -1 || isDeadChar || (unshiftedChar >= '0' && unshiftedChar <= '9')) {
+                    if (keyCode == -1 || isDeadKey || unshiftedChar == 0 ||
+                        (unshiftedChar >= '0' && unshiftedChar <= '9')) {
                         LocalFree(lpaccelNew);
                         return false;
                     }
-
+                    
                     lpaccelNew[newItem].key = vKey;
                 }
             }
@@ -1072,7 +1106,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 {
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
     if (parentTag == kTagNotFound) {
-        return NO_ERROR;
+        return ERR_NOT_FOUND;
     }
 
     HMENU menu = (HMENU) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
@@ -1107,7 +1141,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command);
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
     } else {
         return NO_ERROR;
     }
@@ -1125,7 +1159,11 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
         title = title + L"\t" + displayKeyStr;
     }
-    int32 positionIdx = getMenuPosition(browser, position, relativeId);
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+    if (errCode != NO_ERROR) {
+        return errCode;
+    }
     bool inserted = false;
     if (positionIdx >= 0 || positionIdx == kBefore) 
     {

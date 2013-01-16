@@ -46,7 +46,13 @@ static const int ERR_FILE_EXISTS            = 10;
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
-inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return GetForegroundWindow();}
+inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
+    if (browser.get() && browser->GetHost()) {
+        HWND frameHwnd = browser->GetHost()->GetWindowHandle();
+        return (browser->IsPopup()) ? frameHwnd : GetParent(frameHwnd);
+    }
+    return NULL;
+}
 #else
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac uses a shared menu bar
@@ -108,3 +114,5 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
+
+int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
