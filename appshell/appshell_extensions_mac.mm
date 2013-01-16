@@ -612,7 +612,7 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
 
 // Return index where menu or menu item should be placed.
 // -1 indicates append.
-NSInteger getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {
     NSInteger errCode = NO_ERROR;
     if (position.size() == 0)
