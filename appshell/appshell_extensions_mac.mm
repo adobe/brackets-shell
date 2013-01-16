@@ -612,14 +612,13 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
 
 // Return index where menu or menu item should be placed.
 // -1 indicates append.
-NSInteger getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& errCode)
+NSInteger getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {
-    NSInteger positionIdx = -1;
+    NSInteger errCode = NO_ERROR;
     if (position.size() == 0)
     {
-        return positionIdx;
-    }
-    if ((position == "before" || position == "after") && relativeId.size() > 0) {
+        positionIdx = -1;
+    } else if ((position == "before" || position == "after") && relativeId.size() > 0) {
         ExtensionString parentId;   // unused variable
         errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
 
@@ -630,7 +629,7 @@ NSInteger getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionStrin
         positionIdx = 0;
     }
 
-    return positionIdx;
+    return errCode;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, ExtensionString command, ExtensionString position, ExtensionString relativeId) {
@@ -666,8 +665,8 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         relativeId = "window";
     }
     
-    int32 errCode = NO_ERROR;
-    NSInteger positionIdx = getNewMenuPosition(browser, position, relativeId, errCode);
+    NSInteger positionIdx = -1;
+    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
@@ -774,8 +773,8 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                     [newItem setTag:tag];
                     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
                 }
-                int32 errCode = NO_ERROR;
-                NSInteger positionIdx = getNewMenuPosition(browser, position, relativeId, errCode);
+                NSInteger positionIdx = -1;
+                int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
                 if (errCode != NO_ERROR) {
                     return errCode;
                 }

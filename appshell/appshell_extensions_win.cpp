@@ -844,29 +844,28 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
     return ERR_NOT_FOUND;
 }
 
-int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& errCode)
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {    
-    errCode = NO_ERROR;
+    int32 errCode = NO_ERROR;
     if (position.size() == 0)
     {
-        return kAppend;
-    }
-    if (position == L"first") {
-        return 0;
-    }
-    if (position == L"before" && relativeId.size() > 0) {
-        return kBefore;
-    }
-    int32 positionIdx = kAppend;
-    if (position == L"after" && relativeId.size() > 0) {
-        ExtensionString parentId;   // unused variable
-        errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
-        if (positionIdx != -1) {
-            positionIdx++;
+        positionIdx = kAppend;
+    } else if (position == L"first") {
+        positionIdx = 0;
+    } else if (position == L"before" && relativeId.size() > 0) {
+        positionIdx = kBefore;
+    } else {
+        int32 positionIdx = kAppend;
+        if (position == L"after" && relativeId.size() > 0) {
+            ExtensionString parentId;   // unused variable
+            errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+            if (positionIdx != -1) {
+                positionIdx++;
+            }
         }
     }
 
-    return positionIdx;
+    return errCode;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, ExtensionString command,
@@ -888,8 +887,8 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     }
 
     bool inserted = false;    
-    int32 errCode = NO_ERROR;
-    int32 positionIdx = getNewMenuPosition(browser, position, relativeId, errCode);
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
@@ -1160,8 +1159,8 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
         title = title + L"\t" + displayKeyStr;
     }
-    int32 errCode = NO_ERROR;
-    int32 positionIdx = getNewMenuPosition(browser, position, relativeId, errCode);
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
