@@ -66,7 +66,23 @@ public:
     
     virtual void CommandComplete(bool handled) {
         if (!handled) {
-            HandleEditCommand(browser_, commandId_);
+            CefRefPtr<CefFrame> frame = browser_->GetFocusedFrame();
+            if (!frame)
+                return;
+            
+            if (commandId_ == EDIT_UNDO) {
+                frame->Undo();
+            } else if (commandId_ == EDIT_REDO) {
+                frame->Redo();
+            } else if (commandId_ == EDIT_CUT) {
+                frame->Cut();
+            } else if (commandId_ == EDIT_COPY) {
+                frame->Copy();
+            } else if (commandId_ == EDIT_PASTE) {
+                frame->Paste();
+            } else if (commandId_ == EDIT_SELECT_ALL) {
+                frame->SelectAll();
+            }
         }
     }
 private:

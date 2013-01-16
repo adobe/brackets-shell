@@ -108,6 +108,3 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
-
-void HandleEditCommand(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
-

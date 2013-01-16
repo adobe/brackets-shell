@@ -1316,26 +1316,4 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     return NO_ERROR;
 }
 
-void HandleEditCommand(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
-{
-    REQUIRE_UI_THREAD();
-
-	CefRefPtr<CefFrame> frame = browser->GetFocusedFrame();
-	if (!frame)
-		return;
-
-	if (commandId == EDIT_UNDO) {
-		frame->Undo();
-	} else if (commandId == EDIT_REDO) {
-		frame->Redo();
-	} else if (commandId == EDIT_CUT) {
-		frame->Cut();
-	} else if (commandId == EDIT_COPY) {
-		frame->Copy();
-	} else if (commandId == EDIT_PASTE) {
-		frame->Paste();
-	} else if (commandId == EDIT_SELECT_ALL) {
-		frame->SelectAll();
-	}
-}
 

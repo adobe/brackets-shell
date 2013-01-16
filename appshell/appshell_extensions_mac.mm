@@ -854,26 +854,3 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     
     return NO_ERROR;
 }
-
-void HandleEditCommand(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId) {
-    SEL theSelector = nil;
-    
-    if (commandId == EDIT_UNDO) {
-        theSelector = NSSelectorFromString(@"undo:");
-    } else if (commandId == EDIT_REDO) {
-        theSelector = NSSelectorFromString(@"redo:");
-    } else if (commandId == EDIT_CUT) {
-        theSelector = NSSelectorFromString(@"cut:");
-    } else if (commandId == EDIT_COPY) {
-        theSelector = NSSelectorFromString(@"copy:");
-    } else if (commandId == EDIT_PASTE) {
-        theSelector = NSSelectorFromString(@"paste:");
-    } else if (commandId == EDIT_SELECT_ALL) {
-        theSelector = NSSelectorFromString(@"selectAll:");
-    }
-    
-    if (theSelector != nil) {
-        [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
-    }
-}
-
