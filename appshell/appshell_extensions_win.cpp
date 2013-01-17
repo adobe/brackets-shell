@@ -819,7 +819,7 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
     HMENU parentMenu = (HMENU)NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
     if (parentMenu == NULL) {
         parentMenu = GetMenu((HWND)getMenuParent(browser));
-     } else {
+    } else {
         parentId = NativeMenuModel::getInstance(getMenuParent(browser)).getParentId(tag);
     }
 
@@ -844,30 +844,114 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
     return ERR_NOT_FOUND;
 }
 
-int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
+bool isSeparator(HMENU menu, int32 idx)
+{
+    MENUITEMINFO itemInfo = {0};
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_FTYPE;
+    BOOL res = GetMenuItemInfo(menu, idx, TRUE, &itemInfo);
+    if (res == 0) {
+        return FALSE;
+    }
+    return (itemInfo.fType & MFT_SEPARATOR) != 0;
+}
+
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& parentId, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {    
     int32 errCode = NO_ERROR;
-    if (position.size() == 0)
+    ExtensionString pos = position;
+    ExtensionString relId = relativeId;
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+
+    if (pos.size() == 0)
     {
         positionIdx = kAppend;
-    } else if (position == L"first") {
+    } else if (pos == L"first") {
         positionIdx = 0;
-    } else if (relativeId.size() > 0) {
-        if (position == L"before") {
+    } else if (pos == L"firstInSection" || pos == L"lastInSection") {
+        int32 startTag = model.getTag(relId);
+        HMENU startItem = (HMENU)model.getOsItem(startTag);
+        ExtensionString startParentId = model.getParentId(startTag);
+        HMENU parentMenu = (HMENU)model.getOsItem(model.getTag(startParentId));
+        int32 idx;
+
+        if (startParentId != parentId) {
+            // Section is in a different menu
+            return ERR_NOT_FOUND;
+        }
+
+        MENUITEMINFO parentItemInfo = {0};
+        parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+        parentItemInfo.fMask = MIIM_SUBMENU;
+        BOOL res = GetMenuItemInfo(parentMenu, model.getTag(startParentId), FALSE, &parentItemInfo);
+        if (res == 0) {
+            return ConvertErrnoCode(GetLastError());
+        }
+        parentMenu = parentItemInfo.hSubMenu;
+
+        GetMenuPosition(browser, relId, startParentId, idx);
+
+        if (pos == L"firstInSection") {
+            // Move backwards until reaching the beginning of the menu or a separator
+            while (idx >= 0) {
+                if (isSeparator(parentMenu, idx)) {
+                    break;
+                }
+                idx--;
+            }
+            if (idx < 0) {
+                positionIdx = 0;
+            } else {
+                idx++;
+                pos = L"before";
+            }
+        } else { // "lastInSection"
+            int32 numItems = GetMenuItemCount(parentMenu);
+            // Move forwards until reaching the end of the menu or a separator
+            while (idx < numItems) {
+                if (isSeparator(parentMenu, idx)) {
+                    break;
+                }
+                idx++;
+            }
+            if (idx == numItems) {
+                positionIdx = -1;
+            } else {
+                idx--;
+                pos = L"after";
+            }
+        }
+
+        if (pos == L"before" || pos == L"after") {
+            MENUITEMINFO itemInfo = {0};
+            itemInfo.cbSize = sizeof(MENUITEMINFO);
+            itemInfo.fMask = MIIM_ID;
+                
+            BOOL res = GetMenuItemInfo(parentMenu, idx, TRUE, &itemInfo);
+            if (res == 0) {
+                int err = GetLastError();
+                return ConvertErrnoCode(err);
+            }
+            relId = model.getCommandId(itemInfo.wID);
+        }
+    } 
+    
+    if ((pos == L"before" || pos == L"after") && relId.size() > 0) {
+        if (pos == L"before") {
             positionIdx = kBefore;
         } else {
             positionIdx = kAppend;
         }
 
         ExtensionString parentId;   // unused variable
-        errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+        errCode = GetMenuPosition(browser, relId, parentId, positionIdx);
 
         // If we don't find the relative ID, then don't report the error. 
         // Instead, just make sure that we set positionIdx to kAppend.
         if (errCode == ERR_NOT_FOUND) {
             errCode = NO_ERROR;
             positionIdx = kAppend;
-        } else if (positionIdx >= 0 && position == L"after") {
+        } else if (positionIdx >= 0 && pos == L"after") {
             positionIdx += 1;
         }
     }
@@ -895,7 +979,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
 
     bool inserted = false;    
     int32 positionIdx;
-    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+    int32 errCode = getNewMenuPosition(browser, L"", position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
@@ -1167,7 +1251,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         title = title + L"\t" + displayKeyStr;
     }
     int32 positionIdx;
-    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+    int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
