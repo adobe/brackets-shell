@@ -822,8 +822,13 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     if (menuItem == NULL) {
         return ERR_NOT_FOUND;
     }
-    [menuItem setTitle:itemTitleStr];
     
+    if ([menuItem submenu]) {
+        [[menuItem submenu] setTitle:itemTitleStr];
+    } else {
+        [menuItem setTitle:itemTitleStr];
+    }
+
     return NO_ERROR;
 }
 
@@ -837,7 +842,12 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     if (item == NULL) {
         return ERR_NOT_FOUND;
     }
-    title = [[item title] UTF8String];
+    
+    if ([item submenu]) {
+        title = [[[item submenu] title] UTF8String];
+    } else {
+        title = [[item title] UTF8String];
+    }
     
     return NO_ERROR;
 }
@@ -875,4 +885,3 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     
     return NO_ERROR;
 }
-

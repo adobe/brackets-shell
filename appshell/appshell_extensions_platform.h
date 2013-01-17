@@ -116,4 +116,3 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
-

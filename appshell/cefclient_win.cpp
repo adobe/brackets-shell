@@ -716,7 +716,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       default:
           ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
           if (commandId.size() > 0) {
-              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId);
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
           }
       }
       break;

@@ -63,25 +63,6 @@ static NSAutoreleasePool* g_autopool = nil;
 }
 
 - (void)sendEvent:(NSEvent*)event {
-    if ([event type] == NSKeyDown) {
-        // We've removed cut, copy, paste from the edit menu,
-        // so we handle those shortcuts explicitly.
-        if ([event modifierFlags] & NSCommandKeyMask) {
-            SEL theSelector = nil;
-            NSString *keyStr = [event charactersIgnoringModifiers];
-            unichar keyChar = [keyStr characterAtIndex:0];
-            if ( keyChar == 'c') {
-                theSelector = NSSelectorFromString(@"copy:");
-            } else if (keyChar == 'v'){
-                theSelector = NSSelectorFromString(@"paste:");
-            } else if (keyChar == 'x'){
-                theSelector = NSSelectorFromString(@"cut:");
-            }
-            if (theSelector != nil) {
-                [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
-            }
-        }
-    }
   CefScopedSendingEvent sendingEventScoper;
   [super sendEvent:event];
 }
@@ -132,7 +113,9 @@ static NSAutoreleasePool* g_autopool = nil;
     if (g_handler.get() && g_handler->GetBrowserId()) {
         NSMenuItem* senderItem = sender;
         NSUInteger tag = [senderItem tag];
-        g_handler->SendJSCommand(g_handler->GetBrowser(), NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag));
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+        g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
     }
 }
 
