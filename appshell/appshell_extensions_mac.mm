@@ -612,15 +612,66 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
 
 // Return index where menu or menu item should be placed.
 // -1 indicates append.
-int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, NSMenu* menu, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    ExtensionString pos = position;
+    ExtensionString relId = relativeId;
+    
     NSInteger errCode = NO_ERROR;
-    if (position.size() == 0)
-    {
+    if (position.size() == 0) {
         positionIdx = -1;
-    } else if ((position == "before" || position == "after") && relativeId.size() > 0) {
+    } else if ((pos == "firstInSection" || pos == "lastInSection") && relId.size() > 0) {
+        int32 startTag = model.getTag(relId);
+        NSMenuItem* item = (NSMenuItem*)model.getOsItem(startTag);
+        NSMenu* parentMenu = [item menu];
+        NSInteger startIndex = [parentMenu indexOfItemWithTag:startTag];
+        
+        if (menu != parentMenu) {
+            // Section is in a different menu. 
+            return ERR_NOT_FOUND;
+        }
+        
+        if (pos == "firstInSection") {
+            // Move backwards until reaching the beginning of the menu or a separator
+            while (startIndex >= 0) {
+                if ([[parentMenu itemAtIndex:startIndex] isSeparatorItem]) {
+                    break;
+                }
+                startIndex--;
+            }
+            if (startIndex < 0) {
+                positionIdx = 0;
+            } else {
+                startIndex++;
+                pos = "before";
+            }
+        } else { // "lastInSection"
+            NSInteger numItems = [parentMenu numberOfItems];
+            
+            // Move forwards until reaching the end of the menu or a separator
+            while (startIndex < numItems) {
+                if ([[parentMenu itemAtIndex:startIndex] isSeparatorItem]) {
+                    break;
+                }
+                startIndex++;
+            }
+            if (startIndex == numItems) {
+                positionIdx = -1;
+            } else {
+                startIndex--;
+                pos = "after";
+            }
+        }
+        
+        if (pos == "before" || pos == "after") {
+            relId = model.getCommandId([[parentMenu itemAtIndex:startIndex] tag]);
+        }
+    }
+        
+    if ((pos == "before" || pos == "after") && relId.size() > 0) {
         ExtensionString parentId;   // unused variable
-        errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+        errCode = GetMenuPosition(browser, relId, parentId, positionIdx);
 
         // If we don't find the relative ID, then don't report the error. 
         // Instead, just make sure that we set positionIdx to -1.
@@ -628,10 +679,10 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
             errCode = NO_ERROR;
             positionIdx = -1;
         }
-        if (positionIdx >= 0 && position == "after") {
+        if (positionIdx >= 0 && pos == "after") {
             positionIdx += 1;
         }
-    } else if (position == "first") {
+    } else if (pos == "first") {
         positionIdx = 0;
     }
 
@@ -672,7 +723,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     }
     
     NSInteger positionIdx = -1;
-    int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+    int32 errCode = getNewMenuPosition(browser, nil, position, relativeId, positionIdx);
     if (errCode != NO_ERROR) {
         return errCode;
     }
@@ -780,7 +831,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
                 }
                 NSInteger positionIdx = -1;
-                int32 errCode = getNewMenuPosition(browser, position, relativeId, positionIdx);
+                int32 errCode = getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
                 if (errCode != NO_ERROR) {
                     return errCode;
                 }
