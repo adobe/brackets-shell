@@ -852,23 +852,23 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
         positionIdx = kAppend;
     } else if (position == L"first") {
         positionIdx = 0;
-    } else if (position == L"before" && relativeId.size() > 0) {
-        positionIdx = kBefore;
-    } else {
-        positionIdx = kAppend;
-        if (position == L"after" && relativeId.size() > 0) {
-            ExtensionString parentId;   // unused variable
-            errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+    } else if (relativeId.size() > 0) {
+        if (position == L"before") {
+            positionIdx = kBefore;
+        } else {
+            positionIdx = kAppend;
+        }
 
-            // If we don't find the relative ID, then don't report the error. 
-            // Instead, just make sure that we set postiionIdx to kAppend.
-            if (errCode == ERR_NOT_FOUND) {
-                errCode = NO_ERROR;
-                positionIdx = kAppend;
-            }
-            if (positionIdx != -1) {
-                positionIdx++;
-            }
+        ExtensionString parentId;   // unused variable
+        errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
+
+        // If we don't find the relative ID, then don't report the error. 
+        // Instead, just make sure that we set postiionIdx to kAppend.
+        if (errCode == ERR_NOT_FOUND) {
+            errCode = NO_ERROR;
+            positionIdx = kAppend;
+        } else if (positionIdx >= 0 && position == L"after") {
+            positionIdx += 1;
         }
     }
 
