@@ -622,6 +622,12 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
         ExtensionString parentId;   // unused variable
         errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
 
+        // If we don't find the relative ID, then don't report the error. 
+        // Instead, just make sure that we set postiionIdx to -1.
+        if (errCode == ERR_NOT_FOUND) {
+            errCode = NO_ERROR;
+            positionIdx = -1;
+        }
         if (positionIdx >= 0 && position == "after") {
             positionIdx += 1;
         }
