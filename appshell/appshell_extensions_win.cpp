@@ -863,7 +863,7 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
         errCode = GetMenuPosition(browser, relativeId, parentId, positionIdx);
 
         // If we don't find the relative ID, then don't report the error. 
-        // Instead, just make sure that we set postiionIdx to kAppend.
+        // Instead, just make sure that we set positionIdx to kAppend.
         if (errCode == ERR_NOT_FOUND) {
             errCode = NO_ERROR;
             positionIdx = kAppend;
