@@ -438,6 +438,19 @@ if (!appshell.app) {
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
      * @return None. This is an asynchronous call that is not meant to have a return
+     *
+     * SPECIAL NOTE ABOUT EDIT MENU ITEMS
+     * The Undo, Redo, Cut, Copy, Paste, and Select All items are handled specially. The JavaScript code
+     * will get the first chance to handle the events. If they are *not* handled by JavaScript, the default
+     * implementation will call those methods on the CEF instance.
+     *
+     * In order for this to work correctly, you MUST use the following ids for these menu item:
+     *   Undo:        "edit.undo"
+     *   Redo:        "edit.redo"
+     *   Cut:         "edit.cut"
+     *   Copy:        "edit.copy"
+     *   Paste:       "edit.paste"
+     *   Select All:  "edit.selectAll"
      */
     native function AddMenuItem();
     appshell.app.addMenuItem = function (parentId, title, id, key, position, relativeId, callback) {

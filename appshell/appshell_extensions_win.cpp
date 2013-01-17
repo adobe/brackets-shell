@@ -1266,7 +1266,19 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
+const DWORD kMenuRedrawTimeout = 100;
+UINT_PTR redrawTimerId = NULL;
+CefRefPtr<CefBrowser> redrawBrowser;
+
+void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD dwTime) {
+    DrawMenuBar((HWND)getMenuParent(redrawBrowser));
+    KillTimer(NULL, redrawTimerId);
+    redrawTimerId = NULL;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
+    static WCHAR titleBuf[MAX_LOADSTRING];
 
     // find the item
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
@@ -1282,18 +1294,42 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     memset(&itemInfo, 0, sizeof(MENUITEMINFO));
     itemInfo.cbSize = sizeof(MENUITEMINFO);
     itemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+    itemInfo.cch = MAX_LOADSTRING;
+    itemInfo.dwTypeData = titleBuf;
     BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
     if (res == 0) {
         return ConvertErrnoCode(GetLastError());
     }
 
+    std::wstring shortcut(titleBuf);
+    size_t pos = shortcut.find(L"\t");
+    if (pos != -1) {
+        shortcut = shortcut.substr(pos);
+    } else {
+        shortcut = L"";
+    }
+
+    std::wstring newTitle = itemTitle;
+    if (shortcut.size() > 0) {
+        newTitle += L"\t";
+        newTitle += shortcut;
+    }
     itemInfo.fType = MFT_STRING; // just to make sure
-    itemInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
-    itemInfo.cch = itemTitle.size();
+    itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
+    itemInfo.cch = newTitle.size();
 
     res = SetMenuItemInfo(menu, tag, FALSE, &itemInfo);
     if (res == 0) {
         return ConvertErrnoCode(GetLastError());        
+    }
+
+    // The menu bar needs to be redrawn, but we don't want to redraw with
+    // *every* title change since that causes flicker if we're changing a 
+    // bunch of titles in a row (like at app startup). 
+    // Set a timer here so we only do a single redraw.
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
     }
 
     return NO_ERROR;
@@ -1325,8 +1361,14 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     if (++itemInfo.cch < MAX_LOADSTRING) {
         itemInfo.dwTypeData = titleBuf;
         res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-        if (res && itemInfo.dwTypeData)
-            title = itemInfo.dwTypeData;
+        if (res && itemInfo.dwTypeData) {
+            std::wstring titleStr = itemInfo.dwTypeData;
+            size_t pos = titleStr.find(L"\t");
+            if (pos != -1) {
+                titleStr = titleStr.substr(0, pos);
+            }
+            title = titleStr;
+        }
     }
     return NO_ERROR;
 }
