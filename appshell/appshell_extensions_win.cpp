@@ -1171,7 +1171,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         memset(&menuInfo, 0, sizeof(MENUITEMINFO));        
         menuInfo.cbSize = sizeof(MENUITEMINFO);
         menuInfo.wID = (UINT)tag;
-        menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING;    
+        menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;    
         menuInfo.fType = MFT_STRING;
         if (isSeparator) {
             menuInfo.fType = MFT_SEPARATOR;
