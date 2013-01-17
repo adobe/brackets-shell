@@ -1278,6 +1278,7 @@ void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD
 }
 
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
+    static WCHAR titleBuf[MAX_LOADSTRING];
 
     // find the item
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
@@ -1293,14 +1294,29 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     memset(&itemInfo, 0, sizeof(MENUITEMINFO));
     itemInfo.cbSize = sizeof(MENUITEMINFO);
     itemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+    itemInfo.cch = MAX_LOADSTRING;
+    itemInfo.dwTypeData = titleBuf;
     BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
     if (res == 0) {
         return ConvertErrnoCode(GetLastError());
     }
 
+    std::wstring shortcut(titleBuf);
+    size_t pos = shortcut.find(L"\t");
+    if (pos != -1) {
+        shortcut = shortcut.substr(pos);
+    } else {
+        shortcut = L"";
+    }
+
+    std::wstring newTitle = itemTitle;
+    if (shortcut.size() > 0) {
+        newTitle += L"\t";
+        newTitle += shortcut;
+    }
     itemInfo.fType = MFT_STRING; // just to make sure
-    itemInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
-    itemInfo.cch = itemTitle.size();
+    itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
+    itemInfo.cch = newTitle.size();
 
     res = SetMenuItemInfo(menu, tag, FALSE, &itemInfo);
     if (res == 0) {
@@ -1345,8 +1361,14 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     if (++itemInfo.cch < MAX_LOADSTRING) {
         itemInfo.dwTypeData = titleBuf;
         res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-        if (res && itemInfo.dwTypeData)
-            title = itemInfo.dwTypeData;
+        if (res && itemInfo.dwTypeData) {
+            std::wstring titleStr = itemInfo.dwTypeData;
+            size_t pos = titleStr.find(L"\t");
+            if (pos != -1) {
+                titleStr = titleStr.substr(0, pos);
+            }
+            title = titleStr;
+        }
     }
     return NO_ERROR;
 }
