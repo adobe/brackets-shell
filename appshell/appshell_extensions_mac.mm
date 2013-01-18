@@ -728,6 +728,13 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     
     NSInteger positionIdx = -1;
     int32 errCode = getNewMenuPosition(browser, nil, position, relativeId, positionIdx);
+
+    // Another position hack. If position is "first" we will change positionIdx to 1
+    // since we can't allow user to put anything before the Mac OS default application menu.
+    if (position.size() > 0 && position == "first" && positionIdx == 0) {
+        positionIdx = 1;
+    }
+    
     if (positionIdx > -1) {
         [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
     } else {
