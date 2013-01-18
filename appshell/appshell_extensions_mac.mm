@@ -733,11 +733,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     } else {
         [[NSApp mainMenu] addItem:testItem];
     }
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
-   
-    return NO_ERROR;
+    return errCode;
 }
 
 // Looks at modifiers and special keys in "key",
@@ -841,9 +837,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                 } else {
                     [subMenu addItem:newItem];
                 }
-                if (errCode != NO_ERROR) {
-                    return errCode;
-                }
+                return errCode;
             }
         }
     }
