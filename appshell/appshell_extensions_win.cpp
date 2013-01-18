@@ -856,6 +856,21 @@ bool isSeparator(HMENU menu, int32 idx)
     return (itemInfo.fType & MFT_SEPARATOR) != 0;
 }
 
+HMENU getMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& id)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(id);
+
+    MENUITEMINFO parentItemInfo = {0};
+    parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+    parentItemInfo.fMask = MIIM_SUBMENU;
+    BOOL res = GetMenuItemInfo((HMENU)model.getOsItem(tag), tag, FALSE, &parentItemInfo);
+    if (res == 0) {
+        return 0;
+    }
+    return parentItemInfo.hSubMenu;
+}
+
 int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& parentId, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
 {    
     int32 errCode = NO_ERROR;
@@ -877,17 +892,11 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
 
         if (startParentId != parentId) {
             // Section is in a different menu
+            positionIdx = -1;
             return ERR_NOT_FOUND;
         }
 
-        MENUITEMINFO parentItemInfo = {0};
-        parentItemInfo.cbSize = sizeof(MENUITEMINFO);
-        parentItemInfo.fMask = MIIM_SUBMENU;
-        BOOL res = GetMenuItemInfo(parentMenu, model.getTag(startParentId), FALSE, &parentItemInfo);
-        if (res == 0) {
-            return ConvertErrnoCode(GetLastError());
-        }
-        parentMenu = parentItemInfo.hSubMenu;
+        parentMenu = getMenu(browser, startParentId);
 
         GetMenuPosition(browser, relId, startParentId, idx);
 
@@ -943,13 +952,17 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
             positionIdx = kAppend;
         }
 
-        ExtensionString parentId;   // unused variable
-        errCode = GetMenuPosition(browser, relId, parentId, positionIdx);
+        ExtensionString newParentId;
+        errCode = GetMenuPosition(browser, relId, newParentId, positionIdx);
 
-        // If we don't find the relative ID, then don't report the error. 
-        // Instead, just make sure that we set positionIdx to kAppend.
+        if (parentId.size() > 0 && parentId != newParentId) {
+            errCode = ERR_NOT_FOUND;
+        }
+
+        // If we don't find the relative ID, return an error and
+        // set positionIdx to kAppend. The item will be appended and an
+        // error will be shown in the console.
         if (errCode == ERR_NOT_FOUND) {
-            errCode = NO_ERROR;
             positionIdx = kAppend;
         } else if (positionIdx >= 0 && pos == L"after") {
             positionIdx += 1;
@@ -980,9 +993,6 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     bool inserted = false;    
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, L"", position, relativeId, positionIdx);
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
     if (positionIdx >= 0 || positionIdx == kBefore) 
     {
         MENUITEMINFO menuInfo;
@@ -1011,14 +1021,19 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         }
     }
    
-   if (inserted == false)
-   {
+    if (inserted == false)
+    {
         BOOL res = AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str());
         
         if (res == 0) {
             return ConvertErrnoCode(GetLastError());
         }
-   }
+    }
+
+    if (errCode != NO_ERROR) {
+        return errCode;
+    }
+
     return NO_ERROR;
 }
 
@@ -1252,9 +1267,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
     bool inserted = false;
     if (positionIdx >= 0 || positionIdx == kBefore) 
     {
@@ -1305,6 +1317,10 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
         title = title.substr(0, title.find('\t'));
         SetMenuTitle(browser, command, title);
+    }
+
+    if (errCode != NO_ERROR) {
+        return errCode;
     }
 
     return NO_ERROR;
