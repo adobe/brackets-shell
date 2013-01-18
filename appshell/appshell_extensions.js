@@ -431,7 +431,8 @@ if (!appshell.app) {
      * @param {string} title Menu title to display, e.g. "Open"
      * @param {string} id Command ID, e.g. "file.open"
      * @param {string} key Shortcut, e.g. "Cmd-O"
-     * @param {string} position Where to put the item; values are "before", "after", "first", "last", and ""
+     * @param {string} position Where to put the item; values are "before", "after", "first", "last", 
+     *                    "firstInSection", "lastInSection", and ""
      * @param {string} relativeId The ID of the menu item to which is this relative, for position "before" and "after"
      * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
      *        Possible error values:
