@@ -628,7 +628,8 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, NSMenu* menu, const Exte
         NSInteger startIndex = [parentMenu indexOfItemWithTag:startTag];
         
         if (menu != parentMenu) {
-            // Section is in a different menu. 
+            // Section is in a different menu.
+            positionIdx = -1;
             return ERR_NOT_FOUND;
         }
         
@@ -673,10 +674,9 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, NSMenu* menu, const Exte
         ExtensionString parentId;   // unused variable
         errCode = GetMenuPosition(browser, relId, parentId, positionIdx);
 
-        // If we don't find the relative ID, then don't report the error. 
-        // Instead, just make sure that we set positionIdx to -1.
+        // If we don't find the relative ID, return an error
+        // and set positionIdx to -1. The item will be appended and an error will be shown.
         if (errCode == ERR_NOT_FOUND) {
-            errCode = NO_ERROR;
             positionIdx = -1;
         }
         if (positionIdx >= 0 && pos == "after") {
@@ -724,13 +724,13 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     
     NSInteger positionIdx = -1;
     int32 errCode = getNewMenuPosition(browser, nil, position, relativeId, positionIdx);
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
     if (positionIdx > -1) {
         [[NSApp mainMenu] insertItem:testItem atIndex:positionIdx];
     } else {
         [[NSApp mainMenu] addItem:testItem];
+    }
+    if (errCode != NO_ERROR) {
+        return errCode;
     }
    
     return NO_ERROR;
@@ -832,13 +832,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                 }
                 NSInteger positionIdx = -1;
                 int32 errCode = getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
-                if (errCode != NO_ERROR) {
-                    return errCode;
-                }
                 if (positionIdx > -1) {
                     [subMenu insertItem:newItem atIndex:positionIdx];
                 } else {
                     [subMenu addItem:newItem];
+                }
+                if (errCode != NO_ERROR) {
+                    return errCode;
                 }
             }
         }
