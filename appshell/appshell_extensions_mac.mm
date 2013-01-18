@@ -671,9 +671,13 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, NSMenu* menu, const Exte
     }
         
     if ((pos == "before" || pos == "after") && relId.size() > 0) {
-        ExtensionString parentId;   // unused variable
+        ExtensionString parentId; 
         errCode = GetMenuPosition(browser, relId, parentId, positionIdx);
 
+        if (menu && menu != [(NSMenuItem*)model.getOsItem(model.getTag(parentId)) submenu]) {
+            errCode = ERR_NOT_FOUND;
+        }
+        
         // If we don't find the relative ID, return an error
         // and set positionIdx to -1. The item will be appended and an error will be shown.
         if (errCode == ERR_NOT_FOUND) {
