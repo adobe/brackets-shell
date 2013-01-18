@@ -1030,11 +1030,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         }
     }
 
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
-
-    return NO_ERROR;
+    return errCode;
 }
 
 // Return true if the unicode character is one of the symbols that can be used 
@@ -1319,11 +1315,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         SetMenuTitle(browser, command, title);
     }
 
-    if (errCode != NO_ERROR) {
-        return errCode;
-    }
-
-    return NO_ERROR;
+    return errCode;
 }
 
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index) {
