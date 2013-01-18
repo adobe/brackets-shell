@@ -829,9 +829,8 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
         memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
         parentItemInfo.cbSize = sizeof(MENUITEMINFO);
         parentItemInfo.fMask = MIIM_ID;
-                
-        BOOL res = GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo);
-        if (res == 0) {
+        
+        if (!GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo)) {
             int err = GetLastError();
             return ConvertErrnoCode(err);
         }
@@ -849,8 +848,7 @@ bool isSeparator(HMENU menu, int32 idx)
     MENUITEMINFO itemInfo = {0};
     itemInfo.cbSize = sizeof(MENUITEMINFO);
     itemInfo.fMask = MIIM_FTYPE;
-    BOOL res = GetMenuItemInfo(menu, idx, TRUE, &itemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo(menu, idx, TRUE, &itemInfo)) {
         return FALSE;
     }
     return (itemInfo.fType & MFT_SEPARATOR) != 0;
@@ -864,8 +862,7 @@ HMENU getMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& id)
     MENUITEMINFO parentItemInfo = {0};
     parentItemInfo.cbSize = sizeof(MENUITEMINFO);
     parentItemInfo.fMask = MIIM_SUBMENU;
-    BOOL res = GetMenuItemInfo((HMENU)model.getOsItem(tag), tag, FALSE, &parentItemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo((HMENU)model.getOsItem(tag), tag, FALSE, &parentItemInfo)) {
         return 0;
     }
     return parentItemInfo.hSubMenu;
@@ -936,8 +933,7 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
             itemInfo.cbSize = sizeof(MENUITEMINFO);
             itemInfo.fMask = MIIM_ID;
                 
-            BOOL res = GetMenuItemInfo(parentMenu, idx, TRUE, &itemInfo);
-            if (res == 0) {
+            if (!GetMenuItemInfo(parentMenu, idx, TRUE, &itemInfo)) {
                 int err = GetLastError();
                 return ConvertErrnoCode(err);
             }
@@ -1023,9 +1019,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
    
     if (inserted == false)
     {
-        BOOL res = AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str());
-        
-        if (res == 0) {
+        if (!AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str())) {
             return ConvertErrnoCode(GetLastError());
         }
     }
@@ -1223,15 +1217,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     parentItemInfo.cbSize = sizeof(MENUITEMINFO);
     parentItemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
     //get the menuitem containing this one, see if it has a sub menu. If it doesn't, add one.
-    BOOL res = GetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
         return ConvertErrnoCode(GetLastError());
     }
     if (parentItemInfo.hSubMenu == NULL) {
         parentItemInfo.hSubMenu = CreateMenu();
         parentItemInfo.fMask = MIIM_SUBMENU;
-        res = SetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo);
-        if (res == 0) {
+        if (!SetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
             return ConvertErrnoCode(GetLastError());        
         }
     }
@@ -1295,18 +1287,20 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     if (!inserted)
     {
+        BOOL res;
+
         if (isSeparator) 
         {
             res = AppendMenu(submenu, MF_SEPARATOR, NULL, NULL);
         } else {
             res = AppendMenu(submenu, MF_STRING, tag, title.c_str());
         }
+
+        if (!res) {
+            return ConvertErrnoCode(GetLastError());
+        }
     }
     
-    if (res == 0) {
-        return ConvertErrnoCode(GetLastError());
-    }
-
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
     DrawMenuBar((HWND)getMenuParent(browser));
 
@@ -1333,8 +1327,7 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     memset(&itemInfo, 0, sizeof(MENUITEMINFO));
     itemInfo.cbSize = sizeof(MENUITEMINFO);
     itemInfo.fMask = MIIM_STATE;
-    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
         return ConvertErrnoCode(GetLastError());
     }
     enabled = (itemInfo.fState & MFS_DISABLED) == 0;
@@ -1350,8 +1343,7 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
         itemInfo.cbSize = sizeof(MENUITEMINFO);
         itemInfo.fMask = MIIM_ID;
 
-        BOOL res = GetMenuItemInfo(menu, i, TRUE, &itemInfo);
-        if (res == 0) {
+        if (!GetMenuItemInfo(menu, i, TRUE, &itemInfo)) {
             int err = GetLastError();
             return ConvertErrnoCode(err);
         }
@@ -1395,8 +1387,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     itemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
     itemInfo.cch = MAX_LOADSTRING;
     itemInfo.dwTypeData = titleBuf;
-    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
         return ConvertErrnoCode(GetLastError());
     }
 
@@ -1417,8 +1408,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
     itemInfo.cch = newTitle.size();
 
-    res = SetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-    if (res == 0) {
+    if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
         return ConvertErrnoCode(GetLastError());        
     }
 
@@ -1450,8 +1440,7 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     itemInfo.cbSize = sizeof(MENUITEMINFO);
     itemInfo.fMask = MIIM_DATA | MIIM_STRING;
     itemInfo.dwTypeData = NULL;
-    BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
-    if (res == 0) {
+    if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
         return ConvertErrnoCode(GetLastError());
     }
 
@@ -1459,7 +1448,7 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     // if we have room in titleBuf, now get the menu item title
     if (++itemInfo.cch < MAX_LOADSTRING) {
         itemInfo.dwTypeData = titleBuf;
-        res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
+        BOOL res = GetMenuItemInfo(menu, tag, FALSE, &itemInfo);
         if (res && itemInfo.dwTypeData) {
             std::wstring titleStr = itemInfo.dwTypeData;
             size_t pos = titleStr.find(L"\t");
