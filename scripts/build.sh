@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # SETUP - MAC
 # - Install xcode
 # - Install xcode command line tools 
@@ -5,8 +7,8 @@
 # SETUP - WIN
 # - Install Visual Studio 2010 (Express is fine)
 # SETUP - COMMON
-# - Setup source directories as specified in README.md
-#   (copy CEF binary, run scripts/make_symlinks.sh, etc.)
+# - Run scripts/setup.sh from a Bash prompt (Terminal on Mac,
+#   GitBash on Windows).
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
 # - Optionally, set BRACKETS_APP_NAME environment variable with the 
@@ -51,6 +53,9 @@ if [ "$BRACKETS_BUILD_NUM" = "" ]; then
 fi
 brackets_sha=`git log | head -1 | sed -e 's/commit \([0-9a-f]*$\)/\1/'`
 brackets_branch_name=`git status | head -1 | sed -e 's/# On branch \(.*\)/\1/'`
+if [ "$brackets_branch_name" = "# Not currently on any branch." ]; then
+    brackets_branch_name="SHA"
+fi
 popd
 
 # Pull the latest brackets-shell code
@@ -61,15 +66,15 @@ else
     echo "Skipping fetch for brackets-shell repo"
 fi
 
+# Rebuild project files after potentially checking out new code
+scripts/make_appshell_project.sh
+
 os=${OSTYPE//[0-9.]/}
 
 if [ "$os" = "darwin" ]; then # Building on mac
     # Clean and build the xcode project
     xcodebuild -project appshell.xcodeproj -config Release clean
     xcodebuild -project appshell.xcodeproj -config Release build
-    
-    # Package www files
-    scripts/package_www_files.sh
     
     # Remove existing staging dir
     if [ -d installer/mac/staging ]; then
@@ -80,15 +85,19 @@ if [ "$os" = "darwin" ]; then # Building on mac
     
     # Copy to installer staging folder
     cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
+     
+    # Package www files
+    scripts/package_www_files.sh
+
     packageLocation="installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
 
 elif [ "$os" = "msys" ]; then # Building on Windows
 
     # Clean and build the Visual Studio project
-    cmd /k "scripts\build_projects.bat"
+    cmd.exe /c "scripts\build_projects.bat"
 
     # Stage files for installer
-    cmd /k "scripts\stage_for_installer.bat"
+    cmd.exe /c "scripts\stage_for_installer.bat"
 
     packageLocation="installer/win/staging/www"
 

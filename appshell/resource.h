@@ -16,9 +16,6 @@
 #define IDI_CEFCLIENT                   107
 #define IDI_SMALL                       108
 #define IDC_CEFCLIENT                   109
-#define IDC_CEFCLIENT_POPUP             110
-#define IDC_CEFCLIENT_FR                111
-#define IDC_CEFCLIENT_POPUP_FR          112
 #define IDR_MAINFRAME                   128
 #define IDC_NAV_BACK                    200
 #define IDC_NAV_FORWARD                 201

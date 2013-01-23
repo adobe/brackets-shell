@@ -4,4 +4,4 @@
 cd installer/win
 call stageForInstaller.bat
 cd ../..
-exit
+exit /b

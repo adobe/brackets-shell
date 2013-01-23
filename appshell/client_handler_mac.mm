@@ -8,6 +8,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "cefclient.h"
+#include "native_menu_model.h"
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -93,6 +94,8 @@ void ClientHandler::CloseMainWindow() {
   BOOL isReallyClosing;
 }
 - (IBAction)quit:(id)sender;
+- (IBAction)handleMenuAction:(id)sender;
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
@@ -126,6 +129,29 @@ void ClientHandler::CloseMainWindow() {
   }
   */
   clientHandler->DispatchCloseToNextBrowser();
+}
+
+- (IBAction)handleMenuAction:(id)sender {
+    if (clientHandler.get() && clientHandler->GetBrowserId()) {
+        CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+        NSMenuItem* senderItem = sender;
+        NSUInteger tag = [senderItem tag];
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+        clientHandler->SendJSCommand(browser, commandId, callback);
+    }
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+    NSInteger menuState = NSOffState;
+    NSUInteger tag = [menuItem tag];
+    NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(browser));
+    if (menus.isMenuItemChecked(tag)) {
+        menuState = NSOnState;
+    }
+    [menuItem setState:menuState];
+    return menus.isMenuItemEnabled(tag);
 }
 
 - (void)setClientHandler:(CefRefPtr<ClientHandler>) handler {
@@ -208,6 +234,37 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
     [delegate setWindow:window];
     [window setDelegate:delegate];
   }
+}
+
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                  const CefKeyEvent& event,
+                                  CefEventHandle os_event,
+                                  bool* is_keyboard_shortcut) {
+    
+    //This is not fun. Here's the facts as I know them:
+    //+ OnPreKeyEvent is before the browser get the keydown event
+    //+ OnKeyEvent is after the browser has done it's default processing
+    //+ On win the native keyboard accelerators fire in this function
+    //+ On Mac if nothing else stops the event, the acceleators fire last
+    //+ In JS if eventPreventDefault() is called, the shortcut won't fire on mac
+    //+ On Win TranslateAccerator will return true even if the command is disabled
+    //+ On Mac performKeyEquivalent will return true only of the command is enabled
+    //+ On Mac if JS handles the command then the menu bar won't blink
+    //+ In this fuction, the browser passed won't return a V8 Context so you can't get any access there
+    //+ Communicating between the shell and JS is async, so there's no easy way for the JS to decided what to do
+    //    in the middle of the key event, unless we introduce promises there, but that is a lot of work now
+    
+    if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
+        return true;
+    }
+    return false;
+}
+
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                               const CefKeyEvent& event,
+                               CefEventHandle os_event) {
+    return false;
 }
 
 CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {

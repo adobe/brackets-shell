@@ -18,6 +18,7 @@
 #include "resource.h"
 #include "string_util.h"
 #include "client_switches.h"
+#include "native_menu_model.h"
 
 #include <algorithm>
 #include <ShellAPI.h>
@@ -36,6 +37,8 @@
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
+HACCEL hAccelTable;
+HWND hWndMain;
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -119,8 +122,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
-  HACCEL hAccelTable;
-
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
@@ -182,15 +183,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
-
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (app->GetCurrentLanguage() == CefString("fr-FR"))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
 
   int result = 0;
 
@@ -479,14 +471,6 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (locale.str && (locale.length > 0) &&
-      (CefString(locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -499,7 +483,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
   wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
   wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
+  wcex.lpszMenuName  = NULL;
   wcex.lpszClassName = szWindowClass;
   wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -517,8 +501,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 //        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
-  HWND hWnd;
-
   hInst = hInstance;  // Store instance handle in our global variable
 
   // TODO: test this cases:
@@ -534,16 +516,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
   if (showCmd == SW_MAXIMIZE)
 	  styles |= WS_MAXIMIZE;
-  hWnd = CreateWindow(szWindowClass, szTitle, styles,
+  hWndMain = CreateWindow(szWindowClass, szTitle, styles,
                       left, top, width, height, NULL, NULL, hInstance, NULL);
 
-  if (!hWnd)
+  if (!hWndMain)
     return FALSE;
 
-  DragAcceptFiles(hWnd, TRUE);
-  RestoreWindowPlacement(hWnd, showCmd);
-  UpdateWindow(hWnd);
-
+  DragAcceptFiles(hWndMain, TRUE);
+  RestoreWindowPlacement(hWndMain, showCmd);
+  UpdateWindow(hWndMain);
+\
   return TRUE;
 }
 
@@ -746,6 +728,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
           browser->StopLoad();
         return 0;
 #endif // SHOW_TOOLBAR_UI
+      default:
+          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
+          if (commandId.size() > 0) {
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+          }
       }
       break;
     }
@@ -838,6 +826,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
             return HandleDropFiles((HDROP)wParam, g_handler, g_handler->GetBrowser());
         }
         return 0;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        void* menuParent = getMenuParent(g_handler->GetBrowser());
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            EnableMenuItem(menu, id,  flagEnabled);
+
+            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
+            CheckMenuItem(menu, id, flagChecked);
+        }
+        break;
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -873,4 +878,59 @@ CefString AppGetCachePath() {
   cachePath +=  L"/cef_data";
 
   return CefString(cachePath);
+}
+
+// Helper function for AppGetProductVersionString. Reads version info from
+// VERSIONINFO and writes it into the passed in std::wstring.
+void GetFileVersionString(std::wstring &retVersion) {
+  DWORD dwSize = 0;
+  BYTE *pVersionInfo = NULL;
+  VS_FIXEDFILEINFO *pFileInfo = NULL;
+  UINT pLenFileInfo = 0;
+
+  HMODULE module = GetModuleHandle(NULL);
+  TCHAR executablePath[MAX_PATH];
+  GetModuleFileName(module, executablePath, MAX_PATH);
+
+  dwSize = GetFileVersionInfoSize(executablePath, NULL);
+  if (dwSize == 0) {
+    return;
+  }
+
+  pVersionInfo = new BYTE[dwSize];
+
+  if (!GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo)) 	{
+    delete[] pVersionInfo;
+    return;
+  }
+
+  if (!VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo)) {
+    delete[] pVersionInfo;
+    return;
+  }
+
+  int major  = (pFileInfo->dwFileVersionMS >> 16) & 0xffff ;
+  int minor  = (pFileInfo->dwFileVersionMS) & 0xffff;
+  int hotfix = (pFileInfo->dwFileVersionLS >> 16) & 0xffff;
+  int other  = (pFileInfo->dwFileVersionLS) & 0xffff;
+
+  delete[] pVersionInfo;
+
+  std::wostringstream versionStream(L"");
+  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
+  retVersion = versionStream.str();
+}
+
+CefString AppGetProductVersionString() {
+  std::wstring s(APP_NAME);
+  size_t i = s.find(L" ");
+  while (i != std::wstring::npos) {
+    s.erase(i, 1);
+    i = s.find(L" ");
+  }
+  std::wstring version(L"");
+  GetFileVersionString(version);
+  s.append(L"/");
+  s.append(version);
+  return CefString(s);
 }
