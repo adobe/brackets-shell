@@ -525,7 +525,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DragAcceptFiles(hWndMain, TRUE);
   RestoreWindowPlacement(hWndMain, showCmd);
   UpdateWindow(hWndMain);
-
+\
   return TRUE;
 }
 
