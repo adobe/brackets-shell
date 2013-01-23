@@ -48,6 +48,7 @@ static NSAutoreleasePool* g_autopool = nil;
 
 // Files passed to the app at startup
 static NSMutableArray* pendingOpenFiles;
+ExtensionString gPendingFilesToOpen;
 
 // Provide the CefAppProtocol implementation required by CEF.
 @interface ClientApplication : NSApplication<CefAppProtocol> {
@@ -429,9 +430,18 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
                                 [str UTF8String], settings);
  
   if (pendingOpenFiles) {
-    // Set the appshell.startupFiles property after a short delay to give the window
-    // object a chance to initialize
-    [self performSelector:@selector(sendStartupFilesToApp) withObject:self afterDelay:0.5];
+    NSUInteger count = [pendingOpenFiles count];
+    gPendingFilesToOpen = "[";
+    for (NSUInteger i = 0; i < count; i++) {
+      NSString* filename = [pendingOpenFiles objectAtIndex:i];
+          
+      gPendingFilesToOpen += ("\"" + std::string([filename UTF8String]) + "\"");
+      if (i < count - 1)
+        gPendingFilesToOpen += ",";
+    }
+    gPendingFilesToOpen += "]";
+  } else {
+    gPendingFilesToOpen = "[]";
   }
   
   // Show the window.
@@ -439,23 +449,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   [mainWnd makeKeyAndOrderFront: nil];
 }
 
-- (void)sendStartupFilesToApp {
-  std::string fileArray = "[";
-  NSUInteger count = [pendingOpenFiles count];
-  for (NSUInteger i = 0; i < count; i++) {
-    NSString* filename = [pendingOpenFiles objectAtIndex:i];
-    
-    fileArray += ("'" + std::string([filename UTF8String]) + "'");
-    if (i < count - 1)
-      fileArray += ",";
-  }
-  fileArray += "]";
-  
-  std::string cmd = "appshell.startupFiles=" + fileArray;
-  g_handler->GetBrowser()->GetMainFrame()->ExecuteJavaScript(CefString(cmd),
-                                                             g_handler->GetBrowser()->GetMainFrame()->GetURL(), 0);
-  
-}
 // Sent by the default notification center immediately before the application
 // terminates.
 - (void)applicationWillTerminate:(NSNotification *)aNotification {

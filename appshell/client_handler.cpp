@@ -342,6 +342,7 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
 
 void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &filename) {
   std::string filenameStr(filename);
+  // FIXME: Use SendJSCommand once it supports parameters
   std::string cmd = "require('command/CommandManager').execute('file.open',{fullPath:'" + filenameStr + "'})";
   browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
                                 browser->GetMainFrame()->GetURL(), 0);

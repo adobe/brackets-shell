@@ -98,6 +98,8 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
 
 int32 ShowFolderInOSWindow(ExtensionString pathname);
 
+int32 GetPendingFilesToOpen(ExtensionString& files);
+
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId);
 

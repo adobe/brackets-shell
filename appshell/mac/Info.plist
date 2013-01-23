@@ -28,6 +28,19 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
+			<string>Text files</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.text</string>
+                <string>public.source-code</string>
+                <string>public.script</string>
+                <string>public.shell-script</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
 			<string>HTML source</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
@@ -56,6 +69,20 @@
 			<array>
 				<string>css</string>
 				<string>less</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Markdown</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>md</string>
+                <string>mkd</string>
+                <string>mkdn</string>
+                <string>mdown</string>
+				<string>markdown</string>
 			</array>
 		</dict>
 	</array>
