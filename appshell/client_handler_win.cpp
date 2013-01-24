@@ -129,7 +129,8 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           default:
             ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(wmId);
             if (commandId.size() > 0) {
-              g_handler->SendJSCommand(browser, commandId);
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+              g_handler->SendJSCommand(browser, commandId, callback);
             }
         }
 	  }
