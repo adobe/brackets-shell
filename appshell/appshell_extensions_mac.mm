@@ -914,6 +914,28 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     return NO_ERROR;
 }
 
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)model.getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    
+    NSUInteger mask = processKeyString(shortcut);
+    NSString* keyStr = [[NSString alloc] initWithUTF8String:shortcut.c_str()];
+    keyStr = [keyStr lowercaseString];
+    [item setKeyEquivalent:keyStr];
+    [item setKeyEquivalentModifierMask:mask];
+    
+    return NO_ERROR;
+}
+
 //Remove menu item associated with commandId
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {

@@ -489,6 +489,24 @@ public:
                 error = GetMenuTitle(browser, commandId, menuTitle);
                 responseArgs->SetString(2, menuTitle);
             }
+        } else if (message_name == "SetMenuItemShortcut") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - command ID
+            //  2: string - shortcut
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId = argList->GetString(1);
+                ExtensionString shortcut = argList->GetString(2);
+                
+                error = SetMenuItemShortcut(browser, commandId, shortcut);
+                // No additional response args for this function
+            }
         } else if (message_name == "GetMenuPosition") {
             // Parameters:
             //  0: int32 - callback id

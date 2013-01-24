@@ -492,6 +492,18 @@ if (!appshell.app) {
     };
 
     /**
+     * Set menu item shortuct. 
+     * @param {string} commandId ID of the menu item.
+     * @param {string} shortcut Shortcut string, like "Cmd-U".
+     * @param {function (err)} callback Asynchronous callback function. The callback gets an error code.
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function SetMenuItemShortcut();
+    appshell.app.setMenuItemShortcut = function (commandId, shortcut, callback) {
+        SetMenuItemShortcut(callback, commandId, shortcut);
+    };
+ 
+    /**
      * Remove menu associated with commandId.
      * @param {string} commandid ID of the menu item.
      * @param {function(err)} callback Asynchronous callback function. The callback gets an error code.
