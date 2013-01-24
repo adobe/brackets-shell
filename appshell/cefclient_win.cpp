@@ -39,6 +39,7 @@ DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
 HACCEL hAccelTable;
 HWND hWndMain;
+std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -83,6 +84,41 @@ bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 void SaveWindowRect(HWND hWnd);
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
 void RestoreWindowPlacement(HWND hWnd, int showCmd);
+
+bool IsFilename(const std::wstring& str) {
+    // Cheesy check to see if the passed in string is a filename --
+    // look for a colon (after the drive letter) and a dot (for extension)
+    // This should probably be made more robust...
+
+    return (str.find_first_of(':') != std::string::npos &&
+            str.find_first_of('.') != std::string::npos);
+}
+
+std::wstring GetFilenamesFromCommandLine() {
+    std::wstring result = L"[]";
+
+    if (AppGetCommandLine()->HasArguments()) {
+        bool firstEntry = true;
+        std::vector<CefString> args;
+        AppGetCommandLine()->GetArguments(args);
+        std::vector<CefString>::iterator iterator;
+
+        result = L"[";
+        for (iterator = args.begin(); iterator != args.end(); iterator++) {
+            std::wstring argument = (*iterator).ToWString();
+            if (IsFilename(argument)) {
+                if (!firstEntry) {
+                    result += L",";
+                }
+                firstEntry = false;
+                result += L"\"" + argument + L"\"";
+            }
+        }
+        result += L"]";
+    }
+
+    return result;
+}
 
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
@@ -183,6 +219,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
+
+  gFilesToOpen = GetFilenamesFromCommandLine();
 
   int result = 0;
 
