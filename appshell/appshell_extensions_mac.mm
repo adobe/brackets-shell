@@ -590,7 +590,7 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
 int32 GetPendingFilesToOpen(ExtensionString& files)
 {
     files = gPendingFilesToOpen;
-//    gPendingFilesToOpen = "[]";
+    gPendingFilesToOpen = "[]";
     return NO_ERROR;
 }
 
