@@ -1,4 +1,3 @@
-
 ## Overview
 This readme describes how the .dmg file is created for Brackets on Mac. Like many Mac apps 
 Brackets doesn't have an installer. Instead the user opens a disk image file (.dmg) and manually 
@@ -9,8 +8,10 @@ drags Brackets.app to their Applications folder.
    tools are not automatically installed, download them from the Apple Developer Center.
 2. Run DropDMG once. In Preferences > Advanced, click "Install 'dropdmg' Tool".
 3. In Terminal, do: `export BRACKETS_SRC=<absolute path to brackets/src folder>`
-4. From the root of brackets-shell, do: `./scripts/build_mac.sh`. This will place the DMG in
-   the installer/mac folder.
+4. From the root of brackets-shell, do: `./scripts/setup.sh`. This will download any dependencies
+   and build the xcode project.
+5. From the root of brackets-shell, do: `./scripts/build.sh`. This will build the app and place 
+   the DMG in the installer/mac folder.
    
 Note that after this process, you will be on the master branch in both the brackets-shell
 and brackets repos.
