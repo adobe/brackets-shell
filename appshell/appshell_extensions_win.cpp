@@ -1185,7 +1185,7 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     // Move accelerator to the end of the table
     UINT newItem = numAccelerators - 1;
     for (int i = 0; i < numAccelerators; i++) {
-        if (lpaccelNew[i].cmd = (WORD) tag) {
+        if (lpaccelNew[i].cmd == (WORD) tag) {
             lpaccelNew[i] = lpaccelNew[newItem];
             DestroyAcceleratorTable(haccelOld); 
             hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators - 1);
@@ -1194,6 +1194,20 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     }
     LocalFree(lpaccelNew);
     return ERR_NOT_FOUND;
+}
+
+ExtensionString GetDisplayKeyString(const ExtensionString& keyStr) 
+{
+    ExtensionString result = keyStr;
+
+    // We get a keyStr that looks like "Ctrl-O", which is the format we
+    // need for the accelerator table. For displaying in the menu, though,
+    // we have to change it to "Ctrl+O". Careful not to change the final
+    // character, though, so "Ctrl--" ends up as "Ctrl+-".
+    if (result.size() > 0) {
+        replace(result.begin(), result.end() - 1, '-', '+');
+    }
+    return result;
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
@@ -1244,12 +1258,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     keyStr = key.c_str();
 
     if (key.length() > 0) {
-        // We get a keyStr that looks like "Ctrl-O", which is the format we
-        // need for the accelerator table. For displaying in the menu, though,
-        // we have to change it to "Ctrl+O". Careful not to change the final
-        // character, though, so "Ctrl--" ends up as "Ctrl+-".
-        displayKeyStr = keyStr;
-        replace(displayKeyStr.begin(), displayKeyStr.end() - 1, '-', '+');
+        displayKeyStr = GetDisplayKeyString(keyStr);
 
         title = title + L"\t" + displayKeyStr;
     }
@@ -1401,7 +1410,6 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
 
     std::wstring newTitle = itemTitle;
     if (shortcut.size() > 0) {
-        newTitle += L"\t";
         newTitle += shortcut;
     }
     itemInfo.fType = MFT_STRING; // just to make sure
@@ -1458,6 +1466,59 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
             title = titleStr;
         }
     }
+    return NO_ERROR;
+}
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    HMENU menu = (HMENU)model.getOsItem(tag);
+    if (!menu) {
+        return ERR_NOT_FOUND;
+    }
+
+    // Remove old accelerator
+    RemoveKeyFromAcceleratorTable(tag);
+
+    // Set new
+    ExtensionString displayKeyStr = GetDisplayKeyString(shortcut);
+    if (shortcut.size() > 0 && !UpdateAcceleratorTable(tag, shortcut)) {
+        return ERR_UNKNOWN;
+    }
+
+    // Update menu title
+    static WCHAR titleBuf[MAX_LOADSTRING];  
+    MENUITEMINFO itemInfo = {0};
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_DATA | MIIM_STRING;
+    itemInfo.cch = MAX_LOADSTRING;
+    itemInfo.dwTypeData = titleBuf;
+    if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
+        return ConvertErrnoCode(GetLastError());
+    }
+
+    std::wstring titleStr(titleBuf);
+    size_t pos = titleStr.find(L"\t");
+    if (pos != std::string::npos) {
+        titleStr = titleStr.substr(0, pos);
+    }
+    if (displayKeyStr.size() > 0) {
+        titleStr += L"\t";
+        titleStr += displayKeyStr;
+    }
+
+    itemInfo.fType = MFT_STRING; // just to make sure
+    itemInfo.dwTypeData = (LPWSTR)titleStr.c_str();
+    itemInfo.cch = titleStr.size();
+
+    if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
+        return ConvertErrnoCode(GetLastError());        
+    }
+
     return NO_ERROR;
 }
 
