@@ -787,7 +787,8 @@ NSUInteger processKeyString(ExtensionString& key)
     return mask;
 }
 
-int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString position, ExtensionString relativeId) {
+// displayStr is not used on the mac
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString displayStr, ExtensionString position, ExtensionString relativeId) {
     NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
     NSMenuItem *testItem = nil;
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
@@ -914,7 +915,8 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     return NO_ERROR;
 }
 
-int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut)
+// The displayStr param is ignored on the mac.
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
     NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
 

@@ -365,27 +365,30 @@ public:
             //  2: string - menuTitle to display
             //  3: string - command ID
             //  4: string - keyboard shortcut
-            //  5: string - position - first, last, before, after
-            //  6: string - relativeID - ID of other element relative to which this should be positioned (for position before and after)
-            if (argList->GetSize() != 7 ||
+            //  5: string - display string
+            //  6: string - position - first, last, before, after
+            //  7: string - relativeID - ID of other element relative to which this should be positioned (for position before and after)
+            if (argList->GetSize() != 8 ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_STRING ||
                 argList->GetType(3) != VTYPE_STRING ||
                 argList->GetType(4) != VTYPE_STRING ||
                 argList->GetType(5) != VTYPE_STRING ||
-                argList->GetType(6) != VTYPE_STRING) {
+                argList->GetType(6) != VTYPE_STRING ||
+                argList->GetType(7) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
-                ExtensionString parentCommand = CefString(argList->GetString(1));
+                ExtensionString parentCommand = argList->GetString(1);
                 ExtensionString menuTitle = argList->GetString(2);
-                ExtensionString command = CefString(argList->GetString(3));
+                ExtensionString command = argList->GetString(3);
                 ExtensionString key = argList->GetString(4);
-                ExtensionString position = CefString(argList->GetString(5));
-                ExtensionString relativeId = CefString(argList->GetString(6));
+                ExtensionString displayStr = argList->GetString(5);
+                ExtensionString position = argList->GetString(6);
+                ExtensionString relativeId = argList->GetString(7);
 
-                error = AddMenuItem(browser, parentCommand, menuTitle, command, key, position, relativeId);
+                error = AddMenuItem(browser, parentCommand, menuTitle, command, key, displayStr, position, relativeId);
                 // No additional response args for this function
             }
         } else if (message_name == "RemoveMenu") {
@@ -494,17 +497,20 @@ public:
             //  0: int32 - callback id
             //  1: string - command ID
             //  2: string - shortcut
-            if (argList->GetSize() != 3 ||
+            //  3: string - display string
+            if (argList->GetSize() != 4 ||
                 argList->GetType(1) != VTYPE_STRING ||
-                argList->GetType(2) != VTYPE_STRING) {
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
                 ExtensionString commandId = argList->GetString(1);
                 ExtensionString shortcut = argList->GetString(2);
+                ExtensionString displayStr = argList->GetString(3);
                 
-                error = SetMenuItemShortcut(browser, commandId, shortcut);
+                error = SetMenuItemShortcut(browser, commandId, shortcut, displayStr);
                 // No additional response args for this function
             }
         } else if (message_name == "GetMenuPosition") {
