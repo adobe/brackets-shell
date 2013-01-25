@@ -1211,7 +1211,7 @@ ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
-                  ExtensionString command, ExtensionString key,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
@@ -1257,9 +1257,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     title = itemTitle.c_str();
     keyStr = key.c_str();
 
-    if (key.length() > 0) {
+    if (key.length() > 0 && displayStr.length() == 0) {
         displayKeyStr = GetDisplayKeyString(keyStr);
+    } else {
+        displayKeyStr = displayStr;
+    }
 
+    if (displayKeyStr.length() > 0) {
         title = title + L"\t" + displayKeyStr;
     }
     int32 positionIdx;
@@ -1409,7 +1413,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     }
 
     std::wstring newTitle = itemTitle;
-    if (shortcut.size() > 0) {
+    if (shortcut.length() > 0) {
         newTitle += shortcut;
     }
     itemInfo.fType = MFT_STRING; // just to make sure
@@ -1469,7 +1473,7 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     return NO_ERROR;
 }
 
-int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut)
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
     NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
     int32 tag = model.getTag(commandId);
@@ -1481,12 +1485,19 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
         return ERR_NOT_FOUND;
     }
 
+    // Display string
+    ExtensionString displayKeyStr;
+    if (shortcut.length() > 0 && displayStr.length() == 0) {
+        displayKeyStr = GetDisplayKeyString(shortcut);
+    } else {
+        displayKeyStr = displayStr;
+    }
+
     // Remove old accelerator
     RemoveKeyFromAcceleratorTable(tag);
 
     // Set new
-    ExtensionString displayKeyStr = GetDisplayKeyString(shortcut);
-    if (shortcut.size() > 0 && !UpdateAcceleratorTable(tag, shortcut)) {
+    if (shortcut.length() > 0 && !UpdateAcceleratorTable(tag, shortcut)) {
         return ERR_UNKNOWN;
     }
 
