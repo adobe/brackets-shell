@@ -86,12 +86,8 @@ void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCm
 void RestoreWindowPlacement(HWND hWnd, int showCmd);
 
 bool IsFilename(const std::wstring& str) {
-    // Cheesy check to see if the passed in string is a filename --
-    // look for a colon (after the drive letter) and a dot (for extension)
-    // This should probably be made more robust...
-
-    return (str.find_first_of(':') != std::string::npos &&
-            str.find_first_of('.') != std::string::npos);
+    // See if we can access the passed in value
+    return (GetFileAttributes(str.c_str()) != INVALID_FILE_ATTRIBUTES);
 }
 
 std::wstring GetFilenamesFromCommandLine() {
