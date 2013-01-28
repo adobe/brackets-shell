@@ -615,7 +615,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
         return ERR_CANT_READ;
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ,
-        0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     int32 error = NO_ERROR;
 
     if (INVALID_HANDLE_VALUE == hFile)
@@ -646,7 +646,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_UNSUPPORTED_ENCODING;
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
-        0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     DWORD dwBytesWritten;
     int error = NO_ERROR;
 
