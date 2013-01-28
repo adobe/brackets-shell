@@ -34,9 +34,9 @@
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.text</string>
-                <string>public.source-code</string>
-                <string>public.script</string>
-                <string>public.shell-script</string>
+				<string>public.source-code</string>
+				<string>public.script</string>
+				<string>public.shell-script</string>
 			</array>
 		</dict>
 		<dict>
@@ -79,9 +79,9 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>md</string>
-                <string>mkd</string>
-                <string>mkdn</string>
-                <string>mdown</string>
+				<string>mkd</string>
+				<string>mkdn</string>
+				<string>mdown</string>
 				<string>markdown</string>
 			</array>
 		</dict>
