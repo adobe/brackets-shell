@@ -431,6 +431,7 @@ if (!appshell.app) {
      * @param {string} title Menu title to display, e.g. "Open"
      * @param {string} id Command ID, e.g. "file.open"
      * @param {string} key Shortcut, e.g. "Cmd-O"
+     * @param {string} displayStr Shortcut to display in menu. If "", use key.
      * @param {string} position Where to put the item; values are "before", "after", "first", "last", 
      *                    "firstInSection", "lastInSection", and ""
      * @param {string} relativeId The ID of the menu item to which is this relative, for position "before" and "after"
@@ -454,11 +455,11 @@ if (!appshell.app) {
      *   Select All:  "edit.selectAll"
      */
     native function AddMenuItem();
-    appshell.app.addMenuItem = function (parentId, title, id, key, position, relativeId, callback) {
+    appshell.app.addMenuItem = function (parentId, title, id, key, displayStr, position, relativeId, callback) {
         key = key || '';
         position = position || '';
         relativeId = relativeId || '';
-        AddMenuItem(callback, parentId, title, id, key, position, relativeId);
+        AddMenuItem(callback, parentId, title, id, key, displayStr, position, relativeId);
     };
 
     /**
@@ -491,6 +492,19 @@ if (!appshell.app) {
         GetMenuTitle(callback, commandid);
     };
 
+    /**
+     * Set menu item shortuct. 
+     * @param {string} commandId ID of the menu item.
+     * @param {string} shortcut Shortcut string, like "Cmd-U".
+     * @param {string} displayStr String to display in menu. If "", use shortcut.
+     * @param {function (err)} callback Asynchronous callback function. The callback gets an error code.
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function SetMenuItemShortcut();
+    appshell.app.setMenuItemShortcut = function (commandId, shortcut, displayStr, callback) {
+        SetMenuItemShortcut(callback, commandId, shortcut, displayStr);
+    };
+ 
     /**
      * Remove menu associated with commandId.
      * @param {string} commandid ID of the menu item.
