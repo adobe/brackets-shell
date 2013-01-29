@@ -108,12 +108,12 @@ fi
 
 
 # Set the build number, branch and sha on the staged build
-cat "$packageLocation/package.json" \
+cat "$packageLocation/config.json" \
 |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
 |   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_branch_name\3:" \
 |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
 > tmp_package_json.txt
-mv tmp_package_json.txt "$packageLocation/package.json"
+mv tmp_package_json.txt "$packageLocation/config.json"
 
 # Build the installer
 if [ "$os" = "darwin" ]; then # Build mac installer
