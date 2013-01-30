@@ -98,7 +98,29 @@ if (!appshell.app) {
      * @constant Specified file already exists.
      */
     appshell.fs.ERR_FILE_EXISTS             = 10;
- 
+
+    /**
+     * @constant No error.
+     */
+    appshell.app.NO_ERROR                   = 0;
+
+    /**
+     * @constant Node has not yet launched. Try again later.
+     */
+    appshell.app.ERR_NODE_NOT_YET_STARTED   = -1;
+
+    /**
+     * @constant Node is in the process of launching, but has not yet set the port.
+     * Try again later.
+     */
+    appshell.app.ERR_NODE_PORT_NOT_YET_SET  = -2;
+
+    /**
+     * @constant Node encountered a fatal error while launching or running.
+     * It cannot be restarted.
+     */
+    appshell.app.ERR_NODE_FAILED            = -3;
+
     /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
@@ -229,6 +251,23 @@ if (!appshell.app) {
     native function ShowDeveloperTools();
     appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
+    };
+
+    /**
+     * Returns the TCP port of the current Node server 
+     *
+     * @param {function(err, port)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (err, port) where port is the TCP port of the running server.
+     *        Possible error values:
+     *         ERR_NODE_PORT_NOT_SET      = -1;
+     *         ERR_NODE_NOT_RUNNING       = -2;
+     *         ERR_NODE_FAILED            = -3;
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetNodeState();
+    appshell.app.getNodeState = function (callback) {
+        GetNodeState(callback);
     };
 
     /**
