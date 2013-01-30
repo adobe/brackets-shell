@@ -16,13 +16,28 @@
 #   to the branches you want to build. If these variables are not set, the
 #   current branch will be built and no new code will be fetched.
 # SETUP - BUILDING INSTALLERS
-# - Set BUILD_INSTALLER environment variable to 1
 # - Set BRACKETS_SRC environment variable, pointing to the
 #   brackets source code (without trailing '/')
+#
+# USAGE
+# - Call from the root brackets-shell directory:
+#     scripts/build.sh [-i|-installer]
+#
+# - Options:
+#     -i, -installer: package www files and build installer
 
+buildInstaller=0
+
+# Check for options
+#  -i or -installer: stage and build installer
+while getopts ":i" opt; do
+    case $opt in 
+    i)      buildInstaller=1;;
+    esac
+done
 
 # Make sure BRACKETS_SRC environment variable is set
-if [ "$BUILD_INSTALLER" != "" -a "$BRACKETS_SRC" = "" ]; then
+if [ $buildInstaller != 0 -a "$BRACKETS_SRC" = "" ]; then
     echo "The BRACKETS_SRC environment variable must be set to the location of the Brackets source folder. Aborting."
     exit
 fi
@@ -32,8 +47,8 @@ if [ "$BRACKETS_APP_NAME" = "" ]; then
     export BRACKETS_APP_NAME="Brackets"
 fi
 
-# Default the branches to "master"
-# You can set either branch name to "NO_FETCH" to skip the checkout and fetching for that repo
+# Default the branches to "NO_FETCH", which skips fetching and checkout.
+# You can set either to a specific branch name, in which case the branch will be fetched and checked out.
 if [ "$BRACKETS_SHELL_BRANCH" = "" ]; then
     export BRACKETS_SHELL_BRANCH="NO_FETCH"
 fi
@@ -79,7 +94,7 @@ if [ "$os" = "darwin" ]; then # Building on mac
     xcodebuild -project appshell.xcodeproj -config Release clean
     xcodebuild -project appshell.xcodeproj -config Release build
     
-    if [ "$BUILD_INSTALLER" != "" ]; then
+    if [ $buildInstaller != 0 ]; then
         # Remove existing staging dir
         if [ -d installer/mac/staging ]; then
           rm -rf installer/mac/staging
@@ -100,7 +115,7 @@ elif [ "$os" = "msys" ]; then # Building on Windows
     # Clean and build the Visual Studio project
     cmd.exe /c "scripts\build_projects.bat"
 
-    if [ "$BUILD_INSTALLER" != "" ]; then
+    if [ $buildInstaller != 0 ]; then
         # Stage files for installer
         cmd.exe /c "scripts\stage_for_installer.bat"
 
@@ -111,7 +126,7 @@ else
     exit;
 fi
 
-if [ "$BUILD_INSTALLER" != "" ]; then
+if [ $buildInstaller != 0 ]; then
     # Set the build number, branch and sha on the staged build
     cat "$packageLocation/config.json" \
     |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
