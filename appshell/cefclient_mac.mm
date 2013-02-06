@@ -19,6 +19,7 @@
 #include "command_callbacks.h"
 #include "client_switches.h"
 #include "native_menu_model.h"
+#include "appshell_node_process.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -473,6 +474,9 @@ int main(int argc, char* argv[]) {
     
   g_appStartupTime = CFAbsoluteTimeGetCurrent();
 
+  // Start the node server process
+  startNodeProcess();
+    
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
@@ -558,7 +562,7 @@ int main(int argc, char* argv[]) {
 
   // Run the application message loop.
   CefRunMessageLoop();
-  
+    
   //if we quit the message loop programatically we need to call
   //terminate now to properly cleanup everything
   if (!g_isTerminating) {
