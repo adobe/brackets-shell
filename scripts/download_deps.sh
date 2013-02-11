@@ -62,7 +62,7 @@ else
         chmod u+x deps/cef/tools/*
     fi
     
-    python scripts/patchDevTools.py
+    python scripts/patch_devtools.py
     popd
 fi
 
