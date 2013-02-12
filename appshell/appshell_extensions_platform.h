@@ -104,7 +104,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
               ExtensionString position, ExtensionString relativeId);
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
-                  ExtensionString command, ExtensionString key,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId);
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
@@ -116,5 +116,7 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr);
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
