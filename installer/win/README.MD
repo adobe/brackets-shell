@@ -34,7 +34,7 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
 2. Open brackets-shell\installer\mac\buildInstaller.sh and change `releaseName`
 3. Open Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
 4. Open brackets-shell\appshell\version.rc and change `FILEVERSION` and `"FileVersion"`
-5. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion`
+5. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion` and `CFBundleShortVersionString`
 6. Open brackets\src\package.json and change `"version"`
 
 ## To build the Brackets installer
