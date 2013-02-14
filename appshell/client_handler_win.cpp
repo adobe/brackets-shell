@@ -10,10 +10,14 @@
 #include "resource.h"
 #include "native_menu_model.h"
 
+#include <ShellAPI.h>
+
 #define CLOSING_PROP L"CLOSING"
 
-// The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+// WM_DROPFILES handler, defined in cefclient_win.cpp
+extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
 
 // Additional globals
 extern HACCEL hAccelTable;
@@ -151,6 +155,12 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
       }
       break;
 
+    case WM_DROPFILES:
+      if (g_handler.get() && browser.get()) {
+        return HandleDropFiles((HDROP)wParam, g_handler, browser);
+      }
+      break;
+
     case WM_INITMENUPOPUP:
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
@@ -216,6 +226,7 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
     HWND hWnd = browser->GetHost()->GetWindowHandle();
     AttachWindProcToPopup(hWnd);
     LoadWindowsIcons(hWnd);
+    DragAcceptFiles(hWnd, true);
     browser->GetHost()->SetFocus(true);
 }
 

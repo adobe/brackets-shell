@@ -340,6 +340,14 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
   return browser->SendProcessMessage(PID_RENDERER, message);
 }
 
+void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &filename) {
+  std::string filenameStr(filename);
+  // FIXME: Use SendJSCommand once it supports parameters
+  std::string cmd = "require('command/CommandManager').execute('file.open',{fullPath:'" + filenameStr + "'})";
+  browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
+                                browser->GetMainFrame()->GetURL(), 0);
+}
+
 void ClientHandler::DispatchCloseToNextBrowser()
 {
   // If the inner loop iterates thru all browsers and there's still at least one

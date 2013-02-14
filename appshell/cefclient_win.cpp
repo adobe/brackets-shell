@@ -20,6 +20,8 @@
 #include "client_switches.h"
 #include "native_menu_model.h"
 
+#include <algorithm>
+#include <ShellAPI.h>
 #include <ShlObj.h>
 
 #define MAX_LOADSTRING 100
@@ -37,6 +39,7 @@ DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
 HACCEL hAccelTable;
 HWND hWndMain;
+std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -81,6 +84,37 @@ bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 void SaveWindowRect(HWND hWnd);
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
 void RestoreWindowPlacement(HWND hWnd, int showCmd);
+
+bool IsFilename(const std::wstring& str) {
+    // See if we can access the passed in value
+    return (GetFileAttributes(str.c_str()) != INVALID_FILE_ATTRIBUTES);
+}
+
+std::wstring GetFilenamesFromCommandLine() {
+    std::wstring result = L"[]";
+
+    if (AppGetCommandLine()->HasArguments()) {
+        bool firstEntry = true;
+        std::vector<CefString> args;
+        AppGetCommandLine()->GetArguments(args);
+        std::vector<CefString>::iterator iterator;
+
+        result = L"[";
+        for (iterator = args.begin(); iterator != args.end(); iterator++) {
+            std::wstring argument = (*iterator).ToWString();
+            if (IsFilename(argument)) {
+                if (!firstEntry) {
+                    result += L",";
+                }
+                firstEntry = false;
+                result += L"\"" + argument + L"\"";
+            }
+        }
+        result += L"]";
+    }
+
+    return result;
+}
 
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
@@ -181,6 +215,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
+
+  gFilesToOpen = GetFilenamesFromCommandLine();
 
   int result = 0;
 
@@ -520,10 +556,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   if (!hWndMain)
     return FALSE;
 
+  DragAcceptFiles(hWndMain, TRUE);
   RestoreWindowPlacement(hWndMain, showCmd);
   UpdateWindow(hWndMain);
-
+\
   return TRUE;
+}
+
+LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser) {
+    UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+    for (UINT i = 0; i < fileCount; i++) {
+        wchar_t filename[MAX_PATH];
+        DragQueryFile(hDrop, i, filename, MAX_PATH);
+        std::wstring pathStr(filename);
+        replace(pathStr.begin(), pathStr.end(), '\\', '/');
+        handler->SendOpenFileCommand(browser, CefString(pathStr));
+    }
+    return 0;
 }
 
 //
@@ -805,6 +854,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+    case WM_DROPFILES:
+        if (g_handler.get()) {
+            return HandleDropFiles((HDROP)wParam, g_handler, g_handler->GetBrowser());
+        }
+        return 0;
 
     case WM_INITMENUPOPUP:
         HMENU menu = (HMENU)wParam;
