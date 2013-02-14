@@ -471,7 +471,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication {
-    if (!g_isTerminating && g_handler.get() && !g_handler->AppIsQuitting() && g_handler->HasWindows()) {
+    if (!g_isTerminating && g_handler.get() && !g_handler->AppIsQuitting() && g_handler->HasWindows() && [NSApp keyWindow]) {
         g_handler->DispatchCloseToNextBrowser();
         return NSTerminateCancel;
     }
