@@ -29,7 +29,7 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
 11. Set `BRACKETS_SRC` to the root folder of the brackets repo
 
 
-## To rev the Brackets sprint number
+## To rev the Brackets sprint number (see Gruntfile.js set-sprint task)
 1. Open brackets-win-install-build.xml and change `product.sprint.number`
 2. Open brackets-shell\installer\mac\buildInstaller.sh and change `releaseName`
 3. Open Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID

@@ -81,11 +81,11 @@ module.exports = function (grunt) {
         versionRc = versionRc.replace(/(Sprint )([0-9]+)/, "$1" + sprint);
         grunt.file.write(versionRcPath, versionRc);
         
-        // 6. Open appshell/mac/Info.plist and change `CFBundleVersion`
+        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString`
         updateXmlElement(
             "appshell/mac/Info.plist",
-            "/plist/dict/key[text()='CFBundleVersion']/following-sibling::string",
-            packageJSON.version
+            "/plist/dict/key[text()='CFBundleShortVersionString']/following-sibling::string",
+            packageJSON.version.substr(0, packageJSON.version.indexOf("-"))
         );
     });
 
