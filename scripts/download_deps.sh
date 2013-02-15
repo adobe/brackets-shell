@@ -61,6 +61,8 @@ else
         # Make sure scripts in deps/cef/tools are executable
         chmod u+x deps/cef/tools/*
     fi
+    
+    python scripts/patch_devtools.py
     popd
 fi
 
