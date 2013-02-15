@@ -686,11 +686,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       CefWindowInfo info;
       CefBrowserSettings settings;
 
-      // Populate the settings based on command line arguments.
-      AppGetBrowserSettings(settings);
-
-      settings.file_access_from_file_urls_allowed = true;
-      settings.universal_access_from_file_urls_allowed = true;
+      settings.web_security = STATE_DISABLED;
 
       // Initialize window info to the defaults for a child window
       info.SetAsChild(hWnd, rect);
