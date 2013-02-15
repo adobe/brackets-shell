@@ -2,6 +2,7 @@
 *.swp
 xcodebuild
 xcodebuild/*
+node_modules
 
 appshell.xcodeproj
 Brackets.vcxproj

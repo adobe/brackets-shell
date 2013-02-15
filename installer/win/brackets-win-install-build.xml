@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project name="Brackets Windows installer" basedir="."  xmlns:antcontrib="antlib:net.sf.antcontrib"
-default="build.mul">
+<?xml version="1.0" encoding="UTF-8"?><project name="Brackets Windows installer" basedir="." xmlns:antcontrib="antlib:net.sf.antcontrib" default="build.mul">
   
   <!-- Key locations on disk -->
   <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
@@ -12,7 +10,7 @@ default="build.mul">
   <!-- See also: product name definitions in Brackets_<locale>.wxl -->
   <property name="product.shortname" value="Brackets"/>
   <property name="product.fullname" value="Brackets"/>
-  <property name="product.sprint.number" value="20"/>
+  <property name="product.sprint.number" value="21"/>
   <property name="product.version.number" value="0.${product.sprint.number}"/>
   <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
   <property name="product.manufacturer" value="brackets.io"/>
@@ -29,7 +27,7 @@ default="build.mul">
   
   <!-- Build WIX installer -->
   
-  <target name="build.english" >
+  <target name="build.english">
     <echo level="info">Building English installer for build: ${product.version.name} </echo>
     <!-- heat, candle, light-->
     <echo message="Generating fileset."/>
@@ -83,7 +81,7 @@ default="build.mul">
     
   </target>
 
-  <target name="build.french" >
+  <target name="build.french">
     <echo level="info">Building French installer for build: ${product.version.name} </echo>
     <!-- heat, candle, light-->
     <echo message="Generating fileset."/>
@@ -92,7 +90,7 @@ default="build.mul">
     </exec>
 
     <echo message="Prepping installer source."/>
-    <exec dir="" executable="${candle.cmd}" >
+    <exec dir="" executable="${candle.cmd}">
       <arg line="Brackets.wxs
 		              WixUI_InstallDir.wxs
 		              ExitDialog.wxs
@@ -140,38 +138,36 @@ default="build.mul">
 
   <!-- to build a single msi for english and french -->
   <target name="build.mul" depends="build.english, build.french" description="Build the final multi-locale MSI">
-    <exec  executable='"${msitran.cmd}"' failonerror='true'>
+    <exec executable="&quot;${msitran.cmd}&quot;" failonerror="true">
       <arg line="-g '${product.fullname} ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
     </exec>
 
-    <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi" fr-fr.mst 1036'/>
+    <exec executable="cscript" failonerror="true">
+      <arg line="&quot;${wisubstg.cmd}&quot; &quot;${product.fullname} ${product.version.name}.msi&quot; fr-fr.mst 1036"/>
     </exec>
 
-    <exec  executable="cscript" failonerror='true'>
-      <arg line='"${wisubstg.cmd}" "${product.fullname} ${product.version.name}.msi"'/>
+    <exec executable="cscript" failonerror="true">
+      <arg line="&quot;${wisubstg.cmd}&quot; &quot;${product.fullname} ${product.version.name}.msi&quot;"/>
     </exec>
 
   </target>
 
   <!-- this gets the latest build number by looking at the last modified folder and grabbing the digits at the end of \Builds*-->
 
-  <target name='get.latest.build.dir.name'>
-    <antcontrib:timestampselector property='latest.build.dir'>
+  <target name="get.latest.build.dir.name">
+    <antcontrib:timestampselector property="latest.build.dir">
       <path>
-        <fileset dir='\\sjshare.corp.adobe.com\edge\AdobeEdgeCode\Brackets\Win'/>
+        <fileset dir="\\sjshare.corp.adobe.com\edge\AdobeEdgeCode\Brackets\Win"/>
       </path>
     </antcontrib:timestampselector>
     <echo>${latest.build.dir}</echo>
-    <antcontrib:propertyregex property='latest.build.number' input='${latest.build.dir}'
-                   regexp='(Build)(\d{1,})' select='\2'/>
+    <antcontrib:propertyregex property="latest.build.number" input="${latest.build.dir}" regexp="(Build)(\d{1,})" select="\2"/>
     <echo>${latest.build.number}</echo>
-    <antcontrib:math result='new.build.number' operand1='${latest.build.number}'
-                     operation='+' operand2='1' datatype='int'/>
+    <antcontrib:math result="new.build.number" operand1="${latest.build.number}" operation="+" operand2="1" datatype="int"/>
     <echo>${new.build.number}</echo>
   </target>
   
-  <target name="post.build" depends=""></target>
+  <target name="post.build" depends=""/>
   <!-- codesign msi file -->
   <target name="codesign.installer.win" description="runs signtool on msi file">
         <property name="cert.file" value="C:/Certificates/CS_Certs/Adobe_Systems_CS.cer"/>
@@ -187,17 +183,15 @@ default="build.mul">
     
   <!-- Cleanup targets -->
     
-  <target name="clean" depends="clean.temp"
-      description="Remove all Wix generated files from installer\win">
-    <delete><fileset dir="." includes="*.msi" /></delete>
+  <target name="clean" depends="clean.temp" description="Remove all Wix generated files from installer\win">
+    <delete><fileset dir="." includes="*.msi"/></delete>
   </target>
     
-  <target name="clean.temp"
-      description="Remove intermediate Wix files from installer\win, leaving final MSI in place">
-    <delete file="bracketsharvestmanager.wxs" />
-    <delete file="fr-fr.mst" />
-    <delete><fileset dir="." includes="*.wixobj" /></delete>
-    <delete><fileset dir="." includes="*.wixpdb" /></delete>
+  <target name="clean.temp" description="Remove intermediate Wix files from installer\win, leaving final MSI in place">
+    <delete file="bracketsharvestmanager.wxs"/>
+    <delete file="fr-fr.mst"/>
+    <delete><fileset dir="." includes="*.wixobj"/></delete>
+    <delete><fileset dir="." includes="*.wixpdb"/></delete>
   </target>
   
 </project>
