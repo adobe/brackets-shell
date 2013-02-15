@@ -89,9 +89,6 @@ module.exports = function (grunt) {
         );
     });
 
-    // task: test
-    grunt.registerTask('test', ['jshint', 'jasmine']);
-
-    // Default task.
-    grunt.registerTask('default', ['test']);
+    // TODO Default task.
+    // grunt.registerTask('default', ['build']);
 };
