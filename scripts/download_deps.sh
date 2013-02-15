@@ -14,7 +14,7 @@ root_dir=${full_path%/*/*}
 
 #### CEF
 
-cefVersion="3.1180.823"
+cefVersion="3.1364.1094"
 if [ "$os" = "darwin" ]; then # Building on mac
     zipName="cef_binary_""$cefVersion""_macosx"
 elif [ "$os" = "msys" ]; then # Building on win

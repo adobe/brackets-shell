@@ -13,47 +13,87 @@
 #include "include/cef_app.h"
 
 class ClientApp : public CefApp,
+                  public CefBrowserProcessHandler,
                   public CefRenderProcessHandler {
  public:
+  
   // Interface for renderer delegates. All RenderDelegates must be returned via
   // CreateRenderDelegates. Do not perform work in the RenderDelegate
   // constructor. See CefRenderProcessHandler for documentation.
   class RenderDelegate : public virtual CefBase {
 
-   public:
-    // Called when WebKit is initialized. Used to register V8 extensions.
-    virtual void OnWebKitInitialized(CefRefPtr<ClientApp> app) {
-    };
-
-    // Called when a V8 context is created. Used to create V8 window bindings
-    // and set message callbacks. RenderDelegates should check for unique URLs
-    // to avoid interfering with each other.
-    virtual void OnContextCreated(CefRefPtr<ClientApp> app,
-                                  CefRefPtr<CefBrowser> browser,
-                                  CefRefPtr<CefFrame> frame,
-                                  CefRefPtr<CefV8Context> context) {
-    };
-
-    // Called when a V8 context is released. Used to clean up V8 window
-    // bindings. RenderDelegates should check for unique URLs to avoid
-    // interfering with each other.
-    virtual void OnContextReleased(CefRefPtr<ClientApp> app,
-                                   CefRefPtr<CefBrowser> browser,
-                                   CefRefPtr<CefFrame> frame,
-                                   CefRefPtr<CefV8Context> context) {
-    };
-
-    // Called when a process message is received. Return true if the message was
-    // handled and should not be passed on to other handlers. RenderDelegates
-    // should check for unique message names to avoid interfering with each
-    // other.
-    virtual bool OnProcessMessageReceived(
-        CefRefPtr<ClientApp> app,
-        CefRefPtr<CefBrowser> browser,
-        CefProcessId source_process,
-        CefRefPtr<CefProcessMessage> message) {
-      return false;
-    }
+  public:
+      virtual void OnRenderThreadCreated(CefRefPtr<ClientApp> app,
+                                         CefRefPtr<CefListValue> extra_info) {}
+      
+      virtual void OnWebKitInitialized(CefRefPtr<ClientApp> app) {}
+      
+      virtual void OnBrowserCreated(CefRefPtr<ClientApp> app,
+                                    CefRefPtr<CefBrowser> browser) {}
+      
+      virtual void OnBrowserDestroyed(CefRefPtr<ClientApp> app,
+                                      CefRefPtr<CefBrowser> browser) {}
+      
+      virtual bool OnBeforeNavigation(CefRefPtr<ClientApp> app,
+                                      CefRefPtr<CefBrowser> browser,
+                                      CefRefPtr<CefFrame> frame,
+                                      CefRefPtr<CefRequest> request,
+                                      cef_navigation_type_t navigation_type,
+                                      bool is_redirect) {
+          return false;
+      }
+      
+      virtual void OnContextCreated(CefRefPtr<ClientApp> app,
+                                    CefRefPtr<CefBrowser> browser,
+                                    CefRefPtr<CefFrame> frame,
+                                    CefRefPtr<CefV8Context> context) {}
+      
+      virtual void OnContextReleased(CefRefPtr<ClientApp> app,
+                                     CefRefPtr<CefBrowser> browser,
+                                     CefRefPtr<CefFrame> frame,
+                                     CefRefPtr<CefV8Context> context) {}
+      
+      virtual void OnUncaughtException(CefRefPtr<ClientApp> app,
+                                       CefRefPtr<CefBrowser> browser,
+                                       CefRefPtr<CefFrame> frame,
+                                       CefRefPtr<CefV8Context> context,
+                                       CefRefPtr<CefV8Exception> exception,
+                                       CefRefPtr<CefV8StackTrace> stackTrace) {}
+      
+      virtual void OnWorkerContextCreated(CefRefPtr<ClientApp> app,
+                                          int worker_id,
+                                          const CefString& url,
+                                          CefRefPtr<CefV8Context> context) {}
+      
+      virtual void OnWorkerContextReleased(CefRefPtr<ClientApp> app,
+                                           int worker_id,
+                                           const CefString& url,
+                                           CefRefPtr<CefV8Context> context) {}
+      
+      virtual void OnWorkerUncaughtException(
+                                             CefRefPtr<ClientApp> app,
+                                             int worker_id,
+                                             const CefString& url,
+                                             CefRefPtr<CefV8Context> context,
+                                             CefRefPtr<CefV8Exception> exception,
+                                             CefRefPtr<CefV8StackTrace> stackTrace) {}
+      
+      virtual void OnFocusedNodeChanged(CefRefPtr<ClientApp> app,
+                                        CefRefPtr<CefBrowser> browser,
+                                        CefRefPtr<CefFrame> frame,
+                                        CefRefPtr<CefDOMNode> node) {}
+      
+      // Called when a process message is received. Return true if the message was
+      // handled and should not be passed on to other handlers. RenderDelegates
+      // should check for unique message names to avoid interfering with each
+      // other.
+      virtual bool OnProcessMessageReceived(
+                                            CefRefPtr<ClientApp> app,
+                                            CefRefPtr<CefBrowser> browser,
+                                            CefProcessId source_process,
+                                            CefRefPtr<CefProcessMessage> message) {
+          return false;
+      }
   };
 
   typedef std::set<CefRefPtr<RenderDelegate> > RenderDelegateSet;
@@ -61,13 +101,6 @@ class ClientApp : public CefApp,
 
   ClientApp();
         
-  // Set the proxy configuration. Should only be called during initialization.
-  void SetProxyConfig(cef_proxy_type_t proxy_type,
-                      const CefString& proxy_config) {
-    proxy_type_ = proxy_type;
-    proxy_config_ = proxy_config;
-  }
-  
   void AddCallback(int32 id, CefRefPtr<CefV8Context> context, CefRefPtr<CefV8Value> callbackFunction) {
       callback_map_[id] = std::make_pair(context, callbackFunction);
   }
@@ -103,15 +136,30 @@ private:
                                  CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context) OVERRIDE;
   
+  virtual void OnUncaughtException(CefRefPtr<CefBrowser> browser,
+                                   CefRefPtr<CefFrame> frame,
+                                   CefRefPtr<CefV8Context> context,
+                                   CefRefPtr<CefV8Exception> exception,
+                                   CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE;
+  virtual void OnWorkerContextCreated(
+                                      int worker_id,
+                                      const CefString& url,
+                                      CefRefPtr<CefV8Context> context) OVERRIDE;
+  virtual void OnWorkerContextReleased(
+                                       int worker_id,
+                                       const CefString& url,
+                                       CefRefPtr<CefV8Context> context) OVERRIDE;
+  virtual void OnWorkerUncaughtException(
+                                         int worker_id,
+                                         const CefString& url,
+                                         CefRefPtr<CefV8Context> context,
+                                         CefRefPtr<CefV8Exception> exception,
+                                         CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE;
   virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
-  // Proxy configuration.
-  cef_proxy_type_t proxy_type_;
-  CefString proxy_config_;
-  
   // Set of supported RenderDelegates.
   RenderDelegateSet render_delegates_;
                       

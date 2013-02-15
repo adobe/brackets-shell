@@ -200,8 +200,7 @@ class AppShellExtensionHandler : public CefV8Handler {
 }  // namespace
 
 
-ClientApp::ClientApp()
-    : proxy_type_(CEF_PROXY_TYPE_DIRECT) {
+ClientApp::ClientApp() {
   CreateRenderDelegates(render_delegates_);
 }
 
@@ -260,6 +259,47 @@ private:
     CefRefPtr<CefV8Context> m_ctx;
     
 };
+
+void ClientApp::OnUncaughtException(CefRefPtr<CefBrowser> browser,
+                                    CefRefPtr<CefFrame> frame,
+                                    CefRefPtr<CefV8Context> context,
+                                    CefRefPtr<CefV8Exception> exception,
+                                    CefRefPtr<CefV8StackTrace> stackTrace) {
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end(); ++it) {
+        (*it)->OnUncaughtException(this, browser, frame, context, exception,
+                                   stackTrace);
+    }
+}
+
+void ClientApp::OnWorkerContextCreated(int worker_id,
+                                       const CefString& url,
+                                       CefRefPtr<CefV8Context> context) {
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end(); ++it)
+        (*it)->OnWorkerContextCreated(this, worker_id, url, context);
+}
+
+void ClientApp::OnWorkerContextReleased(int worker_id,
+                                        const CefString& url,
+                                        CefRefPtr<CefV8Context> context) {
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end(); ++it)
+        (*it)->OnWorkerContextReleased(this, worker_id, url, context);
+}
+
+void ClientApp::OnWorkerUncaughtException(
+                                          int worker_id,
+                                          const CefString& url,
+                                          CefRefPtr<CefV8Context> context,
+                                          CefRefPtr<CefV8Exception> exception,
+                                          CefRefPtr<CefV8StackTrace> stackTrace) {
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end(); ++it) {
+        (*it)->OnWorkerUncaughtException(this, worker_id, url, context, exception,
+                                         stackTrace);
+    }
+}
 
 bool ClientApp::OnProcessMessageReceived(
         CefRefPtr<CefBrowser> browser,
