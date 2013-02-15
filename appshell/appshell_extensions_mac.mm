@@ -27,6 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+extern ExtensionString gPendingFilesToOpen;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -583,6 +584,13 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
     NSDictionary* errorDict = nil;
     [script executeAndReturnError: &errorDict];
     [script release];
+    return NO_ERROR;
+}
+
+int32 GetPendingFilesToOpen(ExtensionString& files)
+{
+    files = gPendingFilesToOpen;
+    gPendingFilesToOpen = "[]";
     return NO_ERROR;
 }
 
