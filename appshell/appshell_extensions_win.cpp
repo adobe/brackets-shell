@@ -51,6 +51,7 @@ time_t FiletimeToTime(FILETIME const& ft);
 
 extern HINSTANCE hInst;
 extern HACCEL hAccelTable;
+extern std::wstring gFilesToOpen;
 
 // constants
 #define MAX_LOADSTRING 100
@@ -798,6 +799,12 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
     return NO_ERROR;
 }
 
+int32 GetPendingFilesToOpen(ExtensionString& files) {
+    files = gFilesToOpen;
+    ConvertToUnixPath(files);
+    gFilesToOpen = L"";
+    return NO_ERROR;
+}
 
 // Return index where menu or menu item should be placed.
 // -1 indicates append. -2 indicates 'before' - WINAPI supports 
