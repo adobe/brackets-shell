@@ -30,6 +30,11 @@
 
 #include <strsafe.h> // must be included after STL headers
 
+#ifndef OS_WIN
+#define OS_WIN 1
+#endif
+#include "config.h"
+
 #define BRACKETS_NODE_BUFFER_SIZE 4096
 
 static HANDLE g_hChildStd_IN_Rd = NULL;
@@ -79,8 +84,12 @@ void startNodeProcess() {
 // Thread function for the thread that reads from the Node pipe
 // Reads on anonymous pipes are always blocking (OVERLAPPED reads
 // are not possible) So, we need to do this in a separate thread
+//
+// TODO: This code first reads to a character buffer, and then
+// copies it to a std::string. The code could be optimized to avoid
+// this double-copy
 DWORD WINAPI NodeReadThread(LPVOID lpParam) {
-	DWORD dwRead; 
+	DWORD dwRead;
 	CHAR chBuf[BRACKETS_NODE_BUFFER_SIZE];
 	std::string strBuf("");
 	BOOL bSuccess = FALSE;
@@ -102,8 +111,7 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 	// We hold the mutex during startup, and then release it right before
 	// we start our read loop
 	if (hNodeMutex != NULL) {
-		DWORD dwWaitResult;
-		dwWaitResult = WaitForSingleObject(hNodeMutex, INFINITE);
+		DWORD dwWaitResult = WaitForSingleObject(hNodeMutex, INFINITE);
 		if (dwWaitResult == WAIT_OBJECT_0) { // got the mutex
 			nodeStartTime = timeGetTime();
 
@@ -112,11 +120,22 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 			TCHAR scriptPath[MAX_PATH];
 			TCHAR commandLine[BRACKETS_NODE_BUFFER_SIZE];
 
-			GetModuleFileName(module, executablePath, MAX_PATH);
+			DWORD dwFLen = GetModuleFileName(module, executablePath, MAX_PATH);
+			if (dwFLen == 0) {
+				fprintf(stderr, "[Node] Could not get module path");
+				ReleaseMutex(hNodeMutex);
+				restartNode(false);
+				return 0;
+			} else if (dwFLen == MAX_PATH) {
+				fprintf(stderr, "[Node] Path to module exceede max path length");
+				ReleaseMutex(hNodeMutex);
+				restartNode(false);
+				return 0;
+			}
 			PathRemoveFileSpec(executablePath);
 			StringCchCopy(scriptPath, MAX_PATH, executablePath);
-			PathAppend(executablePath, TEXT("Brackets-node.exe"));
-			PathAppend(scriptPath, TEXT("node-core"));
+			PathAppend(executablePath, TEXT(NODE_EXECUTABLE_PATH));
+			PathAppend(scriptPath, TEXT(NODE_CORE_PATH));
 
 			StringCchCopy(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\""));
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, executablePath);
@@ -296,6 +315,8 @@ void sendData(const std::string &data) {
 				// Send succeeded, but didn't write all the data, so try the rest.
 				sendData(data.substr(dwWritten));
 			}
+		} else {
+			fprintf(stderr, "[Node] Unable to get mutex in order to send data");
 		}
 	}
 	// If the mutex didn't exist or we were unable to get it, there's a

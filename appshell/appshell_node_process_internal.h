@@ -32,11 +32,11 @@
 // platform-specific files.
 
 // Cross-platform function to process incoming data. Buffers data, parses
-// the data into messages, and responds appropriately to (possibly
-// by calling platform-specific functions below.)
+// the data into messages, and responds appropriately (possibly by calling
+// platform-specific functions below).
 void processIncomingData(const std::string &data);
 
-// Platform-specific functions that must be be present on all platfomrs.
+// Platform-specific functions that must be be present on all platforms.
 // All of these functions below must be implemented in
 // a thread-safe manner if calls to the *public* API (defined in
 // appshell_node_process.h) happen from a different thread than that which
