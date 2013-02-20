@@ -44,6 +44,7 @@ module.exports = function (grunt) {
     grunt.registerTask('set-sprint', function () {
         var path            = "package.json",
             packageJSON     = grunt.file.readJSON(path),
+            versionShort    = packageJSON.version.substr(0, packageJSON.version.indexOf("-")),
             sprint          = grunt.option("sprint") || 0,
             buildInstallerScriptPath = "installer/mac/buildInstaller.sh",
             buildInstallerScript,
@@ -81,11 +82,16 @@ module.exports = function (grunt) {
         versionRc = versionRc.replace(/(Sprint )([0-9]+)/, "$1" + sprint);
         grunt.file.write(versionRcPath, versionRc);
         
-        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString`
+        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`
         updateXmlElement(
             "appshell/mac/Info.plist",
             "/plist/dict/key[text()='CFBundleShortVersionString']/following-sibling::string",
-            packageJSON.version.substr(0, packageJSON.version.indexOf("-"))
+            versionShort
+        );
+        updateXmlElement(
+            "appshell/mac/Info.plist",
+            "/plist/dict/key[text()='CFBundleVersion']/following-sibling::string",
+            versionShort
         );
     });
 
