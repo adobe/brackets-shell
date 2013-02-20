@@ -28,6 +28,7 @@
 #include "appshell_node_process_internal.h"
 
 #include "util.h"
+#include "config.h"
 
 // NOTE ON THREAD SAFETY: This code is not thread-safe. All of the methods
 // in the NodeWrapper class are inteded to be called *only* by the main
@@ -86,8 +87,8 @@
     lastStartTime = CFAbsoluteTimeGetCurrent();
     
     NSString *appPath = [[NSBundle mainBundle] bundlePath];
-    NSString *nodePath = [appPath stringByAppendingString:@"/Contents/MacOS/Brackets-node"];
-    NSString *nodeJSPath = [appPath stringByAppendingString:@"/Contents/node-core"];
+    NSString *nodePath = [appPath stringByAppendingString:NODE_EXECUTABLE_PATH];
+    NSString *nodeJSPath = [appPath stringByAppendingString:NODE_CORE_PATH];
     
     task = [[NSTask alloc] init];
     [task setStandardOutput: [NSPipe pipe]];

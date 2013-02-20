@@ -43,6 +43,11 @@
 #define GROUP_NAME @""
 #define APP_NAME @"Brackets"
 #define WINDOW_TITLE APP_NAME
+
+// Paths for node resources are relative to the bundle path
+#define NODE_EXECUTABLE_PATH @"/Contents/MacOS/Brackets-node"
+#define NODE_CORE_PATH @"/Contents/node-core"
+
 #endif
 
 #define REMOTE_DEBUGGING_PORT 9234
