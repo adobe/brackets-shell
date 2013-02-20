@@ -66,8 +66,8 @@ fi
 
 #### NODE
 
-nodeVersion="0.8.19"
-npmVersion="1.2.10"
+nodeVersion="0.8.20"
+npmVersion="1.2.11"
 
 # See if we already have the correct version
 if [ -f "$root_dir/deps/node/version-$nodeVersion.txt" ]; then
