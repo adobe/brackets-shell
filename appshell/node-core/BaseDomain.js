@@ -79,7 +79,7 @@
     
     /**
      *
-     * Registes commands with the DomainManager
+     * Registers commands with the DomainManager
      * @param {DomainManager} domainManager The DomainManager to use
      */
     function init(domainManager) {

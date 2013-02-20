@@ -36,7 +36,7 @@ maxerr: 50, node: true */
      * @constructor
      * DomainManager is a module/class that handles the loading, registration,
      * and execution of all commands and events. It is a singleton, and is passed
-     * to a domains in its init() method.
+     * to a domain in its init() method.
      */
     var self = exports;
     
@@ -88,10 +88,13 @@ maxerr: 50, node: true */
      *   can make use of this.
      */
     function registerDomain(domainName, version) {
-        if (!_domains[domainName]) {
+        if (!hasDomain(domainName)) {
+            // invalidate the cache
+            _cachedDomainDescriptions = null;
+            
             _domains[domainName] = {version: version, commands: {}, events: {}};
         } else {
-            throw new Error("Domain " + domainName + " already registered");
+            console.error("[DomainManager] Domain " + domainName + " already registered");
         }
     }
     
@@ -118,9 +121,10 @@ maxerr: 50, node: true */
         // invalidate the cache
         _cachedDomainDescriptions = null;
         
-        if (!_domains.hasOwnProperty(domainName)) {
+        if (!hasDomain(domainName)) {
             registerDomain(domainName, null);
         }
+
         if (!_domains[domainName].commands[commandName]) {
             _domains[domainName].commands[commandName] = {
                 commandFunction: commandFunction,
@@ -136,7 +140,7 @@ maxerr: 50, node: true */
     }
 
     /**
-     * Executes a command by domain name and command name. Called by a connection"s
+     * Executes a command by domain name and command name. Called by a connection's
      * message parser. Sends response or error (possibly asynchronously) to the
      * connection.
      * @param {Connection} connection The requesting connection object.
@@ -144,7 +148,7 @@ maxerr: 50, node: true */
      * @param {string} domainName The domain name.
      * @param {string} commandName The command name.
      * @param {Array} parameters The parameters to pass to the command function. If
-     *    the comand is asynchronous, will be augmented with a callback function.
+     *    the command is asynchronous, will be augmented with a callback function.
      *    (see description in registerCommand documentation)
      */
     function executeCommand(connection, id, domainName,
@@ -163,10 +167,14 @@ maxerr: 50, node: true */
                 parameters.push(callback);
                 command.commandFunction.apply(connection, parameters);
             } else { // synchronous command
-                connection.sendCommandResponse(
-                    id,
-                    command.commandFunction.apply(connection, parameters)
-                );
+                try {
+                    connection.sendCommandResponse(
+                        id,
+                        command.commandFunction.apply(connection, parameters)
+                    );
+                } catch (e) {
+                    connection.sendCommandError(id, e.message);
+                }
             }
         } else {
             connection.sendCommandError(id, "no such command: " +
@@ -185,15 +193,16 @@ maxerr: 50, node: true */
         // invalidate the cache
         _cachedDomainDescriptions = null;
         
-        if (!_domains.hasOwnProperty(domainName)) {
+        if (!hasDomain(domainName)) {
             registerDomain(domainName, null);
         }
+
         if (!_domains[domainName].events[eventName]) {
             _domains[domainName].events[eventName] = {
                 parameters: parameters
             };
         } else {
-            throw new Error("Event " + domainName + "." +
+            console.error("[DomainManager] Event " + domainName + "." +
                 eventName + " already registered");
         }
     }
@@ -219,7 +228,8 @@ maxerr: 50, node: true */
                 parameters
             );
         } else {
-            throw new Error("No such event: " + domainName + "." + eventName);
+            console.error("[DomainManager] No such event: " + domainName +
+                "." + eventName);
         }
     }
     

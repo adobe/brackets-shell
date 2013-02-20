@@ -30,10 +30,18 @@
 static std::string buffer("");
 static int commandCount = 0;
 
-// processes a single command from the node process. May call
+// Processes a single command from the node process. May call
 // platform-specific functions in order to do this. Any platform-specific
 // functions must be declared in a file used on all platforms and then
-// implemented on all platforms.
+// implemented on all platforms. Because this is not the main communication
+// channel with the client, the protocol is left very simple. Individual
+// messages are separated by two newlines. Arguments in a message are
+// separated by "|" characters. The first argument is the command name, and
+// the remaining arguments are dependent on the command.
+//
+// The number of total commands is expected to be very small. Right now,
+// the only commands are "ping" (a keep-alive command) and "port", which
+// records the port number that the node websocket server is currently using.
 void processCommand (const std::string &command) {
     std::vector<std::string> args;
     std::size_t start, end;
@@ -98,6 +106,7 @@ void processIncomingData(const std::string &data) {
         // buffer that has 4 GB of data without any command separators.
         // This indicates that we don't have a command in the buffer, so we can just
         // throw it all out and start over. (This shouldn't ever happen.)
+        fprintf(stderr, "Buffer for node stdout exceeded max size (4GB), clearing buffer.");
         buffer = "";
     }
     buffer += data;

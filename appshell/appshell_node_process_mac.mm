@@ -83,12 +83,21 @@
     NSString *nodePath = [appPath stringByAppendingString:@"/Contents/MacOS/Brackets-node"];
     NSString *nodeJSPath = [appPath stringByAppendingString:@"/Contents/node-core"];
     
-    NSLog(@"Here's where node is: %@\n", nodePath);
-    
     task = [[NSTask alloc] init];
     [task setStandardOutput: [NSPipe pipe]];
     [task setStandardInput: [NSPipe pipe]];
-    // [task setStandardError: [task standardOutput]];  // enable to pipe stderr to stdout
+
+    // Enable the line below to pipe stderr to stdout. In our case, we don't want this
+    // behavior. We already map console.error to a Logger function on the node side. On
+    // the off chance that an extension author explicitly writes to stderr, we don't 
+    // want the messages polluting our communication channel. We *could* imagine doing
+    // something like capturing this and NSLogging it, but that would just encourage this
+    // less-than-ideal debugging workflow.
+    //
+    // If this is not enabled, stderr goes to its own pipe. If that pipe is never opened
+    // on the parent side (as is currently the case in this code) the data is thrown away
+    //
+    // [task setStandardError: [task standardOutput]];  
     
     [task setLaunchPath: nodePath];
     
@@ -117,9 +126,7 @@
 }
 
 // Stops the currently-running node process, and possibly restarts.
--(void) stop {
-    NSLog(@"Shutting down node process\n");
-    
+-(void) stop {    
     // Assume we've failed. We might restart, but until we do, we don't want to send
     // any messages to the task.
     state = BRACKETS_NODE_FAILED;
@@ -136,10 +143,12 @@
         // Make sure the task has actually stopped!
         [task terminate];
         
+        // Finish reading anything that was put in the pipe prior to termination that we
+        // haven't yet read. In theory, there could be a command in the pipe that we need
+        // to execute.
         while ((data = [[[task standardOutput] fileHandleForReading] availableData]) && [data length])
         {
             dataNSString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-            NSLog(@"app got some data: %@\n", dataNSString);
             dataStdString += [dataNSString UTF8String];
         }
 
@@ -155,7 +164,7 @@
     if (elapsed > BRACKETS_NODE_AUTO_RESTART_TIMEOUT) {
         [self start];
     } else {
-        NSLog(@"Node didn't run long enough, so not restarting");
+        NSLog(@"Node process did not stay running long enough. Failing.");
     }
 }
 
@@ -170,18 +179,18 @@
         // -initWithData:encoding: on the other hand checks -[data length]
         
         NSString *dataNSString = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
-        NSLog(@"app got some data: %@\n", dataNSString);
         
         std::string dataStdString([dataNSString UTF8String]);
         processIncomingData(dataStdString);
+
+        // we need to schedule the file handle go read more data in the background again.
+        [[aNotification object] readInBackgroundAndNotify];
         
     } else {
         // We're finished here
         [self stop];
     }
     
-    // we need to schedule the file handle go read more data in the background again.
-    [[aNotification object] readInBackgroundAndNotify];
 }
 
 // Sends data to the current node process

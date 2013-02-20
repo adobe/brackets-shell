@@ -25,12 +25,19 @@
 
 #include <string>
 
+// This file declares "internal" functions that exist on both plantforms for
+// managing the state of the node process. Only code internal to the
+// management of node should call these functions. The reason we have an include
+// file at all is to avoid duplication of forward declarations in multiple
+// platform-specific files.
+
 // Cross-platform function to process incoming data. Buffers data, parses
 // the data into messages, and responds appropriately to (possibly
 // by calling platform-specific functions below.)
 void processIncomingData(const std::string &data);
 
-// Platform-specific functions. All of these functions below must be implemented in
+// Platform-specific functions that must be be present on all platfomrs.
+// All of these functions below must be implemented in
 // a thread-safe manner if calls to the *public* API (defined in
 // appshell_node_process.h) happen from a different thread than that which
 // calls processIncomingData.

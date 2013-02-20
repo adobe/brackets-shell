@@ -146,8 +146,13 @@ maxerr: 50, node: true */
         }
         
         function setupStdout() {
-            // Routinely check if stdout is closed.
-            // If it's closed, our parent process exited, so we should too.
+            // Routinely check if stdout is closed. Stdout will close when our
+            // parent process closes (either expectedly or unexpectedly) so this
+            // is our signal to shutdown to prevent process abandonment.
+            //
+            // We need to continually ping because that's the only way to actually
+            // check if the pipe is closed in a robust way (writable may only get
+            // set to false after trying to write a ping to a closed pipe).
             setInterval(function () {
                 if (!process.stdout.writable) {
                     // If stdout closes, our parent process has terminated or
@@ -155,7 +160,12 @@ maxerr: 50, node: true */
                     Logger.info("[Server] stopping because stdout closed");
                     stop();
                 } else {
-                    sendCommandToParentProcess("ping");
+                    try {
+                        sendCommandToParentProcess("ping");
+                    } catch (e) {
+                        Logger.info("[Server] stopping because stdout was not writable");
+                        stop();
+                    }
                 }
             }, PING_DELAY);
         }
@@ -230,7 +240,7 @@ maxerr: 50, node: true */
         setupHttpAndWebSocketServers(function (err, servers) {
             if (err) {
                 Logger.error(
-                    "[Server] stopping due to while starting http/ws servers: "
+                    "[Server] stopping due to error while starting http/ws servers: "
                         + err
                 );
                 stop();

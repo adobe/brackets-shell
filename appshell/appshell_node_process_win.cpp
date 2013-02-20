@@ -57,7 +57,7 @@ void startNodeProcess() {
 	// during startup from the main thread, and then all other times from the
 	// NodeThread thread. Since the first call to the function actually
 	// *starts* the NodeThread thread, there's currently no way this function
-	// could get called simultatenously by two processes.
+	// could get called simultaneously by two processes.
 	//
 	// However, if we ever implement a way for the main process to re-call
 	// this function, we will need to wrap it in a separate mutex to ensure
@@ -78,7 +78,7 @@ void startNodeProcess() {
 
 // Thread function for the thread that reads from the Node pipe
 // Reads on anonymous pipes are always blocking (OVERLAPPED reads
-// are not possible) So, we nee to do this in a separate thread
+// are not possible) So, we need to do this in a separate thread
 DWORD WINAPI NodeReadThread(LPVOID lpParam) {
 	DWORD dwRead; 
 	CHAR chBuf[BRACKETS_NODE_BUFFER_SIZE];

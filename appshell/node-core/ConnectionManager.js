@@ -75,7 +75,11 @@ maxerr: 50, node: true */
      */
     Connection.prototype._send = function (type, message) {
         if (this._ws && this._connected) {
-            this._ws.send(JSON.stringify({type: type, message: message}));
+            try {
+                this._ws.send(JSON.stringify({type: type, message: message}));
+            } catch (e) {
+                console.error("[Connection] Unable to stringify message: " + e.message);
+            }
         }
     };
 
@@ -110,7 +114,7 @@ maxerr: 50, node: true */
     };
 
     /**
-     * Closes the connection and dones necessary cleanup
+     * Closes the connection and does necessary cleanup
      */
     Connection.prototype.close = function () {
         if (this._ws) {

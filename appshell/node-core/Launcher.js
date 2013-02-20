@@ -53,7 +53,7 @@ maxerr: 50, node: true */
     /** @define {?string} Filename to dump all log data to.
      * If not null, all log data is appended to the specified file.
      */
-    var LOG_FILENAME_ON_LAUNCH = false;
+    var LOG_FILENAME_ON_LAUNCH = null;
     
 
     function exit() {
@@ -106,17 +106,21 @@ maxerr: 50, node: true */
     if (!DEBUG_ON_LAUNCH) {
         launch();
     } else {
+        var noopTimer = setInterval(function () {
+            // no-op so that we don't exit the process
+        }, 100000);
+
         // Inject a global so that user can call launch from the console
         // The debugger won't stop at breakpoints if they're reached as a 
         // direct result of evaluation of the console. So, we call launch()
         // from a timer. This will allow hitting breakpoints set in launch()
         // and in the functions it calls.
         global.debugLaunch = function () {
-            process.nextTick(launch);
+            process.nextTick(function () {
+                clearInterval(noopTimer);
+                launch();
+            });
         };
-        setInterval(function () {
-            // no-op so that we don't exit the process
-        }, 100000);
         process._debugProcess(process.pid);
     }
     
