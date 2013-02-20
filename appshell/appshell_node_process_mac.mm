@@ -27,6 +27,8 @@
 #include "appshell_node_process.h"
 #include "appshell_node_process_internal.h"
 
+#include "util.h"
+
 // NOTE ON THREAD SAFETY: This code is not thread-safe. All of the methods
 // in the NodeWrapper class are inteded to be called *only* by the main
 // thread.
@@ -65,16 +67,20 @@
 
 // Accessor for process state
 -(int) getState {
+    REQUIRE_UI_THREAD();
     return state;
 }
 
 // Mutator for process state
 -(void) setState:(int)newState {
+    REQUIRE_UI_THREAD();
     state = newState;
 }
 
 // Starts a new node process and registers appropriate handlers
 -(bool) start {
+    REQUIRE_UI_THREAD();
+    
     state = BRACKETS_NODE_PORT_NOT_YET_SET;
     
     lastStartTime = CFAbsoluteTimeGetCurrent();
@@ -126,7 +132,10 @@
 }
 
 // Stops the currently-running node process, and possibly restarts.
--(void) stop {    
+-(void) stop {
+    
+    REQUIRE_UI_THREAD();
+    
     // Assume we've failed. We might restart, but until we do, we don't want to send
     // any messages to the task.
     state = BRACKETS_NODE_FAILED;
@@ -195,6 +204,8 @@
 
 // Sends data to the current node process
 -(void) sendDataToTask: (NSString *)dataString {
+    REQUIRE_UI_THREAD();
+    
     if (state > 0) {
         const char * utf8DataString = [dataString UTF8String];
         NSData *data = [[[NSData alloc] initWithBytes:utf8DataString length:strlen(utf8DataString)] autorelease];
