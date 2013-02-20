@@ -71,6 +71,7 @@ echo Copying brackets-shell build from %CD%\..\..\Release ...
     echo \dev\
     echo \obj\
     echo \lib\
+    echo \node-core\
     echo avformat-54.dll
     echo avutil-51.dll
     echo avcodec-54.dll
@@ -84,6 +85,9 @@ echo Copying brackets-shell build from %CD%\..\..\Release ...
 xcopy ..\..\Release staging /s /i /exclude:shell_excludes.tmp
 del shell_excludes.tmp
 
+:: Copy node core to staging
+echo Copying appshell node-core from %CD%\..\..\Release ...
+xcopy ..\..\Release\node-core staging\node-core /s /i
 
 :: Copy BRACKETS_SRC\src to staging\www
 :: excluding .git*
