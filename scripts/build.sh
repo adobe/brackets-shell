@@ -9,17 +9,35 @@
 # SETUP - COMMON
 # - Run scripts/setup.sh from a Bash prompt (Terminal on Mac,
 #   GitBash on Windows).
-# - Set BRACKETS_SRC environment variable, pointing to the
-#   brackets source code (without trailing '/')
 # - Optionally, set BRACKETS_APP_NAME environment variable with the 
 #   name of the application. (This should match the app name built
 #   by the gyp project, and need not match the final installed build name.)
 # - Optionally, set BRACKETS_SHELL_BRANCH and BRACKETS_BRANCH
-#   to the branches you want to build. You can set either of these to 
-#   NO_FETCH to skip the checkout and fetching for that repo.
+#   to the branches you want to build. If these variables are not set, the
+#   current branch will be built and no new code will be fetched.
+# SETUP - BUILDING INSTALLERS
+# - Set BRACKETS_SRC environment variable, pointing to the
+#   brackets source code (without trailing '/')
+#
+# USAGE
+# - Call from the root brackets-shell directory:
+#     scripts/build.sh [-i|-installer]
+#
+# - Options:
+#     -i, -installer: package www files and build installer
+
+buildInstaller=0
+
+# Check for options
+#  -i or -installer: stage and build installer
+while getopts ":i" opt; do
+    case $opt in 
+    i)      buildInstaller=1;;
+    esac
+done
 
 # Make sure BRACKETS_SRC environment variable is set
-if [ "$BRACKETS_SRC" = "" ]; then
+if [ $buildInstaller != 0 -a "$BRACKETS_SRC" = "" ]; then
     echo "The BRACKETS_SRC environment variable must be set to the location of the Brackets source folder. Aborting."
     exit
 fi
@@ -29,13 +47,13 @@ if [ "$BRACKETS_APP_NAME" = "" ]; then
     export BRACKETS_APP_NAME="Brackets"
 fi
 
-# Default the branches to "master"
-# You can set either branch name to "NO_FETCH" to skip the checkout and fetching for that repo
+# Default the branches to "NO_FETCH", which skips fetching and checkout.
+# You can set either to a specific branch name, in which case the branch will be fetched and checked out.
 if [ "$BRACKETS_SHELL_BRANCH" = "" ]; then
-    export BRACKETS_SHELL_BRANCH="master"
+    export BRACKETS_SHELL_BRANCH="NO_FETCH"
 fi
 if [ "$BRACKETS_BRANCH" = "" ]; then
-    export BRACKETS_BRANCH="master"
+    export BRACKETS_BRANCH="NO_FETCH"
 fi
 
 # Pull the latest brackets code
@@ -76,49 +94,52 @@ if [ "$os" = "darwin" ]; then # Building on mac
     xcodebuild -project appshell.xcodeproj -config Release clean
     xcodebuild -project appshell.xcodeproj -config Release build
     
-    # Remove existing staging dir
-    if [ -d installer/mac/staging ]; then
-      rm -rf installer/mac/staging
+    if [ $buildInstaller != 0 ]; then
+        # Remove existing staging dir
+        if [ -d installer/mac/staging ]; then
+          rm -rf installer/mac/staging
+        fi
+        
+        mkdir installer/mac/staging
+        
+        # Copy to installer staging folder
+        cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
+         
+        # Package www files
+        scripts/package_www_files.sh
+
+        packageLocation="installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
     fi
-    
-    mkdir installer/mac/staging
-    
-    # Copy to installer staging folder
-    cp -R "xcodebuild/Release/${BRACKETS_APP_NAME}.app" installer/mac/staging/
-     
-    # Package www files
-    scripts/package_www_files.sh
-
-    packageLocation="installer/mac/staging/${BRACKETS_APP_NAME}.app/Contents/www"
-
 elif [ "$os" = "msys" ]; then # Building on Windows
 
     # Clean and build the Visual Studio project
     cmd.exe /c "scripts\build_projects.bat"
 
-    # Stage files for installer
-    cmd.exe /c "scripts\stage_for_installer.bat"
+    if [ $buildInstaller != 0 ]; then
+        # Stage files for installer
+        cmd.exe /c "scripts\stage_for_installer.bat"
 
-    packageLocation="installer/win/staging/www"
-
+        packageLocation="installer/win/staging/www"
+    fi
 else 
     echo "Unknown platform \"$os\". I don't know how to build this."
     exit;
 fi
 
+if [ $buildInstaller != 0 ]; then
+    # Set the build number, branch and sha on the staged build
+    cat "$packageLocation/config.json" \
+    |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
+    |   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_branch_name\3:" \
+    |   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
+    > tmp_package_json.txt
+    mv tmp_package_json.txt "$packageLocation/config.json"
 
-# Set the build number, branch and sha on the staged build
-cat "$packageLocation/config.json" \
-|   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
-|   sed "s:\(\"branch\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_branch_name\3:" \
-|   sed "s:\(\"SHA\"[^\"]*\"\)\([^\"]*\)\(\"\):\1$brackets_sha\3:" \
-> tmp_package_json.txt
-mv tmp_package_json.txt "$packageLocation/config.json"
+    # Build the installer
+    if [ "$os" = "darwin" ]; then # Build mac installer
+        cd installer/mac
+        ./buildInstaller.sh
 
-# Build the installer
-if [ "$os" = "darwin" ]; then # Build mac installer
-    cd installer/mac
-    ./buildInstaller.sh
-
-# TODO: Build windows installer
+    # TODO: Build windows installer
+    fi
 fi

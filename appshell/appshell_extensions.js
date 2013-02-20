@@ -415,6 +415,23 @@ if (!appshell.app) {
     };
  
     /**
+     * Get files passed to app at startup.
+     *
+     * @param {function(err, files)} callback Asynchronous callback function with two arguments:
+     *           err - error code
+     *           files - Array of file paths to open
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetPendingFilesToOpen();
+    appshell.app.getPendingFilesToOpen = function (callback) {
+        GetPendingFilesToOpen(function (err, files) {
+            // "files" is a string, convert to Array
+            callback(err, err ? [] : JSON.parse(files));
+        });
+    };
+
+    /**
      * Set menu enabled/checked state.
      * @param {string} command ID of the menu item.
      * @param {bool} enabled bool to enable or disable the command

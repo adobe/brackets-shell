@@ -47,6 +47,10 @@ const int kWindowHeight = 700;
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
 
+// Files passed to the app at startup
+static NSMutableArray* pendingOpenFiles;
+ExtensionString gPendingFilesToOpen;
+
 // Provide the CefAppProtocol implementation required by CEF.
 @interface ClientApplication : NSApplication<CefAppProtocol> {
 @private
@@ -287,6 +291,8 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
 - (void)createApp:(id)object;
+- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
+- (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
 @end
 
 @implementation ClientAppDelegate
@@ -421,8 +427,23 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-  CefBrowserHost::CreateBrowser(window_info, g_handler.get(),
+  CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
+ 
+  if (pendingOpenFiles) {
+    NSUInteger count = [pendingOpenFiles count];
+    gPendingFilesToOpen = "[";
+    for (NSUInteger i = 0; i < count; i++) {
+      NSString* filename = [pendingOpenFiles objectAtIndex:i];
+          
+      gPendingFilesToOpen += ("\"" + std::string([filename UTF8String]) + "\"");
+      if (i < count - 1)
+        gPendingFilesToOpen += ",";
+    }
+    gPendingFilesToOpen += "]";
+  } else {
+    gPendingFilesToOpen = "[]";
+  }
   
   // Show the window.
   [mainWnd display];
@@ -451,7 +472,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)theApplication {
-    if (!g_isTerminating && g_handler.get() && !g_handler->AppIsQuitting() && g_handler->HasWindows()) {
+    if (!g_isTerminating && g_handler.get() && !g_handler->AppIsQuitting() && g_handler->HasWindows() && [NSApp keyWindow]) {
         g_handler->DispatchCloseToNextBrowser();
         return NSTerminateCancel;
     }
@@ -459,6 +480,35 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     return NSTerminateNow;
 }
 
+- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
+  if (g_handler) {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([NSApp keyWindow]);
+    g_handler->SendOpenFileCommand(browser, CefString([filename UTF8String]));
+  } else {
+    // App is just starting up. Save the filename so we can open it later.
+    if (!pendingOpenFiles) {
+      pendingOpenFiles = [[NSMutableArray alloc] init];
+      [pendingOpenFiles addObject:filename];
+    }
+  }
+  return YES;
+}
+
+- (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames {
+  if (g_handler) {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([NSApp keyWindow]);
+    for (NSUInteger i = 0; i < [filenames count]; i++) {
+      g_handler->SendOpenFileCommand(browser, CefString([[filenames objectAtIndex:i] UTF8String]));
+    }
+  } else {
+    // App is just starting up. Save the filenames so we can open them later.
+    pendingOpenFiles = [[NSMutableArray alloc] init];
+    for (NSUInteger i = 0; i < [filenames count]; i++) {
+      [pendingOpenFiles addObject:[filenames objectAtIndex:i]];
+    }
+  }
+  return YES;
+}
 @end
 
 
@@ -466,6 +516,8 @@ int main(int argc, char* argv[]) {
   // Initialize the AutoRelease pool.
   g_autopool = [[NSAutoreleasePool alloc] init];
 
+  pendingOpenFiles = nil;
+  
   CefMainArgs main_args(argc, argv);
  
   // Delete Special Characters Palette from Edit menu.
@@ -489,6 +541,8 @@ int main(int argc, char* argv[]) {
 
   // Initialize the ClientApplication instance.
   [ClientApplication sharedApplication];
+  NSObject* delegate = [[ClientAppDelegate alloc] init];
+  [NSApp setDelegate:delegate];
   
   // Parse command line arguments.
   AppInitCommandLine(argc, argv);
@@ -556,7 +610,6 @@ int main(int argc, char* argv[]) {
   }
   
   // Create the application delegate and window.
-  NSObject* delegate = [[ClientAppDelegate alloc] init];
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
                           waitUntilDone:NO];
 

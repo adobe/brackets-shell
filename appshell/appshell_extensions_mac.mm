@@ -27,6 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+extern ExtensionString gPendingFilesToOpen;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -586,6 +587,13 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
     return NO_ERROR;
 }
 
+int32 GetPendingFilesToOpen(ExtensionString& files)
+{
+    files = gPendingFilesToOpen;
+    gPendingFilesToOpen = "[]";
+    return NO_ERROR;
+}
+
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
 {
     index = -1;
@@ -798,9 +806,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
-        if (!isSeparator) {
-            tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
-        }
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
     } else {
         return NO_ERROR;
     }
