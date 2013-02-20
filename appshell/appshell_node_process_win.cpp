@@ -115,8 +115,8 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 			GetModuleFileName(module, executablePath, MAX_PATH);
 			PathRemoveFileSpec(executablePath);
 			StringCchCopy(scriptPath, MAX_PATH, executablePath);
-			PathAppend(executablePath, TEXT("node.exe"));
-			PathAppend(scriptPath, TEXT("server"));
+			PathAppend(executablePath, TEXT("Brackets-node.exe"));
+			PathAppend(scriptPath, TEXT("node-core"));
 
 			StringCchCopy(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\""));
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, executablePath);

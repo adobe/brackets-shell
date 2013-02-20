@@ -42,4 +42,4 @@ tools
 bracketsharvestmanager.wxs
 fr-fr.mst
 
-appshell/server/node_modules
+appshell/node-core/node_modules

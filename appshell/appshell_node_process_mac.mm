@@ -80,8 +80,8 @@
     lastStartTime = CFAbsoluteTimeGetCurrent();
     
     NSString *appPath = [[NSBundle mainBundle] bundlePath];
-    NSString *nodePath = [appPath stringByAppendingString:@"/Contents/Resources/node"];
-    NSString *nodeJSPath = [appPath stringByAppendingString:@"/Contents/Resources/server"];
+    NSString *nodePath = [appPath stringByAppendingString:@"/Contents/MacOS/Brackets-node"];
+    NSString *nodeJSPath = [appPath stringByAppendingString:@"/Contents/node-core"];
     
     NSLog(@"Here's where node is: %@\n", nodePath);
     

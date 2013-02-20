@@ -100,7 +100,7 @@
             {
               # Copy node executable to the output directory
               'destination': '<(PRODUCT_DIR)',
-              'files': ['deps/node/node.exe'],
+              'files': ['deps/node/Brackets-node.exe'],
             },
             {
               # Copy node server files to the output directory
@@ -111,7 +111,7 @@
               # munge paths properly when copying a nested subdirectory. This seems to be
               # an undocumented 'feature' of gyp.
               'destination': '../<(PRODUCT_DIR)',
-              'files': ['appshell/server/'],
+              'files': ['appshell/node-core/'],
             },
           ],
         }],
@@ -155,20 +155,23 @@
               ],
             },
             {
-              'postbuild_name': 'Copy node server resources',
+              # Copy the entire "node-core" directory into the same location as the "www"
+              # directory will end up. Note that the ".." in the path is necessary because
+              # the EXECUTABLE_FOLDER_PATH macro resolves to multiple levels of folders.
+              'postbuild_name': 'Copy node core resources',
               'action': [
                 'rsync',
                 '-a',
-                './appshell/server/',
-                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/../Resources/server/',
+                './appshell/node-core/',
+                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/../node-core/',
               ],
             },
             {
               'postbuild_name': 'Copy node executable',
               'action': [
                 'cp',
-                './deps/node/bin/node',
-                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/../Resources/node',
+                './deps/node/bin/Brackets-node',
+                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/Brackets-node',
               ],
             },
             {

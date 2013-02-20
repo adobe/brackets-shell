@@ -84,11 +84,22 @@ else
         tar -xzf tmp.tar.gz
         rm tmp.tar.gz
         mv "node-v$nodeVersion-darwin-x86" "$root_dir/deps/node"
+
+        # Create a copy of the "node" binary as "Brackets-node". We need one named "node"
+        # for npm to function properly, but we want to call the executable "Brackets-node"
+        # in the final binary. Due to gyp's limited nature, we can't (easily) do this rename
+        # as part of the build process.
+        cp "$root_dir/deps/node/bin/node" "$root_dir/deps/node/bin/Brackets-node"
+
         echo "$nodeVersion" > "$root_dir/deps/node/version-$nodeVersion.txt"
     elif [ "$os" = "msys" ]; then # Building on win
         echo "Downloading Node"
         mkdir "$root_dir/deps/node"
         curl -# "http://nodejs.org/dist/v$nodeVersion/node.exe" -o "$root_dir/deps/node/node.exe"
+
+        # Create a copy of the "node.exe" binary as "Brackets-node.exe". We do this copying
+        # for the same reason as above in the mac case.
+        cp "$root_dir/deps/node/node.exe" "$root_dir/deps/node/Brackets-node.exe"
 
         echo "Downloading NPM"
         curl -# "http://nodejs.org/dist/npm/npm-$npmVersion.zip" > tmp.zip
@@ -103,15 +114,15 @@ else
 fi
 
 if [ "$os" = "darwin" ]; then # Building on mac
-    echo "Bootstrapping Node server"
-    pushd "$root_dir/appshell/server"
+    echo "Bootstrapping Node core"
+    pushd "$root_dir/appshell/node-core"
     OLDPATH=PATH
     PATH="$root_dir/deps/node/bin:$PATH"
     npm install
     PATH=OLDPATH
     popd
 elif [ "$os" = "msys" ]; then # Building on win
-    echo "Bootstrapping Node server"
+    echo "Bootstrapping Node core"
     # npm.cmd must be run from cmd.exe
     cmd.exe /c "scripts\win_bootstrap_node.bat"
 fi
