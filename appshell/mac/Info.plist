@@ -1,11 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?><plist version="1.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
-	<string>appshell.icns</string>
+	<string>brackets.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.brackets.appshell</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,74 +19,10 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.21.0</string>
-	<key>CFBundleShortVersionString</key>
-	<string>0.21.0</string>
+	<string>0.18.0.0</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>CFBundleDocumentTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>Text files</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>public.text</string>
-				<string>public.source-code</string>
-				<string>public.script</string>
-				<string>public.shell-script</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>HTML source</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>htm</string>
-				<string>html</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>JavaScript source</string>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>js</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>CSS source</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>css</string>
-				<string>less</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>Markdown</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>md</string>
-				<string>mkd</string>
-				<string>mkdn</string>
-				<string>mdown</string>
-				<string>markdown</string>
-			</array>
-		</dict>
-	</array>
 </dict>
 </plist>
