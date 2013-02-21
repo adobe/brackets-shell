@@ -42,3 +42,4 @@ tools
 *.wixobj
 bracketsharvestmanager.wxs
 fr-fr.mst
+appshell/node-core/node_modules
