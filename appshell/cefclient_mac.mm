@@ -419,8 +419,11 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   CefWindowInfo window_info;
   CefBrowserSettings settings;
 
-  settings.web_security = STATE_DISABLED;
+  // Populate the settings based on command line arguments.
+  AppGetBrowserSettings(settings);
 
+  settings.web_security_disabled = true;
+  
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
