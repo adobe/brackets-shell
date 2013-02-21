@@ -25,11 +25,21 @@
 module.exports = function (grunt) {
     "use strict";
 
-    // TODO Project configuration.
-    // grunt.initConfig({});
+    grunt.initConfig({
+        jshint: {
+            all: [
+                'Gruntfile.js',
+                'tasks/**/*.js'
+            ],
+            /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
+            options: {
+                jshintrc: '.jshintrc'
+            }
+        }
+    });
 
     grunt.loadTasks("tasks");
+    grunt.loadNpmTasks('grunt-contrib-jshint');
 
-    // TODO Default task.
-    // grunt.registerTask('default', ['build']);
+    grunt.registerTask('default', 'jshint');
 };

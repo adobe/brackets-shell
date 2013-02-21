@@ -20,94 +20,101 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-"use strict";
+/*global module, require*/
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
+    "use strict";
     
-    var xpath           = require("xpath"),
-        xmldom          = require("xmldom"),
-        guid            = require("guid"),
-        domParser       = new xmldom.DOMParser(),
-        xmlSerializer   = new xmldom.XMLSerializer();
+    var guid = require("guid");
     
     function writeJSON(path, obj) {
         grunt.file.write(path, JSON.stringify(obj, null, "    "));
     }
-    
-    function updateXml(path, query, attrName, value) {
-        var text    = grunt.file.read(path),
-            doc     = domParser.parseFromString(text),
-            node    = xpath.select(query, doc)[0];
-        
-        if (attrName) {
-            node.setAttribute(attrName, value);
-        } else {
-            node.textContent = value;
+
+    function safeReplace(content, regexp, replacement) {
+        var newContent = content.replace(regexp, replacement);
+
+        if (newContent === content) {
+            grunt.fail.fatal("Regexp " + regexp + " did not match");
         }
-        
-        grunt.file.write(path, xmlSerializer.serializeToString(doc));
-    }
-    
-    function updateXmlAttribute(path, query, attrName, value) {
-        updateXml(path, query, attrName, value);
-    }
-    
-    function updateXmlElement(path, query, value) {
-        updateXml(path, query, null, value);
+
+        return newContent;
     }
     
     // task: set-sprint
     grunt.registerTask("set-sprint", "Update occurrences of sprint number for all native installers and binaries", function () {
-        var path            = "package.json",
-            packageJSON     = grunt.file.readJSON(path),
-            versionShort    = packageJSON.version.substr(0, packageJSON.version.indexOf("-")),
-            sprint          = grunt.option("sprint") || 0,
-            buildInstallerScriptPath = "installer/mac/buildInstaller.sh",
-            buildInstallerScript,
-            versionRcPath   = "appshell/version.rc",
-            versionRc;
+        var packageJsonPath             = "package.json",
+            packageJSON                 = grunt.file.readJSON(packageJsonPath),
+            winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
+            buildInstallerScriptPath    = "installer/mac/buildInstaller.sh",
+            wxsPath                     = "installer/win/Brackets.wxs",
+            versionRcPath               = "appshell/version.rc",
+            infoPlistPath               = "appshell/mac/Info.plist",
+            sprint                      = grunt.option("sprint") || 0,
+            versionShort                = packageJSON.version.substr(0, packageJSON.version.indexOf("-")),
+            text;
+
+        // replace sprint number in short version, e.g. N.<sprint>.N
+        versionShort = versionShort.replace(/([0-9]+\.)([0-9]+)(\.[0-9]+)/, "$1" + sprint + "$3");
+
+        if (!sprint) {
+            grunt.fail.fatal("Please specify a sprint. e.g. grunt set-sprint --sprint=21");
+        }
         
         // 1. Update package.json
-        packageJSON.version = packageJSON.version.replace(/([0-9]+\.)([0-9]+)(.*)?/, "$1" + sprint + "$3");
-        writeJSON(path, packageJSON);
+        packageJSON.version = safeReplace(
+            packageJSON.version,
+            /([0-9]+\.)([0-9]+)([\.\-a-zA-Z0-9]*)?/,
+            "$1" + sprint + "$3");
+        writeJSON(packageJsonPath, packageJSON);
         
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.sprint.number`
-        updateXmlAttribute(
-            "installer/win/brackets-win-install-build.xml",
-            "/project/property[@name='product.sprint.number']",
-            "value",
-            sprint
-        );
+        text = grunt.file.read(winInstallerBuildXmlPath);
+        text = safeReplace(
+            text,
+            /<property name="product\.sprint\.number" value="([0-9]+)"\/>/,
+            '<property name="product.sprint.number" value="' + sprint + '"/>');
+        grunt.file.write(winInstallerBuildXmlPath, text);
         
         // 3. Open installer/mac/buildInstaller.sh and change `releaseName`
-        buildInstallerScript = grunt.file.read(buildInstallerScriptPath);
-        buildInstallerScript = buildInstallerScript.replace(/(Brackets Sprint )([0-9]+)/, "$1" + sprint);
-        grunt.file.write(buildInstallerScriptPath, buildInstallerScript);
+        text = grunt.file.read(buildInstallerScriptPath);
+        text = safeReplace(
+            text,
+            /(Brackets Sprint )([0-9]+)/,
+            "$1" + sprint
+        );
+        grunt.file.write(buildInstallerScriptPath, text);
         
         // 4. Open installer/win/Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
-        updateXmlAttribute(
-            "installer/win/Brackets.wxs",
-            "//Component[@Id='StartMenuShortcut']",
-            "Guid",
-            "{" + guid.raw() + "}"
+        text = grunt.file.read(wxsPath);
+        text = safeReplace(
+            text,
+            /<Component Id="StartMenuShortcut" Guid="\{[0-9A-Fa-f\-]+\}" Win64="no" >/,
+            '<Component Id="StartMenuShortcut" Guid="{' + guid.raw() + '}" Win64="no" >'
         );
+        grunt.file.write(wxsPath, text);
         
         // 5. Open appshell/version.rc and change `FILEVERSION` and `"FileVersion"`
-        versionRc = grunt.file.read(versionRcPath);
-        versionRc = versionRc.replace(/(FILEVERSION\s+[0-9]+,)([0-9]+)/, "$1" + sprint);
-        versionRc = versionRc.replace(/(Sprint )([0-9]+)/, "$1" + sprint);
-        grunt.file.write(versionRcPath, versionRc);
+        text = grunt.file.read(versionRcPath);
+        text = safeReplace(
+            text,
+            /(FILEVERSION\s+[0-9]+,)([0-9]+)/,
+            "$1" + sprint
+        );
+        text = safeReplace(
+            text,
+            /(Sprint )([0-9]+)/,
+            "$1" + sprint
+        );
+        grunt.file.write(versionRcPath, text);
         
-        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`
-        updateXmlElement(
-            "appshell/mac/Info.plist",
-            "/plist/dict/key[text()='CFBundleShortVersionString']/following-sibling::string",
-            versionShort
+        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`text = grunt.file.read(wxsPath);
+        text = grunt.file.read(infoPlistPath);
+        text = safeReplace(
+            text,
+            /<string>[0-9]+\.[0-9]+\.[0-9]+<\/string>/g,
+            '<string>' + versionShort + '</string>'
         );
-        updateXmlElement(
-            "appshell/mac/Info.plist",
-            "/plist/dict/key[text()='CFBundleVersion']/following-sibling::string",
-            versionShort
-        );
+        grunt.file.write(infoPlistPath, text);
     });
 };

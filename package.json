@@ -14,8 +14,7 @@
     "devDependencies": {
         "grunt": ">=0.4.0rc5",
         "grunt-cli": ">=0.1.6",
-        "xmldom": ">=0.1.13",
-        "xpath": ">=0.0.5",
+        "grunt-contrib-jshint": ">=0.1.1rc6",
         "guid": ">=0.0.10"
     }
 }
