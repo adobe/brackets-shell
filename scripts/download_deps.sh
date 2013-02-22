@@ -113,18 +113,4 @@ else
 
 fi
 
-if [ "$os" = "darwin" ]; then # Building on mac
-    echo "Bootstrapping Node core"
-    pushd "$root_dir/appshell/node-core"
-    OLDPATH=PATH
-    PATH="$root_dir/deps/node/bin:$PATH"
-    npm install
-    PATH=OLDPATH
-    popd
-elif [ "$os" = "msys" ]; then # Building on win
-    echo "Bootstrapping Node core"
-    # npm.cmd must be run from cmd.exe
-    cmd.exe /c "scripts\win_bootstrap_node.bat"
-fi
-
 echo "Node setup complete!"

@@ -36,7 +36,7 @@ maxerr: 50, node: true */
     
     var fs                = require("fs"),
         http              = require("http"),
-        WebSocket         = require("ws-deploy"),
+        WebSocket         = require("./thirdparty/ws"),
         EventEmitter      = require("events").EventEmitter,
         Logger            = require("./Logger"),
         ConnectionManager = require("./ConnectionManager"),
