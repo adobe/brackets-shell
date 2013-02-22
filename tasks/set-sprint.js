@@ -112,8 +112,13 @@ module.exports = function (grunt) {
         text = grunt.file.read(infoPlistPath);
         text = safeReplace(
             text,
-            /<string>[0-9]+\.[0-9]+\.[0-9]+<\/string>/g,
-            '<string>' + versionShort + '</string>'
+            /(<key>CFBundleVersion<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            "$1" + versionShort + "$3"
+        );
+        text = safeReplace(
+            text,
+            /(<key>CFBundleShortVersionString<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            "$1" + versionShort + "$3"
         );
         grunt.file.write(infoPlistPath, text);
     });
