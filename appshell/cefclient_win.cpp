@@ -826,8 +826,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // set the MINMAXINFO structure pointer
       LPMINMAXINFO lpMinMaxInfo;
       lpMinMaxInfo = (MINMAXINFO FAR *) lParam;
-      lpMinMaxInfo->ptMinTrackSize.x = 450;
-      lpMinMaxInfo->ptMinTrackSize.y = 300;
+      lpMinMaxInfo->ptMinTrackSize.x = WINDOW_MIN_WIDTH;
+      lpMinMaxInfo->ptMinTrackSize.y = WINDOW_MIN_HEIGHT;
       break;
 
     case WM_ERASEBKGND:
