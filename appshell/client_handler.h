@@ -200,6 +200,7 @@ class ClientHandler : public CefClient,
   // If callback is specified, it will be called with the result from the command.
   bool SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
+  void SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString& filename);
   void DispatchCloseToNextBrowser();
   void AbortQuit();
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);

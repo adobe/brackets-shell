@@ -27,6 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
+extern ExtensionString gPendingFilesToOpen;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -586,6 +587,13 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
     return NO_ERROR;
 }
 
+int32 GetPendingFilesToOpen(ExtensionString& files)
+{
+    files = gPendingFilesToOpen;
+    gPendingFilesToOpen = "[]";
+    return NO_ERROR;
+}
+
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
 {
     index = -1;
@@ -787,7 +795,8 @@ NSUInteger processKeyString(ExtensionString& key)
     return mask;
 }
 
-int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString position, ExtensionString relativeId) {
+// displayStr is not used on the mac
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle, ExtensionString command, ExtensionString key, ExtensionString displayStr, ExtensionString position, ExtensionString relativeId) {
     NSString* itemTitleStr = [[NSString alloc] initWithUTF8String:itemTitle.c_str()];
     NSMenuItem *testItem = nil;
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
@@ -910,6 +919,29 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     } else {
         title = [[item title] UTF8String];
     }
+    
+    return NO_ERROR;
+}
+
+// The displayStr param is ignored on the mac.
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    NSMenuItem* item = (NSMenuItem*)model.getOsItem(tag);
+    if (item == NULL) {
+        return ERR_NOT_FOUND;
+    }
+    
+    NSUInteger mask = processKeyString(shortcut);
+    NSString* keyStr = [[NSString alloc] initWithUTF8String:shortcut.c_str()];
+    keyStr = [keyStr lowercaseString];
+    [item setKeyEquivalent:keyStr];
+    [item setKeyEquivalentModifierMask:mask];
     
     return NO_ERROR;
 }

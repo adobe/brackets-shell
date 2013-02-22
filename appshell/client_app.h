@@ -17,8 +17,9 @@ class ClientApp : public CefApp,
  public:
   // Interface for renderer delegates. All RenderDelegates must be returned via
   // CreateRenderDelegates. Do not perform work in the RenderDelegate
-  // constructor.
+  // constructor. See CefRenderProcessHandler for documentation.
   class RenderDelegate : public virtual CefBase {
+
    public:
     // Called when WebKit is initialized. Used to register V8 extensions.
     virtual void OnWebKitInitialized(CefRefPtr<ClientApp> app) {
@@ -59,14 +60,14 @@ class ClientApp : public CefApp,
   typedef std::map<int32, std::pair< CefRefPtr<CefV8Context>, CefRefPtr<CefV8Value> > > CallbackMap;
 
   ClientApp();
-
+        
   // Set the proxy configuration. Should only be called during initialization.
   void SetProxyConfig(cef_proxy_type_t proxy_type,
                       const CefString& proxy_config) {
     proxy_type_ = proxy_type;
     proxy_config_ = proxy_config;
   }
-        
+  
   void AddCallback(int32 id, CefRefPtr<CefV8Context> context, CefRefPtr<CefV8Value> callbackFunction) {
       callback_map_[id] = std::make_pair(context, callbackFunction);
   }
@@ -101,6 +102,7 @@ private:
   virtual void OnContextReleased(CefRefPtr<CefBrowser> browser,
                                  CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context) OVERRIDE;
+  
   virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
@@ -109,7 +111,7 @@ private:
   // Proxy configuration.
   cef_proxy_type_t proxy_type_;
   CefString proxy_config_;
-
+  
   // Set of supported RenderDelegates.
   RenderDelegateSet render_delegates_;
                       

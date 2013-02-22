@@ -1,0 +1,20 @@
+{
+    "name": "Brackets-Shell",
+    "version": "0.21.0-0",
+    "homepage": "http://brackets.io",
+    "issues": {
+        "url": "http://github.com/adobe/brackets-shell/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/adobe/brackets-shell.git",
+        "branch": "",
+        "SHA": ""
+    },
+    "devDependencies": {
+        "grunt": ">=0.4.0rc5",
+        "grunt-cli": ">=0.1.6",
+        "grunt-contrib-jshint": ">=0.1.1rc6",
+        "guid": ">=0.0.10"
+    }
+}

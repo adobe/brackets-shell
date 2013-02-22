@@ -28,13 +28,19 @@ Normally, the installer scripts are run from a specific pre-set-up build machine
 10. `git clone` the brackets and brackets-shell Git repos
 11. Set `BRACKETS_SRC` to the root folder of the brackets repo
 
+## To rev the Brackets sprint number with Grunt, both brackets-shell and brackets
+## repositories must be updated. For the initial Grunt setup, see:
+## https://github.com/adobe/brackets/wiki/Grunt-Setup.
+##
+##   brackets       > grunt set-sprint --sprint=NN
+##   brackets-shell > grunt set-sprint --sprint=NN
 
-## To rev the Brackets sprint number
+## To rev the Brackets sprint number manually
 1. Open brackets-win-install-build.xml and change `product.sprint.number`
 2. Open brackets-shell\installer\mac\buildInstaller.sh and change `releaseName`
 3. Open Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
 4. Open brackets-shell\appshell\version.rc and change `FILEVERSION` and `"FileVersion"`
-5. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion`
+5. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion` and `CFBundleShortVersionString`
 6. Open brackets\src\package.json and change `"version"`
 
 ## To build the Brackets installer

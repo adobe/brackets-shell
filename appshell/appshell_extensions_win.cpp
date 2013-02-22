@@ -51,6 +51,7 @@ time_t FiletimeToTime(FILETIME const& ft);
 
 extern HINSTANCE hInst;
 extern HACCEL hAccelTable;
+extern std::wstring gFilesToOpen;
 
 // constants
 #define MAX_LOADSTRING 100
@@ -615,7 +616,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
         return ERR_CANT_READ;
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ,
-        0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     int32 error = NO_ERROR;
 
     if (INVALID_HANDLE_VALUE == hFile)
@@ -646,7 +647,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_UNSUPPORTED_ENCODING;
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
-        0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     DWORD dwBytesWritten;
     int error = NO_ERROR;
 
@@ -798,6 +799,12 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
     return NO_ERROR;
 }
 
+int32 GetPendingFilesToOpen(ExtensionString& files) {
+    files = gFilesToOpen;
+    ConvertToUnixPath(files);
+    gFilesToOpen = L"";
+    return NO_ERROR;
+}
 
 // Return index where menu or menu item should be placed.
 // -1 indicates append. -2 indicates 'before' - WINAPI supports 
@@ -1185,7 +1192,7 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     // Move accelerator to the end of the table
     UINT newItem = numAccelerators - 1;
     for (int i = 0; i < numAccelerators; i++) {
-        if (lpaccelNew[i].cmd = (WORD) tag) {
+        if (lpaccelNew[i].cmd == (WORD) tag) {
             lpaccelNew[i] = lpaccelNew[newItem];
             DestroyAcceleratorTable(haccelOld); 
             hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators - 1);
@@ -1196,8 +1203,22 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     return ERR_NOT_FOUND;
 }
 
+ExtensionString GetDisplayKeyString(const ExtensionString& keyStr) 
+{
+    ExtensionString result = keyStr;
+
+    // We get a keyStr that looks like "Ctrl-O", which is the format we
+    // need for the accelerator table. For displaying in the menu, though,
+    // we have to change it to "Ctrl+O". Careful not to change the final
+    // character, though, so "Ctrl--" ends up as "Ctrl+-".
+    if (result.size() > 0) {
+        replace(result.begin(), result.end() - 1, '-', '+');
+    }
+    return result;
+}
+
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
-                  ExtensionString command, ExtensionString key,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
     int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
@@ -1243,14 +1264,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     title = itemTitle.c_str();
     keyStr = key.c_str();
 
-    if (key.length() > 0) {
-        // We get a keyStr that looks like "Ctrl-O", which is the format we
-        // need for the accelerator table. For displaying in the menu, though,
-        // we have to change it to "Ctrl+O". Careful not to change the final
-        // character, though, so "Ctrl--" ends up as "Ctrl+-".
-        displayKeyStr = keyStr;
-        replace(displayKeyStr.begin(), displayKeyStr.end() - 1, '-', '+');
+    if (key.length() > 0 && displayStr.length() == 0) {
+        displayKeyStr = GetDisplayKeyString(keyStr);
+    } else {
+        displayKeyStr = displayStr;
+    }
 
+    if (displayKeyStr.length() > 0) {
         title = title + L"\t" + displayKeyStr;
     }
     int32 positionIdx;
@@ -1400,8 +1420,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     }
 
     std::wstring newTitle = itemTitle;
-    if (shortcut.size() > 0) {
-        newTitle += L"\t";
+    if (shortcut.length() > 0) {
         newTitle += shortcut;
     }
     itemInfo.fType = MFT_STRING; // just to make sure
@@ -1458,6 +1477,66 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
             title = titleStr;
         }
     }
+    return NO_ERROR;
+}
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    HMENU menu = (HMENU)model.getOsItem(tag);
+    if (!menu) {
+        return ERR_NOT_FOUND;
+    }
+
+    // Display string
+    ExtensionString displayKeyStr;
+    if (shortcut.length() > 0 && displayStr.length() == 0) {
+        displayKeyStr = GetDisplayKeyString(shortcut);
+    } else {
+        displayKeyStr = displayStr;
+    }
+
+    // Remove old accelerator
+    RemoveKeyFromAcceleratorTable(tag);
+
+    // Set new
+    if (shortcut.length() > 0 && !UpdateAcceleratorTable(tag, shortcut)) {
+        return ERR_UNKNOWN;
+    }
+
+    // Update menu title
+    static WCHAR titleBuf[MAX_LOADSTRING];  
+    MENUITEMINFO itemInfo = {0};
+    itemInfo.cbSize = sizeof(MENUITEMINFO);
+    itemInfo.fMask = MIIM_DATA | MIIM_STRING;
+    itemInfo.cch = MAX_LOADSTRING;
+    itemInfo.dwTypeData = titleBuf;
+    if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
+        return ConvertErrnoCode(GetLastError());
+    }
+
+    std::wstring titleStr(titleBuf);
+    size_t pos = titleStr.find(L"\t");
+    if (pos != std::string::npos) {
+        titleStr = titleStr.substr(0, pos);
+    }
+    if (displayKeyStr.size() > 0) {
+        titleStr += L"\t";
+        titleStr += displayKeyStr;
+    }
+
+    itemInfo.fType = MFT_STRING; // just to make sure
+    itemInfo.dwTypeData = (LPWSTR)titleStr.c_str();
+    itemInfo.cch = titleStr.size();
+
+    if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
+        return ConvertErrnoCode(GetLastError());        
+    }
+
     return NO_ERROR;
 }
 

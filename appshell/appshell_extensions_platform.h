@@ -29,7 +29,7 @@
 #include <string>
 
 // Extension error codes. These MUST be in sync with the error
-// codes in brackets_extensions.js
+// codes in appshell_extensions.js
 #if !defined(OS_WIN) // NO_ERROR is defined on windows
 static const int NO_ERROR                   = 0;
 #endif
@@ -90,6 +90,8 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
 
+int32 GetNodeState(int32& state);
+
 void OnBeforeShutdown();
 
 void CloseWindow(CefRefPtr<CefBrowser> browser);
@@ -98,11 +100,13 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser);
 
 int32 ShowFolderInOSWindow(ExtensionString pathname);
 
+int32 GetPendingFilesToOpen(ExtensionString& files);
+
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId);
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
-                  ExtensionString command, ExtensionString key,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId);
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
@@ -114,5 +118,7 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle);
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr);
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);

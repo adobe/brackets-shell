@@ -98,7 +98,29 @@ if (!appshell.app) {
      * @constant Specified file already exists.
      */
     appshell.fs.ERR_FILE_EXISTS             = 10;
- 
+
+    /**
+     * @constant No error.
+     */
+    appshell.app.NO_ERROR                   = 0;
+
+    /**
+     * @constant Node has not yet launched. Try again later.
+     */
+    appshell.app.ERR_NODE_NOT_YET_STARTED   = -1;
+
+    /**
+     * @constant Node is in the process of launching, but has not yet set the port.
+     * Try again later.
+     */
+    appshell.app.ERR_NODE_PORT_NOT_YET_SET  = -2;
+
+    /**
+     * @constant Node encountered a fatal error while launching or running.
+     * It cannot be restarted.
+     */
+    appshell.app.ERR_NODE_FAILED            = -3;
+
     /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
@@ -229,6 +251,23 @@ if (!appshell.app) {
     native function ShowDeveloperTools();
     appshell.app.showDeveloperTools = function () {
         ShowDeveloperTools();
+    };
+
+    /**
+     * Returns the TCP port of the current Node server 
+     *
+     * @param {function(err, port)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (err, port) where port is the TCP port of the running server.
+     *        Possible error values:
+     *         ERR_NODE_PORT_NOT_SET      = -1;
+     *         ERR_NODE_NOT_RUNNING       = -2;
+     *         ERR_NODE_FAILED            = -3;
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetNodeState();
+    appshell.app.getNodeState = function (callback) {
+        GetNodeState(callback);
     };
 
     /**
@@ -376,6 +415,23 @@ if (!appshell.app) {
     };
  
     /**
+     * Get files passed to app at startup.
+     *
+     * @param {function(err, files)} callback Asynchronous callback function with two arguments:
+     *           err - error code
+     *           files - Array of file paths to open
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetPendingFilesToOpen();
+    appshell.app.getPendingFilesToOpen = function (callback) {
+        GetPendingFilesToOpen(function (err, files) {
+            // "files" is a string, convert to Array
+            callback(err, err ? [] : JSON.parse(files));
+        });
+    };
+
+    /**
      * Set menu enabled/checked state.
      * @param {string} command ID of the menu item.
      * @param {bool} enabled bool to enable or disable the command
@@ -431,6 +487,7 @@ if (!appshell.app) {
      * @param {string} title Menu title to display, e.g. "Open"
      * @param {string} id Command ID, e.g. "file.open"
      * @param {string} key Shortcut, e.g. "Cmd-O"
+     * @param {string} displayStr Shortcut to display in menu. If "", use key.
      * @param {string} position Where to put the item; values are "before", "after", "first", "last", 
      *                    "firstInSection", "lastInSection", and ""
      * @param {string} relativeId The ID of the menu item to which is this relative, for position "before" and "after"
@@ -454,11 +511,11 @@ if (!appshell.app) {
      *   Select All:  "edit.selectAll"
      */
     native function AddMenuItem();
-    appshell.app.addMenuItem = function (parentId, title, id, key, position, relativeId, callback) {
+    appshell.app.addMenuItem = function (parentId, title, id, key, displayStr, position, relativeId, callback) {
         key = key || '';
         position = position || '';
         relativeId = relativeId || '';
-        AddMenuItem(callback, parentId, title, id, key, position, relativeId);
+        AddMenuItem(callback, parentId, title, id, key, displayStr, position, relativeId);
     };
 
     /**
@@ -491,6 +548,19 @@ if (!appshell.app) {
         GetMenuTitle(callback, commandid);
     };
 
+    /**
+     * Set menu item shortuct. 
+     * @param {string} commandId ID of the menu item.
+     * @param {string} shortcut Shortcut string, like "Cmd-U".
+     * @param {string} displayStr String to display in menu. If "", use shortcut.
+     * @param {function (err)} callback Asynchronous callback function. The callback gets an error code.
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function SetMenuItemShortcut();
+    appshell.app.setMenuItemShortcut = function (commandId, shortcut, displayStr, callback) {
+        SetMenuItemShortcut(callback, commandId, shortcut, displayStr);
+    };
+ 
     /**
      * Remove menu associated with commandId.
      * @param {string} commandid ID of the menu item.
