@@ -4,8 +4,5 @@
   "description": "Node core for appshell",
   "main": "Launcher.js",
   "author": "Joel Brandt <joelrbrandt@gmail.com>",
-  "license": "MIT",
-  "dependencies": {
-    "ws-deploy": "git+https://github.com/joelrbrandt/ws-deploy.git#7a3bdc6b21ebd66d4b360003391257945ab0585f"
-  }
+  "license": "MIT"
 }
