@@ -1,6 +1,6 @@
-# ws: a node.js websocket library #
+# Overview
 
-This repository contains a minimal repackaging of ws for deployment.
+This module contains a minimal repackaging of ws for deployment.
 It is currently at version 0.4.25. The main repository for ws can be
 found at https://github.com/einaros/ws
 
@@ -9,7 +9,15 @@ as an external dependency. The main repository for options.js can be
 found at https://github.com/einaros/options.js
 
 No modifications are made to either library except for a.) removing
-files that are not necessary for deployment and b.) fixing up paths
+files that are not necessary for deployment and b.) fixing up paths.
+Specifically, this module was made by following these steps:
+
+1. Start with version 0.4.25 of ws
+2. Incorporate options.js directly into ws and fix up paths
+3. Remove files not needed for deployment (tests, etc.)
+4. Remove "compiled" code, and fix up paths to use "fallback"
+JS code by default. (Removing "compiled" code makes it easier
+to have this work in a cross-platform way.)
 
 Both ws and options.js are written by Einar Otto Stangvik and licensed
 under the MIT license (see below).
