@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
  *  
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), 
@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
- /*global module, require*/
+/*global module, require*/
 /*jslint regexp:true*/
 module.exports = function (grunt) {
     "use strict";
@@ -28,18 +28,18 @@ module.exports = function (grunt) {
     grunt.initConfig({
         jshint: {
             all: [
-                'Gruntfile.js',
-                'tasks/**/*.js'
+                "Gruntfile.js",
+                "tasks/**/*.js"
             ],
             /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
             options: {
-                jshintrc: '.jshintrc'
+                jshintrc: ".jshintrc"
             }
         }
     });
 
     grunt.loadTasks("tasks");
-    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks("grunt-contrib-jshint");
 
-    grunt.registerTask('default', 'jshint');
+    grunt.registerTask("default", "jshint");
 };
