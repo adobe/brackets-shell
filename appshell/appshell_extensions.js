@@ -427,7 +427,7 @@ if (!appshell.app) {
     appshell.app.getPendingFilesToOpen = function (callback) {
         GetPendingFilesToOpen(function (err, files) {
             // "files" is a string, convert to Array
-            callback(err, err ? [] : JSON.parse(files));
+            callback(err, err ? [] : (files ? JSON.parse(files) : []));
         });
     };
 
