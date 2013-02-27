@@ -432,6 +432,16 @@ if (!appshell.app) {
     };
 
     /**
+     * Get the remote debugging port used by the appshell.
+     *
+     * @return int. The remote debugging port used by the appshell.
+     */
+    native function GetRemoteDebuggingPort();
+    appshell.app.getRemoteDebuggingPort = function () {
+        return GetRemoteDebuggingPort();
+    };
+ 
+    /**
      * Set menu enabled/checked state.
      * @param {string} command ID of the menu item.
      * @param {bool} enabled bool to enable or disable the command
