@@ -12,6 +12,7 @@
 #include "include/cef_task.h"
 #include "include/cef_v8.h"
 #include "util.h"  // NOLINT(build/include)
+#include "config.h"
 
 namespace {
 
@@ -146,7 +147,7 @@ class AppShellExtensionHandler : public CefV8Handler {
                        CefString& exception) {
       
       // The only messages that are handled here is getElapsedMilliseconds(),
-      // GetCurrentLanguage(), and GetApplicationSupportDirectory().
+      // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
       // All other messages are passed to the browser process.
       if (name == "GetElapsedMilliseconds") {
           retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
@@ -154,6 +155,8 @@ class AppShellExtensionHandler : public CefV8Handler {
           retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
       } else if (name == "GetApplicationSupportDirectory") {
           retval = CefV8Value::CreateString(ClientApp::AppGetSupportDirectory());
+      } else if (name == "GetRemoteDebuggingPort") {
+          retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
       } else {
           // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
           CefRefPtr<CefBrowser> browser = 
