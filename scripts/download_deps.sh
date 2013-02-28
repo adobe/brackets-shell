@@ -26,6 +26,14 @@ if [ -f "$root_dir/deps/cef/$zipName.txt" ]; then
     echo "You already have the correct version of CEF downloaded."
     
 else
+    # remove any "dev" symlinks before nuking the cef folder
+    if [ -d "$root_dir/Release/dev" ]; then
+        rmdir "$root_dir/Release/dev"
+    fi
+    if [ -d "$root_dir/Debug/dev" ]; then
+        rmdir "$root_dir/Debug/dev"
+    fi
+    
     # nuke the old folder
     rm -rf "$root_dir/deps/cef"
     
