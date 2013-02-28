@@ -127,6 +127,9 @@ else
 fi
 
 if [ $buildInstaller != 0 ]; then
+    # Remove unneeded source from the staging folder
+    rm "$packageLocation/thirdparty/CodeMirror2/mode/verilog/index.html"
+    
     # Set the build number, branch and sha on the staged build
     cat "$packageLocation/config.json" \
     |   sed "s:\(\"version\"[^\"]*\"[0-9.]*-\)\([0-9*]\)\(\"\):\1$BRACKETS_BUILD_NUM\3:" \
