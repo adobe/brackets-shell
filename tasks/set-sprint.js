@@ -65,7 +65,8 @@ module.exports = function (grunt) {
         packageJSON.version = safeReplace(
             packageJSON.version,
             /([0-9]+\.)([0-9]+)([\.\-a-zA-Z0-9]*)?/,
-            "$1" + sprint + "$3");
+            "$1" + sprint + "$3"
+        );
         writeJSON(packageJsonPath, packageJSON);
         
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.sprint.number`
@@ -73,7 +74,8 @@ module.exports = function (grunt) {
         text = safeReplace(
             text,
             /<property name="product\.sprint\.number" value="([0-9]+)"\/>/,
-            '<property name="product.sprint.number" value="' + sprint + '"/>');
+            '<property name="product.sprint.number" value="' + sprint + '"/>'
+        );
         grunt.file.write(winInstallerBuildXmlPath, text);
         
         // 3. Open installer/mac/buildInstaller.sh and change `releaseName`
