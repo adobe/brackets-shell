@@ -191,7 +191,8 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSArray *parameters = nil;
         if (enableRemoteDebugging) {
             parameters = [NSArray arrayWithObjects:
-                           @"--remote-debugging-port=9222", 
+                           @"--remote-debugging-port=9222",
+						   @"--user-data-dir=brackets-profile",
                            @"--allow-file-access-from-files",
                            urlString,
                            nil];

@@ -292,7 +292,7 @@ public:
             // handler->ShowDevTools(browser);
             
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
-            OpenLiveBrowser(url, true);
+			OpenLiveBrowser(url, false);
 
         } else if (message_name == "GetNodeState") {
             // Parameters:
