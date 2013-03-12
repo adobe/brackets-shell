@@ -21,26 +21,12 @@
  * 
  */
 /*global module, require*/
-/*jslint regexp:true*/
+
 module.exports = function (grunt) {
     "use strict";
-
-    grunt.initConfig({
-        jshint: {
-            all: [
-                "Gruntfile.js",
-                "tasks/**/*.js"
-            ],
-            /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
-            options: {
-                jshintrc: ".jshintrc"
-            }
-        }
+    
+    // task: build
+    grunt.registerTask("build", "Build brackets-shell", function () {
+        
     });
-
-    grunt.loadTasks("tasks");
-    grunt.loadNpmTasks("grunt-contrib-jshint");
-    grunt.loadNpmTasks("grunt-curl");
-
-    grunt.registerTask("default", "jshint");
 };

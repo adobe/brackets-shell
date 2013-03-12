@@ -21,26 +21,16 @@
  * 
  */
 /*global module, require*/
-/*jslint regexp:true*/
-module.exports = function (grunt) {
+
+var fs = require("fs");
+
+function link(grunt) {
     "use strict";
+}
 
-    grunt.initConfig({
-        jshint: {
-            all: [
-                "Gruntfile.js",
-                "tasks/**/*.js"
-            ],
-            /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
-            options: {
-                jshintrc: ".jshintrc"
-            }
-        }
-    });
+function unlink(grunt) {
+    "use strict";
+}
 
-    grunt.loadTasks("tasks");
-    grunt.loadNpmTasks("grunt-contrib-jshint");
-    grunt.loadNpmTasks("grunt-curl");
-
-    grunt.registerTask("default", "jshint");
-};
+module.exports.link = link;
+module.exports.unlink = unlink;
