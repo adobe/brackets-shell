@@ -36,22 +36,22 @@ module.exports = function (grunt) {
             */
             /* mac */
             cef_darwin: {
-                dest    : ".",
-                src     : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
+                dest        : ".",
+                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
             },
             node_darwin: {
-                dest    : ".",
-                src     : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
+                dest        : ".",
+                src         : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
             },
             /* win */
             cef_win32: {
-                dest    : ".",
-                src     : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
+                dest        : ".",
+                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
             },
             node_win32: {
-                dest    : ".",
-                src     : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
-                           "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
+                dest        : ".",
+                src         : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
+                               "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
             }
         },
         unzip: {
@@ -61,7 +61,7 @@ module.exports = function (grunt) {
             }
         },
         jshint: {
-            all :           ["Gruntfile.js", "tasks/**/*.js"],
+            all             : ["Gruntfile.js", "tasks/**/*.js"],
             /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
             options: {
                 jshintrc    : ".jshintrc"

@@ -108,18 +108,17 @@ module.exports = function (grunt) {
         deleteFile("Release/dev");
         deleteFile("Debug/dev");
         
+        // delete symlinks to cef
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
             deleteFile(CEF_MAPPING[key]);
         });
-        
-        grunt.verbose.writeln("Deleting deps/cef");
         
         // finally delete CEF binary
         deleteFile("deps/cef");
     });
     
     // task: cef-download
-    grunt.registerTask("cef-download", "", function () {
+    grunt.registerTask("cef-download", "Download CEF, see curl-dir config in Gruntfile.js", function () {
         // requires download-cef to set "cefZipName" in config
         grunt.task.requires(["cef"]);
         
@@ -137,6 +136,7 @@ module.exports = function (grunt) {
             zipName = grunt.config("cefZipName"),
             unzipPromise;
         
+        // unzip to deps/
         unzipPromise = unzip(zipName, "deps");
         
         // remove .zip ext
@@ -145,6 +145,7 @@ module.exports = function (grunt) {
         unzipPromise.then(function () {
             var deferred = q.defer();
             
+            // rename version stamped name to cef
             rename("deps/" + zipName, "deps/cef").then(function () {
                 // write empty file with zip file 
                 grunt.file.write("deps/cef/" + zipName + ".txt", "");
@@ -158,6 +159,7 @@ module.exports = function (grunt) {
                 return exec("chmod u+x deps/cef/tools/*");
             }
             
+            // return a resolved promise
             return q();
         }).then(function () {
             done();
@@ -173,14 +175,17 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
+        // create symlinks
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
             path = CEF_MAPPING[key];
             
+            // some paths to deps/cef/* are platform speciifc and may not exist
             if (grunt.file.exists(key)) {
                 links.push(link(key, path));
             }
         });
         
+        // wait for all symlinks to complete
         q.all(links).then(function () {
             done();
         }, function (err) {
@@ -201,6 +206,7 @@ module.exports = function (grunt) {
         // extract file name and set config property
         nodeSrc = Array.isArray(nodeSrc) ? nodeSrc : [nodeSrc];
         
+        // curl-dir:node_win32 defines multiple downloads, account for this array
         nodeSrc.forEach(function (value, index) {
             nodeSrc[index] = value.substr(value.lastIndexOf("/") + 1);
         });
@@ -210,12 +216,13 @@ module.exports = function (grunt) {
         if (!grunt.file.exists("deps/node/" + txtName) ||
                 !grunt.file.exists(nodeSrc[0]) ||
                 (!nodeSrc[1] || !grunt.file.exists(nodeSrc[1]))) {
+            // curl-dir:<platform>
             grunt.task.run(curlTask);
         } else {
             grunt.verbose.writeln("Skipping Node.js download. Found deps/node/" + txtName);
         }
         
-        // queue node-clean, curl-dir:<platform>, and node-<platform>
+        // queue node-clean, and node-<platform>
         grunt.task.run(["node-clean", setupTask]);
     });
     
@@ -311,6 +318,6 @@ module.exports = function (grunt) {
         });
     });
     
-    // task: create-project
+    // task: setup
     grunt.registerTask("setup", ["cef", "node", "create-project"]);
 };
