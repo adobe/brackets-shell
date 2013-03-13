@@ -153,7 +153,8 @@ module.exports = function (grunt) {
             return deferred.promise;
         }).then(function () {
             if (process.platform !== "win32") {
-                return chmod("deps/cef/tools/*", "u+x");
+                // FIXME figure out how to use fs.chmod to only do additive mode u+x
+                return exec("chmod u+x deps/cef/tools/*");
             }
             
             return q();
@@ -294,7 +295,7 @@ module.exports = function (grunt) {
         if (process.platform === "darwin") {
             gypPromise = gypPromise.then(function () {
                 // FIXME port to JavaScript?
-                return exec("bash tasks/fix-code.sh");
+                return exec("bash tasks/fix-xcode.sh");
             });
         }
         
@@ -305,4 +306,7 @@ module.exports = function (grunt) {
             done(false);
         });
     });
+    
+    // task: create-project
+    grunt.registerTask("setup", ["cef", "node", "create-project"]);
 };
