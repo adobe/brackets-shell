@@ -28,14 +28,15 @@ module.exports = function (grunt) {
     var fs              = require("fs"),
         child_process   = require("child_process"),
         q               = require("q"),
-        /* constants */
+        /* win only (lib), mac only (Resources, tools) */
         CEF_MAPPING     = {
-            "deps/cef/Debug": "Debug",
-            "deps/cef/include": "include",
-            "deps/cef/libcef_dll": "libcef_dll",
-            "deps/cef/Release": "Release",
-            "deps/cef/Resources": "Resources",
-            "deps/cef/tools": "tools"
+            "deps/cef/Debug"        : "Debug",
+            "deps/cef/include"      : "include",
+            "deps/cef/lib"          : "lib",
+            "deps/cef/libcef_dll"   : "libcef_dll",
+            "deps/cef/Release"      : "Release",
+            "deps/cef/Resources"    : "Resources",
+            "deps/cef/tools"        : "tools"
         },
         /* use promises instead of callbacks */
         link,
@@ -174,7 +175,10 @@ module.exports = function (grunt) {
         
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
             path = CEF_MAPPING[key];
-            links.push(link(key, path));
+            
+            if (grunt.file.exists(key)) {
+                links.push(link(key, path));
+            }
         });
         
         q.all(links).then(function () {
