@@ -281,4 +281,28 @@ module.exports = function (grunt) {
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {
         deleteFile("deps/node");
     });
+    
+    // task: create-project
+    grunt.registerTask("create-project", "Create Xcode/VisualStudio project", function () {
+        var done = this.async(),
+            gypPromise;
+        
+        grunt.log.writeln("Building project files");
+        
+        gypPromise = exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
+        
+        if (process.platform === "darwin") {
+            gypPromise = gypPromise.then(function () {
+                // FIXME port to JavaScript?
+                return exec("bash tasks/fix-code.sh");
+            });
+        }
+        
+        gypPromise.then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
 };
