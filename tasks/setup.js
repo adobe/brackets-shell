@@ -27,7 +27,7 @@ module.exports = function (grunt) {
 
     var fs              = require("fs"),
         child_process   = require("child_process"),
-        Q               = require("q"),
+        q               = require("q"),
         /* constants */
         CEF_MAPPING     = {
             "deps/cef/Debug": "Debug",
@@ -39,21 +39,22 @@ module.exports = function (grunt) {
         },
         /* use promises instead of callbacks */
         link,
-        exec            = Q.denodeify(child_process.exec),
-        rename          = Q.denodeify(fs.rename);
+        chmod           = q.denodeify(fs.chmod),
+        exec            = q.denodeify(child_process.exec),
+        rename          = q.denodeify(fs.rename);
     
     // cross-platform symbolic link
     link = (function () {
         var symlink;
         
         if (process.platform === "win32") {
-            symlink = Q.denodeify(fs.symlink);
+            symlink = q.denodeify(fs.symlink);
             
             return function (srcpath, destpath) {
                 return symlink(srcpath, destpath, "junction");
             };
         } else {
-            symlink = Q.denodeify(fs.link);
+            symlink = q.denodeify(fs.link);
             
             return function (srcpath, destpath) {
                 return symlink(srcpath, destpath);
@@ -66,6 +67,12 @@ module.exports = function (grunt) {
         return exec("unzip -q " + src + " -d " + dest);
     }
     
+    function deleteFile(path) {
+        if (grunt.file.exists(path)) {
+            grunt.file.delete(path);
+        }
+    }
+    
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config  = "cef_" + process.platform,
@@ -75,6 +82,7 @@ module.exports = function (grunt) {
         
         // extract zip file name and set config property
         zipName = zipSrc.substr(zipSrc.lastIndexOf("/") + 1);
+        grunt.config("cefZipSrc", zipSrc);
         grunt.config("cefZipName", zipName);
         grunt.config("cefConfig", config);
         
@@ -82,7 +90,7 @@ module.exports = function (grunt) {
         txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
         
         // optionally download if CEF is not found
-        if (!grunt.file.exists("deps/cef/" + txtName)) {
+        if (!grunt.file.exists("deps/cef/" + txtName) || !grunt.file.exists(zipName)) {
             grunt.task.run("cef-download");
         } else {
             grunt.verbose.writeln("Skipping CEF download. Found deps/cef/" + txtName);
@@ -95,19 +103,18 @@ module.exports = function (grunt) {
     grunt.registerTask("cef-clean", "Removes CEF binaries and linked folders", function () {
         var path;
         
+        // delete dev symlinks from "setup_for_hacking"
+        deleteFile("Release/dev");
+        deleteFile("Debug/dev");
+        
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
-            path = CEF_MAPPING[key];
-            
-            if (grunt.file.exists(path)) {
-                grunt.file.delete(path);
-            }
+            deleteFile(CEF_MAPPING[key]);
         });
         
         grunt.verbose.writeln("Deleting deps/cef");
         
-        if (grunt.file.exists("deps/cef")) {
-            grunt.file.delete("deps/cef");
-        }
+        // finally delete CEF binary
+        deleteFile("deps/cef");
     });
     
     // task: cef-download
@@ -116,7 +123,7 @@ module.exports = function (grunt) {
         grunt.task.requires(["cef"]);
         
         // run curl
-        grunt.log.writeln("Downloading " + grunt.config("cefZipName"));
+        grunt.log.writeln("Downloading " + grunt.config("cefZipSrc"));
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
     
@@ -135,7 +142,7 @@ module.exports = function (grunt) {
         zipName = zipName.substr(0, zipName.lastIndexOf("."));
         
         unzipPromise.then(function () {
-            var deferred = Q.defer();
+            var deferred = q.defer();
             
             rename("deps/" + zipName, "deps/cef").then(function () {
                 // write empty file with zip file 
@@ -144,6 +151,12 @@ module.exports = function (grunt) {
             });
             
             return deferred.promise;
+        }).then(function () {
+            if (process.platform !== "win32") {
+                return chmod("deps/cef/tools/*", "u+x");
+            }
+            
+            return q();
         }).then(function () {
             done();
         }, function (err) {
@@ -163,7 +176,7 @@ module.exports = function (grunt) {
             links.push(link(key, path));
         });
         
-        Q.all(links).then(function () {
+        q.all(links).then(function () {
             done();
         }, function (err) {
             done(false);
@@ -175,7 +188,10 @@ module.exports = function (grunt) {
         var config      = "node_" + process.platform,
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             curlTask    = "curl-dir:node_" + process.platform,
-            setupTask   = "node-" + process.platform;
+            setupTask   = "node-" + process.platform,
+            nodeVersion = grunt.config("node_version"),
+            npmVersion  = grunt.config("npm_version"),
+            txtName     = "version-" + nodeVersion + ".txt";
         
         // extract file name and set config property
         nodeSrc = Array.isArray(nodeSrc) ? nodeSrc : [nodeSrc];
@@ -185,8 +201,17 @@ module.exports = function (grunt) {
         });
         grunt.config("nodeSrc", nodeSrc);
         
+        // optionally download if CEF is not found
+        if (!grunt.file.exists("deps/node/" + txtName) ||
+                !grunt.file.exists(nodeSrc[0]) ||
+                (!nodeSrc[1] || !grunt.file.exists(nodeSrc[1]))) {
+            grunt.task.run(curlTask);
+        } else {
+            grunt.verbose.writeln("Skipping Node.js download. Found deps/node/" + txtName);
+        }
+        
         // queue node-clean, curl-dir:<platform>, and node-<platform>
-        grunt.task.run(["node-clean", curlTask, setupTask]);
+        grunt.task.run(["node-clean", setupTask]);
     });
     
     function nodeWriteVersion() {
@@ -195,23 +220,23 @@ module.exports = function (grunt) {
     }
     
     // task: node-win32
-    grunt.registerTask("node-win32", "Download Node.js for Windows", function () {
+    grunt.registerTask("node-win32", "Setup Node.js for Windows", function () {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
         
         var done    = this.async(),
             nodeSrc = grunt.config("nodeSrc"),
             exeFile = nodeSrc[0],
-            npmFile = nodeSrc[1],
-            unzipPromise;
+            npmFile = nodeSrc[1];
         
         grunt.file.mkdir("deps/node");
         
-        // rename to Brackets-node
-        rename("node.exe", "deps/node/Brackets-node.exe").then(function () {
-            // unzip NPM
-            return unzipPromise(npmFile, "deps/node");
-        }).then(function () {
+        // copy node.exe to Brackets-node
+        grunt.file.copy(exeFile,  "deps/node/Brackets-node.exe");
+        
+        // unzip NPM
+        unzip(npmFile, "deps/node").then(function () {
+            nodeWriteVersion();
             done();
         }, function (err) {
             grunt.log.error(err);
@@ -220,7 +245,7 @@ module.exports = function (grunt) {
     });
     
     // task: node-darwin
-    grunt.registerTask("node-darwin", "Download Node.js for Mac OSX and extract", function () {
+    grunt.registerTask("node-darwin", "Setup Node.js for Mac OSX and extract", function () {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
         
@@ -254,8 +279,6 @@ module.exports = function (grunt) {
     
     // task: node-clean
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {
-        if (grunt.file.exists("deps/node")) {
-            grunt.file.delete("deps/node");
-        }
+        deleteFile("deps/node");
     });
 };

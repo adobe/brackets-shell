@@ -6,6 +6,8 @@ xcodebuild/*
 /npm-debug.log
 /cef*.zip
 /node*.tar.gz
+/node.exe
+/npm*.zip
 
 appshell.xcodeproj
 Brackets.vcxproj
