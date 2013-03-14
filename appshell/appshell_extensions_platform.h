@@ -74,7 +74,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles);
 
-int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
+int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents, bool& isNetworkDrive);
 
 int32 MakeDir(ExtensionString path, int32 mode);
 

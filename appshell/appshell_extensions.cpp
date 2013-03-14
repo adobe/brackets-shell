@@ -146,8 +146,10 @@ public:
             
             if (error == NO_ERROR) {
                 ExtensionString path = argList->GetString(1);
+                bool isNetworkDrive;
                 
-                error = ReadDir(path, directoryContents);
+                error = ReadDir(path, directoryContents, isNetworkDrive);
+                responseArgs->SetBool(3, isNetworkDrive);
             }
             
             // Set response args for this function

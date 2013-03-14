@@ -155,9 +155,10 @@ if (!appshell.app) {
      * Reads the contents of a directory. 
      *
      * @param {string} path The path of the directory to read.
-     * @param {function(err, files)} callback Asynchronous callback function. The callback gets two arguments 
-     *        (err, files) where files is an array of the names of the files
-     *        in the directory excluding '.' and '..'.
+     * @param {function(err, files)} callback Asynchronous callback function. The callback gets three arguments 
+     *        (err, files, isNetworkDrive) where files is an array of the names of the files
+     *        in the directory excluding '.' and '..', and isNetworkDrive indicates whether the given 
+     *        path of the directory is a mapped network drive or not.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN

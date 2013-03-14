@@ -520,7 +520,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     return NO_ERROR;
 }
 
-int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
+int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents, bool& isNetworkDrive)
 {
     if (path.length() && path[path.length() - 1] != '/')
         path += '/';
@@ -554,6 +554,9 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     else {
         return ConvertWinErrorCode(GetLastError());
     }
+
+    ExtensionString drive = path.substr(0, path.find('/') + 1);
+    isNetworkDrive = GetDriveType(drive.c_str()) == DRIVE_REMOTE;
 
     // On Windows, list directories first, then files
     size_t i, total = 0;
