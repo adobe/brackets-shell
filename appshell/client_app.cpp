@@ -393,3 +393,9 @@ bool ClientApp::OnProcessMessageReceived(
     
     return handled;
 }
+
+void ClientApp::OnBeforeCommandLineProcessing(
+      const CefString& process_type,
+      CefRefPtr<CefCommandLine> command_line) {
+    command_line->AppendSwitch("enable-css-shaders");
+}
