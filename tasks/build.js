@@ -44,7 +44,7 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package", "installer"]);
+    grunt.registerTask("full-build", ["git", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package", "installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
@@ -208,7 +208,7 @@ module.exports = function (grunt) {
         var configPath = grunt.config("build.staging") + "/www/config.json",
             configJSON = grunt.file.readJSON(configPath);
         
-        configJSON.version = configJSON.version + "-" + grunt.config("build.build-number");
+        configJSON.version = configJSON.version.substr(0, configJSON.version.lastIndexOf("-") + 1) + grunt.config("build.build-number");
         configJSON.repository.branch = grunt.config("build.build-branch");
         configJSON.repository.SHA = grunt.config("build.build-sha");
         
