@@ -27,7 +27,7 @@ module.exports = function (grunt) {
     
     var common  = require("./tasks/common")(grunt),
         resolve = common.resolve,
-        staging = (common.platform() === "mac") ? "installer/mac/staging/<%= build.name %>/Contents" : "installer/win/staging";
+        staging = (common.platform() === "mac") ? "installer/mac/staging/<%= build.name %>.app/Contents" : "installer/win/staging";
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -85,14 +85,19 @@ module.exports = function (grunt) {
                     }
                 ]
             },
+            // FIXME: see stage-mac task issues with copying .app bundles
+            /*
             "mac": {
                 "files": [
                     {
-                        "src"       : ["xcodebuild/Release/<%= build.name %>.app"],
-                        "dest"      : "installer/mac/staging/"
+                        "expand"    : true,
+                        "cwd"       : "xcodebuild/Release/<%= build.name %>.app/",
+                        "src"       : ["**"],
+                        "dest"      : "installer/mac/staging/<%= build.name %>.app/"
                     }
                 ]
             },
+            */
             "www": {
                 "files": [
                     {
@@ -155,4 +160,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-curl");
 
     grunt.registerTask("default", "jshint");
+    
+    grunt.registerTask("temp", "", function () {
+        grunt.file.copy("xcodebuild/Release/Brackets.app", "installer/mac/staging/Brackets.app");
+    });
 };

@@ -157,7 +157,7 @@ module.exports = function (grunt) {
             result = result.then(function () {
                 var deferred = q.defer(),
                     indexOf = command.indexOf(" "),
-                    cmdArgs = (indexOf > 0) ? command.substr(indexOf + 1).split(" ") : [],
+                    cmdArgs = (indexOf > 0) ? command.substr(indexOf + 1).match(SPLIT_ARGS) : [],
                     args = opts.args || cmdArgs,
                     cmd = (indexOf < 0) ? command : command.substr(0, indexOf),
                     child,

@@ -149,12 +149,32 @@ module.exports = function (grunt) {
     
     // task: stage
     grunt.registerTask("stage", "Stage release files", function () {
-        var target = platform();
+        // stage platform-specific binaries
+        grunt.task.run("stage-" + platform());
+    });
+    
+    // task: stage-mac
+    grunt.registerTask("stage-mac", "Stage mac executable files", function () {
+        var done = this.async();
         
-        common.deleteFile("installer/" + target + "/staging");
+        common.deleteFile("installer/mac/staging");
         
+        // this should have been a grunt-contrib-copy task "copy:mac", but something goes wrong when creating the .app folder
+        spawn([
+            "mkdir installer/mac/staging",
+            "cp -R xcodebuild/Release/" + grunt.config("build.name") + ".app installer/mac/staging/"
+        ]).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+    
+    // task: stage-win
+    grunt.registerTask("stage-win", "Stage win executable files", function () {
         // stage platform-specific binaries, then package www files
-        grunt.task.run("copy:" + target);
+        grunt.task.run("copy:win");
     });
     
     // task: package
