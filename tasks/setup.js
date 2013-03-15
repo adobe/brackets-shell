@@ -20,7 +20,6 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint es5:true*/
 /*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
@@ -69,12 +68,6 @@ module.exports = function (grunt) {
         return exec("unzip -q " + src + " -d " + dest);
     }
     
-    function deleteFile(path) {
-        if (grunt.file.exists(path)) {
-            grunt.file.delete(path);
-        }
-    }
-    
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config  = "cef-" + process.platform,
@@ -106,16 +99,16 @@ module.exports = function (grunt) {
         var path;
         
         // delete dev symlinks from "setup_for_hacking"
-        deleteFile("Release/dev");
-        deleteFile("Debug/dev");
+        common.deleteFile("Release/dev");
+        common.deleteFile("Debug/dev");
         
         // delete symlinks to cef
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
-            deleteFile(CEF_MAPPING[key]);
+            common.deleteFile(CEF_MAPPING[key]);
         });
         
         // finally delete CEF binary
-        deleteFile("deps/cef");
+        common.deleteFile("deps/cef");
     });
     
     // task: cef-download
@@ -292,7 +285,7 @@ module.exports = function (grunt) {
     
     // task: node-clean
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {
-        deleteFile("deps/node");
+        common.deleteFile("deps/node");
     });
     
     // task: create-project

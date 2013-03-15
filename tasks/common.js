@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint vars: true, plusplus: true, regexp: true*/
+/*jslint es5:true, vars: true, plusplus: true, regexp: true*/
 /*global module, require, process, Buffer*/
 module.exports = function (grunt) {
     "use strict";
@@ -218,11 +218,18 @@ module.exports = function (grunt) {
         }
     }
     
+    function deleteFile(path) {
+        if (grunt.file.exists(path)) {
+            grunt.file.delete(path);
+        }
+    }
+    
     common.exec = exec;
     common.pipe = pipe;
     common.spawn = spawn;
     common.resolve = resolve;
     common.platform = platform;
+    common.deleteFile = deleteFile;
     
     return common;
 };

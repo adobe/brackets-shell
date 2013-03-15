@@ -26,7 +26,8 @@ module.exports = function (grunt) {
     "use strict";
     
     var common  = require("./tasks/common")(grunt),
-        resolve = common.resolve;
+        resolve = common.resolve,
+        staging = (common.platform() === "mac") ? "installer/mac/staging/<%= build.name %>/Contents" : "installer/win/staging";
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -60,7 +61,7 @@ module.exports = function (grunt) {
         },
         "copy": {
             "win": {
-                "files" : [
+                "files": [
                     {
                         "expand"    : true,
                         "cwd"       : "Release/",
@@ -84,21 +85,29 @@ module.exports = function (grunt) {
                     }
                 ]
             },
+            "mac": {
+                "files": [
+                    {
+                        "src"       : ["xcodebuild/Release/<%= build.name %>.app"],
+                        "dest"      : "installer/mac/staging/"
+                    }
+                ]
+            },
             "www": {
-                "files" : [
+                "files": [
                     {
                         "dot"       : true,
                         "expand"    : true,
-                        "cwd"       : resolve("../brackets/src"), // FIXME duplicate of update-repo.brackets.repo
+                        "cwd"       : "<%= git.www.repo %>/src",
                         "src"       : ["**", "!**/.git*"],
-                        "dest"      : "installer/" + common.platform() + "/staging/www/"
+                        "dest"      : "<%= build.staging %>/www/"
                     },
                     {
                         "dot"       : true,
                         "expand"    : true,
-                        "cwd"       : resolve("../brackets/samples"), // FIXME duplicate of update-repo.brackets.repo
+                        "cwd"       : "<%= git.www.repo %>/samples",
                         "src"       : ["**"],
-                        "dest"      : "installer/" + common.platform() + "/staging/samples/"
+                        "dest"      : "<%= build.staging %>/samples/"
                     }
                 ]
             }
@@ -117,15 +126,15 @@ module.exports = function (grunt) {
             }
         },
         "build": {
-            "name"          : "Brackets",
-            "www-repo"      : "<%= git.brackets.path %>"
+            "name"              : "Brackets",
+            "staging"           : staging
         },
-        "update-repo": {
-            "brackets": {
-                "repo"      : "../brackets",
+        "git": {
+            "www": {
+                "repo"      : "../brackets",    // TODO user configurable?
                 "branch"    : ""
             },
-            "brackets-shell": {
+            "shell": {
                 "repo"      : ".",
                 "branch"    : ""
             }

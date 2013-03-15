@@ -45,7 +45,7 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "installer"]);
+    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "stage", "copy:www", "installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
@@ -112,9 +112,9 @@ module.exports = function (grunt) {
     });
     
     // task: build-num
-    grunt.registerTask("build-num", "Compute www-repo build number and set config property build.build-number", function () {
+    grunt.registerTask("build-num", "Compute www repo build number and set config property build.build-number", function () {
         var done = this.async(),
-            wwwRepo = resolve(grunt.config("build.www-repo"));
+            wwwRepo = resolve(grunt.config("git.www.repo"));
         
         pipe(["git log --oneline"], { cwd: wwwRepo })
             .then(function (result) {
@@ -130,9 +130,9 @@ module.exports = function (grunt) {
     });
     
     // task: build-sha
-    grunt.registerTask("build-sha", "Wrote www-repo SHA build.build-sha", function () {
+    grunt.registerTask("build-sha", "Wrote www repo SHA build.build-sha", function () {
         var done = this.async(),
-            wwwRepo = resolve(grunt.config("build.www-repo"));
+            wwwRepo = resolve(grunt.config("git.www.repo"));
         
         pipe(["git log -1"], { cwd: wwwRepo })
             .then(function (result) {
@@ -145,6 +145,31 @@ module.exports = function (grunt) {
             }, function () {
                 done(false);
             });
+    });
+    
+    // task: stage
+    grunt.registerTask("stage", "Stage release files", function () {
+        var target = platform();
+        
+        common.deleteFile("installer/" + target + "staging");
+        
+        // stage platform-specific binaries, then package www files
+        grunt.task.run(["copy:" + target, "package-" + target]);
+    });
+    
+    // task: package
+    grunt.registerTask("package", "Package www files", function () {
+        grunt.task.run("package-" + platform());
+    });
+    
+    // task: package-mac
+    grunt.registerTask("package-mac", "Package www files for mac", function () {
+        grunt.task.run("copy:www");
+    });
+    
+    // task: package-win
+    grunt.registerTask("package-win", "Package www files for win", function () {
+        grunt.task.run("copy:www");
     });
     
     // task: installer
