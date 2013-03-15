@@ -159,9 +159,5 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-curl");
 
-    grunt.registerTask("default", "jshint");
-    
-    grunt.registerTask("temp", "", function () {
-        grunt.file.copy("xcodebuild/Release/Brackets.app", "installer/mac/staging/Brackets.app");
-    });
+    grunt.registerTask("default", "full-build");
 };

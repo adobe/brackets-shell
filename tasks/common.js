@@ -39,7 +39,7 @@ module.exports = function (grunt) {
     
     /**
      * Spawns async commands in parallel, piping each command's output to the next.
-     * @param {!(string|Array.<string>)} commands
+     * @param {!Array.<string>} commands
      * @param {Object?} opts child_process.spawn options
      * @returns {Promise} resolved with {{code: number, stdout: string, stderr: string}}
      */
@@ -224,12 +224,17 @@ module.exports = function (grunt) {
         }
     }
     
+    function writeJSON(path, obj) {
+        grunt.file.write(path, JSON.stringify(obj, null, "    "));
+    }
+    
     common.exec = exec;
     common.pipe = pipe;
     common.spawn = spawn;
     common.resolve = resolve;
     common.platform = platform;
     common.deleteFile = deleteFile;
+    common.writeJSON = writeJSON;
     
     return common;
 };

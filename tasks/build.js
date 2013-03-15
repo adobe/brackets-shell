@@ -29,7 +29,6 @@ module.exports = function (grunt) {
     var common      = require("./common")(grunt),
         q           = require("q"),
         exec        = common.exec,
-        pipe        = common.pipe,
         spawn       = common.spawn,
         resolve     = common.resolve,
         platform    = common.platform,
@@ -45,7 +44,7 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "stage", "package", "installer"]);
+    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package", "installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
@@ -111,12 +110,30 @@ module.exports = function (grunt) {
         }
     });
     
+    // task: build-branch
+    grunt.registerTask("build-branch", "Write www repo branch to config property build.build-branch", function () {
+        var done = this.async(),
+            wwwRepo = resolve(grunt.config("git.www.repo"));
+        
+        spawn(["git status"], { cwd: wwwRepo })
+            .then(function (result) {
+                var branch = /On branch (.*)/.exec(result.stdout.trim())[1];
+                
+                grunt.log.writeln("Build branch " + branch);
+                grunt.config("build.build-branch", branch);
+                
+                done();
+            }, function () {
+                done(false);
+            });
+    });
+    
     // task: build-num
     grunt.registerTask("build-num", "Compute www repo build number and set config property build.build-number", function () {
         var done = this.async(),
             wwwRepo = resolve(grunt.config("git.www.repo"));
         
-        pipe(["git log --oneline"], { cwd: wwwRepo })
+        spawn(["git log --oneline"], { cwd: wwwRepo })
             .then(function (result) {
                 var buildNum = result.stdout.trim().split("\n").length;
                 
@@ -130,11 +147,11 @@ module.exports = function (grunt) {
     });
     
     // task: build-sha
-    grunt.registerTask("build-sha", "Wrote www repo SHA build.build-sha", function () {
+    grunt.registerTask("build-sha", "Write www repo SHA to config property build.build-sha", function () {
         var done = this.async(),
             wwwRepo = resolve(grunt.config("git.www.repo"));
         
-        pipe(["git log -1"], { cwd: wwwRepo })
+        spawn(["git log -1"], { cwd: wwwRepo })
             .then(function (result) {
                 var sha = /commit (.*)/.exec(result.stdout.trim())[1];
                 
@@ -142,7 +159,7 @@ module.exports = function (grunt) {
                 grunt.config("build.build-sha", sha);
                 
                 done();
-            }, function () {
+            }, function (err) {
                 done(false);
             });
     });
@@ -181,7 +198,21 @@ module.exports = function (grunt) {
     grunt.registerTask("package", "Package www files", function () {
         common.deleteFile(grunt.config("build.staging") + "/www");
         common.deleteFile(grunt.config("build.staging") + "/samples");
-        grunt.task.run(["copy:www", "copy:samples"]);
+        grunt.task.run(["copy:www", "copy:samples", "write-config"]);
+    });
+    
+    // task: write-config
+    grunt.registerTask("write-config", "Update version data in www config.json payload", function () {
+        grunt.task.requires(["build-num", "build-branch", "build-sha"]);
+        
+        var configPath = grunt.config("build.staging") + "/www/config.json",
+            configJSON = grunt.file.readJSON(configPath);
+        
+        configJSON.version = configJSON.version + "-" + grunt.config("build.build-number");
+        configJSON.repository.branch = grunt.config("build.build-branch");
+        configJSON.repository.SHA = grunt.config("build.build-sha");
+        
+        common.writeJSON(configPath, configJSON);
     });
     
     // task: installer
