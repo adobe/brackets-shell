@@ -45,7 +45,7 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "stage", "copy:www", "installer"]);
+    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "stage", "package", "installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
@@ -151,35 +151,35 @@ module.exports = function (grunt) {
     grunt.registerTask("stage", "Stage release files", function () {
         var target = platform();
         
-        common.deleteFile("installer/" + target + "staging");
+        common.deleteFile("installer/" + target + "/staging");
         
         // stage platform-specific binaries, then package www files
-        grunt.task.run(["copy:" + target, "package-" + target]);
+        grunt.task.run("copy:" + target);
     });
     
     // task: package
     grunt.registerTask("package", "Package www files", function () {
-        grunt.task.run("package-" + platform());
-    });
-    
-    // task: package-mac
-    grunt.registerTask("package-mac", "Package www files for mac", function () {
-        grunt.task.run("copy:www");
-    });
-    
-    // task: package-win
-    grunt.registerTask("package-win", "Package www files for win", function () {
-        grunt.task.run("copy:www");
+        common.deleteFile(grunt.config("build.staging") + "/www");
+        common.deleteFile(grunt.config("build.staging") + "/samples");
+        grunt.task.run(["copy:www", "copy:samples"]);
     });
     
     // task: installer
     grunt.registerTask("installer", "Build installer", function () {
+        // TODO update brackets.config.json
         grunt.task.run("installer-" + platform());
     });
     
     // task: installer-mac
     grunt.registerTask("installer-mac", "Build mac installer", function () {
+        var done = this.async();
         
+        spawn(["bash buildInstaller.sh"], { cwd: resolve("installer/mac"), env: getBracketsEnv() }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
     });
     
     // task: installer

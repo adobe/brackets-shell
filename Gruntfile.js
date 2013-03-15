@@ -101,7 +101,11 @@ module.exports = function (grunt) {
                         "cwd"       : "<%= git.www.repo %>/src",
                         "src"       : ["**", "!**/.git*"],
                         "dest"      : "<%= build.staging %>/www/"
-                    },
+                    }
+                ]
+            },
+            "samples": {
+                "files": [
                     {
                         "dot"       : true,
                         "expand"    : true,
