@@ -28,7 +28,6 @@ module.exports = function (grunt) {
     
     var common      = require("./common")(grunt),
         q           = require("q"),
-        exec        = common.exec,
         spawn       = common.spawn,
         resolve     = common.resolve,
         platform    = common.platform,
@@ -44,10 +43,11 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["git", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package", "installer"]);
+    grunt.registerTask("full-build", ["git", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package"]);
+    grunt.registerTask("installer", ["full-build", "build-installer"]);
     
     // task: build
-    grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
+    grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
         grunt.task.run("build-" + platform());
     });
     
@@ -216,13 +216,13 @@ module.exports = function (grunt) {
     });
     
     // task: installer
-    grunt.registerTask("installer", "Build installer", function () {
+    grunt.registerTask("build-installer", "Build installer", function () {
         // TODO update brackets.config.json
-        grunt.task.run("installer-" + platform());
+        grunt.task.run("build-installer-" + platform());
     });
     
     // task: installer-mac
-    grunt.registerTask("installer-mac", "Build mac installer", function () {
+    grunt.registerTask("build-installer-mac", "Build mac installer", function () {
         var done = this.async();
         
         spawn(["bash buildInstaller.sh"], { cwd: resolve("installer/mac"), env: getBracketsEnv() }).then(function () {
@@ -234,13 +234,10 @@ module.exports = function (grunt) {
     });
     
     // task: installer
-    grunt.registerTask("installer-win", "Build windows installer", function () {
+    grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
         
-        spawn([
-            "cmd.exe /c stageForInstaller.bat",
-            "ant -f brackets-win-install-build.xml"
-        ], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
+        spawn(["ant -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
