@@ -26,6 +26,7 @@ module.exports = function (grunt) {
     "use strict";
 
     grunt.initConfig({
+        "pkg":              grunt.file.readJSON("package.json"),
         "curl-dir": {
             /* linux not supported yet */
             /*
@@ -35,42 +36,55 @@ module.exports = function (grunt) {
             },
             */
             /* mac */
-            cef_darwin: {
-                dest        : ".",
-                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
+            "cef_darwin": {
+                "dest"      : ".",
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
             },
-            node_darwin: {
-                dest        : ".",
-                src         : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
+            "node_darwin": {
+                "dest"      : ".",
+                "src"       : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
             },
             /* win */
-            cef_win32: {
-                dest        : ".",
-                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
+            "cef_win32": {
+                "dest"      : ".",
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
             },
-            node_win32: {
-                dest        : ".",
-                src         : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
+            "node_win32": {
+                "dest"      : ".",
+                "src"       : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
                                "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
             }
         },
-        unzip: {
-            cef: {
-                src: "<%= cef_zip %>",
-                dest: "deps/cef"
+        "unzip": {
+            "cef": {
+                "src"       : "<%= cef_zip %>",
+                "dest"      : "deps/cef"
             }
         },
-        jshint: {
-            all             : ["Gruntfile.js", "tasks/**/*.js"],
+        "jshint": {
+            "all"           : ["Gruntfile.js", "tasks/**/*.js"],
             /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
-            options: {
-                jshintrc    : ".jshintrc"
+            "options": {
+                "jshintrc"  : ".jshintrc"
             }
         },
-        cef_zip             : "cef.zip",
-        cef_version         : "3.1180.823",
-        node_version        : "0.8.20",
-        npm_version         : "1.2.11"
+        "build": {
+            "name"          : "Brackets"
+        },
+        "update-repo": {
+            "brackets": {
+                "repo"      : "../brackets",
+                "branch"    : ""
+            },
+            "brackets-shell": {
+                "repo"      : ".",
+                "branch"    : ""
+            }
+        },
+        "cef-zip"           : "cef.zip",
+        "cef-version"       : "3.1180.823",
+        "node-version"      : "0.8.20",
+        "npm-version"       : "1.2.11"
     });
 
     grunt.loadTasks("tasks");

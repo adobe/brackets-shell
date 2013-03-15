@@ -25,7 +25,8 @@
 module.exports = function (grunt) {
     "use strict";
 
-    var fs              = require("fs"),
+    var common          = require("./common")(grunt),
+        fs              = require("fs"),
         child_process   = require("child_process"),
         q               = require("q"),
         /* win only (lib), mac only (Resources, tools) */
@@ -41,8 +42,8 @@ module.exports = function (grunt) {
         /* use promises instead of callbacks */
         link,
         chmod           = q.denodeify(fs.chmod),
-        exec            = q.denodeify(child_process.exec),
-        rename          = q.denodeify(fs.rename);
+        rename          = q.denodeify(fs.rename),
+        exec            = common.exec;
     
     // cross-platform symbolic link
     link = (function () {
@@ -76,7 +77,7 @@ module.exports = function (grunt) {
     
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config  = "cef_" + process.platform,
+        var config  = "cef-" + process.platform,
             zipSrc  = grunt.config("curl-dir." + config + ".src"),
             zipName,
             txtName;
@@ -195,18 +196,18 @@ module.exports = function (grunt) {
     
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
-        var config      = "node_" + process.platform,
+        var config      = "node-" + process.platform,
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
-            curlTask    = "curl-dir:node_" + process.platform,
+            curlTask    = "curl-dir:node-" + process.platform,
             setupTask   = "node-" + process.platform,
-            nodeVersion = grunt.config("node_version"),
-            npmVersion  = grunt.config("npm_version"),
+            nodeVersion = grunt.config("node-version"),
+            npmVersion  = grunt.config("npm-version"),
             txtName     = "version-" + nodeVersion + ".txt";
         
         // extract file name and set config property
         nodeSrc = Array.isArray(nodeSrc) ? nodeSrc : [nodeSrc];
         
-        // curl-dir:node_win32 defines multiple downloads, account for this array
+        // curl-dir:node-win32 defines multiple downloads, account for this array
         nodeSrc.forEach(function (value, index) {
             nodeSrc[index] = value.substr(value.lastIndexOf("/") + 1);
         });
@@ -227,8 +228,8 @@ module.exports = function (grunt) {
     });
     
     function nodeWriteVersion() {
-        // write empty file with node_version name
-        grunt.file.write("deps/node/version-" + grunt.config("node_version") + ".txt", "");
+        // write empty file with node-version name
+        grunt.file.write("deps/node/version-" + grunt.config("node-version") + ".txt", "");
     }
     
     // task: node-win32
