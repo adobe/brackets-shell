@@ -50,6 +50,7 @@ module.exports = function (grunt) {
         
         opts = opts || {};
         opts.env = opts.env || process.env;
+        opts.cwd = opts.cwd || process.cwd();
         
         // spawn commands simultaneously
         commands.forEach(function (command) {

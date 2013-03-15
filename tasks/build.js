@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint vars:true, regexp:true*/
+/*jslint vars:true, regexp:true, nomen:true*/
 /*global module, require, process*/
 
 module.exports = function (grunt) {
@@ -32,10 +32,20 @@ module.exports = function (grunt) {
         pipe        = common.pipe,
         spawn       = common.spawn,
         resolve     = common.resolve,
-        platform    = common.platform;
+        platform    = common.platform,
+        _           = grunt.util._;
+    
+    function getBracketsEnv() {
+        var env = _.extend(process.env);
+        
+        env.BRACKETS_SRC = resolve(grunt.config("update-repo.brackets.repo"));
+        env.BRACKETS_APP_NAME = grunt.config("build.name");
+        
+        return env;
+    }
     
     // task: full-build
-    grunt.registerTask(["update-repo", "build", "installer"]);
+    grunt.registerTask("full-build", ["update-repo", "create-project", "build", "build-num", "build-sha", "installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell, and build an installer.", function (wwwBranch, shellBranch) {
@@ -69,8 +79,8 @@ module.exports = function (grunt) {
         });
     });
     
-    // task: update-repo
-    grunt.registerMultiTask("update-repo", "Pull specified www-repo branch from origin", function () {
+    // task: git
+    grunt.registerMultiTask("git", "Pull specified repo branch from origin", function () {
         var repo = this.data.repo;
         
         if (!repo) {
@@ -101,6 +111,7 @@ module.exports = function (grunt) {
         }
     });
     
+    // task: build-num
     grunt.registerTask("build-num", "Compute www-repo build number and set config property build.build-number", function () {
         var done = this.async(),
             wwwRepo = resolve(grunt.config("build.www-repo"));
@@ -109,7 +120,7 @@ module.exports = function (grunt) {
             .then(function (result) {
                 var buildNum = result.stdout.trim().split("\n").length;
                 
-                grunt.verbose.writeln("Build number " + buildNum);
+                grunt.log.writeln("Build number " + buildNum);
                 grunt.config("build.build-number", buildNum);
                 
                 done();
@@ -118,15 +129,16 @@ module.exports = function (grunt) {
             });
     });
     
+    // task: build-sha
     grunt.registerTask("build-sha", "Wrote www-repo SHA build.build-sha", function () {
         var done = this.async(),
             wwwRepo = resolve(grunt.config("build.www-repo"));
         
-        pipe("git log -1", { cwd: wwwRepo })
+        pipe(["git log -1"], { cwd: wwwRepo })
             .then(function (result) {
                 var sha = /commit (.*)/.exec(result.stdout.trim())[1];
                 
-                grunt.verbose.writeln("SHA " + sha);
+                grunt.log.writeln("SHA " + sha);
                 grunt.config("build.build-sha", sha);
                 
                 done();
@@ -146,7 +158,17 @@ module.exports = function (grunt) {
     });
     
     // task: installer
-    grunt.registerTask("installer", "Build win installer", function () {
+    grunt.registerTask("installer-win", "Build windows installer", function () {
+        var done = this.async();
         
+        spawn([
+            "cmd.exe /c stageForInstaller.bat",
+            "ant -f brackets-win-install-build.xml"
+        ], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
     });
 };

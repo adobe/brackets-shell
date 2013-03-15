@@ -24,6 +24,9 @@
 /*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
+    
+    var common  = require("./tasks/common")(grunt),
+        resolve = common.resolve;
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -55,6 +58,51 @@ module.exports = function (grunt) {
                                "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
             }
         },
+        "copy": {
+            "win": {
+                "files" : [
+                    {
+                        "expand"    : true,
+                        "cwd"       : "Release/",
+                        "src"       : [
+                            "**",
+                            "!*.pdb",
+                            "!dev/**",
+                            "!obj/**",
+                            "!lib/**",
+                            "!avformat-54.dll",
+                            "!avutil-51.dll",
+                            "!avcodec-54.dll",
+                            "!d3dcompiler_43.dll",
+                            "!d3dx9_43.dll",
+                            "!libEGL.dll",
+                            "!libGLESv2.dll",
+                            "!cefclient.exe",
+                            "!debug.log"
+                        ],
+                        "dest"      : "installer/win/staging/"
+                    }
+                ]
+            },
+            "www": {
+                "files" : [
+                    {
+                        "dot"       : true,
+                        "expand"    : true,
+                        "cwd"       : resolve("../brackets/src"), // FIXME duplicate of update-repo.brackets.repo
+                        "src"       : ["**", "!**/.git*"],
+                        "dest"      : "installer/" + common.platform() + "/staging/www/"
+                    },
+                    {
+                        "dot"       : true,
+                        "expand"    : true,
+                        "cwd"       : resolve("../brackets/samples"), // FIXME duplicate of update-repo.brackets.repo
+                        "src"       : ["**"],
+                        "dest"      : "installer/" + common.platform() + "/staging/samples/"
+                    }
+                ]
+            }
+        },
         "unzip": {
             "cef": {
                 "src"       : "<%= cef_zip %>",
@@ -69,7 +117,8 @@ module.exports = function (grunt) {
             }
         },
         "build": {
-            "name"          : "Brackets"
+            "name"          : "Brackets",
+            "www-repo"      : "<%= git.brackets.path %>"
         },
         "update-repo": {
             "brackets": {
@@ -89,6 +138,7 @@ module.exports = function (grunt) {
 
     grunt.loadTasks("tasks");
     grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-curl");
 
     grunt.registerTask("default", "jshint");
