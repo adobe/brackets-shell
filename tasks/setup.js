@@ -40,7 +40,6 @@ module.exports = function (grunt) {
         },
         /* use promises instead of callbacks */
         link,
-        chmod           = q.denodeify(fs.chmod),
         exec            = q.denodeify(child_process.exec),
         rename          = q.denodeify(fs.rename);
     
