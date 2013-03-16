@@ -40,7 +40,6 @@ module.exports = function (grunt) {
         },
         /* use promises instead of callbacks */
         link,
-        chmod           = q.denodeify(fs.chmod),
         rename          = q.denodeify(fs.rename),
         exec            = common.exec;
     
@@ -67,7 +66,7 @@ module.exports = function (grunt) {
         grunt.verbose.writeln("Extracting " + src);
         return exec("unzip -q " + src + " -d " + dest);
     }
-    
+
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config  = "cef-" + process.platform,
@@ -86,12 +85,10 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName) || !grunt.file.exists(zipName)) {
-            grunt.task.run("cef-download");
+            grunt.task.run(["cef-download","cef-clean", "cef-extract", "cef-symlinks"]);
         } else {
             grunt.verbose.writeln("Skipping CEF download. Found deps/cef/" + txtName);
         }
-        
-        grunt.task.run(["cef-clean", "cef-extract", "cef-symlinks"]);
     });
     
     // task: cef-clean
@@ -99,16 +96,16 @@ module.exports = function (grunt) {
         var path;
         
         // delete dev symlinks from "setup_for_hacking"
-        common.deleteFile("Release/dev");
-        common.deleteFile("Debug/dev");
+        common.deleteFile("Release/dev", { force: true });
+        common.deleteFile("Debug/dev", { force: true });
         
         // delete symlinks to cef
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
             common.deleteFile(CEF_MAPPING[key]);
         });
         
-        // finally delete CEF binary
-        common.deleteFile("deps/cef");
+        // finally delete CEF binary\
+        common.deleteFile("deps/cef", { force: true });
     });
     
     // task: cef-download
@@ -173,7 +170,7 @@ module.exports = function (grunt) {
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
             path = CEF_MAPPING[key];
             
-            // some paths to deps/cef/* are platform speciifc and may not exist
+            // some paths to deps/cef/* are platform specific and may not exist
             if (grunt.file.exists(key)) {
                 links.push(link(key, path));
             }
@@ -206,18 +203,15 @@ module.exports = function (grunt) {
         });
         grunt.config("nodeSrc", nodeSrc);
         
-        // optionally download if CEF is not found
+        // optionally download if node is not found
         if (!grunt.file.exists("deps/node/" + txtName) ||
                 !grunt.file.exists(nodeSrc[0]) ||
                 (!nodeSrc[1] || !grunt.file.exists(nodeSrc[1]))) {
             // curl-dir:<platform>
-            grunt.task.run(curlTask);
+            grunt.task.run([curlTask, "node-clean", setupTask]);
         } else {
             grunt.verbose.writeln("Skipping Node.js download. Found deps/node/" + txtName);
         }
-        
-        // queue node-clean, and node-<platform>
-        grunt.task.run(["node-clean", setupTask]);
     });
     
     function nodeWriteVersion() {
@@ -285,7 +279,7 @@ module.exports = function (grunt) {
     
     // task: node-clean
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {
-        common.deleteFile("deps/node");
+        common.deleteFile("deps/node", { force: true });
     });
     
     // task: create-project

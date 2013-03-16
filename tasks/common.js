@@ -218,9 +218,9 @@ module.exports = function (grunt) {
         }
     }
     
-    function deleteFile(path) {
+    function deleteFile(path, options) {
         if (grunt.file.exists(path)) {
-            grunt.file.delete(path);
+            grunt.file.delete(path, options);
         }
     }
     
