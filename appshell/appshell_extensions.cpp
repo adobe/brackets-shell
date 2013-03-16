@@ -133,6 +133,23 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
+        } else if (message_name == "IsNetworkDrive") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - directory path
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            bool isRemote = false;
+            if (error == NO_ERROR) {
+                ExtensionString path = argList->GetString(1);                
+                error = IsNetworkDrive(path, isRemote);
+            }
+            
+            // Set response args for this function
+            responseArgs->SetBool(2, isRemote);
         } else if (message_name == "ReadDir") {
             // Parameters:
             //  0: int32 - callback id
@@ -146,10 +163,8 @@ public:
             
             if (error == NO_ERROR) {
                 ExtensionString path = argList->GetString(1);
-                bool isNetworkDrive;
                 
-                error = ReadDir(path, directoryContents, isNetworkDrive);
-                responseArgs->SetBool(3, isNetworkDrive);
+                error = ReadDir(path, directoryContents);
             }
             
             // Set response args for this function
