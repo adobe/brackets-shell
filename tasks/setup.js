@@ -305,7 +305,7 @@ module.exports = function (grunt) {
         
         grunt.log.writeln("Building project files");
         
-        gypPromise = exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
+        gypPromise = exec("bash -c 'gyp/gyp appshell.gyp.txt -I common.gypi --depth=.'");
         
         if (process.platform === "darwin") {
             gypPromise = gypPromise.then(function () {
