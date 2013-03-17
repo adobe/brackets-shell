@@ -36,7 +36,7 @@ module.exports = function (grunt) {
     function getBracketsEnv() {
         var env = _.extend(process.env);
         
-        env.BRACKETS_SRC = resolve(grunt.config("update-repo.brackets.repo"));
+        env.BRACKETS_SRC = resolve(grunt.config("git.www.repo"));
         env.BRACKETS_APP_NAME = grunt.config("build.name");
         
         return env;

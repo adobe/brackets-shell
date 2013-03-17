@@ -310,7 +310,7 @@ module.exports = function (grunt) {
         if (common.platform() === "mac") {
             promise = promise.then(function () {
                 // FIXME port to JavaScript?
-                return exec("bash tasks/fix-xcode.sh");
+                return exec("bash scripts/fix-xcode.sh");
             });
         }
         
