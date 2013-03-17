@@ -92,12 +92,11 @@ module.exports = function (grunt) {
             grunt.verbose.writeln("Updating repo " + this.target + " at " + repo);
             
             var done = this.async(),
-                promise =
-                    spawn([
-                        "git checkout " + this.data.branch,
-                        "git pull origin " + this.data.branch,
-                        "git submodule update --init --recursive"
-                    ], { cwd: repo });
+                promise = spawn([
+                    "git checkout " + this.data.branch,
+                    "git pull origin " + this.data.branch,
+                    "git submodule update --init --recursive"
+                ], { cwd: repo });
         
             promise.then(function () {
                 done();

@@ -29,7 +29,8 @@ module.exports = function (grunt) {
         child_process   = require("child_process"),
         path            = require("path"),
         common          = {},
-        qexec           = q.denodeify(child_process.exec);
+        qexec           = q.denodeify(child_process.exec),
+        _platform;
     
     var SPLIT_ARGS      = /\S+|"[^"]+"|'[^']+'/g;
     
@@ -209,13 +210,17 @@ module.exports = function (grunt) {
     }
     
     function platform() {
-        if (process.platform === "darwin") {
-            return "mac";
-        } else if (process.platform === "win32") {
-            return "win";
-        } else {
-            return "linux";
+        if (!_platform) {
+            if (process.platform === "darwin") {
+                _platform = "mac";
+            } else if (process.platform === "win32") {
+                _platform = "win";
+            } else {
+                _platform = "linux";
+            }
         }
+
+        return _platform;
     }
     
     function deleteFile(path, options) {

@@ -69,7 +69,7 @@ module.exports = function (grunt) {
 
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config      = "cef-" + process.platform,
+        var config      = "cef-" + common.platform(),
             zipSrc      = grunt.config("curl-dir." + config + ".src"),
             zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
             zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
@@ -147,7 +147,7 @@ module.exports = function (grunt) {
             // write empty file with zip file 
             grunt.file.write("deps/cef/" + zipName + ".txt", "");
 
-            if (process.platform !== "win32") {
+            if (common.platform() !== "win") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
                 return exec("chmod u+x deps/cef/tools/*");
             }
@@ -188,12 +188,13 @@ module.exports = function (grunt) {
     
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
-        var config      = "node-" + process.platform,
+        var platform    = common.platform(),
+            config      = "node-" + platform,
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             nodeDest    = [],
             dest        = grunt.config("curl-dir." + config + ".dest"),
-            curlTask    = "curl-dir:node-" + process.platform,
-            setupTask   = "node-" + process.platform,
+            curlTask    = "curl-dir:node-" + platform,
+            setupTask   = "node-" + platform,
             nodeVersion = grunt.config("node-version"),
             npmVersion  = grunt.config("npm-version"),
             txtName     = "version-" + nodeVersion + ".txt",
@@ -232,7 +233,7 @@ module.exports = function (grunt) {
     }
     
     // task: node-win32
-    grunt.registerTask("node-win32", "Setup Node.js for Windows", function () {
+    grunt.registerTask("node-win", "Setup Node.js for Windows", function () {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
         
@@ -256,8 +257,8 @@ module.exports = function (grunt) {
         });
     });
     
-    // task: node-darwin
-    grunt.registerTask("node-darwin", "Setup Node.js for Mac OSX and extract", function () {
+    // task: node-mac
+    grunt.registerTask("node-mac", "Setup Node.js for Mac OSX and extract", function () {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
         
@@ -306,7 +307,7 @@ module.exports = function (grunt) {
             return exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
         });
         
-        if (promise.platform === "darwin") {
+        if (common.platform() === "mac") {
             promise = promise.then(function () {
                 // FIXME port to JavaScript?
                 return exec("bash tasks/fix-xcode.sh");

@@ -40,23 +40,23 @@ module.exports = function (grunt) {
             },
             */
             /* mac */
-            "cef_darwin": {
+            "cef-mac": {
                 "dest"      : "downloads/",
-                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_macosx.zip"
             },
-            "node_darwin": {
+            "node-mac": {
                 "dest"      : "downloads/",
-                "src"       : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
+                "src"       : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
             },
             /* win */
-            "cef_win32": {
+            "cef-win": {
                 "dest"      : "downloads/",
-                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_windows.zip"
             },
-            "node_win32": {
+            "node-win": {
                 "dest"      : "downloads/",
-                "src"       : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
-                               "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
+                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
+                               "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
             }
         },
         "copy": {
@@ -148,10 +148,15 @@ module.exports = function (grunt) {
                 "branch"    : ""
             }
         },
-        "cef-zip"           : "cef.zip",
-        "cef-version"       : "3.1180.823",
-        "node-version"      : "0.8.20",
-        "npm-version"       : "1.2.11"
+        "cef": {
+            "version"       : "3.1180.823",
+        },
+        "node": {
+            "version"       : "0.8.20",
+        },
+        "npm": {
+            "version"       : "1.2.11"
+        }
     });
 
     grunt.loadTasks("tasks");
