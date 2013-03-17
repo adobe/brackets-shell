@@ -78,7 +78,7 @@ module.exports = function (grunt) {
         var config      = "cef_" + process.platform,
             zipSrc      = grunt.config("curl-dir." + config + ".src"),
             zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
-            zipDest     = grunt.config("curl-dir." + config + ".dest") + "/" + zipName,
+            zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
             txtName;
         
         // extract zip file name and set config property
@@ -202,7 +202,8 @@ module.exports = function (grunt) {
             setupTask   = "node-" + process.platform,
             nodeVersion = grunt.config("node_version"),
             npmVersion  = grunt.config("npm_version"),
-            txtName     = "version-" + nodeVersion + ".txt";
+            txtName     = "version-" + nodeVersion + ".txt",
+            missingDest = false;
         
         // extract file name and set config property
         nodeSrc = Array.isArray(nodeSrc) ? nodeSrc : [nodeSrc];
@@ -210,15 +211,16 @@ module.exports = function (grunt) {
         // curl-dir:node_win32 defines multiple downloads, account for this array
         nodeSrc.forEach(function (value, index) {
             nodeSrc[index] = value.substr(value.lastIndexOf("/") + 1);
-            nodeDest[index] = dest + "/" + nodeSrc[index];
+            nodeDest[index] = dest + nodeSrc[index];
+
+            missingDest = missingDest || !grunt.file.exists(nodeDest[index]);
         });
         grunt.config("nodeSrc", nodeSrc);
         grunt.config("nodeDest", nodeDest);
         
         // optionally download if node is not found
         if (!grunt.file.exists("deps/node/" + txtName)) {
-            if (grunt.file.exists(nodeDest[0]) &&
-                (nodeDest[1] && grunt.file.exists(nodeDest[1]))) {
+            if (!missingDest) {
                 grunt.verbose.writeln("Found node download(s) " + nodeDest);
                 grunt.task.run(["node-clean", setupTask]);
             } else {
@@ -273,8 +275,9 @@ module.exports = function (grunt) {
         grunt.verbose.writeln("Extracting " + tarFile);
         tarExec = exec("tar -xzf " + tarFile);
         
-        // remove .tar.gz extension
-        tarName = tarFile.substr(0, tarFile.lastIndexOf(".tar.gz"));
+        // remove downloads/, remove .tar.gz extension
+        tarName = tarFile.substr(tarFile.lastIndexOf("/") + 1);
+        tarName = tarName.substr(0, tarName.lastIndexOf(".tar.gz"));
         
         tarExec.then(function () {
             return rename(tarName, "deps/node");
@@ -301,20 +304,24 @@ module.exports = function (grunt) {
     // task: create-project
     grunt.registerTask("create-project", "Create Xcode/VisualStudio project", function () {
         var done = this.async(),
-            gypPromise;
+            promise;
         
         grunt.log.writeln("Building project files");
         
-        gypPromise = exec("bash -c 'gyp/gyp appshell.gyp.txt -I common.gypi --depth=.'");
+        promise = rename("appshell.gyp.txt", "appshell.gyp").then(function () {
+            return exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
+        });
         
-        if (process.platform === "darwin") {
-            gypPromise = gypPromise.then(function () {
+        if (promise.platform === "darwin") {
+            promise = promise.then(function () {
                 // FIXME port to JavaScript?
                 return exec("bash tasks/fix-xcode.sh");
             });
         }
         
-        gypPromise.then(function () {
+        promise.then(function () {
+            return rename("appshell.gyp", "appshell.gyp.txt");
+        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
