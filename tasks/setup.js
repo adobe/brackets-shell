@@ -69,13 +69,14 @@ module.exports = function (grunt) {
 
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config  = "cef-" + process.platform,
-            zipSrc  = grunt.config("curl-dir." + config + ".src"),
-            zipName,
+        var config      = "cef-" + process.platform,
+            zipSrc      = grunt.config("curl-dir." + config + ".src"),
+            zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
+            zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
             txtName;
         
         // extract zip file name and set config property
-        zipName = zipSrc.substr(zipSrc.lastIndexOf("/") + 1);
+        grunt.config("cefZipDest", zipDest);
         grunt.config("cefZipSrc", zipSrc);
         grunt.config("cefZipName", zipName);
         grunt.config("cefConfig", config);
@@ -84,8 +85,13 @@ module.exports = function (grunt) {
         txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
         
         // optionally download if CEF is not found
-        if (!grunt.file.exists("deps/cef/" + txtName) || !grunt.file.exists(zipName)) {
-            grunt.task.run(["cef-download","cef-clean", "cef-extract", "cef-symlinks"]);
+        if (!grunt.file.exists("deps/cef/" + txtName)) {
+            if (grunt.file.exists(zipDest)) {
+                grunt.verbose.writeln("Found CEF download " + zipDest);
+                grunt.task.run(["cef-clean", "cef-extract", "cef-symlinks"]);
+            } else {
+                grunt.task.run(["cef-download","cef-clean", "cef-extract", "cef-symlinks"]);
+            }
         } else {
             grunt.verbose.writeln("Skipping CEF download. Found deps/cef/" + txtName);
         }
@@ -114,7 +120,7 @@ module.exports = function (grunt) {
         grunt.task.requires(["cef"]);
         
         // run curl
-        grunt.log.writeln("Downloading " + grunt.config("cefZipSrc"));
+        grunt.log.writeln("Downloading " + grunt.config("cefZipSrc") + ". This may take a while...");
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
     
@@ -124,34 +130,30 @@ module.exports = function (grunt) {
         grunt.task.requires(["cef"]);
         
         var done    = this.async(),
+            zipDest = grunt.config("cefZipDest"),
             zipName = grunt.config("cefZipName"),
             unzipPromise;
         
         // unzip to deps/
-        unzipPromise = unzip(zipName, "deps");
+        unzipPromise = unzip(zipDest, "deps");
         
         // remove .zip ext
         zipName = zipName.substr(0, zipName.lastIndexOf("."));
         
         unzipPromise.then(function () {
-            var deferred = q.defer();
-            
             // rename version stamped name to cef
-            rename("deps/" + zipName, "deps/cef").then(function () {
-                // write empty file with zip file 
-                grunt.file.write("deps/cef/" + zipName + ".txt", "");
-                deferred.resolve();
-            });
-            
-            return deferred.promise;
+            return rename("deps/" + zipName, "deps/cef");
         }).then(function () {
+            // write empty file with zip file 
+            grunt.file.write("deps/cef/" + zipName + ".txt", "");
+
             if (process.platform !== "win32") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
                 return exec("chmod u+x deps/cef/tools/*");
             }
             
             // return a resolved promise
-            return q();
+            return q.resolve();
         }).then(function () {
             done();
         }, function (err) {
@@ -188,11 +190,14 @@ module.exports = function (grunt) {
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
         var config      = "node-" + process.platform,
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
+            nodeDest    = [],
+            dest        = grunt.config("curl-dir." + config + ".dest"),
             curlTask    = "curl-dir:node-" + process.platform,
             setupTask   = "node-" + process.platform,
             nodeVersion = grunt.config("node-version"),
             npmVersion  = grunt.config("npm-version"),
-            txtName     = "version-" + nodeVersion + ".txt";
+            txtName     = "version-" + nodeVersion + ".txt",
+            missingDest = false;
         
         // extract file name and set config property
         nodeSrc = Array.isArray(nodeSrc) ? nodeSrc : [nodeSrc];
@@ -200,15 +205,22 @@ module.exports = function (grunt) {
         // curl-dir:node-win32 defines multiple downloads, account for this array
         nodeSrc.forEach(function (value, index) {
             nodeSrc[index] = value.substr(value.lastIndexOf("/") + 1);
+            nodeDest[index] = dest + nodeSrc[index];
+
+            missingDest = missingDest || !grunt.file.exists(nodeDest[index]);
         });
         grunt.config("nodeSrc", nodeSrc);
+        grunt.config("nodeDest", nodeDest);
         
         // optionally download if node is not found
-        if (!grunt.file.exists("deps/node/" + txtName) ||
-                !grunt.file.exists(nodeSrc[0]) ||
-                (!nodeSrc[1] || !grunt.file.exists(nodeSrc[1]))) {
-            // curl-dir:<platform>
-            grunt.task.run([curlTask, "node-clean", setupTask]);
+        if (!grunt.file.exists("deps/node/" + txtName)) {
+            if (!missingDest) {
+                grunt.verbose.writeln("Found node download(s) " + nodeDest);
+                grunt.task.run(["node-clean", setupTask]);
+            } else {
+                grunt.log.writeln("Downloading " + nodeSrc.toString() + ". This may take a while...");
+                grunt.task.run([curlTask, "node-clean", setupTask]);
+            }
         } else {
             grunt.verbose.writeln("Skipping Node.js download. Found deps/node/" + txtName);
         }
@@ -224,10 +236,10 @@ module.exports = function (grunt) {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
         
-        var done    = this.async(),
-            nodeSrc = grunt.config("nodeSrc"),
-            exeFile = nodeSrc[0],
-            npmFile = nodeSrc[1];
+        var done        = this.async(),
+            nodeDest    = grunt.config("nodeDest"),
+            exeFile     = nodeDest[0],
+            npmFile     = nodeDest[1];
         
         grunt.file.mkdir("deps/node");
         
@@ -250,15 +262,16 @@ module.exports = function (grunt) {
         grunt.task.requires(["node"]);
         
         var done    = this.async(),
-            tarFile = grunt.config("nodeSrc")[0],
+            tarFile = grunt.config("nodeDest")[0],
             tarExec,
             tarName;
         
         grunt.verbose.writeln("Extracting " + tarFile);
         tarExec = exec("tar -xzf " + tarFile);
         
-        // remove .tar.gz extension
-        tarName = tarFile.substr(0, tarFile.lastIndexOf(".tar.gz"));
+        // remove downloads/, remove .tar.gz extension
+        tarName = tarFile.substr(tarFile.lastIndexOf("/") + 1);
+        tarName = tarName.substr(0, tarName.lastIndexOf(".tar.gz"));
         
         tarExec.then(function () {
             return rename(tarName, "deps/node");
@@ -285,20 +298,24 @@ module.exports = function (grunt) {
     // task: create-project
     grunt.registerTask("create-project", "Create Xcode/VisualStudio project", function () {
         var done = this.async(),
-            gypPromise;
+            promise;
         
         grunt.log.writeln("Building project files");
         
-        gypPromise = exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
+        promise = rename("appshell.gyp.txt", "appshell.gyp").then(function () {
+            return exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
+        });
         
-        if (process.platform === "darwin") {
-            gypPromise = gypPromise.then(function () {
+        if (promise.platform === "darwin") {
+            promise = promise.then(function () {
                 // FIXME port to JavaScript?
                 return exec("bash tasks/fix-xcode.sh");
             });
         }
         
-        gypPromise.then(function () {
+        promise.then(function () {
+            return rename("appshell.gyp", "appshell.gyp.txt");
+        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
