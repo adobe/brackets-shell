@@ -152,6 +152,24 @@ if (!appshell.app) {
     };
     
     /**
+     * Check whether a given path is from a network drive. 
+     *
+     * @param {string} path The path to check for a network drive.
+     * @param {function(err, isRemote)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (err, isRemote) where isRemote indicates whether the given path is a mapped network drive or not.
+     * 
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function IsNetworkDrive();
+    appshell.fs.isNetworkDrive = function (path, callback) {
+        var resultString = IsNetworkDrive(callback, path);
+    };
+     
+    /**
      * Reads the contents of a directory. 
      *
      * @param {string} path The path of the directory to read.

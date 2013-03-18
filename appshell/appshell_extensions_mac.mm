@@ -328,6 +328,31 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     return NO_ERROR;
 }
 
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+    NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
+    isRemote = false;
+    
+    if ([pathStr length] == 0) {
+        return ERR_INVALID_PARAMS;
+    }
+
+    // Detect remote drive
+    NSString *testPath = [pathStr copy];
+    while (![testPath isEqualToString:@"/"]) {
+        NSURL *testUrl = [NSURL fileURLWithPath:testPath];
+        NSNumber *isVolumeKey;
+        [testUrl getResourceValue:&isVolumeKey forKey:NSURLIsVolumeKey error:nil];
+        if ([isVolumeKey boolValue]) {
+            isRemote = true;
+            break;
+        }
+        testPath = [testPath stringByDeletingLastPathComponent];
+    }
+
+    return NO_ERROR;
+}
+
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
