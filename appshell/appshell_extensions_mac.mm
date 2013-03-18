@@ -331,7 +331,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
-	isRemote = false;
+    isRemote = false;
     
     if ([pathStr length] == 0) {
         return ERR_INVALID_PARAMS;
