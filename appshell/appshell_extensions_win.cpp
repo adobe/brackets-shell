@@ -520,6 +520,18 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     return NO_ERROR;
 }
 
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+    if (path.length() == 0) {
+        return ERR_INVALID_PARAMS;
+    }
+
+    ExtensionString drive = path.substr(0, path.find('/') + 1);
+    isRemote = GetDriveType(drive.c_str()) == DRIVE_REMOTE;
+
+    return NO_ERROR;
+}
+
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
     if (path.length() && path[path.length() - 1] != '/')
