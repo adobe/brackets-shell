@@ -48,7 +48,7 @@ module.exports = function (grunt) {
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
-        grunt.task.run("build-" + platform;
+        grunt.task.run("build-" + platform);
     });
     
     // task: build-mac
@@ -213,7 +213,7 @@ module.exports = function (grunt) {
     // task: installer
     grunt.registerTask("build-installer", "Build installer", function () {
         // TODO update brackets.config.json
-        grunt.task.run(["clean:installer-" + platform, "build-installer-" + platform];
+        grunt.task.run(["clean:installer-" + platform, "build-installer-" + platform]);
     });
     
     // task: installer-mac

@@ -156,10 +156,10 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1180.823",
+            "version"       : "3.1180.823"
         },
         "node": {
-            "version"       : "0.8.20",
+            "version"       : "0.8.20"
         },
         "npm": {
             "version"       : "1.2.11"
