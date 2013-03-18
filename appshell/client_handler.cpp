@@ -354,17 +354,18 @@ void ClientHandler::DispatchCloseToNextBrowser()
   // left (i.e. the first browser that was skipped), then re-start loop
   while (browser_window_map_.size() > 0)
   {
-    // Close the main window last. On Windows, closing the main window exits the
+    // Close the first (main) window last. On Windows, closing the main window exits the
     // application, so make sure all other windows get a crack at saving changes first.
-    bool skipMainWindow = (browser_window_map_.size() > 1);
+    bool skipFirstOne = (browser_window_map_.size() > 1);
 
     BrowserWindowMap::const_iterator i;
     for (i = browser_window_map_.begin(); i != browser_window_map_.end(); i++)
     {
-      CefRefPtr<CefBrowser> browser = i->second;
-      if (skipMainWindow && browser && browser->GetIdentifier() == m_BrowserId) {
+      if (skipFirstOne) {
+        skipFirstOne = false;
         continue;
       }
+      CefRefPtr<CefBrowser> browser = i->second;
 
       // Bring the window to the front before sending the command
       BringBrowserWindowToFront(browser);
