@@ -59,6 +59,9 @@ module.exports = function (grunt) {
                                "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
             }
         },
+        "clean": {
+            "installer"     : ["installer/mac/*.dmg", "installer/win/*.msi"]
+        },
         "copy": {
             "win": {
                 "files": [
@@ -162,6 +165,7 @@ module.exports = function (grunt) {
     grunt.loadTasks("tasks");
     grunt.loadNpmTasks("grunt-contrib-jshint");
     grunt.loadNpmTasks("grunt-contrib-copy");
+    grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-curl");
 
     grunt.registerTask("default", "full-build");
