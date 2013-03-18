@@ -235,8 +235,10 @@ module.exports = function (grunt) {
     // task: installer
     grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
+
+        common.deleteFile("installer/win/*.msi");
         
-        spawn(["ant -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
+        spawn(["cmd.exe /c ant.bat -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
