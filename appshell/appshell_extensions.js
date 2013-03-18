@@ -160,10 +160,7 @@ if (!appshell.app) {
      * 
      *        Possible error values:
      *          NO_ERROR
-     *          ERR_UNKNOWN
      *          ERR_INVALID_PARAMS
-     *          ERR_NOT_FOUND
-     *          ERR_CANT_READ
      *                 
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
