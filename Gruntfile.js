@@ -60,7 +60,11 @@ module.exports = function (grunt) {
             }
         },
         "clean": {
-            "installer"     : ["installer/mac/*.dmg", "installer/win/*.msi"]
+            "installer-mac"     : ["installer/mac/*.dmg"],
+            "installer-win"     : ["installer/win/*.msi"],
+            "staging-mac"       : ["installer/mac/staging"],
+            "staging-win"       : ["installer/win/staging"],
+            "www"               : ["<%= build.staging %>/www", "<%= build.staging %>/samples"]
         },
         "copy": {
             "win": {

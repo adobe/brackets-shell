@@ -30,7 +30,7 @@ module.exports = function (grunt) {
         q           = require("q"),
         spawn       = common.spawn,
         resolve     = common.resolve,
-        platform    = common.platform,
+        platform    = common.platform(),
         _           = grunt.util._;
     
     function getBracketsEnv() {
@@ -48,7 +48,7 @@ module.exports = function (grunt) {
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
-        grunt.task.run("build-" + platform());
+        grunt.task.run("build-" + platform;
     });
     
     // task: build-mac
@@ -166,14 +166,12 @@ module.exports = function (grunt) {
     // task: stage
     grunt.registerTask("stage", "Stage release files", function () {
         // stage platform-specific binaries
-        grunt.task.run("stage-" + platform());
+        grunt.task.run(["clean:staging-" + platform, "stage-" + platform]);
     });
     
     // task: stage-mac
     grunt.registerTask("stage-mac", "Stage mac executable files", function () {
         var done = this.async();
-        
-        common.deleteFile("installer/mac/staging");
         
         // this should have been a grunt-contrib-copy task "copy:mac", but something goes wrong when creating the .app folder
         spawn([
@@ -195,9 +193,7 @@ module.exports = function (grunt) {
     
     // task: package
     grunt.registerTask("package", "Package www files", function () {
-        common.deleteFile(grunt.config("build.staging") + "/www");
-        common.deleteFile(grunt.config("build.staging") + "/samples");
-        grunt.task.run(["copy:www", "copy:samples", "write-config"]);
+        grunt.task.run(["clean:www","copy:www", "copy:samples", "write-config"]);
     });
     
     // task: write-config
@@ -217,7 +213,7 @@ module.exports = function (grunt) {
     // task: installer
     grunt.registerTask("build-installer", "Build installer", function () {
         // TODO update brackets.config.json
-        grunt.task.run("build-installer-" + platform());
+        grunt.task.run(["clean:installer-" + platform, "build-installer-" + platform];
     });
     
     // task: installer-mac
@@ -235,8 +231,6 @@ module.exports = function (grunt) {
     // task: installer
     grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
-
-        common.deleteFile("installer/win/*.msi");
         
         spawn(["cmd.exe /c ant.bat -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
             done();
