@@ -20,26 +20,62 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*global module, require*/
 /*jslint regexp:true*/
+/*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
 
     grunt.initConfig({
+        "curl-dir": {
+            /* linux not supported yet */
+            /*
+            linux: {
+                dest        : "<%= cef_zip %>",
+                src         : "https://docs.google.com/file/d/0B7as0diokeHxeTNqZFIyNWZKSWM/edit?usp=sharing"
+            },
+            */
+            /* mac */
+            cef_darwin: {
+                dest        : "downloads/",
+                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_macosx.zip"
+            },
+            node_darwin: {
+                dest        : "downloads/",
+                src         : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node_version %>-darwin-x86.tar.gz"
+            },
+            /* win */
+            cef_win32: {
+                dest        : "downloads/",
+                src         : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef_version %>_windows.zip"
+            },
+            node_win32: {
+                dest        : "downloads/",
+                src         : ["http://nodejs.org/dist/v<%= node_version %>/node.exe",
+                               "http://nodejs.org/dist/npm/npm-<%= npm_version %>.zip"]
+            }
+        },
+        unzip: {
+            cef: {
+                src: "<%= cef_zip %>",
+                dest: "deps/cef"
+            }
+        },
         jshint: {
-            all: [
-                "Gruntfile.js",
-                "tasks/**/*.js"
-            ],
+            all             : ["Gruntfile.js", "tasks/**/*.js"],
             /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
             options: {
-                jshintrc: ".jshintrc"
+                jshintrc    : ".jshintrc"
             }
-        }
+        },
+        cef_zip             : "cef.zip",
+        cef_version         : "3.1180.823",
+        node_version        : "0.8.20",
+        npm_version         : "1.2.11"
     });
 
     grunt.loadTasks("tasks");
     grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-curl");
 
     grunt.registerTask("default", "jshint");
 };
