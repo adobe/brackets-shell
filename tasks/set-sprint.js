@@ -25,11 +25,8 @@
 module.exports = function (grunt) {
     "use strict";
     
-    var guid = require("guid");
-    
-    function writeJSON(path, obj) {
-        grunt.file.write(path, JSON.stringify(obj, null, "    "));
-    }
+    var guid = require("guid"),
+        common = require("./common")(grunt);
 
     function safeReplace(content, regexp, replacement) {
         var newContent = content.replace(regexp, replacement);
@@ -67,7 +64,7 @@ module.exports = function (grunt) {
             /([0-9]+\.)([0-9]+)([\.\-a-zA-Z0-9]*)?/,
             "$1" + sprint + "$3"
         );
-        writeJSON(packageJsonPath, packageJSON);
+        common.writeJSON(packageJsonPath, packageJSON);
         
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.sprint.number`
         text = grunt.file.read(winInstallerBuildXmlPath);

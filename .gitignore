@@ -4,6 +4,7 @@ xcodebuild
 xcodebuild/*
 /node_modules
 /npm-debug.log
+/downloads
 
 appshell.xcodeproj
 Brackets.vcxproj
