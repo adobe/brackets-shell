@@ -173,5 +173,5 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-curl");
 
-    grunt.registerTask("default", "full-build");
+    grunt.registerTask("default", ["setup", "build"]);
 };
