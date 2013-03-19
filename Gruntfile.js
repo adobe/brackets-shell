@@ -46,7 +46,7 @@ module.exports = function (grunt) {
             },
             "node-mac": {
                 "dest"      : "downloads/",
-                "src"       : "http://nodejs.org/dist/v<%= node_version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
             },
             /* win */
             "cef-win": {
@@ -60,6 +60,7 @@ module.exports = function (grunt) {
             }
         },
         "clean": {
+            "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
             "staging-mac"       : ["installer/mac/staging"],
