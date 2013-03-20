@@ -221,13 +221,21 @@ class ClientHandler : public CefClient,
   // Create all of RequestDelegateSet objects.
   static void CreateRequestDelegates(RequestDelegateSet& delegates);
 
-  // The child browser window
-  CefRefPtr<CefBrowser> m_Browser;
-
   // The main frame window handle
   CefWindowHandle m_MainHwnd;
 
-  // The child browser id
+  // The child browser window. This is only set for the FIRST client window.
+  // The browser id for m_Browser is stored in m_BrowserId.
+  //
+  // On Windows, the FIRST client window is the main window that must be closed last.
+  //
+  // On Mac, the FIRST client window does not necessarily need to be closed last.
+  // A lot of the code seems to unnecessarily enforce that only certain operations will
+  // work if m_Browser/m_BrowserId is set. TODO: fix this.
+  CefRefPtr<CefBrowser> m_Browser;
+
+  // The child browser id of m_Browser. This is also only set for FIRST client window.
+  // See comments above for m_Browser.
   int m_BrowserId;
 
   // The edit window handle
