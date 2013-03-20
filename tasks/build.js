@@ -89,7 +89,7 @@ module.exports = function (grunt) {
         repo = resolve(repo);
         
         if (this.data.branch) {
-            grunt.verbose.writeln("Updating repo " + this.target + " at " + repo);
+            grunt.log.writeln("Updating repo " + this.target + " at " + repo + " to branch " + this.data.branch);
             
             var done = this.async(),
                 promise = spawn([

@@ -149,11 +149,11 @@ module.exports = function (grunt) {
         "git": {
             "www": {
                 "repo"      : "../brackets",    // TODO user configurable?
-                "branch"    : ""
+                "branch"    : grunt.option("www") || ""
             },
             "shell": {
                 "repo"      : ".",
-                "branch"    : ""
+                "branch"    : grunt.option("shell") || ""
             }
         },
         "cef": {
