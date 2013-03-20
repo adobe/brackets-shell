@@ -89,7 +89,7 @@ module.exports = function (grunt) {
         repo = resolve(repo);
         
         if (this.data.branch) {
-            grunt.verbose.writeln("Updating repo " + this.target + " at " + repo);
+            grunt.log.writeln("Updating repo " + this.target + " at " + repo + " to branch " + this.data.branch);
             
             var done = this.async(),
                 promise = spawn([
@@ -132,9 +132,9 @@ module.exports = function (grunt) {
         var done = this.async(),
             wwwRepo = resolve(grunt.config("git.www.repo"));
         
-        spawn(["git log --oneline"], { cwd: wwwRepo })
+        spawn(["git log --format=%h"], { cwd: wwwRepo })
             .then(function (result) {
-                var buildNum = result.stdout.trim().split("\n").length;
+                var buildNum = result.stdout.toString().match(/[0-9a-f]\n/g).length;
                 
                 grunt.log.writeln("Build number " + buildNum);
                 grunt.config("build.build-number", buildNum);
