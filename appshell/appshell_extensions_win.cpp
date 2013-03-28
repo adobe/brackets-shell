@@ -379,8 +379,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     if (cbData.numberOfFoundWindows == 0) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
     } else if (liveBrowserMgr->GetCloseCallback()) {
-        // set a timeout for up to 3 minutes to close the browser 
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+        // set a timeout for up to 10 seconds to close the browser
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
 }
 
