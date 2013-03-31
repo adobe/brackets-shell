@@ -604,11 +604,7 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 int32 ShowFolderInOSWindow(ExtensionString pathname)
 {
-    NSString* scriptString = [NSString stringWithFormat: @"activate application \"Finder\"\n tell application \"Finder\" to open posix file \"%s\"", pathname.c_str()];
-    NSAppleScript* script = [[NSAppleScript alloc] initWithSource: scriptString];
-    NSDictionary* errorDict = nil;
-    [script executeAndReturnError: &errorDict];
-    [script release];
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:[NSArray arrayWithObject: [NSURL fileURLWithPath: pathname.c_str()]]];
     return NO_ERROR;
 }
 
