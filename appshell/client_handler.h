@@ -238,7 +238,10 @@ class ClientHandler : public CefClient,
   CefWindowHandle m_ForwardHwnd;
   CefWindowHandle m_StopHwnd;
   CefWindowHandle m_ReloadHwnd;
-                          
+  
+  // Used for identifying Jasmine test window
+  bool m_isTestWindow;
+
   // Support for logging.
   std::string m_LogFile;
 

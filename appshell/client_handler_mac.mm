@@ -22,6 +22,9 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   CefBrowserSettings& settings) {
   REQUIRE_UI_THREAD();
 
+  std::string urlStr = url;
+  m_isTestWindow = (urlStr.find("test/SpecRunner") != std::string::npos);
+
   return false;
 }
 
@@ -254,7 +257,7 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     //+ Communicating between the shell and JS is async, so there's no easy way for the JS to decided what to do
     //    in the middle of the key event, unless we introduce promises there, but that is a lot of work now
     
-    if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
+    if(!m_isTestWindow && [[NSApp mainMenu] performKeyEquivalent: os_event]) {
         return true;
     }
     return false;
