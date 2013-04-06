@@ -28,10 +28,6 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefString& url,
                                   CefRefPtr<CefClient>& client,
                                   CefBrowserSettings& settings) {
-
-  std::string urlStr = url;
-  m_isTestWindow = (urlStr.find("test/SpecRunner") != std::string::npos);
-
   return false;
 }
 
@@ -259,7 +255,13 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                     const CefKeyEvent& event,
                                     CefEventHandle os_event,
                                     bool* is_keyboard_shortcut) {
-    if (!m_isTestWindow && ::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event)) {
+
+    // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
+    if (!GetMenu((HWND)getMenuParent(browser))) {
+        return false;
+    }
+
+    if (::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event)) {
         return true;
     }
 
