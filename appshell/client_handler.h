@@ -246,7 +246,7 @@ class ClientHandler : public CefClient,
   CefWindowHandle m_ForwardHwnd;
   CefWindowHandle m_StopHwnd;
   CefWindowHandle m_ReloadHwnd;
-                          
+  
   // Support for logging.
   std::string m_LogFile;
 

@@ -255,6 +255,12 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                     const CefKeyEvent& event,
                                     CefEventHandle os_event,
                                     bool* is_keyboard_shortcut) {
+
+    // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
+    if (!GetMenu((HWND)getMenuParent(browser))) {
+        return false;
+    }
+
     if (::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event)) {
         return true;
     }
