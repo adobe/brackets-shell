@@ -331,7 +331,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     std::wstring args = appPath;
 
     if (enableRemoteDebugging)
-        args += L" --remote-debugging-port=9222 --user-data-dir=brackets-profile --no-first-run --allow-file-access-from-files ";
+        args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
     else
         args += L" ";
     args += argURL;
@@ -379,8 +379,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     if (cbData.numberOfFoundWindows == 0) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
     } else if (liveBrowserMgr->GetCloseCallback()) {
-        // set a timeout for up to 3 minutes to close the browser 
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+        // set a timeout for up to 10 seconds to close the browser
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
 }
 
@@ -516,6 +516,18 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
             }
         }
     }
+
+    return NO_ERROR;
+}
+
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+    if (path.length() == 0) {
+        return ERR_INVALID_PARAMS;
+    }
+
+    ExtensionString drive = path.substr(0, path.find('/') + 1);
+    isRemote = GetDriveType(drive.c_str()) == DRIVE_REMOTE;
 
     return NO_ERROR;
 }
