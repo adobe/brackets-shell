@@ -367,6 +367,9 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // during cleanup (ie, a window close from javascript).
   [mainWnd setReleasedWhenClosed:NO];
 
+  NSSize minSize = NSMakeSize (WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
+  [mainWnd setMinSize: minSize];
+    
   NSView* contentView = [mainWnd contentView];
 
 #ifdef SHOW_TOOLBAR_UI

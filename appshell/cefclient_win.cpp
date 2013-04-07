@@ -822,6 +822,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       }
       break;
 
+    case WM_GETMINMAXINFO:
+      // set the MINMAXINFO structure pointer
+      LPMINMAXINFO lpMinMaxInfo;
+      lpMinMaxInfo = (MINMAXINFO FAR *) lParam;
+      lpMinMaxInfo->ptMinTrackSize.x = WINDOW_MIN_WIDTH;
+      lpMinMaxInfo->ptMinTrackSize.y = WINDOW_MIN_HEIGHT;
+      break;
+
     case WM_ERASEBKGND:
       if (g_handler.get() && g_handler->GetBrowser()) {
         CefWindowHandle hwnd =

@@ -50,6 +50,9 @@
 
 #endif
 
+#define WINDOW_MIN_WIDTH 450
+#define WINDOW_MIN_HEIGHT 300
+
 #define REMOTE_DEBUGGING_PORT 9234
 
 // Un-comment this line to show the toolbar UI at the top of the appshell window
