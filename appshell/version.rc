@@ -32,7 +32,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION    	0,23,0,0
+FILEVERSION    	0,24,0,0
 /* PRODUCTVERSION 	1,0,0,0 */
 FILEOS         	VOS__WINDOWS32
 FILETYPE       	VFT_APP
@@ -43,7 +43,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "brackets.io\0"
             VALUE "FileDescription",  "\0"
-            VALUE "FileVersion",      "Sprint 23\0"
+            VALUE "FileVersion",      "Sprint 24\0"
             VALUE "ProductName",      APP_NAME "\0"
             VALUE "ProductVersion",   "\0"
             VALUE "LegalCopyright",   "(c) 2012 Adobe Systems, Inc.\0"
