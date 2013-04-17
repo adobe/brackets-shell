@@ -68,20 +68,16 @@
 
 // Accessor for process state
 -(int) getState {
-    REQUIRE_UI_THREAD();
     return state;
 }
 
 // Mutator for process state
 -(void) setState:(int)newState {
-    REQUIRE_UI_THREAD();
     state = newState;
 }
 
 // Starts a new node process and registers appropriate handlers
 -(bool) start {
-    REQUIRE_UI_THREAD();
-    
     state = BRACKETS_NODE_PORT_NOT_YET_SET;
     
     lastStartTime = CFAbsoluteTimeGetCurrent();
@@ -134,9 +130,6 @@
 
 // Stops the currently-running node process, and possibly restarts.
 -(void) stop {
-    
-    REQUIRE_UI_THREAD();
-    
     // Assume we've failed. We might restart, but until we do, we don't want to send
     // any messages to the task.
     state = BRACKETS_NODE_FAILED;
@@ -204,9 +197,7 @@
 }
 
 // Sends data to the current node process
--(void) sendDataToTask: (NSString *)dataString {
-    REQUIRE_UI_THREAD();
-    
+-(void) sendDataToTask: (NSString *)dataString {    
     if (state > 0) {
         const char * utf8DataString = [dataString UTF8String];
         NSData *data = [[[NSData alloc] initWithBytes:utf8DataString length:strlen(utf8DataString)] autorelease];
