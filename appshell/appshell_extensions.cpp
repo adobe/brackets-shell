@@ -580,7 +580,21 @@ public:
                 responseArgs->SetString(2, parentId);
                 responseArgs->SetInt(3, index);
             }
-        } else {
+        } else if (message_name == "Drag") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            // if (argList->GetSize() != 2 ||
+            //     argList->GetType(1) != VTYPE_STRING) {
+            //     error = ERR_INVALID_PARAMS;
+            // }
+            
+            if (error == NO_ERROR) {
+                
+                Drag(browser);
+            }
+        } 
+        else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }
