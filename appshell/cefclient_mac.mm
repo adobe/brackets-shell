@@ -480,10 +480,29 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     return NSTerminateNow;
 }
 
+// Find a window that can handle an openfile command.
+static NSWindow* findTargetWindow(NSApplication* theApplication) {
+  NSWindow* result = [theApplication keyWindow];
+  if (!result) {
+    result = [theApplication mainWindow];
+    if (!result) {
+      // the app might be inactive or hidden. Pick the first window on the window list.
+      NSArray* windows = [theApplication windows];
+      if ([windows count] >= 1) {
+        result = [windows objectAtIndex: 0];
+      }
+    }
+  }
+  return result;
+}
+
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
   if (g_handler) {
-    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([NSApp keyWindow]);
-    g_handler->SendOpenFileCommand(browser, CefString([filename UTF8String]));
+    NSWindow* targetWindow = findTargetWindow(NSApp);
+    if (targetWindow) {
+      CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
+      g_handler->SendOpenFileCommand(browser, CefString([filename UTF8String]));
+    }
   } else {
     // App is just starting up. Save the filename so we can open it later.
     if (!pendingOpenFiles) {
@@ -496,9 +515,12 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames {
   if (g_handler) {
-    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow([NSApp keyWindow]);
-    for (NSUInteger i = 0; i < [filenames count]; i++) {
-      g_handler->SendOpenFileCommand(browser, CefString([[filenames objectAtIndex:i] UTF8String]));
+    NSWindow* targetWindow = findTargetWindow(NSApp);
+    if (targetWindow) {
+      CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
+      for (NSUInteger i = 0; i < [filenames count]; i++) {
+        g_handler->SendOpenFileCommand(browser, CefString([[filenames objectAtIndex:i] UTF8String]));
+      }
     }
   } else {
     // App is just starting up. Save the filenames so we can open them later.
