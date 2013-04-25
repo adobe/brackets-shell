@@ -481,7 +481,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 }
 
 // Find a window that can handle an openfile command.
-static NSWindow* findTargetWindow(NSApplication* theApplication) {
+- (NSWindow *) findTargetWindow:(NSApplication *)theApplication {
   NSWindow* result = [theApplication keyWindow];
   if (!result) {
     result = [theApplication mainWindow];
@@ -498,7 +498,7 @@ static NSWindow* findTargetWindow(NSApplication* theApplication) {
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
   if (g_handler) {
-    NSWindow* targetWindow = findTargetWindow(NSApp);
+    NSWindow* targetWindow = [self findTargetWindow:theApplication];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
       g_handler->SendOpenFileCommand(browser, CefString([filename UTF8String]));
@@ -515,7 +515,7 @@ static NSWindow* findTargetWindow(NSApplication* theApplication) {
 
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames {
   if (g_handler) {
-    NSWindow* targetWindow = findTargetWindow(NSApp);
+    NSWindow* targetWindow = [self findTargetWindow:theApplication];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
       for (NSUInteger i = 0; i < [filenames count]; i++) {
