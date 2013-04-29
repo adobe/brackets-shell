@@ -27,7 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
-ExtensionString gPendingFilesToOpen;
+extern NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -611,8 +611,21 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
 {
-    files = gPendingFilesToOpen;
-    gPendingFilesToOpen = "[]";
+    if (pendingOpenFiles) {
+        NSUInteger count = [pendingOpenFiles count];
+        files = "[";
+        for (NSUInteger i = 0; i < count; i++) {
+          NSString* filename = [pendingOpenFiles objectAtIndex:i];
+      
+          files += ("\"" + std::string([filename UTF8String]) + "\"");
+          if (i < count - 1)
+            files += ",";
+        }
+        files += "]";
+        pendingOpenFiles = NULL; // TODO should this be dealloced?
+    } else {
+        files = "[]";
+    }
     return NO_ERROR;
 }
 

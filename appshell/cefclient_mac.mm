@@ -47,9 +47,12 @@ const int kWindowHeight = 700;
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
 
-// Files passed to the app at startup
-static NSMutableArray* pendingOpenFiles;
-extern ExtensionString gPendingFilesToOpen;
+// A list of files that will be opened by the app during startup.
+// If this list is non-NULL, it means the app is not yet ready to open any files,
+// so if you want to open a file you must add it to this list.
+// If the list is NULL, that means that startup has finished,
+// so if you want to open a file you need to call SendOpenFileCommand.
+NSMutableArray* pendingOpenFiles;
 
 // Provide the CefAppProtocol implementation required by CEF.
 @interface ClientApplication : NSApplication<CefAppProtocol> {
@@ -297,6 +300,16 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
 @implementation ClientAppDelegate
 
+- (id) init {
+  [super init];  
+  // Register our handler for the "handleOpenFileEvent" (a.k.a. OpFl) apple event.
+  [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
+                                                     andSelector:@selector(handleOpenFileEvent:withReplyEvent:)
+                                                   forEventClass:'aevt'
+                                                      andEventID:'OpFl'];
+  return self;
+}
+
 // Create the application on the UI thread.
 - (void)createApp:(id)object {
   [NSApplication sharedApplication];
@@ -430,24 +443,16 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
  
-  if (pendingOpenFiles) {
-    NSUInteger count = [pendingOpenFiles count];
-    gPendingFilesToOpen = "[";
-    for (NSUInteger i = 0; i < count; i++) {
-      NSString* filename = [pendingOpenFiles objectAtIndex:i];
-          
-      gPendingFilesToOpen += ("\"" + std::string([filename UTF8String]) + "\"");
-      if (i < count - 1)
-        gPendingFilesToOpen += ",";
-    }
-    gPendingFilesToOpen += "]";
-  } else {
-    gPendingFilesToOpen = "[]";
-  }
-  
   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
+}
+
+// Handle the Openfile apple event. This is a custom apple event similar to the regular
+// Open event, but can handle file paths in the form "path[:lineNumber[:columnNumber]]".
+- (void)handleOpenFileEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+  NSAppleEventDescriptor* filePathDescriptor = [event paramDescriptorForKeyword:'file'];
+  [self application:NSApp openFile:[filePathDescriptor stringValue]];
 }
 
 // Sent by the default notification center immediately before the application
@@ -497,7 +502,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
-  if (g_handler) {
+  if (!pendingOpenFiles) {
     NSWindow* targetWindow = [self findTargetWindow:theApplication];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
@@ -505,16 +510,13 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     }
   } else {
     // App is just starting up. Save the filename so we can open it later.
-    if (!pendingOpenFiles) {
-      pendingOpenFiles = [[NSMutableArray alloc] init];
-      [pendingOpenFiles addObject:filename];
-    }
+    [pendingOpenFiles addObject:filename];
   }
   return YES;
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames {
-  if (g_handler) {
+  if (!pendingOpenFiles) {
     NSWindow* targetWindow = [self findTargetWindow:theApplication];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
@@ -524,7 +526,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     }
   } else {
     // App is just starting up. Save the filenames so we can open them later.
-    pendingOpenFiles = [[NSMutableArray alloc] init];
     for (NSUInteger i = 0; i < [filenames count]; i++) {
       [pendingOpenFiles addObject:[filenames objectAtIndex:i]];
     }
@@ -538,7 +539,7 @@ int main(int argc, char* argv[]) {
   // Initialize the AutoRelease pool.
   g_autopool = [[NSAutoreleasePool alloc] init];
 
-  pendingOpenFiles = nil;
+  pendingOpenFiles = [[NSMutableArray alloc] init];
   
   CefMainArgs main_args(argc, argv);
  
