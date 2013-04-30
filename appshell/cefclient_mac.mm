@@ -49,7 +49,7 @@ static NSAutoreleasePool* g_autopool = nil;
 
 // Files passed to the app at startup
 static NSMutableArray* pendingOpenFiles;
-ExtensionString gPendingFilesToOpen;
+extern ExtensionString gPendingFilesToOpen;
 
 // Provide the CefAppProtocol implementation required by CEF.
 @interface ClientApplication : NSApplication<CefAppProtocol> {

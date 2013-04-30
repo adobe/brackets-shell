@@ -27,7 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
-extern ExtensionString gPendingFilesToOpen;
+ExtensionString gPendingFilesToOpen;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
