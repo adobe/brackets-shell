@@ -332,7 +332,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
     if (enableRemoteDebugging) {
         std::wstring profilePath(ClientApp::AppGetSupportDirectory());
-        profilePath += L"\\brackets-profile";
+        profilePath += L"\\live-dev-profile";
         args += L" --user-data-dir=\"";
         args += profilePath;
         args += L"\" --no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222 ";
