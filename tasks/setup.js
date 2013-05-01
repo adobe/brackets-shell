@@ -303,6 +303,8 @@ module.exports = function (grunt) {
         
         grunt.log.writeln("Building project files");
         
+        // this is a hack to fix issues with node-gyp picking up this file during 'npm install'
+        // see https://github.com/TooTallNate/node-gyp/issues/216
         promise = rename("appshell.gyp.txt", "appshell.gyp").then(function () {
             return exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
         });
