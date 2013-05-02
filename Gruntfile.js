@@ -137,7 +137,6 @@ module.exports = function (grunt) {
         },
         "jshint": {
             "all"           : ["Gruntfile.js", "tasks/**/*.js"],
-            /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
             "options": {
                 "jshintrc"  : ".jshintrc"
             }
