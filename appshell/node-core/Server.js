@@ -247,7 +247,7 @@ maxerr: 50, node: true */
             } else {
                 Logger.info("[Server] serving on port", servers.port);
                 _httpServer = servers.httpServer;
-                _wsServer = servers._wsServer;
+                _wsServer = servers.wsServer;
                 // tell the parent process what port we're on
                 sendCommandToParentProcess("port", servers.port);
             }
