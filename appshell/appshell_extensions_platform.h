@@ -125,4 +125,4 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
 
-void Drag(CefRefPtr<CefBrowser> browser);
+void DragWindow(CefRefPtr<CefBrowser> browser);

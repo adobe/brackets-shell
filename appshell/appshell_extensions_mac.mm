@@ -1002,7 +1002,7 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     return NO_ERROR;
 }
 
-void Drag(CefRefPtr<CefBrowser> browser)
+void DragWindow(CefRefPtr<CefBrowser> browser)
 {
     NSWindow* win = [browser->GetHost()->GetWindowHandle() window];
     NSPoint origin = [win frame].origin;
@@ -1012,13 +1012,13 @@ void Drag(CefRefPtr<CefBrowser> browser)
     origin.y -= current.y;
 
     while (YES) {
-      NSEvent* event = [win nextEventMatchingMask:(NSLeftMouseDraggedMask | NSLeftMouseUpMask)];
-      if ([event type] == NSLeftMouseUp) break;
-      current = [win convertBaseToScreen:[event locationInWindow]];
-      offset = origin;
-      offset.x += current.x;
-      offset.y += current.y;
-      [win setFrameOrigin:offset];
-      [win displayIfNeeded];
+        NSEvent* event = [win nextEventMatchingMask:(NSLeftMouseDraggedMask | NSLeftMouseUpMask)];
+        if ([event type] == NSLeftMouseUp) break;
+        current = [win convertBaseToScreen:[event locationInWindow]];
+        offset = origin;
+        offset.x += current.x;
+        offset.y += current.y;
+        [win setFrameOrigin:offset];
+        [win displayIfNeeded];
     }
 }
