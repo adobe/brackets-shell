@@ -689,16 +689,13 @@ if (!appshell.app) {
     };
 
     /**
-     * Open the extensions folder in an OS file window.
-     *
-     * @param {string} appURL Not used
-     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     * Drag the main window
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
-    native function Drag();
-    appshell.app.drag = function () {
-        Drag();
+    native function DragWindow();
+    appshell.app.dragWindow = function () {
+        DragWindow();
     };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
