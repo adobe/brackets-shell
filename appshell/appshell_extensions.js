@@ -687,6 +687,16 @@ if (!appshell.app) {
     appshell.app.showExtensionsFolder = function (appURL, callback) {
         appshell.app.showOSFolder(GetApplicationSupportDirectory() + "/extensions", callback);
     };
+
+    /**
+     * Drag the main window
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function DragWindow();
+    appshell.app.dragWindow = function () {
+        DragWindow();
+    };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
