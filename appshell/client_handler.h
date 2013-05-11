@@ -23,6 +23,7 @@ class ClientHandler : public CefClient,
                       public CefLoadHandler,
                       public CefRequestHandler,
                       public CefDisplayHandler,
+                      public CefKeyboardHandler,
                       public CefGeolocationHandler,
                       public CefContextMenuHandler {
  public:
@@ -90,6 +91,10 @@ class ClientHandler : public CefClient,
                                         CefRefPtr<CefProcessMessage> message)
                                         OVERRIDE;
 
+  virtual CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() OVERRIDE {
+    return this;
+  } 
+
   // CefLifeSpanHandler methods
   virtual bool OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                              const CefPopupFeatures& popupFeatures,
@@ -152,6 +157,16 @@ class ClientHandler : public CefClient,
                                     int command_id,
                                     EventFlags event_flags) OVERRIDE;
 
+  // CefKeyboardHandler methods
+  virtual bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                    const CefKeyEvent& event,
+                                    CefEventHandle os_event,
+                                    bool* is_keyboard_shortcut) OVERRIDE;
+
+  virtual bool OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                                    const CefKeyEvent& event,
+                                    CefEventHandle os_event) OVERRIDE;
+
   void SetMainHwnd(CefWindowHandle hwnd);
   CefWindowHandle GetMainHwnd() { return m_MainHwnd; }
   void SetEditHwnd(CefWindowHandle hwnd);
@@ -185,6 +200,7 @@ class ClientHandler : public CefClient,
   // If callback is specified, it will be called with the result from the command.
   bool SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& command, CefRefPtr<CommandCallback> callback = NULL);
   
+  void SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString& filename);
   void DispatchCloseToNextBrowser();
   void AbortQuit();
   static CefRefPtr<CefBrowser> GetBrowserForNativeWindow(void* window);
@@ -205,13 +221,21 @@ class ClientHandler : public CefClient,
   // Create all of RequestDelegateSet objects.
   static void CreateRequestDelegates(RequestDelegateSet& delegates);
 
-  // The child browser window
-  CefRefPtr<CefBrowser> m_Browser;
-
   // The main frame window handle
   CefWindowHandle m_MainHwnd;
 
-  // The child browser id
+  // The child browser window. This is only set for the FIRST client window.
+  // The browser id for m_Browser is stored in m_BrowserId.
+  //
+  // On Windows, the FIRST client window is the main window that must be closed last.
+  //
+  // On Mac, the FIRST client window does not necessarily need to be closed last.
+  // A lot of the code seems to unnecessarily enforce that only certain operations will
+  // work if m_Browser/m_BrowserId is set. TODO: fix this.
+  CefRefPtr<CefBrowser> m_Browser;
+
+  // The child browser id of m_Browser. This is also only set for FIRST client window.
+  // See comments above for m_Browser.
   int m_BrowserId;
 
   // The edit window handle

@@ -17,6 +17,7 @@
 #include "client_switches.h"
 #include "string_util.h"
 #include "util.h"
+#include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
 CefRefPtr<CefCommandLine> g_command_line;
@@ -123,7 +124,11 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   }
     
   // Enable dev tools
-  settings.remote_debugging_port = 9234;
+  settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
+  
+  // Set product version, which gets added to the User Agent string
+  CefString(&settings.product_version) = AppGetProductVersionString();
+
 }
 
 // Returns the application browser settings based on command line arguments.

@@ -340,24 +340,31 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
   return browser->SendProcessMessage(PID_RENDERER, message);
 }
 
+void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &filename) {
+  std::string filenameStr(filename);
+  // FIXME: Use SendJSCommand once it supports parameters
+  std::string cmd = "require('command/CommandManager').execute('file.addToWorkingSet',{fullPath:'" + filenameStr + "'})";
+  browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
+                                browser->GetMainFrame()->GetURL(), 0);
+}
+
 void ClientHandler::DispatchCloseToNextBrowser()
 {
   // If the inner loop iterates thru all browsers and there's still at least one
   // left (i.e. the first browser that was skipped), then re-start loop
   while (browser_window_map_.size() > 0)
   {
-    // Close the first (main) window last. On Windows, closing the main window exits the
+    // Close the main window last. On Windows, closing the main window exits the
     // application, so make sure all other windows get a crack at saving changes first.
-    bool skipFirstOne = (browser_window_map_.size() > 1);
+    bool skipMainWindow = (browser_window_map_.size() > 1);
 
     BrowserWindowMap::const_iterator i;
     for (i = browser_window_map_.begin(); i != browser_window_map_.end(); i++)
     {
-      if (skipFirstOne) {
-        skipFirstOne = false;
+      CefRefPtr<CefBrowser> browser = i->second;
+      if (skipMainWindow && browser && browser->GetIdentifier() == m_BrowserId) {
         continue;
       }
-      CefRefPtr<CefBrowser> browser = i->second;
 
       // Bring the window to the front before sending the command
       BringBrowserWindowToFront(browser);

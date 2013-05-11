@@ -23,6 +23,8 @@
 
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
+#include "native_menu_model.h"
+#include "appshell_node_process.h"
 
 namespace appshell_extensions {
 
@@ -131,6 +133,23 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
+        } else if (message_name == "IsNetworkDrive") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - directory path
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            bool isRemote = false;
+            if (error == NO_ERROR) {
+                ExtensionString path = argList->GetString(1);                
+                error = IsNetworkDrive(path, isRemote);
+            }
+            
+            // Set response args for this function
+            responseArgs->SetBool(2, isRemote);
         } else if (message_name == "ReadDir") {
             // Parameters:
             //  0: int32 - callback id
@@ -308,6 +327,25 @@ public:
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
             OpenLiveBrowser(url, false);
 
+        } else if (message_name == "GetNodeState") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                int32 port = 0;
+                int32 portOrErr = getNodeState();
+                if (portOrErr < 0) { // there is an error
+                    error = portOrErr;
+                } else {
+                    port = portOrErr;
+                    error = NO_ERROR;
+                }
+                responseArgs->SetInt(2, port);
+            }
+            
         } else if (message_name == "QuitApplication") {
             // Parameters - none
 
@@ -349,26 +387,250 @@ public:
                 ExtensionString path = argList->GetString(1);
                 error = ShowFolderInOSWindow(path);
             }
-        } else {
+        } else if (message_name == "GetPendingFilesToOpen") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString files;
+                error = GetPendingFilesToOpen(files);
+                responseArgs->SetString(2, files.c_str());
+            }
+        } else if (message_name == "AddMenu") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menuTitle to display
+            //  2: string - menu/command ID
+            //  3: string - position - first, last, before, after
+            //  4: string - relativeID - ID of other element relative to which this should be positioned (for position before and after)
+            if (argList->GetSize() != 5 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING ||
+                argList->GetType(4) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString menuTitle = argList->GetString(1);
+                ExtensionString command = CefString(argList->GetString(2));
+                ExtensionString position = CefString(argList->GetString(3));
+                ExtensionString relativeId = CefString(argList->GetString(4));
+                
+                error = AddMenu(browser, menuTitle, command, position, relativeId);
+                // No additional response args for this function
+            }
+        } else if (message_name == "AddMenuItem") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - parent menu this is part of
+            //  2: string - menuTitle to display
+            //  3: string - command ID
+            //  4: string - keyboard shortcut
+            //  5: string - display string
+            //  6: string - position - first, last, before, after
+            //  7: string - relativeID - ID of other element relative to which this should be positioned (for position before and after)
+            if (argList->GetSize() != 8 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING ||
+                argList->GetType(4) != VTYPE_STRING ||
+                argList->GetType(5) != VTYPE_STRING ||
+                argList->GetType(6) != VTYPE_STRING ||
+                argList->GetType(7) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString parentCommand = argList->GetString(1);
+                ExtensionString menuTitle = argList->GetString(2);
+                ExtensionString command = argList->GetString(3);
+                ExtensionString key = argList->GetString(4);
+                ExtensionString displayStr = argList->GetString(5);
+                ExtensionString position = argList->GetString(6);
+                ExtensionString relativeId = argList->GetString(7);
+
+                error = AddMenuItem(browser, parentCommand, menuTitle, command, key, displayStr, position, relativeId);
+                // No additional response args for this function
+            }
+        } else if (message_name == "RemoveMenu") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId;
+                commandId = argList->GetString(1);
+                error = RemoveMenu(browser, commandId);
+            }
+            // No response args for this function
+        } else if (message_name == "RemoveMenuItem") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId;
+                commandId = argList->GetString(1);
+                error = RemoveMenuItem(browser, commandId);
+            }
+            // No response args for this function
+        } else if (message_name == "GetMenuItemState") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId = CefString(argList->GetString(1));
+                ExtensionString menuTitle;
+                bool checked, enabled;
+                int index;
+                error = GetMenuItemState(browser, commandId, enabled, checked, index);
+                responseArgs->SetBool(2, enabled);
+                responseArgs->SetBool(3, checked);
+                responseArgs->SetInt(4, index);
+            }
+        }  else if(message_name == "SetMenuItemState") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - commandName
+            //  2: bool - enabled
+            //  3: bool - checked
+            if (argList->GetSize() != 4 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_BOOL ||
+                argList->GetType(3) != VTYPE_BOOL) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            if (error == NO_ERROR) {
+                ExtensionString command = argList->GetString(1);
+                bool enabled = argList->GetBool(2);
+                bool checked = argList->GetBool(3);
+                error = NativeMenuModel::getInstance(getMenuParent(browser)).setMenuItemState(command, enabled, checked);
+            }
+        } else if (message_name == "SetMenuTitle") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            //  2: string - menuTitle to display
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING) {
+                    error = ERR_INVALID_PARAMS;
+            }
+
+            if (error == NO_ERROR) {
+                ExtensionString command = CefString(argList->GetString(1));
+                ExtensionString menuTitle = argList->GetString(2);
+
+                error = SetMenuTitle(browser, command, menuTitle);
+                // No additional response args for this function
+            }
+        }  else if (message_name == "GetMenuTitle") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId = CefString(argList->GetString(1));
+                ExtensionString menuTitle;
+                error = GetMenuTitle(browser, commandId, menuTitle);
+                responseArgs->SetString(2, menuTitle);
+            }
+        } else if (message_name == "SetMenuItemShortcut") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - command ID
+            //  2: string - shortcut
+            //  3: string - display string
+            if (argList->GetSize() != 4 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId = argList->GetString(1);
+                ExtensionString shortcut = argList->GetString(2);
+                ExtensionString displayStr = argList->GetString(3);
+                
+                error = SetMenuItemShortcut(browser, commandId, shortcut, displayStr);
+                // No additional response args for this function
+            }
+        } else if (message_name == "GetMenuPosition") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - menu/command ID
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString commandId;
+                ExtensionString parentId;
+                int index;
+                commandId = argList->GetString(1);
+                error = GetMenuPosition(browser, commandId, parentId, index);
+                responseArgs->SetString(2, parentId);
+                responseArgs->SetInt(3, index);
+            }
+        } else if (message_name == "DragWindow") {     
+            // Parameters: none       
+            DragWindow(browser);
+        } 
+        else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }
-        
+      
         if (callbackId != -1) {
             responseArgs->SetInt(1, error);
-            
+          
             // Send response
             browser->SendProcessMessage(PID_RENDERER, response);
         }
-        
+      
         return true;
     }
-    
+  
     IMPLEMENT_REFCOUNTING(ProcessMessageDelegate);
 };
     
 void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
-  
+
+//Replace keyStroke with replaceString 
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+	size_t idx = key.find(keyStroke, 0);
+	if (idx != ExtensionString::npos) {
+		key = key.replace(idx, keyStroke.size(), replaceString);
+		return true;
+	}
+	return false;
+}
+
 } // namespace appshell_extensions

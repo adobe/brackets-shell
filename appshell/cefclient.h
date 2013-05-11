@@ -26,6 +26,9 @@ std::string AppGetWorkingDirectory();
 // Returns the default CEF cache location
 CefString AppGetCachePath();
 
+// Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
+CefString AppGetProductVersionString();
+
 // Initialize the application command line.
 void AppInitCommandLine(int argc, const char* const* argv);
 

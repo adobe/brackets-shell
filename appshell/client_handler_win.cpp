@@ -8,11 +8,19 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "resource.h"
+#include "native_menu_model.h"
+
+#include <ShellAPI.h>
 
 #define CLOSING_PROP L"CLOSING"
 
-// The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+// WM_DROPFILES handler, defined in cefclient_win.cpp
+extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
+
+// Additional globals
+extern HACCEL hAccelTable;
 
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefPopupFeatures& popupFeatures,
@@ -20,15 +28,6 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
                                   const CefString& url,
                                   CefRefPtr<CefClient>& client,
                                   CefBrowserSettings& settings) {
-  REQUIRE_UI_THREAD();
-
-  std::string urlStr = url;
-  
-  //ensure all non-dev tools windows get a menu bar
-  if (windowInfo.menu == NULL && urlStr.find("chrome-devtools:") == std::string::npos) {
-    windowInfo.menu = ::LoadMenu( GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CEFCLIENT_POPUP) );
-  }
-
   return false;
 }
 
@@ -131,7 +130,13 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
  		      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
 			}
 			return 0;
-          }
+          default:
+            ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(wmId);
+            if (commandId.size() > 0) {
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+              g_handler->SendJSCommand(browser, commandId, callback);
+            }
+        }
 	  }
       break;
 
@@ -149,6 +154,29 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
  		return 0;
       }
       break;
+
+    case WM_DROPFILES:
+      if (g_handler.get() && browser.get()) {
+        return HandleDropFiles((HDROP)wParam, g_handler, browser);
+      }
+      break;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        void* menuParent = getMenuParent(browser);
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            EnableMenuItem(menu, id,  flagEnabled);
+
+            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
+            CheckMenuItem(menu, id, flagChecked);
+        }
+        break;
   }
 
   if (g_popupWndOldProc) 
@@ -160,10 +188,6 @@ void AttachWindProcToPopup(HWND wnd)
 {
   if (!wnd) {
     return;
-  }
-
-  if (!::GetMenu(wnd)) {
-    return; //no menu, no need for the proc
   }
 
   WNDPROC curProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(wnd, GWLP_WNDPROC));
@@ -202,6 +226,7 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
     HWND hWnd = browser->GetHost()->GetWindowHandle();
     AttachWindProcToPopup(hWnd);
     LoadWindowsIcons(hWnd);
+    DragAcceptFiles(hWnd, true);
     browser->GetHost()->SetFocus(true);
 }
 
@@ -219,15 +244,33 @@ CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 
-  // On windows, the main browser is the first in the map. It needs to be
-  // destroyed last. So, don't allow main browser to be closed until there's
+  // On windows, the main browser needs to be destroyed last.
+  // So, don't allow main browser to be closed until there's
   // only 1 browser remaining in the map.
-  if (browser_window_map_.size() > 1) {
-    CefWindowHandle hWndBrowser = browser->GetHost()->GetWindowHandle();
-    CefWindowHandle hWndMain    = browser_window_map_.begin()->first;
+  return (browser_window_map_.size() == 1) || 
+         (browser && browser->GetIdentifier() != m_BrowserId);
+}
 
-    return (hWndBrowser != hWndMain);
-  }
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                    const CefKeyEvent& event,
+                                    CefEventHandle os_event,
+                                    bool* is_keyboard_shortcut) {
+    HWND frameHwnd = (HWND)getMenuParent(browser);
 
-  return true;
+    // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
+    if (!GetMenu(frameHwnd)) {
+        return false;
+    }
+
+    if (::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                                const CefKeyEvent& event,
+                                CefEventHandle os_event) {
+  return false;
 }
