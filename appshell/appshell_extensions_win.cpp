@@ -725,30 +725,16 @@ int32 MoveFileOrDirectoryToTrash(ExtensionString filename)
     if (dwAttr == INVALID_FILE_ATTRIBUTES)
         return ERR_NOT_FOUND;
 
-    SHFILEOPSTRUCT operation;
+    WCHAR filepath[MAX_PATH+1] = {0};
+    wcscpy(filepath, filename.c_str());
+    SHFILEOPSTRUCT operation = {0};
     operation.wFunc = FO_DELETE;
-    operation.pFrom = filename.c_str();
+    operation.pFrom = filepath;
     operation.fFlags = FOF_ALLOWUNDO;
 
     int result = SHFileOperation(&operation);
 
-    switch( result ) {
-        case NO_ERROR:
-            return NO_ERROR;
-        case DE_ROOTDIR:
-        case DE_ACCESSDENIEDSRC:            
-        case DE_SRC_IS_CDROM:            
-        case DE_SRC_IS_DVD:            
-        case DE_SRC_IS_CDRECORD:            
-            return ERROR_ACCESS_DENIED;
-        case DE_INVALIDFILES:        
-            return ERROR_WRITE_PROTECT;
-        case DE_FILE_TOO_LARGE:
-            return ERROR_HANDLE_DISK_FULL;
-        default:
-            return ERR_UNKNOWN;
-        }            
-    }
+    return result ? ERR_UNKNOWN : NO_ERROR;
 }
 
 void OnBeforeShutdown()
