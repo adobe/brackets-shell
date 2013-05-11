@@ -373,7 +373,7 @@ if (!appshell.app) {
     /**
      * Delete a file non-permanently (to trash).
      *
-     * @param {string} path The path of the file to delete
+     * @param {string} path The path of the file or directory to delete
      * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR

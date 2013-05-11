@@ -92,7 +92,7 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
 
-int32 MoveFileOrDirectoryToTrash(ExtensionString filename);
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response);
 
 int32 GetNodeState(int32& state);
 

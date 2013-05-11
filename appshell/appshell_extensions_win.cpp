@@ -716,37 +716,29 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
-int32 MoveFileOrDirectoryToTrash(ExtensionString filename)
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
+    int32 error = NO_ERROR;
 
     if (dwAttr == INVALID_FILE_ATTRIBUTES)
-        return ERR_NOT_FOUND;
+        error = ERR_NOT_FOUND;
 
-    SHFILEOPSTRUCT operation;
-    operation.wFunc = FO_DELETE;
-    operation.pFrom = filename.c_str();
-    operation.fFlags = FOF_ALLOWUNDO;
+    if (error == NO_ERROR) {
+        WCHAR filepath[MAX_PATH+1] = {0};
+        wcscpy(filepath, filename.c_str());
+        SHFILEOPSTRUCT operation = {0};
+        operation.wFunc = FO_DELETE;
+        operation.pFrom = filepath;
+        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
 
-    int result = SHFileOperation(&operation);
-
-    switch( result ) {
-        case NO_ERROR:
-            return NO_ERROR;
-        case DE_ROOTDIR:
-        case DE_ACCESSDENIEDSRC:            
-        case DE_SRC_IS_CDROM:            
-        case DE_SRC_IS_DVD:            
-        case DE_SRC_IS_CDRECORD:            
-            return ERROR_ACCESS_DENIED;
-        case DE_INVALIDFILES:        
-            return ERROR_WRITE_PROTECT;
-        case DE_FILE_TOO_LARGE:
-            return ERROR_HANDLE_DISK_FULL;
-        default:
-            return ERR_UNKNOWN;
-        }            
+        if (SHFileOperation(&operation)) {
+            error = ERR_UNKNOWN;
+        }
     }
+
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
 }
 
 void OnBeforeShutdown()
