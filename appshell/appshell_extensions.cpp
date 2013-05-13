@@ -314,9 +314,11 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
                 
-                error = MoveFileOrDirectoryToTrash(filename);
+                MoveFileOrDirectoryToTrash(filename, browser, response);
                 
-                // No additional response args for this function
+                // Skip standard callback handling. MoveFileOrDirectoryToTrash fires the
+                // callback asynchronously.
+                return true;
             }
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
