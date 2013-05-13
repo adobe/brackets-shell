@@ -807,7 +807,26 @@ time_t FiletimeToTime(FILETIME const& ft) {
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {
-    ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    ConvertToNativePath(pathname);
+    
+    DWORD dwAttr = GetFileAttributes(pathname.c_str());
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+    
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        // Folder: open it directly, with nothing selected inside
+        ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+        
+    } else {
+        // File: open its containing folder with this file selected
+        ITEMIDLIST *pidl = ILCreateFromPath(pathname.c_str());
+        if (pidl) {
+            SHOpenFolderAndSelectItems(pidl,0,0,0);
+            ILFree(pidl);
+        }
+    }
+    
     return NO_ERROR;
 }
 
