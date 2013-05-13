@@ -348,8 +348,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
     PROCESS_INFORMATION pi = {0};
 
     // Launch cmd.exe and pass in the arguments
