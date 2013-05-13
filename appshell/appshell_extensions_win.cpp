@@ -327,7 +327,7 @@ static bool ConvertToShortPathName(std::wstring & path)
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-    std::wstring appPath = L"/c start chrome ";
+    std::wstring appPath = GetPathToLiveBrowser();
     std::wstring args = appPath;
 
     if (enableRemoteDebugging) {
@@ -348,12 +348,10 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
     PROCESS_INFORMATION pi = {0};
 
     // Launch cmd.exe and pass in the arguments
-    if (!CreateProcess(_wgetenv(L"COMSPEC"), argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+    if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         return ConvertWinErrorCode(GetLastError());
     }
         
