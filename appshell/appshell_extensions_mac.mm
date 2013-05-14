@@ -605,7 +605,17 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 int32 ShowFolderInOSWindow(ExtensionString pathname)
 {
     NSString *filepath = [NSString stringWithUTF8String:pathname.c_str()];
-    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:[NSArray arrayWithObject: [NSURL fileURLWithPath: filepath]]];
+    BOOL isDirectory;
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:filepath isDirectory:&isDirectory]) {
+        return ERR_NOT_FOUND;
+    }
+
+    if (isDirectory) {
+        [[NSWorkspace sharedWorkspace] openFile:filepath];
+    } else {
+        [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:[NSArray arrayWithObject: [NSURL fileURLWithPath: filepath]]];
+    }
     return NO_ERROR;
 }
 
