@@ -804,6 +804,7 @@ NSUInteger processKeyString(ExtensionString& key)
     
     appshell_extensions::fixupKey(key, "Delete", del);
     appshell_extensions::fixupKey(key, "Backspace", backspace);
+    appshell_extensions::fixupKey(key, "Space", " ");
     appshell_extensions::fixupKey(key, "Tab", tab);
     appshell_extensions::fixupKey(key, "Enter", enter);
     appshell_extensions::fixupKey(key, "Up", "↑");
