@@ -305,16 +305,16 @@ public:
         } else if (message_name == "MoveFileOrDirectoryToTrash") {
             // Parameters:
             //  0: int32 - callback id
-            //  1: string - filename
+            //  1: string - path
             if (argList->GetSize() != 2 ||
                 argList->GetType(1) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
             
             if (error == NO_ERROR) {
-                ExtensionString filename = argList->GetString(1);
+                ExtensionString path = argList->GetString(1);
                 
-                MoveFileOrDirectoryToTrash(filename, browser, response);
+                MoveFileOrDirectoryToTrash(path, browser, response);
                 
                 // Skip standard callback handling. MoveFileOrDirectoryToTrash fires the
                 // callback asynchronously.
