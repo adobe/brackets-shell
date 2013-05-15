@@ -31,6 +31,8 @@
 #include <ShellAPI.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
+#include <Shobjidl.h>
+#include <atlbase.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -434,28 +436,32 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     ConvertToNativePath(initialDirectory);
 
     if (chooseDirectory) {
-        BROWSEINFO bi = {0};
-        bi.hwndOwner = GetActiveWindow();
-        bi.lpszTitle = title.c_str();
-        bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
-        bi.lpfn = SetInitialPathCallback;
-        bi.lParam = (LPARAM)initialDirectory.c_str();
-
-        LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-        if (pidl != 0) {
-            if (SHGetPathFromIDList(pidl, szFile)) {
-                // Add directory path to the result
-                ExtensionString pathName(szFile);
-                ConvertToUnixPath(pathName);
-                selectedFiles->SetString(0, pathName);
-            }
-            IMalloc* pMalloc = NULL;
-            SHGetMalloc(&pMalloc);
-            if (pMalloc) {
-                pMalloc->Free(pidl);
-                pMalloc->Release();
-            }
-        }
+		IFileDialog *pfd;
+		if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
+			DWORD dwOptions;
+			if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
+				pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+				CComPtr<IShellItem> shellItem;
+				if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
+					pfd->SetFolder(shellItem);
+				if (SUCCEEDED(pfd->Show(NULL))) {
+					IShellItem *psi;
+					if (SUCCEEDED(pfd->GetResult(&psi))) {
+						LPWSTR lpwszName = NULL;
+						if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
+							// Add directory path to the result
+							std::wstring wstrName(lpwszName);
+							ExtensionString pathName(wstrName);
+							ConvertToUnixPath(pathName);
+							selectedFiles->SetString(0, pathName);
+							::CoTaskMemFree(lpwszName);
+						}
+						psi->Release();
+					}
+				}
+			}
+			pfd->Release();
+		}
     } else {
         OPENFILENAME ofn;
 
