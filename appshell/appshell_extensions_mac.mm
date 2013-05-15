@@ -491,20 +491,50 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
     
-    // Contrary to the name of this function, we don't actually delete directories
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
+        // Contrary to the name of this function, we don't actually delete directories
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {                    
         if (isDirectory) {
-            return ERR_NOT_FILE;
-        }
+            return ERR_NOT_FILE;    
+        }            
     } else {
         return ERR_NOT_FOUND;
-    }    
-    
+    }
+        
     if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
-        return NO_ERROR;
+        return NO_ERROR;       
     
     return ConvertNSErrorCode(error, false);
 }
+
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    NSString* pathStr = [NSString stringWithUTF8String:filename.c_str()];
+    NSURL* fileUrl = [NSURL fileURLWithPath: pathStr];
+    
+    static CefRefPtr<CefProcessMessage> s_response;
+    static CefRefPtr<CefBrowser> s_browser;
+    
+    if (s_response) {
+        // Already a pending request. This will only happen if MoveFileOrDirectoryToTrash is called
+        // before the previous call has completed, which is not very likely.
+        response->GetArgumentList()->SetInt(1, ERR_UNKNOWN);
+        browser->SendProcessMessage(PID_RENDERER, response);
+        return;
+    }
+    
+    s_browser = browser;
+    s_response = response;
+    
+    [[NSWorkspace sharedWorkspace] recycleURLs:[NSArray arrayWithObject:fileUrl] completionHandler:^(NSDictionary *newURLs, NSError *error) {
+        // Invoke callback
+        s_response->GetArgumentList()->SetInt(1, ConvertNSErrorCode(error, false));
+        s_browser->SendProcessMessage(PID_RENDERER, s_response);
+        
+        s_response = nil;
+        s_browser = nil;
+    }];
+}
+
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {
