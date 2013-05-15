@@ -732,7 +732,7 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
         SHFILEOPSTRUCT operation = {0};
         operation.wFunc = FO_DELETE;
         operation.pFrom = filepath;
-        operation.fFlags = FOF_ALLOWUNDO;
+        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
 
         if (SHFileOperation(&operation)) {
             error = ERR_UNKNOWN;
