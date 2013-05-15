@@ -436,11 +436,14 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     ConvertToNativePath(initialDirectory);
 
     if (chooseDirectory) {
+		// use the MSDN-preferred implementation of the Open File dialog in pick folders mode
+		//   (rather than the older SHBrowseForFolder() implementation)
 		IFileDialog *pfd;
 		if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
+			// configure the dialog to Select Folders only
 			DWORD dwOptions;
 			if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
-				pfd->SetOptions(dwOptions | FOS_PICKFOLDERS);
+				pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
 				CComPtr<IShellItem> shellItem;
 				if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
 					pfd->SetFolder(shellItem);
