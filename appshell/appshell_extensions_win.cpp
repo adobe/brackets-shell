@@ -754,6 +754,30 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+    int32 error = NO_ERROR;
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        error = ERR_NOT_FOUND;
+
+    if (error == NO_ERROR) {
+        WCHAR filepath[MAX_PATH+1] = {0};
+        wcscpy(filepath, filename.c_str());
+        SHFILEOPSTRUCT operation = {0};
+        operation.wFunc = FO_DELETE;
+        operation.pFrom = filepath;
+        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
+
+        if (SHFileOperation(&operation)) {
+            error = ERR_UNKNOWN;
+        }
+    }
+
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
+}
 
 void OnBeforeShutdown()
 {

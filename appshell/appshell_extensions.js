@@ -19,7 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  * 
- */ 
+ */
 
 // This is the JavaScript code for bridging to native functionality
 // See appshell_extentions_[platform] for implementation of native methods.
@@ -40,7 +40,7 @@ if (!appshell.fs) {
 if (!appshell.app) {
     appshell.app = {};
 }
-(function () {    
+(function () {
     // Error values. These MUST be in sync with the error values
     // at the top of appshell_extensions_platform.h.
     
@@ -352,7 +352,7 @@ if (!appshell.app) {
     };
     
     /**
-     * Delete a file.
+     * Delete a file permanently.
      *
      * @param {string} path The path of the file to delete
      * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
@@ -369,6 +369,25 @@ if (!appshell.app) {
     appshell.fs.unlink = function (path, callback) {
         DeleteFileOrDirectory(callback, path);
     };
+    
+    /**
+     * Delete a file non-permanently (to trash).
+     *
+     * @param {string} path The path of the file or directory to delete
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *          ERR_NOT_FILE
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function MoveFileOrDirectoryToTrash();
+    appshell.fs.moveToTrash = function (path, callback) {
+        MoveFileOrDirectoryToTrash(callback, path);
+    };    
 
     /**
      * Return the number of milliseconds that have elapsed since the application
