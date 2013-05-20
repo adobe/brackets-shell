@@ -491,20 +491,50 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
     
-    // Contrary to the name of this function, we don't actually delete directories
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
+        // Contrary to the name of this function, we don't actually delete directories
+    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {                    
         if (isDirectory) {
-            return ERR_NOT_FILE;
-        }
+            return ERR_NOT_FILE;    
+        }            
     } else {
         return ERR_NOT_FOUND;
-    }    
-    
+    }
+        
     if ([[NSFileManager defaultManager] removeItemAtPath:path error:&error])
-        return NO_ERROR;
+        return NO_ERROR;       
     
     return ConvertNSErrorCode(error, false);
 }
+
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    NSString* pathStr = [NSString stringWithUTF8String:filename.c_str()];
+    NSURL* fileUrl = [NSURL fileURLWithPath: pathStr];
+    
+    static CefRefPtr<CefProcessMessage> s_response;
+    static CefRefPtr<CefBrowser> s_browser;
+    
+    if (s_response) {
+        // Already a pending request. This will only happen if MoveFileOrDirectoryToTrash is called
+        // before the previous call has completed, which is not very likely.
+        response->GetArgumentList()->SetInt(1, ERR_UNKNOWN);
+        browser->SendProcessMessage(PID_RENDERER, response);
+        return;
+    }
+    
+    s_browser = browser;
+    s_response = response;
+    
+    [[NSWorkspace sharedWorkspace] recycleURLs:[NSArray arrayWithObject:fileUrl] completionHandler:^(NSDictionary *newURLs, NSError *error) {
+        // Invoke callback
+        s_response->GetArgumentList()->SetInt(1, ConvertNSErrorCode(error, false));
+        s_browser->SendProcessMessage(PID_RENDERER, s_response);
+        
+        s_response = nil;
+        s_browser = nil;
+    }];
+}
+
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {
@@ -605,7 +635,17 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 int32 ShowFolderInOSWindow(ExtensionString pathname)
 {
     NSString *filepath = [NSString stringWithUTF8String:pathname.c_str()];
-    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:[NSArray arrayWithObject: [NSURL fileURLWithPath: filepath]]];
+    BOOL isDirectory;
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:filepath isDirectory:&isDirectory]) {
+        return ERR_NOT_FOUND;
+    }
+
+    if (isDirectory) {
+        [[NSWorkspace sharedWorkspace] openFile:filepath];
+    } else {
+        [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:[NSArray arrayWithObject: [NSURL fileURLWithPath: filepath]]];
+    }
     return NO_ERROR;
 }
 
@@ -817,6 +857,7 @@ NSUInteger processKeyString(ExtensionString& key)
     
     appshell_extensions::fixupKey(key, "Delete", del);
     appshell_extensions::fixupKey(key, "Backspace", backspace);
+    appshell_extensions::fixupKey(key, "Space", " ");
     appshell_extensions::fixupKey(key, "Tab", tab);
     appshell_extensions::fixupKey(key, "Enter", enter);
     appshell_extensions::fixupKey(key, "Up", "↑");
@@ -1013,4 +1054,25 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     }
     
     return NO_ERROR;
+}
+
+void DragWindow(CefRefPtr<CefBrowser> browser)
+{
+    NSWindow* win = [browser->GetHost()->GetWindowHandle() window];
+    NSPoint origin = [win frame].origin;
+    NSPoint current = [NSEvent mouseLocation];
+    NSPoint offset;
+    origin.x -= current.x;
+    origin.y -= current.y;
+
+    while (YES) {
+        NSEvent* event = [win nextEventMatchingMask:(NSLeftMouseDraggedMask | NSLeftMouseUpMask)];
+        if ([event type] == NSLeftMouseUp) break;
+        current = [win convertBaseToScreen:[event locationInWindow]];
+        offset = origin;
+        offset.x += current.x;
+        offset.y += current.y;
+        [win setFrameOrigin:offset];
+        [win displayIfNeeded];
+    }
 }

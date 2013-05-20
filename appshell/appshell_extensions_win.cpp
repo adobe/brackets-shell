@@ -330,10 +330,15 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     std::wstring appPath = GetPathToLiveBrowser();
     std::wstring args = appPath;
 
-    if (enableRemoteDebugging)
-        args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
-    else
+    if (enableRemoteDebugging) {
+        std::wstring profilePath(ClientApp::AppGetSupportDirectory());
+        profilePath += L"\\live-dev-profile";
+        args += L" --user-data-dir=\"";
+        args += profilePath;
+        args += L"\" --no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222 ";
+    } else {
         args += L" ";
+    }
     args += argURL;
 
     // Args must be mutable
@@ -345,8 +350,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
 
-    //Send the whole command in through the args param. Windows will parse the first token up to a space
-    //as the processes and feed the rest in as the argument string. 
+    // Launch cmd.exe and pass in the arguments
     if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         return ConvertWinErrorCode(GetLastError());
     }
@@ -712,6 +716,30 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+    int32 error = NO_ERROR;
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        error = ERR_NOT_FOUND;
+
+    if (error == NO_ERROR) {
+        WCHAR filepath[MAX_PATH+1] = {0};
+        wcscpy(filepath, filename.c_str());
+        SHFILEOPSTRUCT operation = {0};
+        operation.wFunc = FO_DELETE;
+        operation.pFrom = filepath;
+        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
+
+        if (SHFileOperation(&operation)) {
+            error = ERR_UNKNOWN;
+        }
+    }
+
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
+}
 
 void OnBeforeShutdown()
 {
@@ -807,7 +835,26 @@ time_t FiletimeToTime(FILETIME const& ft) {
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {
-    ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    ConvertToNativePath(pathname);
+    
+    DWORD dwAttr = GetFileAttributes(pathname.c_str());
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+    
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        // Folder: open it directly, with nothing selected inside
+        ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+        
+    } else {
+        // File: open its containing folder with this file selected
+        ITEMIDLIST *pidl = ILCreateFromPath(pathname.c_str());
+        if (pidl) {
+            SHOpenFolderAndSelectItems(pidl,0,0,0);
+            ILFree(pidl);
+        }
+    }
+    
     return NO_ERROR;
 }
 
@@ -1104,6 +1151,8 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             lpaccelNew[newItem].key = VK_BACK;
         } else if (keyStr.find(L"DEL")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_DELETE;
+        } else if (keyStr.find(L"SPACE")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_SPACE;
         } else if (keyStr.find(L"TAB")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_TAB;
         } else if (keyStr.find(L"ENTER")  != ExtensionString::npos) {
@@ -1574,5 +1623,12 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     DrawMenuBar((HWND)getMenuParent(browser));
     return NO_ERROR;
 }
+
+void DragWindow(CefRefPtr<CefBrowser> browser) {
+    ReleaseCapture();
+    HWND browserHwnd = (HWND)getMenuParent(browser);
+    SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+}
+    
 
 

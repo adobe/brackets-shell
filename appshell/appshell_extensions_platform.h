@@ -92,6 +92,8 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
 int32 DeleteFileOrDirectory(ExtensionString filename);
 
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response);
+
 int32 GetNodeState(int32& state);
 
 void OnBeforeShutdown();
@@ -124,3 +126,5 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr);
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
+
+void DragWindow(CefRefPtr<CefBrowser> browser);
