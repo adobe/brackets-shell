@@ -27,7 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
-extern NSMutableArray* pendingOpenFiles;
+NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -662,7 +662,8 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
             files += ",";
         }
         files += "]";
-        pendingOpenFiles = NULL; // TODO should this be dealloced?
+		[pendingOpenFiles release];
+        pendingOpenFiles = NULL;
     } else {
         files = "[]";
     }

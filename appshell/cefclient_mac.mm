@@ -52,7 +52,7 @@ static NSAutoreleasePool* g_autopool = nil;
 // so if you want to open a file you must add it to this list.
 // If the list is NULL, that means that startup has finished,
 // so if you want to open a file you need to call SendOpenFileCommand.
-NSMutableArray* pendingOpenFiles;
+extern NSMutableArray* pendingOpenFiles;
 
 // Provide the CefAppProtocol implementation required by CEF.
 @interface ClientApplication : NSApplication<CefAppProtocol> {
@@ -491,10 +491,18 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   if (!result) {
     result = [theApplication mainWindow];
     if (!result) {
-      // the app might be inactive or hidden. Pick the first window on the window list.
+      // the app might be inactive or hidden. Look for the main window on the window list.
       NSArray* windows = [theApplication windows];
-      if ([windows count] >= 1) {
-        result = [windows objectAtIndex: 0];
+      for (NSUInteger i = 0; i < [windows count]; i++) {
+        NSWindow* window = [windows objectAtIndex:i];
+
+        // Note: this only finds the main (first) appshell window. If additional
+        // windows are open, they will _not_ be found. If the main (first) window
+        // is closed, it may be found, but will be hidden.
+        if ([[window frameAutosaveName] isEqualToString: APP_NAME @"MainWindow"]) {
+          result = window;
+          break;
+        }
       }
     }
   }
