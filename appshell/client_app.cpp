@@ -161,7 +161,10 @@ class AppShellExtensionHandler : public CefV8Handler {
           // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
           CefRefPtr<CefBrowser> browser = 
                 CefV8Context::GetCurrentContext()->GetBrowser();
-          ASSERT(browser.get());
+          if (!browser.get()) {
+              // If we don't have a browser, we can't handle the command.
+              return false;
+          }
           CefRefPtr<CefProcessMessage> message = 
                 CefProcessMessage::Create(name);
           CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
