@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <ShellAPI.h>
 #include <ShlObj.h>
-
+ 
 #define MAX_LOADSTRING 100
 
 #ifdef SHOW_TOOLBAR_UI
@@ -86,9 +86,34 @@ void SaveWindowRect(HWND hWnd);
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
 void RestoreWindowPlacement(HWND hWnd, int showCmd);
 
+// If 'str' ends with a colon followed by some digits, then remove the colon and digits. For example:
+//    "c:\bob\abc.txt:123:456" will be changed to "c:\bob\abc.txt:123"
+//    "c:\bob\abc.txt:123" will be changed to "c:\bob\abc.txt"
+//    "c:\bob\abc.txt" will not be changed
+// (Note: we could do this with a regular expression, but there is no regex library currently
+// built into brackets-shell, and I don't want to add one just for this simple case).
+void StripColonNumber(std::wstring& str) {
+    bool gotDigits = false;
+    int index;
+    for(index = str.size() - 1; index >= 0; index--) {
+        if(!isdigit(str[index]))
+            break;
+        gotDigits = true;
+    }
+    if(gotDigits && index >= 0 && str[index] == ':') {
+        str.resize(index);
+    }
+}
+
+// Determine if 'str' is a valid filename.
 bool IsFilename(const std::wstring& str) {
-    // See if we can access the passed in value
-    return (GetFileAttributes(str.c_str()) != INVALID_FILE_ATTRIBUTES);
+    // Strip off trailing line and column number, if any.
+    std::wstring temp(str);
+    StripColonNumber(temp);
+    StripColonNumber(temp);
+
+	// Return true if the OS thinks the filename is OK.
+    return (GetFileAttributes(temp.c_str()) != INVALID_FILE_ATTRIBUTES);
 }
 
 std::wstring GetFilenamesFromCommandLine() {
@@ -563,7 +588,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DragAcceptFiles(hWndMain, TRUE);
   RestoreWindowPlacement(hWndMain, showCmd);
   UpdateWindow(hWndMain);
-\
+
   return TRUE;
 }
 
