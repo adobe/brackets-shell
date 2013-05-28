@@ -31,6 +31,8 @@
 #include <ShellAPI.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
+#include <Shobjidl.h>
+#include <atlbase.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -330,10 +332,15 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     std::wstring appPath = GetPathToLiveBrowser();
     std::wstring args = appPath;
 
-    if (enableRemoteDebugging)
-        args += L" --remote-debugging-port=9222 --allow-file-access-from-files ";
-    else
+    if (enableRemoteDebugging) {
+        std::wstring profilePath(ClientApp::AppGetSupportDirectory());
+        profilePath += L"\\live-dev-profile";
+        args += L" --user-data-dir=\"";
+        args += profilePath;
+        args += L"\" --no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222 ";
+    } else {
         args += L" ";
+    }
     args += argURL;
 
     // Args must be mutable
@@ -345,8 +352,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
 
-    //Send the whole command in through the args param. Windows will parse the first token up to a space
-    //as the processes and feed the rest in as the argument string. 
+    // Launch cmd.exe and pass in the arguments
     if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         return ConvertWinErrorCode(GetLastError());
     }
@@ -379,8 +385,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     if (cbData.numberOfFoundWindows == 0) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
     } else if (liveBrowserMgr->GetCloseCallback()) {
-        // set a timeout for up to 3 minutes to close the browser 
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+        // set a timeout for up to 10 seconds to close the browser
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
 }
 
@@ -425,33 +431,69 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     }
     */
 
-    // SHBrowseForFolder can handle Windows path only, not Unix path.
+    // Windows common file dialogs can handle Windows path only, not Unix path.
     // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
 
     if (chooseDirectory) {
-        BROWSEINFO bi = {0};
-        bi.hwndOwner = GetActiveWindow();
-        bi.lpszTitle = title.c_str();
-        bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
-        bi.lpfn = SetInitialPathCallback;
-        bi.lParam = (LPARAM)initialDirectory.c_str();
+		// check current OS version
+		OSVERSIONINFO osvi;
+		memset(&osvi, 0, sizeof(OSVERSIONINFO));
+		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		if (GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6)) {
+			// for Vista or later, use the MSDN-preferred implementation of the Open File dialog in pick folders mode
+			IFileDialog *pfd;
+			if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
+				// configure the dialog to Select Folders only
+				DWORD dwOptions;
+				if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
+					pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
+					CComPtr<IShellItem> shellItem;
+					if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
+						pfd->SetFolder(shellItem);
+					if (SUCCEEDED(pfd->Show(NULL))) {
+						IShellItem *psi;
+						if (SUCCEEDED(pfd->GetResult(&psi))) {
+							LPWSTR lpwszName = NULL;
+							if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
+								// Add directory path to the result
+								std::wstring wstrName(lpwszName);
+								ExtensionString pathName(wstrName);
+								ConvertToUnixPath(pathName);
+								selectedFiles->SetString(0, pathName);
+								::CoTaskMemFree(lpwszName);
+							}
+							psi->Release();
+						}
+					}
+				}
+				pfd->Release();
+			}
+		} else {
+			// for XP, use the old-styled SHBrowseForFolder() implementation
+			BROWSEINFO bi = {0};
+			bi.hwndOwner = GetActiveWindow();
+			bi.lpszTitle = title.c_str();
+			bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
+			bi.lpfn = SetInitialPathCallback;
+			bi.lParam = (LPARAM)initialDirectory.c_str();
 
-        LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-        if (pidl != 0) {
-            if (SHGetPathFromIDList(pidl, szFile)) {
-                // Add directory path to the result
-                ExtensionString pathName(szFile);
-                ConvertToUnixPath(pathName);
-                selectedFiles->SetString(0, pathName);
-            }
-            IMalloc* pMalloc = NULL;
-            SHGetMalloc(&pMalloc);
-            if (pMalloc) {
-                pMalloc->Free(pidl);
-                pMalloc->Release();
-            }
-        }
+			LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+			if (pidl != 0) {
+				if (SHGetPathFromIDList(pidl, szFile)) {
+					// Add directory path to the result
+					ExtensionString pathName(szFile);
+					ConvertToUnixPath(pathName);
+					selectedFiles->SetString(0, pathName);
+				}
+				IMalloc* pMalloc = NULL;
+				SHGetMalloc(&pMalloc);
+				if (pMalloc) {
+					pMalloc->Free(pidl);
+					pMalloc->Release();
+				}
+			}
+		}
     } else {
         OPENFILENAME ofn;
 
@@ -516,6 +558,18 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
             }
         }
     }
+
+    return NO_ERROR;
+}
+
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+    if (path.length() == 0) {
+        return ERR_INVALID_PARAMS;
+    }
+
+    ExtensionString drive = path.substr(0, path.find('/') + 1);
+    isRemote = GetDriveType(drive.c_str()) == DRIVE_REMOTE;
 
     return NO_ERROR;
 }
@@ -700,6 +754,30 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+    int32 error = NO_ERROR;
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        error = ERR_NOT_FOUND;
+
+    if (error == NO_ERROR) {
+        WCHAR filepath[MAX_PATH+1] = {0};
+        wcscpy(filepath, filename.c_str());
+        SHFILEOPSTRUCT operation = {0};
+        operation.wFunc = FO_DELETE;
+        operation.pFrom = filepath;
+        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
+
+        if (SHFileOperation(&operation)) {
+            error = ERR_UNKNOWN;
+        }
+    }
+
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
+}
 
 void OnBeforeShutdown()
 {
@@ -795,7 +873,26 @@ time_t FiletimeToTime(FILETIME const& ft) {
 }
 
 int32 ShowFolderInOSWindow(ExtensionString pathname) {
-    ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+    ConvertToNativePath(pathname);
+    
+    DWORD dwAttr = GetFileAttributes(pathname.c_str());
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+    
+    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        // Folder: open it directly, with nothing selected inside
+        ShellExecute(NULL, L"open", pathname.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+        
+    } else {
+        // File: open its containing folder with this file selected
+        ITEMIDLIST *pidl = ILCreateFromPath(pathname.c_str());
+        if (pidl) {
+            SHOpenFolderAndSelectItems(pidl,0,0,0);
+            ILFree(pidl);
+        }
+    }
+    
     return NO_ERROR;
 }
 
@@ -1092,6 +1189,8 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             lpaccelNew[newItem].key = VK_BACK;
         } else if (keyStr.find(L"DEL")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_DELETE;
+        } else if (keyStr.find(L"SPACE")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_SPACE;
         } else if (keyStr.find(L"TAB")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_TAB;
         } else if (keyStr.find(L"ENTER")  != ExtensionString::npos) {
@@ -1562,5 +1661,12 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     DrawMenuBar((HWND)getMenuParent(browser));
     return NO_ERROR;
 }
+
+void DragWindow(CefRefPtr<CefBrowser> browser) {
+    ReleaseCapture();
+    HWND browserHwnd = (HWND)getMenuParent(browser);
+    SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+}
+    
 
 

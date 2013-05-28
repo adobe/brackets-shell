@@ -25,11 +25,8 @@
 module.exports = function (grunt) {
     "use strict";
     
-    var guid = require("guid");
-    
-    function writeJSON(path, obj) {
-        grunt.file.write(path, JSON.stringify(obj, null, "    "));
-    }
+    var guid = require("guid"),
+        common = require("./common")(grunt);
 
     function safeReplace(content, regexp, replacement) {
         var newContent = content.replace(regexp, replacement);
@@ -65,15 +62,17 @@ module.exports = function (grunt) {
         packageJSON.version = safeReplace(
             packageJSON.version,
             /([0-9]+\.)([0-9]+)([\.\-a-zA-Z0-9]*)?/,
-            "$1" + sprint + "$3");
-        writeJSON(packageJsonPath, packageJSON);
+            "$1" + sprint + "$3"
+        );
+        common.writeJSON(packageJsonPath, packageJSON);
         
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.sprint.number`
         text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
             /<property name="product\.sprint\.number" value="([0-9]+)"\/>/,
-            '<property name="product.sprint.number" value="' + sprint + '"/>');
+            '<property name="product.sprint.number" value="' + sprint + '"/>'
+        );
         grunt.file.write(winInstallerBuildXmlPath, text);
         
         // 3. Open installer/mac/buildInstaller.sh and change `releaseName`

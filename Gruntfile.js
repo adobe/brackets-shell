@@ -20,26 +20,157 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*global module, require*/
 /*jslint regexp:true*/
+/*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
+    
+    var common  = require("./tasks/common")(grunt),
+        resolve = common.resolve,
+        staging = (common.platform() === "mac") ? "installer/mac/staging/<%= build.name %>.app/Contents" : "installer/win/staging";
 
     grunt.initConfig({
-        jshint: {
-            all: [
-                "Gruntfile.js",
-                "tasks/**/*.js"
-            ],
-            /* use strict options to mimic JSLINT until we migrate to JSHINT in Brackets */
-            options: {
-                jshintrc: ".jshintrc"
+        "pkg":              grunt.file.readJSON("package.json"),
+        "curl-dir": {
+            /* linux not supported yet */
+            /*
+            linux: {
+                dest        : "<%= cef_zip %>",
+                src         : "https://docs.google.com/file/d/0B7as0diokeHxeTNqZFIyNWZKSWM/edit?usp=sharing"
+            },
+            */
+            /* mac */
+            "cef-mac": {
+                "dest"      : "downloads/",
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_macosx.zip"
+            },
+            "node-mac": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
+            },
+            /* win */
+            "cef-win": {
+                "dest"      : "downloads/",
+                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_windows.zip"
+            },
+            "node-win": {
+                "dest"      : "downloads/",
+                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
+                               "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
             }
+        },
+        "clean": {
+            "downloads"         : ["downloads"],
+            "installer-mac"     : ["installer/mac/*.dmg"],
+            "installer-win"     : ["installer/win/*.msi"],
+            "staging-mac"       : ["installer/mac/staging"],
+            "staging-win"       : ["installer/win/staging"],
+            "www"               : ["<%= build.staging %>/www", "<%= build.staging %>/samples"]
+        },
+        "copy": {
+            "win": {
+                "files": [
+                    {
+                        "expand"    : true,
+                        "cwd"       : "Release/",
+                        "src"       : [
+                            "**",
+                            "!*.pdb",
+                            "!dev/**",
+                            "!obj/**",
+                            "!lib/**",
+                            "!avformat-54.dll",
+                            "!avutil-51.dll",
+                            "!avcodec-54.dll",
+                            "!d3dcompiler_43.dll",
+                            "!d3dx9_43.dll",
+                            "!libEGL.dll",
+                            "!libGLESv2.dll",
+                            "!cefclient.exe",
+                            "!debug.log"
+                        ],
+                        "dest"      : "installer/win/staging/"
+                    }
+                ]
+            },
+            // FIXME: see stage-mac task issues with copying .app bundles
+            /*
+            "mac": {
+                "files": [
+                    {
+                        "expand"    : true,
+                        "cwd"       : "xcodebuild/Release/<%= build.name %>.app/",
+                        "src"       : ["**"],
+                        "dest"      : "installer/mac/staging/<%= build.name %>.app/"
+                    }
+                ]
+            },
+            */
+            "www": {
+                "files": [
+                    {
+                        "dot"       : true,
+                        "expand"    : true,
+                        "cwd"       : "<%= git.www.repo %>/src",
+                        "src"       : ["**", "!**/.git*"],
+                        "dest"      : "<%= build.staging %>/www/"
+                    }
+                ]
+            },
+            "samples": {
+                "files": [
+                    {
+                        "dot"       : true,
+                        "expand"    : true,
+                        "cwd"       : "<%= git.www.repo %>/samples",
+                        "src"       : ["**"],
+                        "dest"      : "<%= build.staging %>/samples/"
+                    }
+                ]
+            }
+        },
+        "unzip": {
+            "cef": {
+                "src"       : "<%= cef_zip %>",
+                "dest"      : "deps/cef"
+            }
+        },
+        "jshint": {
+            "all"           : ["Gruntfile.js", "tasks/**/*.js"],
+            "options": {
+                "jshintrc"  : ".jshintrc"
+            }
+        },
+        "build": {
+            "name"              : "Brackets",
+            "staging"           : staging
+        },
+        "git": {
+            "www": {
+                "repo"      : "../brackets",    // TODO user configurable?
+                "branch"    : grunt.option("www-branch") || ""
+            },
+            "shell": {
+                "repo"      : ".",
+                "branch"    : grunt.option("shell-branch") || ""
+            }
+        },
+        "cef": {
+            "version"       : "3.1180.823"
+        },
+        "node": {
+            "version"       : "0.8.20"
+        },
+        "npm": {
+            "version"       : "1.2.11"
         }
     });
 
     grunt.loadTasks("tasks");
     grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-contrib-copy");
+    grunt.loadNpmTasks("grunt-contrib-clean");
+    grunt.loadNpmTasks("grunt-curl");
 
-    grunt.registerTask("default", "jshint");
+    grunt.registerTask("default", ["setup", "build"]);
 };

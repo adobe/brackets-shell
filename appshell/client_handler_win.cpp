@@ -236,24 +236,25 @@ CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 
-  // On windows, the main browser is the first in the map. It needs to be
-  // destroyed last. So, don't allow main browser to be closed until there's
+  // On windows, the main browser needs to be destroyed last.
+  // So, don't allow main browser to be closed until there's
   // only 1 browser remaining in the map.
-  if (browser_window_map_.size() > 1) {
-    CefWindowHandle hWndBrowser = browser->GetHost()->GetWindowHandle();
-    CefWindowHandle hWndMain    = browser_window_map_.begin()->first;
-
-    return (hWndBrowser != hWndMain);
-  }
-
-  return true;
+  return (browser_window_map_.size() == 1) || 
+         (browser && browser->GetIdentifier() != m_BrowserId);
 }
 
 bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                     const CefKeyEvent& event,
                                     CefEventHandle os_event,
                                     bool* is_keyboard_shortcut) {
-    if (::TranslateAccelerator((HWND)getMenuParent(browser), hAccelTable, os_event)) {
+    HWND frameHwnd = (HWND)getMenuParent(browser);
+
+    // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
+    if (!GetMenu(frameHwnd)) {
+        return false;
+    }
+
+    if (::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
         return true;
     }
 

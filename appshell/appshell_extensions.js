@@ -19,7 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  * 
- */ 
+ */
 
 // This is the JavaScript code for bridging to native functionality
 // See appshell_extentions_[platform] for implementation of native methods.
@@ -40,7 +40,7 @@ if (!appshell.fs) {
 if (!appshell.app) {
     appshell.app = {};
 }
-(function () {    
+(function () {
     // Error values. These MUST be in sync with the error values
     // at the top of appshell_extensions_platform.h.
     
@@ -151,6 +151,24 @@ if (!appshell.app) {
         }, 10);
     };
     
+    /**
+     * Check whether a given path is from a network drive. 
+     *
+     * @param {string} path The path to check for a network drive.
+     * @param {function(err, isRemote)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (err, isRemote) where isRemote indicates whether the given path is a mapped network drive or not.
+     * 
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function IsNetworkDrive();
+    appshell.fs.isNetworkDrive = function (path, callback) {
+        var resultString = IsNetworkDrive(callback, path);
+    };
+     
     /**
      * Reads the contents of a directory. 
      *
@@ -334,7 +352,7 @@ if (!appshell.app) {
     };
     
     /**
-     * Delete a file.
+     * Delete a file permanently.
      *
      * @param {string} path The path of the file to delete
      * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
@@ -351,6 +369,25 @@ if (!appshell.app) {
     appshell.fs.unlink = function (path, callback) {
         DeleteFileOrDirectory(callback, path);
     };
+    
+    /**
+     * Delete a file non-permanently (to trash).
+     *
+     * @param {string} path The path of the file or directory to delete
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *          ERR_NOT_FILE
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function MoveFileOrDirectoryToTrash();
+    appshell.fs.moveToTrash = function (path, callback) {
+        MoveFileOrDirectoryToTrash(callback, path);
+    };    
 
     /**
      * Return the number of milliseconds that have elapsed since the application
@@ -431,6 +468,16 @@ if (!appshell.app) {
         });
     };
 
+    /**
+     * Get the remote debugging port used by the appshell.
+     *
+     * @return int. The remote debugging port used by the appshell.
+     */
+    native function GetRemoteDebuggingPort();
+    appshell.app.getRemoteDebuggingPort = function () {
+        return GetRemoteDebuggingPort();
+    };
+ 
     /**
      * Set menu enabled/checked state.
      * @param {string} command ID of the menu item.
@@ -658,6 +705,16 @@ if (!appshell.app) {
      */
     appshell.app.showExtensionsFolder = function (appURL, callback) {
         appshell.app.showOSFolder(GetApplicationSupportDirectory() + "/extensions", callback);
+    };
+
+    /**
+     * Drag the main window
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function DragWindow();
+    appshell.app.dragWindow = function () {
+        DragWindow();
     };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
