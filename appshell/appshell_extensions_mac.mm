@@ -855,6 +855,20 @@ NSUInteger processKeyString(ExtensionString& key)
     // from unicode display char to ascii hyphen
     appshell_extensions::fixupKey(key, "−", "-");
 
+    // Check for F1 - F15 keys.
+    if (key.find("F") != ExtensionString::npos) {
+        for (int i = NSF15FunctionKey; i >= NSF1FunctionKey; i--) {
+            NSString *funcKey = [NSString stringWithFormat:@"F%d", i - NSF1FunctionKey + 1];
+            ExtensionString fKey = [funcKey UTF8String];
+            if (key.find(fKey) != ExtensionString::npos) {
+                unichar ch = i;
+                NSString *actualKey = [NSString stringWithCharacters: &ch length: 1];
+                appshell_extensions::fixupKey(key, fKey, ExtensionString([actualKey UTF8String]));
+                break;
+            }
+        }
+    }
+
     return mask;
 }
 
