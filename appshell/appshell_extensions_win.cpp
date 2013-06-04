@@ -32,7 +32,6 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <Shobjidl.h>
-#include <atlbase.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -448,7 +447,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 				DWORD dwOptions;
 				if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
 					pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
-					CComPtr<IShellItem> shellItem;
+					IShellItem *shellItem = NULL;
 					if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
 						pfd->SetFolder(shellItem);
 					if (SUCCEEDED(pfd->Show(NULL))) {
@@ -466,6 +465,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 							psi->Release();
 						}
 					}
+					if (shellItem != NULL)
+						shellItem->Release();
 				}
 				pfd->Release();
 			}
