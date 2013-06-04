@@ -412,25 +412,6 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
 
-    // TODO (issue #64) - This method should be using IFileDialog instead of the
-    /* outdated SHGetPathFromIDList and GetOpenFileName.
-       
-    Useful function to parse fileTypesStr:
-    template<class T>
-    int inline findAndReplaceString(T& source, const T& find, const T& replace)
-    {
-    int num=0;
-    int fLen = find.size();
-    int rLen = replace.size();
-    for (int pos=0; (pos=source.find(find, pos))!=T::npos; pos+=rLen)
-    {
-    num++;
-    source.replace(pos, fLen, replace);
-    }
-    return num;
-    }
-    */
-
     // Windows common file dialogs can handle Windows path only, not Unix path.
     // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
@@ -558,6 +539,33 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
             }
         }
     }
+
+    return NO_ERROR;
+}
+
+int32 ShowSaveAsDialog(ExtensionString title,
+                       ExtensionString initialDirectory,
+                       ExtensionString& absoluteFilepath)
+{
+	wchar_t szFile[MAX_PATH] = {0};
+
+    // Windows common file dialogs can handle Windows path only, not Unix path.
+    // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
+    ConvertToNativePath(initialDirectory);
+
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.hwndOwner = GetActiveWindow();
+	ofn.lStructSize = sizeof(ofn);
+	ofn.lpstrFile = szFile;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
+	ofn.lpstrInitialDir = initialDirectory.c_str();
+	ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
+
+	if (GetSaveFileName(&ofn)) {
+		absoluteFilepath = ofn.lpstrFile;
+	}
 
     return NO_ERROR;
 }
