@@ -484,7 +484,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         ofn.lStructSize = sizeof(ofn);
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
-		ofn.lpstrTitle = title.c_str();
+        ofn.lpstrTitle = title.c_str();
 
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
