@@ -193,7 +193,7 @@ module.exports = function (grunt) {
     
     // task: package
     grunt.registerTask("package", "Package www files", function () {
-        grunt.task.run(["clean:www","copy:www", "copy:samples", "write-config"]);
+        grunt.task.run(["clean:www", "copy:www", "copy:samples", "write-config"]);
     });
     
     // task: write-config

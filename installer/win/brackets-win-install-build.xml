@@ -3,7 +3,7 @@
 default="build.mul">
   
   <!-- Key locations on disk -->
-  <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
+  <property name="wix.base" value="C:\Program Files (x86)\WiX Toolset v3.6"/>
   
   <property name="brackets.staging" value=".\staging"/>
   
