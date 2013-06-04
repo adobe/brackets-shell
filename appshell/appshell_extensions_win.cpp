@@ -547,24 +547,23 @@ int32 ShowSaveAsDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString& absoluteFilepath)
 {
-	wchar_t szFile[MAX_PATH] = {0};
+    ConvertToNativePath(initialDirectory);		// Windows common file dlgs require Windows-style paths
 
-    // Windows common file dialogs can handle Windows path only, not Unix path.
-    // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
-    ConvertToNativePath(initialDirectory);
-
+	// call Windows common file-saveas dialog to prompt for a filename in a writeable location
 	OPENFILENAME ofn;
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.hwndOwner = GetActiveWindow();
 	ofn.lStructSize = sizeof(ofn);
+	wchar_t szFile[MAX_PATH] = {0};
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = MAX_PATH;
 	ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
 	ofn.lpstrInitialDir = initialDirectory.c_str();
 	ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
-
 	if (GetSaveFileName(&ofn)) {
+		// return the validated filename using Unix-style paths
 		absoluteFilepath = ofn.lpstrFile;
+		ConvertToUnixPath(absoluteFilepath);
 	}
 
     return NO_ERROR;
