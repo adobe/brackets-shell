@@ -545,6 +545,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 
 int32 ShowSaveAsDialog(ExtensionString title,
                        ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
                        ExtensionString& absoluteFilepath)
 {
     ConvertToNativePath(initialDirectory);		// Windows common file dlgs require Windows-style paths
@@ -554,7 +555,8 @@ int32 ShowSaveAsDialog(ExtensionString title,
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.hwndOwner = GetActiveWindow();
 	ofn.lStructSize = sizeof(ofn);
-	wchar_t szFile[MAX_PATH] = {0};
+	wchar_t szFile[MAX_PATH];
+	wcscpy(szFile, proposedNewFilename.c_str());
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = MAX_PATH;
 	ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
