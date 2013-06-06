@@ -76,6 +76,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
 int32 ShowSaveAsDialog(ExtensionString title,
                        ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
                        ExtensionString& newFilePath);
 
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote);

@@ -330,6 +330,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
 
 int32 ShowSaveAsDialog(ExtensionString title,
                        ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
                        ExtensionString& absoluteFilepath)
 {
     NSSavePanel* savePanel = [NSSavePanel savePanel];
@@ -341,6 +342,7 @@ int32 ShowSaveAsDialog(ExtensionString title,
         [savePanel setDirectoryURL:initialDir];
     }
 
+    [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
     [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
     
     if ([savePanel runModal] == NSFileHandlingPanelOKButton)

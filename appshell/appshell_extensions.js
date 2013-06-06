@@ -166,10 +166,10 @@ if (!appshell.app) {
       * @return None. This is an asynchronous call that sends all return information to the callback.
       */
      native function ShowSaveAsDialog();
-     appshell.fs.showSaveAsDialog = function (title, initialPath, callback) {
+     appshell.fs.showSaveAsDialog = function (title, initialPath, proposedNewFilename, callback) {
      setTimeout(function () {
                 ShowSaveAsDialog(callback,
-                                 title || 'Save As', initialPath || '');
+                                 title || 'Save As', initialPath || '', proposedNewFilename || '');
                 }, 10);
      };
 
