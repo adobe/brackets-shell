@@ -89,7 +89,7 @@
               '-lrpcrt4.lib',
               '-lopengl32.lib',
               '-lglu32.lib',
-              '-llib/$(ConfigurationName)/libcef.lib'
+              '-l$(ConfigurationName)/libcef.lib'
             ],
           },
           'sources': [
@@ -113,6 +113,16 @@
               'destination': '../<(PRODUCT_DIR)',
               'files': ['appshell/node-core/'],
             },
+            {
+              # Copy resources
+              'destination': '<(PRODUCT_DIR)',
+              'files': ['Resources/cef.pak', 'Resources/devtools_resources.pak'],
+            },
+            {
+              # Copy locales
+              'destination': '../<(PRODUCT_DIR)',
+              'files': ['Resources/locales/'],
+            }
           ],
         }],
         [ 'OS=="mac"', {
