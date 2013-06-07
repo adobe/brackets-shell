@@ -5,10 +5,11 @@
 
 // Command names. These MUST be in sync with the command names in
 // brackets/src/command/Commands.js
-const std::string APP_ABORT_QUIT    = "app.abort_quit";
-const std::string FILE_QUIT         = "file.quit";
-const std::string FILE_CLOSE_WINDOW = "file.close_window";
-const std::string HELP_ABOUT        = "help.about";
+const std::string APP_ABORT_QUIT        = "app.abort_quit";
+const std::string APP_BEFORE_MENUPOPUP  = "app.before.menupopup";
+const std::string FILE_QUIT             = "file.quit";
+const std::string FILE_CLOSE_WINDOW     = "file.close_window";
+const std::string HELP_ABOUT            = "help.about";
 
 #if defined(OS_WIN)
 const ExtensionString EDIT_UNDO         = L"edit.undo";
