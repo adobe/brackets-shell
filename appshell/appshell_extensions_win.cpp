@@ -773,7 +773,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
     if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
-        browser->GetHost()->CloseBrowser();
+        browser->GetHost()->CloseBrowser(true);
     }
 }
 

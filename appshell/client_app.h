@@ -59,23 +59,6 @@ class ClientApp : public CefApp,
                                        CefRefPtr<CefV8Exception> exception,
                                        CefRefPtr<CefV8StackTrace> stackTrace) {}
       
-      virtual void OnWorkerContextCreated(CefRefPtr<ClientApp> app,
-                                          int worker_id,
-                                          const CefString& url,
-                                          CefRefPtr<CefV8Context> context) {}
-      
-      virtual void OnWorkerContextReleased(CefRefPtr<ClientApp> app,
-                                           int worker_id,
-                                           const CefString& url,
-                                           CefRefPtr<CefV8Context> context) {}
-      
-      virtual void OnWorkerUncaughtException(
-                                             CefRefPtr<ClientApp> app,
-                                             int worker_id,
-                                             const CefString& url,
-                                             CefRefPtr<CefV8Context> context,
-                                             CefRefPtr<CefV8Exception> exception,
-                                             CefRefPtr<CefV8StackTrace> stackTrace) {}
       
       virtual void OnFocusedNodeChanged(CefRefPtr<ClientApp> app,
                                         CefRefPtr<CefBrowser> browser,
@@ -140,20 +123,6 @@ private:
                                    CefRefPtr<CefV8Context> context,
                                    CefRefPtr<CefV8Exception> exception,
                                    CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE;
-  virtual void OnWorkerContextCreated(
-                                      int worker_id,
-                                      const CefString& url,
-                                      CefRefPtr<CefV8Context> context) OVERRIDE;
-  virtual void OnWorkerContextReleased(
-                                       int worker_id,
-                                       const CefString& url,
-                                       CefRefPtr<CefV8Context> context) OVERRIDE;
-  virtual void OnWorkerUncaughtException(
-                                         int worker_id,
-                                         const CefString& url,
-                                         CefRefPtr<CefV8Context> context,
-                                         CefRefPtr<CefV8Exception> exception,
-                                         CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE;
   virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
