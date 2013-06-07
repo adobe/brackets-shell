@@ -32,7 +32,6 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <Shobjidl.h>
-#include <atlbase.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -412,25 +411,6 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     wchar_t szFile[MAX_PATH];
     szFile[0] = 0;
 
-    // TODO (issue #64) - This method should be using IFileDialog instead of the
-    /* outdated SHGetPathFromIDList and GetOpenFileName.
-       
-    Useful function to parse fileTypesStr:
-    template<class T>
-    int inline findAndReplaceString(T& source, const T& find, const T& replace)
-    {
-    int num=0;
-    int fLen = find.size();
-    int rLen = replace.size();
-    for (int pos=0; (pos=source.find(find, pos))!=T::npos; pos+=rLen)
-    {
-    num++;
-    source.replace(pos, fLen, replace);
-    }
-    return num;
-    }
-    */
-
     // Windows common file dialogs can handle Windows path only, not Unix path.
     // ofn.lpstrInitialDir also needs Windows path on XP and not Unix path.
     ConvertToNativePath(initialDirectory);
@@ -448,9 +428,10 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 				DWORD dwOptions;
 				if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
 					pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
-					CComPtr<IShellItem> shellItem;
+					IShellItem *shellItem = NULL;
 					if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
 						pfd->SetFolder(shellItem);
+					pfd->SetTitle(title.c_str());
 					if (SUCCEEDED(pfd->Show(NULL))) {
 						IShellItem *psi;
 						if (SUCCEEDED(pfd->GetResult(&psi))) {
@@ -466,6 +447,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 							psi->Release();
 						}
 					}
+					if (shellItem != NULL)
+						shellItem->Release();
 				}
 				pfd->Release();
 			}
@@ -502,6 +485,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         ofn.lStructSize = sizeof(ofn);
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = MAX_PATH;
+        ofn.lpstrTitle = title.c_str();
 
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
         /* findAndReplaceString( fileTypesStr, std::string(" "), std::string(";*."));
