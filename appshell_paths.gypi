@@ -163,11 +163,20 @@
       'appshell/appshell_extensions.js',
     ],
     'appshell_sources_linux': [
+      'appshell/appshell_extensions_gtk.cpp',
       'appshell/cefclient_gtk.cpp',
       'appshell/client_handler_gtk.cpp',
+      'appshell/client_app_gtk.cpp',
       'appshell/resource_util_linux.cpp',
     ],
     'appshell_bundle_resources_linux': [
+      '$(BUILDTYPE)/locales',
+      'appshell/res/brackets.ico',
+      '$(BUILDTYPE)/cef.pak',
+      '$(BUILDTYPE)/devtools_resources.pak',
+    ],
+    'appshell_bundle_libraries_linux': [
+      '$(BUILDTYPE)/lib.target/libcef.so',
     ],
   },
 }
