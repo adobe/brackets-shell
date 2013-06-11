@@ -21,6 +21,7 @@
  * 
  */ 
 
+#include <gtk/gtk.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
@@ -31,6 +32,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
+
+GtkWidget* _menuWidget;
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 
@@ -146,6 +149,10 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+}
+
 int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
@@ -154,24 +161,24 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
     GtkWidget *dialog;
-     const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
-     GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
-     dialog = gtk_file_chooser_dialog_new (dialog_title,
-                          NULL,
-                          file_or_directory,
-                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                          GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                          NULL);
-     
-     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
-       {
-         char *filename;
-         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-         selectedFiles->SetString(0,filename);
-         g_free (filename);
-       }
-     
-     gtk_widget_destroy (dialog);
+    const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
+    GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
+    dialog = gtk_file_chooser_dialog_new (dialog_title,
+                  NULL,
+                  file_or_directory,
+                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                  GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                  NULL);
+    
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        char *filename;
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+        selectedFiles->SetString(0,filename);
+        g_free (filename);
+    }
+    
+    gtk_widget_destroy (dialog);
     return NO_ERROR;
 }
 
@@ -324,6 +331,11 @@ int DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
+{
+    // TOdO
+}
+
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
@@ -333,7 +345,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
         // if(gtk_widget_is_toplevel (hwnd))
         //     gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
         // else
-            browser->GetHost()->CloseBrowser();
+            browser->GetHost()->CloseBrowser(true);
     }
 }
 
@@ -380,4 +392,102 @@ int ConvertLinuxErrorCode(int errorCode, bool isReading)
     default:
         return ERR_UNKNOWN;
     }
+}
+
+int32 GetPendingFilesToOpen(ExtensionString& files)
+{
+}
+
+GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
+{
+    GtkWidget* window = (GtkWidget*)getMenuParent(browser);
+    GtkWidget* widget;
+    GList *children, *iter;
+
+    children = gtk_container_get_children(GTK_CONTAINER(window));
+    for(iter = children; iter != NULL; iter = g_list_next(iter)) {
+        widget = (GtkWidget*)iter->data;
+
+        if (GTK_IS_CONTAINER(widget))
+            return widget;
+    }
+
+    return NULL;
+}
+
+int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
+              ExtensionString position, ExtensionString relativeId)
+{
+    // if (tag == kTagNotFound) {
+    //     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
+    // } else {
+    //     // menu already there
+    //     return NO_ERROR;
+    // }
+
+    GtkWidget* menuBar = GetMenuBar(browser);
+    GtkWidget* menuWidget = gtk_menu_new();
+    GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+
+    // FIXME add lookup for menu widgets
+    _menuWidget = menuWidget;
+    
+    return NO_ERROR;
+}
+
+void FakeCallback() {
+}
+
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
+                  ExtensionString position, ExtensionString relativeId)
+{
+    GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+    g_signal_connect(entry, "activate", FakeCallback, NULL);
+    // FIXME add lookup for menu widgets
+    gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+
+    return NO_ERROR;
+}
+
+int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    return NO_ERROR;
+}
+
+int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    return NO_ERROR;
+}
+
+int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index)
+{
+    return NO_ERROR;
+}
+
+int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle)
+{
+    return NO_ERROR;
+}
+
+int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle)
+{
+    return NO_ERROR;
+}
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
+{
+    return NO_ERROR;
+}
+
+int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
+{
+    return NO_ERROR;
+}
+
+void DragWindow(CefRefPtr<CefBrowser> browser)
+{
+    // TODO
 }

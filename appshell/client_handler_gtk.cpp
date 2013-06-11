@@ -12,18 +12,6 @@
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
-// ClientHandler::ClientLifeSpanHandler implementation
-bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
-                                  const CefPopupFeatures& popupFeatures,
-                                  CefWindowInfo& windowInfo,
-                                  const CefString& url,
-                                  CefRefPtr<CefClient>& client,
-                                  CefBrowserSettings& settings) {
-  REQUIRE_UI_THREAD();
-
-  return false;
-}
-
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
@@ -93,3 +81,18 @@ bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 	return true;
 }
 
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                  const CefKeyEvent& event,
+                                  CefEventHandle os_event,
+                                  bool* is_keyboard_shortcut) {
+    
+    // TODO
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                               const CefKeyEvent& event,
+                               CefEventHandle os_event) {
+    // TODO
+    return false;
+}
