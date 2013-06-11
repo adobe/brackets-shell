@@ -78,6 +78,7 @@ extern ExtensionString gPendingFilesToOpen;
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
   BOOL isReallyClosing;
+  ExtensionString lastMenuParentId;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
@@ -125,6 +126,9 @@ extern ExtensionString gPendingFilesToOpen;
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+    // Notify that menu is being popped up
+    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+    
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
     NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser()));
