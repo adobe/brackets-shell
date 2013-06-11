@@ -78,7 +78,6 @@ extern ExtensionString gPendingFilesToOpen;
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
   BOOL isReallyClosing;
-  ExtensionString lastMenuParentId;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
