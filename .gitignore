@@ -45,6 +45,7 @@ tools
 bracketsharvestmanager.wxs
 fr-fr.mst
 
+appshell.gyp
 appshell_extensions_js.o
 Makefile
 appshell.Makefile
