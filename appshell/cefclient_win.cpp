@@ -866,6 +866,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
         return 0;
 
     case WM_INITMENUPOPUP:
+        // Notify before popping up
+        g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
         void* menuParent = getMenuParent(g_handler->GetBrowser());
