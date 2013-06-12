@@ -93,10 +93,10 @@ private:
     LiveBrowserMgrWin();
     virtual ~LiveBrowserMgrWin();
 
-    UINT							m_closeLiveBrowserHeartbeatTimerId;
-    UINT							m_closeLiveBrowserTimeoutTimerId;
-    CefRefPtr<CefProcessMessage>	m_closeLiveBrowserCallback;
-    CefRefPtr<CefBrowser>			m_browser;
+    UINT                            m_closeLiveBrowserHeartbeatTimerId;
+    UINT                            m_closeLiveBrowserTimeoutTimerId;
+    CefRefPtr<CefProcessMessage>    m_closeLiveBrowserCallback;
+    CefRefPtr<CefBrowser>            m_browser;
 
     static LiveBrowserMgrWin* s_instance;
 };
@@ -416,67 +416,67 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     ConvertToNativePath(initialDirectory);
 
     if (chooseDirectory) {
-		// check current OS version
-		OSVERSIONINFO osvi;
-		memset(&osvi, 0, sizeof(OSVERSIONINFO));
-		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if (GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6)) {
-			// for Vista or later, use the MSDN-preferred implementation of the Open File dialog in pick folders mode
-			IFileDialog *pfd;
-			if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
-				// configure the dialog to Select Folders only
-				DWORD dwOptions;
-				if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
-					pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
-					IShellItem *shellItem = NULL;
-					if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
-						pfd->SetFolder(shellItem);
-					pfd->SetTitle(title.c_str());
-					if (SUCCEEDED(pfd->Show(NULL))) {
-						IShellItem *psi;
-						if (SUCCEEDED(pfd->GetResult(&psi))) {
-							LPWSTR lpwszName = NULL;
-							if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
-								// Add directory path to the result
-								std::wstring wstrName(lpwszName);
-								ExtensionString pathName(wstrName);
-								ConvertToUnixPath(pathName);
-								selectedFiles->SetString(0, pathName);
-								::CoTaskMemFree(lpwszName);
-							}
-							psi->Release();
-						}
-					}
-					if (shellItem != NULL)
-						shellItem->Release();
-				}
-				pfd->Release();
-			}
-		} else {
-			// for XP, use the old-styled SHBrowseForFolder() implementation
-			BROWSEINFO bi = {0};
-			bi.hwndOwner = GetActiveWindow();
-			bi.lpszTitle = title.c_str();
-			bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
-			bi.lpfn = SetInitialPathCallback;
-			bi.lParam = (LPARAM)initialDirectory.c_str();
+        // check current OS version
+        OSVERSIONINFO osvi;
+        memset(&osvi, 0, sizeof(OSVERSIONINFO));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        if (GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6)) {
+            // for Vista or later, use the MSDN-preferred implementation of the Open File dialog in pick folders mode
+            IFileDialog *pfd;
+            if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
+                // configure the dialog to Select Folders only
+                DWORD dwOptions;
+                if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
+                    pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
+                    IShellItem *shellItem = NULL;
+                    if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
+                        pfd->SetFolder(shellItem);
+                    pfd->SetTitle(title.c_str());
+                    if (SUCCEEDED(pfd->Show(NULL))) {
+                        IShellItem *psi;
+                        if (SUCCEEDED(pfd->GetResult(&psi))) {
+                            LPWSTR lpwszName = NULL;
+                            if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
+                                // Add directory path to the result
+                                std::wstring wstrName(lpwszName);
+                                ExtensionString pathName(wstrName);
+                                ConvertToUnixPath(pathName);
+                                selectedFiles->SetString(0, pathName);
+                                ::CoTaskMemFree(lpwszName);
+                            }
+                            psi->Release();
+                        }
+                    }
+                    if (shellItem != NULL)
+                        shellItem->Release();
+                }
+                pfd->Release();
+            }
+        } else {
+            // for XP, use the old-styled SHBrowseForFolder() implementation
+            BROWSEINFO bi = {0};
+            bi.hwndOwner = GetActiveWindow();
+            bi.lpszTitle = title.c_str();
+            bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
+            bi.lpfn = SetInitialPathCallback;
+            bi.lParam = (LPARAM)initialDirectory.c_str();
 
-			LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-			if (pidl != 0) {
-				if (SHGetPathFromIDList(pidl, szFile)) {
-					// Add directory path to the result
-					ExtensionString pathName(szFile);
-					ConvertToUnixPath(pathName);
-					selectedFiles->SetString(0, pathName);
-				}
-				IMalloc* pMalloc = NULL;
-				SHGetMalloc(&pMalloc);
-				if (pMalloc) {
-					pMalloc->Free(pidl);
-					pMalloc->Release();
-				}
-			}
-		}
+            LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
+            if (pidl != 0) {
+                if (SHGetPathFromIDList(pidl, szFile)) {
+                    // Add directory path to the result
+                    ExtensionString pathName(szFile);
+                    ConvertToUnixPath(pathName);
+                    selectedFiles->SetString(0, pathName);
+                }
+                IMalloc* pMalloc = NULL;
+                SHGetMalloc(&pMalloc);
+                if (pMalloc) {
+                    pMalloc->Free(pidl);
+                    pMalloc->Release();
+                }
+            }
+        }
     } else {
         OPENFILENAME ofn;
 
@@ -546,30 +546,30 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     return NO_ERROR;
 }
 
-int32 ShowSaveAsDialog(ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
                        ExtensionString& absoluteFilepath)
 {
-    ConvertToNativePath(initialDirectory);		// Windows common file dlgs require Windows-style paths
+    ConvertToNativePath(initialDirectory);        // Windows common file dlgs require Windows-style paths
 
-	// call Windows common file-saveas dialog to prompt for a filename in a writeable location
-	OPENFILENAME ofn;
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.hwndOwner = GetActiveWindow();
-	ofn.lStructSize = sizeof(ofn);
-	wchar_t szFile[MAX_PATH];
-	wcscpy(szFile, proposedNewFilename.c_str());
-	ofn.lpstrFile = szFile;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
-	ofn.lpstrInitialDir = initialDirectory.c_str();
-	ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
-	if (GetSaveFileName(&ofn)) {
-		// return the validated filename using Unix-style paths
-		absoluteFilepath = ofn.lpstrFile;
-		ConvertToUnixPath(absoluteFilepath);
-	}
+    // call Windows common file-saveas dialog to prompt for a filename in a writeable location
+    OPENFILENAME ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.hwndOwner = GetActiveWindow();
+    ofn.lStructSize = sizeof(ofn);
+    wchar_t szFile[MAX_PATH];
+    wcscpy(szFile, proposedNewFilename.c_str());
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
+    ofn.lpstrInitialDir = initialDirectory.c_str();
+    ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
+    if (GetSaveFileName(&ofn)) {
+        // return the validated filename using Unix-style paths
+        absoluteFilepath = ofn.lpstrFile;
+        ConvertToUnixPath(absoluteFilepath);
+    }
 
     return NO_ERROR;
 }
@@ -1231,7 +1231,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             // we want F12 and such to be found before F1 and so on.
             for (int i = VK_F15; i >= VK_F1; i--) {
                 swprintf(fKey, sizeof(fKey), L"F%d", (i - VK_F1 + 1));
-			
+            
                 if (keyStr.find(fKey) != ExtensionString::npos) {
                     lpaccelNew[newItem].key = i;
                     isFunctionKey = true;
@@ -1251,7 +1251,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
-                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);	
+                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);    
                     bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
   
                     // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with

@@ -328,7 +328,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     return NO_ERROR;
 }
 
-int32 ShowSaveAsDialog(ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
                        ExtensionString& absoluteFilepath)
@@ -350,7 +350,6 @@ int32 ShowSaveAsDialog(ExtensionString title,
         NSURL* theFile = [savePanel URL];
         absoluteFilepath = [[theFile path] UTF8String];
 
-        NSLog(@"New filename %s", absoluteFilepath.c_str());
     }
     [NSApp endSheet:savePanel];
 

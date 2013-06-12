@@ -133,7 +133,7 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
-        } else if (message_name == "ShowSaveAsDialog") {
+        } else if (message_name == "ShowSaveDialog") {
             // Parameters:
             //  0: int32 - callback id
             //  1: string - title
@@ -153,7 +153,7 @@ public:
                 ExtensionString initialPath = argList->GetString(2);
                 ExtensionString proposedNewFilename = argList->GetString(3);
 
-                error = ShowSaveAsDialog(title,
+                error = ShowSaveDialog(title,
                                          initialPath,
                                          proposedNewFilename,
                                          newFilePath);

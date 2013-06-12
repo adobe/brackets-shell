@@ -74,7 +74,7 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles);
 
-int32 ShowSaveAsDialog(ExtensionString title,
+int32 ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
                        ExtensionString& newFilePath);
