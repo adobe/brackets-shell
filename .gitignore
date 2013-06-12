@@ -18,6 +18,7 @@ libcef_dll_wrapper.vcxproj
 *.esproj
 *.xcworkspace
 
+*.aps
 *.pdb
 *.ilk
 *.sdf
