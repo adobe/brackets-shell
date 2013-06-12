@@ -42,4 +42,7 @@ popd
 # install and run gyp to create makefile
 sudo apt-get install gyp -qq --assume-yes
 
+# copy appshell.gp
+cp appshell.gyp.txt appshell.gyp
+
 gyp --depth .

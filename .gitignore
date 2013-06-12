@@ -54,11 +54,3 @@ appshell/gtk
 appshell/gtk/*
 
 appshell/node-core/node_modules
-
-appshell_extensions_js.o
-Makefile
-appshell.Makefile
-Brackets.target.mk
-libcef_dll_wrapper.target.mk
-appshell/gtk
-appshell/gtk/*
