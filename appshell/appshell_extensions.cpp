@@ -133,6 +133,34 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
+        } else if (message_name == "ShowSaveDialog") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - title
+            //  2: string - initialPath
+            //  3: string - poposedNewFilename
+            if (argList->GetSize() != 4 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING ||
+                argList->GetType(3) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            ExtensionString newFilePath;
+
+            if (error == NO_ERROR) {
+                ExtensionString title = argList->GetString(1);
+                ExtensionString initialPath = argList->GetString(2);
+                ExtensionString proposedNewFilename = argList->GetString(3);
+
+                error = ShowSaveDialog(title,
+                                         initialPath,
+                                         proposedNewFilename,
+                                         newFilePath);
+            }
+
+            // Set response args for this function
+            responseArgs->SetString(2, newFilePath);
         } else if (message_name == "IsNetworkDrive") {
             // Parameters:
             //  0: int32 - callback id
