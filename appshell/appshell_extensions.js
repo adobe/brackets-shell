@@ -152,7 +152,7 @@ if (!appshell.app) {
     };
     
     /**
-      * Display the OS Save As dialog, allowing the user to provide a path and name to save a file.
+      * Display the OS Save dialog, allowing the user to provide a path and name to save a file.
       *
       * @param {string} title Title of the Save As dialog.
       * @param {string} initialPath Initial path to display in the dialog. Pass NULL or "" to
@@ -167,10 +167,10 @@ if (!appshell.app) {
       */
      native function ShowSaveDialog();
      appshell.fs.showSaveDialog = function (title, initialPath, proposedNewFilename, callback) {
-     setTimeout(function () {
-                ShowSaveDialog(callback,
-                                 title || 'Save As', initialPath || '', proposedNewFilename || '');
-                }, 10);
+         setTimeout(function () {
+             ShowSaveDialog(callback,
+                            title || 'Save As', initialPath || '', proposedNewFilename || '');
+         }, 10);
      };
 
     /**
