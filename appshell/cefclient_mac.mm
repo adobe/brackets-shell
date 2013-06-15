@@ -73,6 +73,19 @@ extern ExtensionString gPendingFilesToOpen;
 }
 @end
 
+@interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
+}
+- (void)menuWillOpen:(NSMenu *)menu;
+@end
+
+@implementation ClientMenuDelegate
+
+- (void)menuWillOpen:(NSMenu *)menu {
+    // Notify that menu is being popped up
+    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+}
+
+@end
 
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
@@ -125,9 +138,6 @@ extern ExtensionString gPendingFilesToOpen;
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
-    // Notify that menu is being popped up
-    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
-    
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
     NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser()));
@@ -304,12 +314,16 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 - (void)createApp:(id)object {
   [NSApplication sharedApplication];
   [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
+  NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
   
   // Set the delegate for application events.
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
   ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
+  
+  // Create the delegate for menu events.
+  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
   
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
@@ -362,6 +376,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:delegate];
+  [mainMenu setDelegate:menuDelegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
