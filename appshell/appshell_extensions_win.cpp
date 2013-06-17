@@ -432,7 +432,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                     if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
                         pfd->SetFolder(shellItem);
                     pfd->SetTitle(title.c_str());
-                    if (SUCCEEDED(pfd->Show(NULL))) {
+                    if (SUCCEEDED(pfd->Show(GetActiveWindow()))) {
                         IShellItem *psi;
                         if (SUCCEEDED(pfd->GetResult(&psi))) {
                             LPWSTR lpwszName = NULL;
