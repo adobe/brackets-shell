@@ -107,10 +107,7 @@
               # The '/' at the end of the 'files' directory is very important and magically
               # causes 'xcopy' to get used instead of 'copy' for recursive copies.
               # This seems to be an undocumented feature of gyp.
-              # Also, the ../ before the PRODUCT_DIR variable is correct. Gyp doesn't seem to
-              # munge paths properly when copying a nested subdirectory. This seems to be
-              # an undocumented 'feature' of gyp.
-              'destination': '../<(PRODUCT_DIR)',
+             'destination': '<(PRODUCT_DIR)',
               'files': ['appshell/node-core/'],
             },
             {
@@ -120,7 +117,7 @@
             },
             {
               # Copy locales
-              'destination': '../<(PRODUCT_DIR)',
+              'destination': '<(PRODUCT_DIR)',
               'files': ['Resources/locales/'],
             }
           ],
