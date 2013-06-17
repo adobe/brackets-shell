@@ -774,6 +774,9 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
         browser->GetHost()->CloseBrowser(true);
+
+        ::PostMessage(browser->IsPopup() ? browserHwnd : GetParent(browserHwnd),
+                      WM_CLOSE, 0, 0);
     }
 }
 
