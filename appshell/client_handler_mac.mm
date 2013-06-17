@@ -79,6 +79,7 @@ void ClientHandler::CloseMainWindow() {
 // itself when done.
 @interface PopupClientWindowDelegate : NSObject <NSWindowDelegate> {
   CefRefPtr<ClientHandler> clientHandler;
+  NSObject* priorDelegate;
   NSWindow* window;
   BOOL isReallyClosing;
 }
@@ -88,6 +89,7 @@ void ClientHandler::CloseMainWindow() {
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
+- (void)setPriorDelegate:(NSObject*)prior;
 @end
 
 @implementation PopupClientWindowDelegate
@@ -151,6 +153,10 @@ void ClientHandler::CloseMainWindow() {
   window = win;
 }
 
+- (void)setPriorDelegate:(NSObject*)prior {
+  priorDelegate = prior;
+}
+
 - (void)setIsReallyClosing {
   isReallyClosing = true;
 }
@@ -173,6 +179,13 @@ void ClientHandler::CloseMainWindow() {
   // flag is set. The CloseBrowser() call results in a THIRD call to this function, but this time we check
   // the isReallyClosing flag and if true, return YES.
 
+  // If we have a reference to CEF window delegate, then call the corresponding method here so that we can
+  // switch to using its handling of 'onbeforeunload' events.
+  // TODO: Once we switch, we may have to remove all other code in this method.
+  if (priorDelegate) {
+    [priorDelegate performSelector:@selector(windowShouldClose:) withObject:aWindow];
+  }
+
   CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(aWindow);
   
   if (!isReallyClosing && browser) {
@@ -191,7 +204,10 @@ void ClientHandler::CloseMainWindow() {
 }
 
 // Deletes itself.
-- (void)cleanup:(id)window {  
+- (void)cleanup:(id)aWindow {
+  if (priorDelegate) {
+      [priorDelegate performSelector:@selector(cleanup:) withObject:aWindow];
+  }
   [self release];
 }
 
@@ -219,13 +235,17 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   
   // CEF3 is now using a window delegate with this revision http://code.google.com/p/chromiumembedded/source/detail?r=1149
   // And the declaration of the window delegate (CefWindowDelegate class) is in libcef/browser/browser_host_impl_mac.mm and
-  // thus it is not available for us to extend it. So for now, we have to override it with our delegate class
-  // (PopupClientWindowDelegate) since we're not using its implementation of JavaScript 'onbeforeunload' handling yet.
+  // thus it is not available for us to extend it by inheriting. So for now, we have to override it with our delegate
+  // class (PopupClientWindowDelegate) since we're not using its implementation of JavaScript 'onbeforeunload' handling yet.
   // Besides, we need to keep using our window delegate class for native menus and commands to function correctly in all
-  // popup windows. Ideally, we should extend CefWindowDelegate class when its declaration is available and start using its
+  // popup windows. Although we replace cef window deleget with ours, we still keep a reference to the original delegate and
+  // store it in our own delegate so that we can call its methods from corresponding methods in our own window delegate
+  // class.
+  // Ideally, we should directly inherit from CefWindowDelegate class when its declaration is available and start using its
   // windowShouldClose method instead of our own that is also handling similar events of JavaScript 'onbeforeunload' events.
+  NSObject* priorDelegate = NULL;
   if ([window delegate]) {
-      [[window delegate] release];  // Release the delegate created by CEF
+      priorDelegate = [window delegate];
       [window setDelegate: nil];
   }
 
@@ -234,6 +254,9 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
     [delegate setClientHandler:this];
     [delegate setWindow:window];
     [window setDelegate:delegate];
+    if (priorDelegate) {
+      [delegate setPriorDelegate:priorDelegate];
+    }
   }
 }
 
