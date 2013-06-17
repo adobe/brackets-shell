@@ -152,6 +152,28 @@ if (!appshell.app) {
     };
     
     /**
+      * Display the OS Save dialog, allowing the user to provide a path and name to save a file.
+      *
+      * @param {string} title Title of the Save As dialog.
+      * @param {string} initialPath Initial path to display in the dialog. Pass NULL or "" to
+      *        display the last path chosen.
+      * @param {function(err, selection)} callback Asynchronous callback function. The callback gets two arguments
+      *        (err, absolutefilepath) where absolutefilepath is a string with the absolute path to the file.
+      *        Possible error values:
+      *          NO_ERROR
+      *          ERR_INVALID_PARAMS
+      *
+      * @return None. This is an asynchronous call that sends all return information to the callback.
+      */
+     native function ShowSaveDialog();
+     appshell.fs.showSaveDialog = function (title, initialPath, proposedNewFilename, callback) {
+         setTimeout(function () {
+             ShowSaveDialog(callback,
+                            title || 'Save As', initialPath || '', proposedNewFilename || '');
+         }, 10);
+     };
+
+    /**
      * Check whether a given path is from a network drive. 
      *
      * @param {string} path The path to check for a network drive.

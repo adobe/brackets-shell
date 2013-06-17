@@ -328,6 +328,34 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     return NO_ERROR;
 }
 
+int32 ShowSaveDialog(ExtensionString title,
+                       ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
+                       ExtensionString& absoluteFilepath)
+{
+    NSSavePanel* savePanel = [NSSavePanel savePanel];
+    [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
+    
+    if (initialDirectory != "")
+    {
+        NSURL* initialDir = [NSURL fileURLWithPath:[NSString stringWithUTF8String:initialDirectory.c_str()]];
+        [savePanel setDirectoryURL:initialDir];
+    }
+
+    [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
+    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+    
+    if ([savePanel runModal] == NSFileHandlingPanelOKButton)
+    {
+        NSURL* theFile = [savePanel URL];
+        absoluteFilepath = [[theFile path] UTF8String];
+
+    }
+    [NSApp endSheet:savePanel];
+
+    return NO_ERROR;
+}
+
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
