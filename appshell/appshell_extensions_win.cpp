@@ -432,7 +432,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                     if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
                         pfd->SetFolder(shellItem);
                     pfd->SetTitle(title.c_str());
-                    if (SUCCEEDED(pfd->Show(NULL))) {
+                    if (SUCCEEDED(pfd->Show(GetActiveWindow()))) {
                         IShellItem *psi;
                         if (SUCCEEDED(pfd->GetResult(&psi))) {
                             LPWSTR lpwszName = NULL;
@@ -801,7 +801,10 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
     if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
-        browser->GetHost()->CloseBrowser();
+        browser->GetHost()->CloseBrowser(true);
+
+        ::PostMessage(browser->IsPopup() ? browserHwnd : GetParent(browserHwnd),
+                      WM_CLOSE, 0, 0);
     }
 }
 
