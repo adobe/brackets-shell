@@ -73,15 +73,28 @@ extern ExtensionString gPendingFilesToOpen;
 }
 @end
 
+@interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
+}
+- (void)menuWillOpen:(NSMenu *)menu;
+@end
+
+@implementation ClientMenuDelegate
+
+- (void)menuWillOpen:(NSMenu *)menu {
+    // Notify that menu is being popped up
+    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+}
+
+@end
+
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
-@interface ClientWindowDelegate : NSObject <NSWindowDelegate, NSMenuDelegate> {
+@interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
   BOOL isReallyClosing;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
-- (void)menuWillOpen:(NSMenu *)menu;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
@@ -133,11 +146,6 @@ extern ExtensionString gPendingFilesToOpen;
     }
     [menuItem setState:menuState];
     return menus.isMenuItemEnabled(tag);
-}
-
-- (void)menuWillOpen:(NSMenu *)menu {
-    // Notify that menu is being popped up
-    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
 }
 
 - (IBAction)quit:(id)sender {
@@ -306,14 +314,17 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 - (void)createApp:(id)object {
   [NSApplication sharedApplication];
   [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
-  NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
   
   // Set the delegate for application events.
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
   ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
-  
+
+  // Create the delegate for menu events.
+  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
+  [[NSApp mainMenu] setDelegate:menuDelegate];
+
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
                           NSClosableWindowMask |
@@ -365,7 +376,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:delegate];
-  [mainMenu setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
@@ -550,7 +560,7 @@ int main(int argc, char* argv[]) {
   [ClientApplication sharedApplication];
   NSObject* delegate = [[ClientAppDelegate alloc] init];
   [NSApp setDelegate:delegate];
-  
+
   // Parse command line arguments.
   AppInitCommandLine(argc, argv);
 
