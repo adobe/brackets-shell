@@ -750,6 +750,30 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
     return NO_ERROR;
 }
 
+int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo) 
+{
+    WCHAR filepath[MAX_PATH+1] = {0};
+    wcscpy(filepath, filename.c_str());
+    SHFILEOPSTRUCT operation = {0};
+
+    operation.wFunc = FO_DELETE;
+    operation.hwnd = GetActiveWindow();
+    operation.wFunc = FO_DELETE;
+    operation.pFrom = filepath;
+    operation.fFlags =  FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
+
+    if (allowUndo) 
+        operation.fFlags |= FOF_ALLOWUNDO;
+
+
+    // error codes from this function are pretty vague
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/bb762164(v=vs.85).aspx
+    // So for now, just treat all errors as ERR_UNKNOWN
+    if (SHFileOperation(&operation)) 
+        return ERR_UNKNOWN; 
+    return NO_ERROR;
+}
+
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
@@ -758,11 +782,14 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
         return ERR_NOT_FOUND;
 
     if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
-        return ERR_NOT_FILE;
-
-    if (!DeleteFile(filename.c_str()))
-        return ConvertWinErrorCode(GetLastError());
-
+    {
+        return ShellDeleteFileOrDirectory(filename, false);
+    } 
+    else 
+    {
+        if (!DeleteFile(filename.c_str()))
+            return ConvertWinErrorCode(GetLastError());
+    }
     return NO_ERROR;
 }
 
@@ -770,21 +797,12 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
     int32 error = NO_ERROR;
-
+ 
     if (dwAttr == INVALID_FILE_ATTRIBUTES)
         error = ERR_NOT_FOUND;
 
     if (error == NO_ERROR) {
-        WCHAR filepath[MAX_PATH+1] = {0};
-        wcscpy(filepath, filename.c_str());
-        SHFILEOPSTRUCT operation = {0};
-        operation.wFunc = FO_DELETE;
-        operation.pFrom = filepath;
-        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
-
-        if (SHFileOperation(&operation)) {
-            error = ERR_UNKNOWN;
-        }
+        error = ShellDeleteFileOrDirectory(filename, false);
     }
 
     response->GetArgumentList()->SetInt(1, error);

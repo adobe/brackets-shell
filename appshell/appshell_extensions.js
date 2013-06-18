@@ -121,6 +121,12 @@ if (!appshell.app) {
      */
     appshell.app.ERR_NODE_FAILED            = -3;
 
+    /*
+     * @private 
+     */
+    var _dummyCallback = function () {
+    };
+
     /**
      * Display the OS File Open dialog, allowing the user to select
      * files or directories.
@@ -217,13 +223,14 @@ if (!appshell.app) {
      *
      * @param {string} path The path of the directory to create.
      * @param {number} mode The permissions for the directory, in numeric format (ie 0777)
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument.
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument.
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      **/
     native function MakeDir();
     appshell.fs.makedir = function (path, mode, callback) {
-        MakeDir(callback, path, mode);
+        // RFC: mode should be 0777 if it's undefined
+        MakeDir(callback || _dummyCallback, path, mode);
     };
 
     /**
@@ -231,13 +238,13 @@ if (!appshell.app) {
      *
      * @param {string} oldPath The old name of the file or directory.
      * @param {string} newPath The new name of the file or directory.
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument.
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument.
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      **/
     native function Rename();
     appshell.fs.rename = function(oldPath, newPath, callback) {
-        Rename(callback, oldPath, newPath);
+        Rename(callback || _dummyCallback, oldPath, newPath);
     };
  
     /**
@@ -338,7 +345,7 @@ if (!appshell.app) {
      * @param {string} path The path of the file to write.
      * @param {string} data The data to write to the file.
      * @param {string} encoding The encoding for the file. The only supported encoding is 'utf8'.
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -351,7 +358,7 @@ if (!appshell.app) {
      */
     native function WriteFile();
     appshell.fs.writeFile = function (path, data, encoding, callback) {
-        WriteFile(callback, path, data, encoding);
+        WriteFile(callback || _dummyCallback, path, data, encoding);
     };
     
     /**
@@ -359,7 +366,7 @@ if (!appshell.app) {
      *
      * @param {string} path The path of the file or directory
      * @param {number} mode The permissions for the file or directory, in numeric format (ie 0777)
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -370,14 +377,14 @@ if (!appshell.app) {
      */
     native function SetPosixPermissions();
     appshell.fs.chmod = function (path, mode, callback) {
-        SetPosixPermissions(callback, path, mode);
+        SetPosixPermissions(callback || _dummyCallback, path, mode);
     };
     
     /**
      * Delete a file permanently.
      *
      * @param {string} path The path of the file to delete
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -389,14 +396,14 @@ if (!appshell.app) {
      */
     native function DeleteFileOrDirectory();
     appshell.fs.unlink = function (path, callback) {
-        DeleteFileOrDirectory(callback, path);
+        DeleteFileOrDirectory(callback || _dummyCallback, path);
     };
     
     /**
      * Delete a file non-permanently (to trash).
      *
      * @param {string} path The path of the file or directory to delete
-     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -408,7 +415,7 @@ if (!appshell.app) {
      */
     native function MoveFileOrDirectoryToTrash();
     appshell.fs.moveToTrash = function (path, callback) {
-        MoveFileOrDirectoryToTrash(callback, path);
+        MoveFileOrDirectoryToTrash(callback || _dummyCallback, path);
     };    
 
     /**
@@ -425,7 +432,7 @@ if (!appshell.app) {
      *
      * @param {string} url
      * @param {boolean} enableRemoteDebugging
-     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {function(err)} [optional] callback Asynchronous callback function with one argument (the error)
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS - invalid parameters
@@ -438,7 +445,7 @@ if (!appshell.app) {
     appshell.app.openLiveBrowser = function (url, enableRemoteDebugging, callback) {
         // enableRemoteDebugging flag is ignored on mac
         setTimeout(function() {
-            OpenLiveBrowser(callback, url, enableRemoteDebugging);
+            OpenLiveBrowser(callback || _dummyCallback, url, enableRemoteDebugging);
         }, 0);
     };
     
@@ -447,7 +454,7 @@ if (!appshell.app) {
      * the close attempt if there is a page with unsaved changes. This function will fire the
      * callback when the browser is closed (No_ERROR) or after a three minute timeout (ERR_UNKNOWN). 
      *
-     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {function(err)} callback Asynchronous callback function with one argument (the error) 
      *        Possible error values:
      *          NO_ERROR (all windows are closed by the time the callback is fired)
      *          ERR_UNKNOWN - windows are currently open, though the user may be getting prompted by the 
@@ -457,20 +464,21 @@ if (!appshell.app) {
      */
     native function CloseLiveBrowser();
     appshell.app.closeLiveBrowser = function (callback) {
-        CloseLiveBrowser(callback);
+        CloseLiveBrowser(callback || _dummyCallback);
     };
  
     /**
      * Open a URL in the default OS browser window. 
      *
      * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     *          NOTE: null or undefined can be used for this argument to avoid the callback
      * @param {string} url URL to open in the browser.
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function OpenURLInDefaultBrowser();
-    appshell.app.openURLInDefaultBrowser = function (callback, url) {
-        OpenURLInDefaultBrowser(callback, url);
+    appshell.app.openURLInDefaultBrowser = function (url, callback) {
+        OpenURLInDefaultBrowser(callback || _dummyCallback, url);
     };
  
     /**
@@ -505,7 +513,7 @@ if (!appshell.app) {
      * @param {string} command ID of the menu item.
      * @param {bool} enabled bool to enable or disable the command
      * @param {bool} checked bool to set the 'checked' attribute of the menu item.
-     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     * @param {function(integer)} [optional] callback Asynchronous callback function. The callback gets one argument, error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -513,7 +521,7 @@ if (!appshell.app) {
      */
     native function SetMenuItemState();
     appshell.app.setMenuItemState = function (commandid, enabled, checked, callback) {
-        SetMenuItemState(callback, commandid, enabled, checked);
+        SetMenuItemState(callback || _dummyCallback, commandid, enabled, checked);
     };
 
     /**
@@ -537,7 +545,7 @@ if (!appshell.app) {
      * @param {string} id Menu ID, e.g. "file"
      * @param {string} position Where to put the item; values are "before", "after", "first", "last", and ""
      * @param {string} relativeId The ID of the menu to which is this relative, for position "before" and "after"
-     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     * @param {function(integer)} [optional] callback Asynchronous callback function. The callback gets one argument, error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -547,7 +555,7 @@ if (!appshell.app) {
     appshell.app.addMenu = function (title, id, position, relativeId, callback) {
         position = position || '';
         relativeId = relativeId || '';
-        AddMenu(callback, title, id, position, relativeId);
+        AddMenu(callback || _dummyCallback, title, id, position, relativeId);
     };
 
     /**
@@ -560,7 +568,7 @@ if (!appshell.app) {
      * @param {string} position Where to put the item; values are "before", "after", "first", "last", 
      *                    "firstInSection", "lastInSection", and ""
      * @param {string} relativeId The ID of the menu item to which is this relative, for position "before" and "after"
-     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     * @param {function(integer)} [optional] callback Asynchronous callback function. The callback gets one argument, error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -584,14 +592,14 @@ if (!appshell.app) {
         key = key || '';
         position = position || '';
         relativeId = relativeId || '';
-        AddMenuItem(callback, parentId, title, id, key, displayStr, position, relativeId);
+        AddMenuItem(callback || _dummyCallback, parentId, title, id, key, displayStr, position, relativeId);
     };
 
     /**
      * Change the title of a menu or menu item.
      * @param {string} commandid Menu/Command ID, e.g. "file" or "file.open"
      * @param {string} title Menu title to display, e.g. "File" or "Open"
-     * @param {function(integer)} callback Asynchronous callback function. The callback gets one argument, error code.
+     * @param {function(integer)} [optional] callback Asynchronous callback function. The callback gets one argument, error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS, ERR_NOT_FOUND, ERR_UNKNOWN
@@ -599,7 +607,7 @@ if (!appshell.app) {
      */
     native function SetMenuTitle();
     appshell.app.setMenuTitle = function (commandid, title, callback) {
-        SetMenuTitle(callback, commandid, title);
+        SetMenuTitle(callback || _dummyCallback, commandid, title);
     };
  
     /**
@@ -622,18 +630,18 @@ if (!appshell.app) {
      * @param {string} commandId ID of the menu item.
      * @param {string} shortcut Shortcut string, like "Cmd-U".
      * @param {string} displayStr String to display in menu. If "", use shortcut.
-     * @param {function (err)} callback Asynchronous callback function. The callback gets an error code.
+     * @param {function (err)} [optional] callback Asynchronous callback function. The callback gets an error code.
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function SetMenuItemShortcut();
     appshell.app.setMenuItemShortcut = function (commandId, shortcut, displayStr, callback) {
-        SetMenuItemShortcut(callback, commandId, shortcut, displayStr);
+        SetMenuItemShortcut(callback || _dummyCallback, commandId, shortcut, displayStr);
     };
  
     /**
      * Remove menu associated with commandId.
      * @param {string} commandid ID of the menu item.
-     * @param {function(err)} callback Asynchronous callback function. The callback gets an error code.
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets an error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -643,13 +651,13 @@ if (!appshell.app) {
      */
     native function RemoveMenu();
     appshell.app.removeMenu = function (commandId, callback) {
-        RemoveMenu(callback, commandId);
+        RemoveMenu(callback || _dummyCallback, commandId);
     };
 
     /**
      * Remove menuitem associated with commandId.
      * @param {string} commandid ID of the menu item.
-     * @param {function(err)} callback Asynchronous callback function. The callback gets an error code.
+     * @param {function(err)} [optional] callback Asynchronous callback function. The callback gets an error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -659,7 +667,7 @@ if (!appshell.app) {
      */
     native function RemoveMenuItem();
     appshell.app.removeMenuItem = function (commandId, callback) {
-        RemoveMenuItem(callback, commandId);
+        RemoveMenuItem(callback || _dummyCallback, commandId);
     };
  
     /**
@@ -708,25 +716,25 @@ if (!appshell.app) {
      * Open the specified folder in an OS file window.
      *
      * @param {string} path Path of the folder to show.
-     * @param {function(err)} callback Asyncrhonous callback function with one argument (the error)
+     * @param {function(err)} [optional] callback Asyncrhonous callback function with one argument (the error)
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function ShowOSFolder();
     appshell.app.showOSFolder = function (path, callback) {
-        ShowOSFolder(callback, path);
+        ShowOSFolder(callback || _dummyCallback, path);
     }
  
     /**
      * Open the extensions folder in an OS file window.
      *
      * @param {string} appURL Not used
-     * @param {function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {function(err)} [optional] callback Asynchronous callback function with one argument (the error)
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     appshell.app.showExtensionsFolder = function (appURL, callback) {
-        appshell.app.showOSFolder(GetApplicationSupportDirectory() + "/extensions", callback);
+        appshell.app.showOSFolder(GetApplicationSupportDirectory() + "/extensions", callback || _dummyCallback);
     };
 
     /**
