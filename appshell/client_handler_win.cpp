@@ -22,14 +22,6 @@ extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, Ce
 // Additional globals
 extern HACCEL hAccelTable;
 
-bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
-                                  const CefPopupFeatures& popupFeatures,
-                                  CefWindowInfo& windowInfo,
-                                  const CefString& url,
-                                  CefRefPtr<CefClient>& client,
-                                  CefBrowserSettings& settings) {
-  return false;
-}
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,

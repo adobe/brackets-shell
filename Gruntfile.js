@@ -42,7 +42,7 @@ module.exports = function (grunt) {
             /* mac */
             "cef-mac": {
                 "dest"      : "downloads/",
-                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_macosx.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_macosx.zip"
             },
             "node-mac": {
                 "dest"      : "downloads/",
@@ -51,7 +51,7 @@ module.exports = function (grunt) {
             /* win */
             "cef-win": {
                 "dest"      : "downloads/",
-                "src"       : "http://chromiumembedded.googlecode.com/files/cef_binary_<%= cef.version %>_windows.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_windows.zip"
             },
             "node-win": {
                 "dest"      : "downloads/",
@@ -156,7 +156,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1180.823"
+            "version"       : "3.1453.1255"
         },
         "node": {
             "version"       : "0.8.20"

@@ -637,7 +637,8 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
   
   // Tell the window delegate it's really time to close
   [[window delegate] performSelector:@selector(setIsReallyClosing)];
-  browser->GetHost()->CloseBrowser();
+  browser->GetHost()->CloseBrowser(true);
+  [window close];
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
