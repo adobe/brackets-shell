@@ -95,12 +95,12 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd);
 void StripColonNumber(std::wstring& str) {
     bool gotDigits = false;
     int index;
-    for(index = str.size() - 1; index >= 0; index--) {
-        if(!isdigit(str[index]))
+    for (index = str.size() - 1; index >= 0; index--) {
+        if (!isdigit(str[index]))
             break;
         gotDigits = true;
     }
-    if(gotDigits && index >= 0 && str[index] == ':') {
+    if (gotDigits && index >= 0 && str[index] == ':') {
         str.resize(index);
     }
 }

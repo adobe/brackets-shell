@@ -690,7 +690,7 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
             files += ",";
         }
         files += "]";
-		[pendingOpenFiles release];
+        [pendingOpenFiles release];
         pendingOpenFiles = NULL;
     } else {
         files = "[]";
