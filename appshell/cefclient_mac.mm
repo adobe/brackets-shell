@@ -73,20 +73,6 @@ extern ExtensionString gPendingFilesToOpen;
 }
 @end
 
-//@interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
-//}
-//- (void)menuWillOpen:(NSMenu *)menu;
-//@end
-//
-//@implementation ClientMenuDelegate
-//
-//- (void)menuWillOpen:(NSMenu *)menu {
-//    // Notify that menu is being popped up
-//    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
-//}
-//
-//@end
-
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate, NSMenuDelegate> {
@@ -95,7 +81,7 @@ extern ExtensionString gPendingFilesToOpen;
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
-//- (void)menuWillOpen:(NSMenu *)menu;
+- (void)menuWillOpen:(NSMenu *)menu;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
 #ifdef SHOW_TOOLBAR_UI
@@ -328,9 +314,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Create the delegate for control and browser window events.
   ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
   
-//  // Create the delegate for menu events.
-//  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
-  
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
                           NSClosableWindowMask |
@@ -382,7 +365,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:delegate];
-//  [mainMenu setDelegate:menuDelegate];
   [mainMenu setDelegate:delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
