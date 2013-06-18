@@ -203,8 +203,7 @@ class AppShellExtensionHandler : public CefV8Handler {
 }  // namespace
 
 
-ClientApp::ClientApp()
-    : proxy_type_(CEF_PROXY_TYPE_DIRECT) {
+ClientApp::ClientApp() {
   CreateRenderDelegates(render_delegates_);
 }
 
@@ -263,6 +262,18 @@ private:
     CefRefPtr<CefV8Context> m_ctx;
     
 };
+
+void ClientApp::OnUncaughtException(CefRefPtr<CefBrowser> browser,
+                                    CefRefPtr<CefFrame> frame,
+                                    CefRefPtr<CefV8Context> context,
+                                    CefRefPtr<CefV8Exception> exception,
+                                    CefRefPtr<CefV8StackTrace> stackTrace) {
+    RenderDelegateSet::iterator it = render_delegates_.begin();
+    for (; it != render_delegates_.end(); ++it) {
+        (*it)->OnUncaughtException(this, browser, frame, context, exception,
+                                   stackTrace);
+    }
+}
 
 bool ClientApp::OnProcessMessageReceived(
         CefRefPtr<CefBrowser> browser,
