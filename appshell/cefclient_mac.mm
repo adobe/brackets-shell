@@ -74,18 +74,54 @@ extern NSMutableArray* pendingOpenFiles;
   CefScopedSendingEvent sendingEventScoper;
   [super sendEvent:event];
 }
+
+// Find a window that can handle an openfile command.
+- (NSWindow *) findTargetWindow {
+  NSApplication * nsApp = (NSApplication *)self;
+  NSWindow* result = [nsApp keyWindow];
+  if (!result) {
+    result = [nsApp mainWindow];
+    if (!result) {
+      // the app might be inactive or hidden. Look for the main window on the window list.
+      NSArray* windows = [nsApp windows];
+      for (NSUInteger i = 0; i < [windows count]; i++) {
+        NSWindow* window = [windows objectAtIndex:i];
+
+        // Note: this only finds the main (first) appshell window. If additional
+        // windows are open, they will _not_ be found. If the main (first) window
+        // is closed, it may be found, but will be hidden.
+        if ([[window frameAutosaveName] isEqualToString: APP_NAME @"MainWindow"]) {
+          result = window;
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 @end
 
 @interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
+  ClientApplication* clientApplication;
 }
+- (void)setApplication:(NSApplication*)application;
 - (void)menuWillOpen:(NSMenu *)menu;
 @end
 
 @implementation ClientMenuDelegate
 
+- (void)setApplication:(ClientApplication*)application {
+    clientApplication = application;
+}
+
 - (void)menuWillOpen:(NSMenu *)menu {
     // Notify that menu is being popped up
-    g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+    NSWindow* targetWindow = [clientApplication findTargetWindow];
+    if (targetWindow) {
+        CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
+        g_handler->SendJSCommand(browser, APP_BEFORE_MENUPOPUP);
+    }
 }
 
 @end
@@ -336,7 +372,8 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   // Create the delegate for menu events.
   ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
-  
+  [menuDelegate setApplication: [ClientApplication sharedApplication]];
+
   [[NSApp mainMenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
@@ -502,33 +539,10 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
     return NSTerminateNow;
 }
 
-// Find a window that can handle an openfile command.
-- (NSWindow *) findTargetWindow:(NSApplication *)theApplication {
-  NSWindow* result = [theApplication keyWindow];
-  if (!result) {
-    result = [theApplication mainWindow];
-    if (!result) {
-      // the app might be inactive or hidden. Look for the main window on the window list.
-      NSArray* windows = [theApplication windows];
-      for (NSUInteger i = 0; i < [windows count]; i++) {
-        NSWindow* window = [windows objectAtIndex:i];
-
-        // Note: this only finds the main (first) appshell window. If additional
-        // windows are open, they will _not_ be found. If the main (first) window
-        // is closed, it may be found, but will be hidden.
-        if ([[window frameAutosaveName] isEqualToString: APP_NAME @"MainWindow"]) {
-          result = window;
-          break;
-        }
-      }
-    }
-  }
-  return result;
-}
-
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
   if (!pendingOpenFiles) {
-    NSWindow* targetWindow = [self findTargetWindow:theApplication];
+    ClientApplication * clientApp = (ClientApplication *)theApplication;
+    NSWindow* targetWindow = [clientApp findTargetWindow];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
       g_handler->SendOpenFileCommand(browser, CefString([filename UTF8String]));
@@ -542,7 +556,8 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames {
   if (!pendingOpenFiles) {
-    NSWindow* targetWindow = [self findTargetWindow:theApplication];
+    ClientApplication * clientApp = (ClientApplication *)theApplication;
+    NSWindow* targetWindow = [clientApp findTargetWindow];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
       for (NSUInteger i = 0; i < [filenames count]; i++) {
