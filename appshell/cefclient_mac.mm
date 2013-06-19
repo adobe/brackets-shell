@@ -336,7 +336,10 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   // Create the delegate for menu events.
   ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
+  
   [[NSApp mainMenu] setDelegate:menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
