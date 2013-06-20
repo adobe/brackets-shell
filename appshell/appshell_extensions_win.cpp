@@ -802,7 +802,7 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
         error = ERR_NOT_FOUND;
 
     if (error == NO_ERROR) {
-        error = ShellDeleteFileOrDirectory(filename, false);
+        error = ShellDeleteFileOrDirectory(filename, true);
     }
 
     response->GetArgumentList()->SetInt(1, error);
