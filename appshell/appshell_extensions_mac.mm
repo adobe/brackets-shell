@@ -27,7 +27,7 @@
 
 #include <Cocoa/Cocoa.h>
 
-ExtensionString gPendingFilesToOpen;
+NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
 - (void)appTerminated:(NSNotification *)note;
@@ -325,6 +325,34 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     }
     [NSApp endSheet:openPanel];
     
+    return NO_ERROR;
+}
+
+int32 ShowSaveDialog(ExtensionString title,
+                       ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
+                       ExtensionString& absoluteFilepath)
+{
+    NSSavePanel* savePanel = [NSSavePanel savePanel];
+    [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
+    
+    if (initialDirectory != "")
+    {
+        NSURL* initialDir = [NSURL fileURLWithPath:[NSString stringWithUTF8String:initialDirectory.c_str()]];
+        [savePanel setDirectoryURL:initialDir];
+    }
+
+    [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
+    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+    
+    if ([savePanel runModal] == NSFileHandlingPanelOKButton)
+    {
+        NSURL* theFile = [savePanel URL];
+        absoluteFilepath = [[theFile path] UTF8String];
+
+    }
+    [NSApp endSheet:savePanel];
+
     return NO_ERROR;
 }
 
@@ -652,8 +680,22 @@ int32 ShowFolderInOSWindow(ExtensionString pathname)
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
 {
-    files = gPendingFilesToOpen;
-    gPendingFilesToOpen = "[]";
+    if (pendingOpenFiles) {
+        NSUInteger count = [pendingOpenFiles count];
+        files = "[";
+        for (NSUInteger i = 0; i < count; i++) {
+          NSString* filename = [pendingOpenFiles objectAtIndex:i];
+      
+          files += ("\"" + std::string([filename UTF8String]) + "\"");
+          if (i < count - 1)
+            files += ",";
+        }
+        files += "]";
+        [pendingOpenFiles release];
+        pendingOpenFiles = NULL;
+    } else {
+        files = "[]";
+    }
     return NO_ERROR;
 }
 
@@ -788,6 +830,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     if (subMenu == nil) {
         subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
         [testItem setSubmenu:subMenu];
+        [subMenu setDelegate:[[NSApp mainMenu] delegate]];
     }
    
     // Positioning hack. If position and relativeId are both "", put the menu

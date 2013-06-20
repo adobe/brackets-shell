@@ -81,6 +81,11 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles);
 
+int32 ShowSaveDialog(ExtensionString title,
+                       ExtensionString initialDirectory,
+                       ExtensionString proposedNewFilename,
+                       ExtensionString& newFilePath);
+
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);

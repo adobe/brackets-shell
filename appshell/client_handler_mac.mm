@@ -217,6 +217,18 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
   [window setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
   
+  // CEF3 is now using a window delegate with this revision http://code.google.com/p/chromiumembedded/source/detail?r=1149
+  // And the declaration of the window delegate (CefWindowDelegate class) is in libcef/browser/browser_host_impl_mac.mm and
+  // thus it is not available for us to extend it. So for now, we have to override it with our delegate class
+  // (PopupClientWindowDelegate) since we're not using its implementation of JavaScript 'onbeforeunload' handling yet.
+  // Besides, we need to keep using our window delegate class for native menus and commands to function correctly in all
+  // popup windows. Ideally, we should extend CefWindowDelegate class when its declaration is available and start using its
+  // windowShouldClose method instead of our own that is also handling similar events of JavaScript 'onbeforeunload' events.
+  if ([window delegate]) {
+      [[window delegate] release];  // Release the delegate created by CEF
+      [window setDelegate: nil];
+  }
+
   if (![window delegate]) {
     PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
     [delegate setClientHandler:this];
