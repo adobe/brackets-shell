@@ -114,7 +114,8 @@ extern NSMutableArray* pendingOpenFiles;
     NSWindow* targetWindow = [NSApp findTargetWindow];
     if (targetWindow) {
         CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
-        g_handler->SendJSCommand(browser, APP_BEFORE_MENUPOPUP);
+        if (browser)
+            g_handler->SendJSCommand(browser, APP_BEFORE_MENUPOPUP);
     }
 }
 
