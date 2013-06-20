@@ -27,6 +27,11 @@
 #include <string>
 #include "appshell_extensions_platform.h"
 
+// IDs of static menuitems
+#define BRACKETS_MENUITEMTAG      0
+#define WINDOW_MENUITEMTAG     4999
+
+
 class NativeMenuItemModel
 {
     public:
