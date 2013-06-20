@@ -103,21 +103,15 @@ extern NSMutableArray* pendingOpenFiles;
 @end
 
 @interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
-  ClientApplication* clientApplication;
 }
-- (void)setApplication:(NSApplication*)application;
 - (void)menuWillOpen:(NSMenu *)menu;
 @end
 
 @implementation ClientMenuDelegate
 
-- (void)setApplication:(ClientApplication*)application {
-    clientApplication = application;
-}
-
 - (void)menuWillOpen:(NSMenu *)menu {
     // Notify that menu is being popped up
-    NSWindow* targetWindow = [clientApplication findTargetWindow];
+    NSWindow* targetWindow = [NSApp findTargetWindow];
     if (targetWindow) {
         CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
         g_handler->SendJSCommand(browser, APP_BEFORE_MENUPOPUP);
@@ -372,7 +366,6 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
 
   // Create the delegate for menu events.
   ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
-  [menuDelegate setApplication: [ClientApplication sharedApplication]];
 
   [[NSApp mainMenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
