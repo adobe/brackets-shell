@@ -22,8 +22,6 @@
 #include "native_menu_model.h"
 #include "command_callbacks.h"
 
-//id of the existing window menu item
-#define WINDOW_MENUITEMTAG 4999
 #if defined(OS_WIN)
 const ExtensionString WINDOW_COMMAND    = L"window";
 #else

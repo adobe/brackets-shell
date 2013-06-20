@@ -830,6 +830,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     if (subMenu == nil) {
         subMenu = [[[NSMenu alloc] initWithTitle:itemTitleStr] autorelease];
         [testItem setSubmenu:subMenu];
+        [subMenu setDelegate:[[NSApp mainMenu] delegate]];
     }
    
     // Positioning hack. If position and relativeId are both "", put the menu
