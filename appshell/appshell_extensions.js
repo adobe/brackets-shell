@@ -543,14 +543,12 @@ if (!appshell.app) {
      *          ERR_INVALID_PARAMS
      * @return None. This is an asynchronous call that is not meant to have a return
      */
-    /*
     native function AddMenu();
     appshell.app.addMenu = function (title, id, position, relativeId, callback) {
         position = position || '';
         relativeId = relativeId || '';
         AddMenu(callback, title, id, position, relativeId);
     };
-    */
 
     /**
      * Add a menu item.
