@@ -752,6 +752,12 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
 
 int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo) 
 {
+    DWORD dwAttr = GetFileAttributes(filename.c_str());
+
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+        return ERR_NOT_FOUND;
+    }
+
     WCHAR filepath[MAX_PATH+1] = {0};
     wcscpy(filepath, filename.c_str());
     SHFILEOPSTRUCT operation = {0};
@@ -776,32 +782,12 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
 
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-    int32 error = NO_ERROR;
-
-    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-        error = ERR_NOT_FOUND;
-    }
-    
-    if (error == NO_ERROR) {
-        error = ShellDeleteFileOrDirectory(filename, false);
-    }
-    
-    return error;
+    return ShellDeleteFileOrDirectory(filename, false);
 }
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-    int32 error = NO_ERROR;
- 
-    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-        error = ERR_NOT_FOUND;
-    }
-
-    if (error == NO_ERROR) {
-        error = ShellDeleteFileOrDirectory(filename, true);
-    }
+    int32 error = ShellDeleteFileOrDirectory(filename, true);
 
     response->GetArgumentList()->SetInt(1, error);
     browser->SendProcessMessage(PID_RENDERER, response);
