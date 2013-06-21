@@ -53,8 +53,8 @@ std::string ClientApp::GetExtensionJSSource()
     //# We objcopy the appshell/appshell_extensions.js file, and link it directly into the binary.
     //# See http://www.linuxjournal.com/content/embedding-file-executable-aka-hello-world-version-5967
     const char* p = &_binary_appshell_appshell_extensions_js_start;
-    std:: string content(p);
-    // std:: string extensionJSPath(AppGetSupportDirectory());
+    std::string content(p);
+    // std::string extensionJSPath(AppGetSupportDirectory());
     // extensionJSPath.append("/appshell_extensions.js");
     // FILE* file = fopen(extensionJSPath.c_str(),"r");
     // if(file == NULL)
@@ -81,7 +81,7 @@ double ClientApp::GetElapsedMilliseconds()
 CefString ClientApp::AppGetSupportDirectory() 
 {
     //Check environment variables first;
-    std:: string home_dir(getenv("HOME"));
+    std::string home_dir(getenv("HOME"));
 
     if(home_dir.length()==0)
     {
