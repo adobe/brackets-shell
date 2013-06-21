@@ -758,7 +758,6 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
 
     operation.wFunc = FO_DELETE;
     operation.hwnd = GetActiveWindow();
-    operation.wFunc = FO_DELETE;
     operation.pFrom = filepath;
     operation.fFlags =  FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
 
