@@ -750,42 +750,44 @@ int32 SetPosixPermissions(ExtensionString filename, int32 mode)
     return NO_ERROR;
 }
 
-int32 DeleteFileOrDirectory(ExtensionString filename)
+int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo) 
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
-    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
         return ERR_NOT_FOUND;
+    }
 
-    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
-        return ERR_NOT_FILE;
+    WCHAR filepath[MAX_PATH+1] = {0};
+    wcscpy(filepath, filename.c_str());
+    SHFILEOPSTRUCT operation = {0};
 
-    if (!DeleteFile(filename.c_str()))
-        return ConvertWinErrorCode(GetLastError());
+    operation.wFunc = FO_DELETE;
+    operation.hwnd = GetActiveWindow();
+    operation.pFrom = filepath;
+    operation.fFlags =  FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
 
+    if (allowUndo) {
+        operation.fFlags |= FOF_ALLOWUNDO;
+    }
+
+    // error codes from this function are pretty vague
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/bb762164(v=vs.85).aspx
+    // So for now, just treat all errors as ERR_UNKNOWN
+    if (SHFileOperation(&operation)) {
+        return ERR_UNKNOWN; 
+    }
     return NO_ERROR;
+}
+
+int32 DeleteFileOrDirectory(ExtensionString filename)
+{
+    return ShellDeleteFileOrDirectory(filename, false);
 }
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-    int32 error = NO_ERROR;
-
-    if (dwAttr == INVALID_FILE_ATTRIBUTES)
-        error = ERR_NOT_FOUND;
-
-    if (error == NO_ERROR) {
-        WCHAR filepath[MAX_PATH+1] = {0};
-        wcscpy(filepath, filename.c_str());
-        SHFILEOPSTRUCT operation = {0};
-        operation.wFunc = FO_DELETE;
-        operation.pFrom = filepath;
-        operation.fFlags = FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
-
-        if (SHFileOperation(&operation)) {
-            error = ERR_UNKNOWN;
-        }
-    }
+    int32 error = ShellDeleteFileOrDirectory(filename, true);
 
     response->GetArgumentList()->SetInt(1, error);
     browser->SendProcessMessage(PID_RENDERER, response);

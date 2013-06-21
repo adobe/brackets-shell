@@ -517,14 +517,9 @@ int32 DeleteFileOrDirectory(ExtensionString filename)
     NSError* error = nil;
     
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    BOOL isDirectory;
     
-        // Contrary to the name of this function, we don't actually delete directories
-    if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {                    
-        if (isDirectory) {
-            return ERR_NOT_FILE;    
-        }            
-    } else {
+    // Make sure it exists
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
         return ERR_NOT_FOUND;
     }
         
