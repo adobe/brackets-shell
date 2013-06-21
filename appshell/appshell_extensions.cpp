@@ -429,6 +429,19 @@ public:
                 error = GetPendingFilesToOpen(files);
                 responseArgs->SetString(2, files.c_str());
             }
+        } else if (message_name == "OpenDroppedFiles") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                handler->OpenDroppedFiles(browser);
+            }
+            
+            // No additional response args for this function
+            
         } else if (message_name == "AddMenu") {
             // Parameters:
             //  0: int32 - callback id

@@ -498,6 +498,11 @@ if (!appshell.app) {
         });
     };
 
+    native function OpenDroppedFiles();
+    appshell.app.openDroppedFiles = function (callback) {
+        OpenDroppedFiles(callback || _dummyCallback);
+    };
+ 
     /**
      * Get the remote debugging port used by the appshell.
      *
