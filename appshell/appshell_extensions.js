@@ -223,7 +223,7 @@ if (!appshell.app) {
      *
      * @param {string} path The path of the directory to create.
      * @param {number} mode The permissions for the directory, in numeric format (ie 0777)
-     * @param {?function(err)}  callback Asynchronous callback function. The callback gets one argument.
+     * @param {{function(err)=}}  callback Asynchronous callback function. The callback gets one argument.
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      **/
@@ -238,7 +238,7 @@ if (!appshell.app) {
      *
      * @param {string} oldPath The old name of the file or directory.
      * @param {string} newPath The new name of the file or directory.
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets one argument.
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets one argument.
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      **/
@@ -345,7 +345,7 @@ if (!appshell.app) {
      * @param {string} path The path of the file to write.
      * @param {string} data The data to write to the file.
      * @param {string} encoding The encoding for the file. The only supported encoding is 'utf8'.
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -366,7 +366,7 @@ if (!appshell.app) {
      *
      * @param {string} path The path of the file or directory
      * @param {number} mode The permissions for the file or directory, in numeric format (ie 0777)
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -384,7 +384,7 @@ if (!appshell.app) {
      * Delete a file permanently.
      *
      * @param {string} path The path of the file to delete
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -403,7 +403,7 @@ if (!appshell.app) {
      * Delete a file non-permanently (to trash).
      *
      * @param {string} path The path of the file or directory to delete
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets one argument (err).
      *        Possible error values:
      *          NO_ERROR
      *          ERR_UNKNOWN
@@ -432,7 +432,7 @@ if (!appshell.app) {
      *
      * @param {string} url
      * @param {boolean} enableRemoteDebugging
-     * @param {?function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {{function(err)=}} callback Asynchronous callback function with one argument (the error)
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS - invalid parameters
@@ -641,7 +641,7 @@ if (!appshell.app) {
     /**
      * Remove menu associated with commandId.
      * @param {string} commandid ID of the menu item.
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets an error code.
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets an error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -657,7 +657,7 @@ if (!appshell.app) {
     /**
      * Remove menuitem associated with commandId.
      * @param {string} commandid ID of the menu item.
-     * @param {?function(err)} callback Asynchronous callback function. The callback gets an error code.
+     * @param {{function(err)=}} callback Asynchronous callback function. The callback gets an error code.
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
@@ -716,7 +716,7 @@ if (!appshell.app) {
      * Open the specified folder in an OS file window.
      *
      * @param {string} path Path of the folder to show.
-     * @param {?function(err)} callback Asyncrhonous callback function with one argument (the error)
+     * @param {{function(err)=}} callback Asyncrhonous callback function with one argument (the error)
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
@@ -729,7 +729,7 @@ if (!appshell.app) {
      * Open the extensions folder in an OS file window.
      *
      * @param {string} appURL Not used
-     * @param {?function(err)} callback Asynchronous callback function with one argument (the error)
+     * @param {{function(err)=}} callback Asynchronous callback function with one argument (the error)
      *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
