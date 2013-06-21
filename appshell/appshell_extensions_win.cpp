@@ -761,35 +761,33 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
     operation.pFrom = filepath;
     operation.fFlags =  FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI;
 
-    if (allowUndo) 
+    if (allowUndo) {
         operation.fFlags |= FOF_ALLOWUNDO;
-
+    }
 
     // error codes from this function are pretty vague
     // http://msdn.microsoft.com/en-us/library/windows/desktop/bb762164(v=vs.85).aspx
     // So for now, just treat all errors as ERR_UNKNOWN
-    if (SHFileOperation(&operation)) 
+    if (SHFileOperation(&operation)) {
         return ERR_UNKNOWN; 
+    }
     return NO_ERROR;
 }
 
 int32 DeleteFileOrDirectory(ExtensionString filename)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
+    int32 error = NO_ERROR;
 
-    if (dwAttr == INVALID_FILE_ATTRIBUTES)
-        return ERR_NOT_FOUND;
-
-    if ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0)
-    {
-        return ShellDeleteFileOrDirectory(filename, false);
-    } 
-    else 
-    {
-        if (!DeleteFile(filename.c_str()))
-            return ConvertWinErrorCode(GetLastError());
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
+        error = ERR_NOT_FOUND;
     }
-    return NO_ERROR;
+    
+    if (error == NO_ERROR) {
+        error = ShellDeleteFileOrDirectory(filename, false);
+    }
+    
+    return error;
 }
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
@@ -797,8 +795,9 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
     DWORD dwAttr = GetFileAttributes(filename.c_str());
     int32 error = NO_ERROR;
  
-    if (dwAttr == INVALID_FILE_ATTRIBUTES)
+    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
         error = ERR_NOT_FOUND;
+    }
 
     if (error == NO_ERROR) {
         error = ShellDeleteFileOrDirectory(filename, true);
