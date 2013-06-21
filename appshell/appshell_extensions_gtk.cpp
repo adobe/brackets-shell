@@ -182,6 +182,15 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     return NO_ERROR;
 }
 
+int32 ShowSaveDialog(ExtensionString title,
+                     ExtensionString initialDirectory,
+                     ExtensionString proposedNewFilename,
+                     ExtensionString& newFilePath)
+{
+    // TODO
+    return NO_ERROR;
+}
+
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 {
     //# Add trailing /slash if neccessary
@@ -491,3 +500,4 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
 {
     // TODO
 }
+
