@@ -13,8 +13,8 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
-#include "gtk/appicon.h"
 
+static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 char szWorkingDir[512];  // The current working directory
 std::string szInitialUrl;
 std::string szRunningDir;
@@ -183,10 +183,28 @@ int main(int argc, char* argv[]) {
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
+  
+  // Set window icon
+  std::vector<std::string> icons(APPICONS, APPICONS + sizeof(APPICONS) / sizeof(APPICONS[0]) );
+  GList *list = NULL;
+  for (int i = 0; i < icons.size(); ++i) {
+    std::string path = icons[i];
+    
+    GdkPixbuf *icon = gdk_pixbuf_new_from_file(path.c_str(), NULL);
+    if (!icon)
+       continue;
+    
+    list = g_list_append(list, icon);
+  }
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
-  gtk_window_set_icon(GTK_WINDOW(window), gdk_pixbuf_new_from_inline(-1, appicon, FALSE, NULL));
+
+  gtk_window_set_icon_list(GTK_WINDOW(window), list);
+  
+  // Free icon list
+  g_list_foreach(list, (GFunc) g_object_unref, NULL);
+  g_list_free(list);
 
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
 
