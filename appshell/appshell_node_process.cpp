@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <vector>
+#include <cstdio>
 
 static std::string buffer("");
 static int commandCount = 0;

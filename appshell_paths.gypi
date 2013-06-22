@@ -125,6 +125,14 @@
       'appshell/client_handler_mac.mm',
       'appshell/resource_util_mac.mm',
     ],
+    'appshell_sources_linux': [
+      'appshell/appshell_extensions_gtk.cpp',
+      'appshell/appshell_node_process_linux.cpp',
+      'appshell/client_app_gtk.cpp',
+      'appshell/cefclient_gtk.cpp',
+      'appshell/client_handler_gtk.cpp',
+      'appshell/resource_util_linux.cpp',
+    ],
     'appshell_sources_mac_helper': [
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
@@ -162,12 +170,14 @@
       'appshell/mac/Info.plist',
       'appshell/appshell_extensions.js',
     ],
-    'appshell_sources_linux': [
-      'appshell/cefclient_gtk.cpp',
-      'appshell/client_handler_gtk.cpp',
-      'appshell/resource_util_linux.cpp',
-    ],
     'appshell_bundle_resources_linux': [
+      'Resources/locales',
+      'appshell/res/appshell.ico',
+      'Resources/cef.pak',
+      'Resources/devtools_resources.pak',
+    ],
+    'appshell_bundle_libraries_linux': [
+      '$(BUILDTYPE)/libcef.so',
     ],
   },
 }

@@ -39,10 +39,21 @@ libcef_dll
 tools
 
 /installer/mac/staging/
-
+/installer/linux/brackets.deb
+/installer/linux/debian/usr/lib/
 /installer/win/staging/
 *.wixpdb
 *.wixobj
 bracketsharvestmanager.wxs
 fr-fr.mst
+
+appshell.gyp
+appshell_extensions_js.o
+Makefile
+appshell.Makefile
+Brackets.target.mk
+libcef_dll_wrapper.target.mk
+appshell/gtk
+appshell/gtk/*
+
 appshell/node-core/node_modules
