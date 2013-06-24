@@ -11,6 +11,7 @@
 #include "native_menu_model.h"
 
 extern CefRefPtr<ClientHandler> g_handler;
+bool g_isShowingModalDialog = false;
 
 // ClientHandler::ClientLifeSpanHandler implementation
 
@@ -140,6 +141,9 @@ void ClientHandler::CloseMainWindow() {
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
+	if (g_isShowingModalDialog) {
+	  return false;
+	}
     return menus.isMenuItemEnabled(tag);
 }
 

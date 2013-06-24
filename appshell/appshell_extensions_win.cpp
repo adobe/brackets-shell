@@ -53,6 +53,7 @@ time_t FiletimeToTime(FILETIME const& ft);
 extern HINSTANCE hInst;
 extern HACCEL hAccelTable;
 extern std::wstring gFilesToOpen;
+extern bool g_isShowingModalDialog;
 
 // constants
 #define MAX_LOADSTRING 100
@@ -1685,5 +1686,7 @@ void DragWindow(CefRefPtr<CefBrowser> browser) {
     SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 }
     
-
+void SetModal(bool hasModalDialog) {
+    g_isShowingModalDialog = hasModalDialog;
+}
 

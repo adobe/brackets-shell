@@ -626,6 +626,22 @@ public:
                 responseArgs->SetString(2, parentId);
                 responseArgs->SetInt(3, index);
             }
+        } else if (message_name == "SetModal") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: bool - on or off
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_BOOL) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                bool hasModalDialog = argList->GetBool(1);
+                SetModal(hasModalDialog);
+            }
+            
+            // No additional response args for this function
+            
         } else if (message_name == "DragWindow") {     
             // Parameters: none       
             DragWindow(browser);

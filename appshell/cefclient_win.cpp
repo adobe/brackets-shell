@@ -44,6 +44,7 @@ std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
+bool g_isShowingModalDialog = false;
 
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
@@ -897,7 +898,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
             UINT id = GetMenuItemID(menu, i);
 
             bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            UINT flagEnabled = (enabled && !g_isShowingModalDialog) ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
             EnableMenuItem(menu, id,  flagEnabled);
 
             bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);

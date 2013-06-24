@@ -15,6 +15,7 @@
 #define CLOSING_PROP L"CLOSING"
 
 extern CefRefPtr<ClientHandler> g_handler;
+extern bool g_isShowingModalDialog;
 
 // WM_DROPFILES handler, defined in cefclient_win.cpp
 extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
@@ -161,7 +162,7 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             UINT id = GetMenuItemID(menu, i);
 
             bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            UINT flagEnabled = (enabled && !g_isShowingModalDialog) ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
             EnableMenuItem(menu, id,  flagEnabled);
 
             bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
@@ -250,7 +251,7 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     HWND frameHwnd = (HWND)getMenuParent(browser);
 
     // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
-    if (!GetMenu(frameHwnd)) {
+    if (!GetMenu(frameHwnd) || g_isShowingModalDialog) {
         return false;
     }
 
