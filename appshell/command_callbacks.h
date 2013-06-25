@@ -27,6 +27,15 @@ const ExtensionString EDIT_PASTE        = "edit.paste";
 const ExtensionString EDIT_SELECT_ALL   = "edit.selectAll";
 #endif
 
+inline bool IsEditCommandId(ExtensionString commandId) {
+    return (commandId == EDIT_UNDO)  ||
+           (commandId == EDIT_REDO)  ||
+           (commandId == EDIT_CUT)   ||
+           (commandId == EDIT_COPY)  ||
+           (commandId == EDIT_PASTE) ||
+           (commandId == EDIT_SELECT_ALL);
+}
+
 // Base CommandCallback class
 class CommandCallback : public CefBase {
   

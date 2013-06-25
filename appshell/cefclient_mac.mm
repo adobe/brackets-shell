@@ -152,6 +152,14 @@ extern NSMutableArray* pendingOpenFiles;
   return self;
 }
 
+- (bool)isShowingModalDialog {
+  bool hasModalDialog = false;
+  if (g_handler.get() && g_handler->GetBrowserId()) {
+    hasModalDialog = g_handler->HasModalDialog(g_handler->GetBrowser());
+  }
+  return hasModalDialog;
+}
+
 - (void)setIsReallyClosing {
   isReallyClosing = true;
 }
@@ -175,11 +183,12 @@ extern NSMutableArray* pendingOpenFiles;
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
     NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser()));
+    ExtensionString commandId = menus.getCommandId(tag);
     if (menus.isMenuItemChecked(tag)) {
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
-	if (g_handler->HasModalDialog(g_handler->GetBrowser())) {
+	if (g_handler->HasModalDialog(g_handler->GetBrowser()) && !IsEditCommandId(commandId)) {
 	  return false;
 	}
     return menus.isMenuItemEnabled(tag);

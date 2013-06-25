@@ -629,11 +629,14 @@ void OnBeforeShutdown()
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+  bool hasModalDialog = [[window delegate] performSelector:@selector(isShowingModalDialog)];
   
   // Tell the window delegate it's really time to close
-  [[window delegate] performSelector:@selector(setIsReallyClosing)];
-  browser->GetHost()->CloseBrowser(true);
-  [window close];
+  if (!hasModalDialog) {
+    [[window delegate] performSelector:@selector(setIsReallyClosing)];
+    browser->GetHost()->CloseBrowser(true);
+    [window close];
+  }
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)

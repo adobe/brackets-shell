@@ -337,7 +337,7 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
 
 bool ClientHandler::HasModalDialog(CefRefPtr<CefBrowser> browser) {
     if (browser.get() && modal_browser_window_map_.size() > 0) {
-        BrowserWindowMap::const_iterator it = modal_browser_window_map_.find((HWND)browser->GetHost()->GetWindowHandle());
+        BrowserWindowMap::const_iterator it = modal_browser_window_map_.find(browser->GetHost()->GetWindowHandle());
         return it != modal_browser_window_map_.end();
     }
     return false;
