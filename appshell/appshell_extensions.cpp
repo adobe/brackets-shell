@@ -637,7 +637,7 @@ public:
             
             if (error == NO_ERROR) {
                 bool hasModalDialog = argList->GetBool(1);
-                SetModal(hasModalDialog);
+                handler->SetModal(browser, hasModalDialog);
             }
             
             // No additional response args for this function
