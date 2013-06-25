@@ -203,6 +203,9 @@ class ClientHandler : public CefClient,
   bool AppIsQuitting() { return m_quitting; }
   bool HasWindows() const { return !browser_window_map_.empty(); }
 
+  void SetModal(CefRefPtr<CefBrowser> browser, bool hasModalDialog);
+  bool HasModalDialog(CefRefPtr<CefBrowser> browser);
+
  protected:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
@@ -259,6 +262,7 @@ class ClientHandler : public CefClient,
   
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;
+  static BrowserWindowMap modal_browser_window_map_;
                         
   typedef std::map<int32, CefRefPtr<CommandCallback> > CommandCallbackMap;
   int32 callbackId;

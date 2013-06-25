@@ -27,7 +27,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-extern bool g_isShowingModalDialog;
 NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
@@ -1116,8 +1115,4 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
         [win setFrameOrigin:offset];
         [win displayIfNeeded];
     }
-}
-
-void SetModal(bool hasModalDialog) {
-    g_isShowingModalDialog = hasModalDialog;
 }

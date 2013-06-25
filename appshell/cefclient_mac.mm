@@ -26,7 +26,6 @@ CFTimeInterval g_appStartupTime;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
-bool g_isShowingModalDialog = false;
 static bool g_isTerminating = false;
 
 char szWorkingDir[512];   // The current working directory
@@ -180,7 +179,7 @@ extern NSMutableArray* pendingOpenFiles;
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
-	if (g_isShowingModalDialog) {
+	if (g_handler->HasModalDialog(g_handler->GetBrowser())) {
 	  return false;
 	}
     return menus.isMenuItemEnabled(tag);
