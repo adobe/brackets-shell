@@ -141,9 +141,9 @@ void ClientHandler::CloseMainWindow() {
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
-	if (clientHandler->HasModalDialog(browser) && !IsEditCommandId(commandId)) {
-	  return false;
-	}
+    if (clientHandler->HasModalDialog(browser) && !IsEditCommandId(commandId)) {
+      return false;
+    }
     return menus.isMenuItemEnabled(tag);
 }
 
@@ -194,7 +194,7 @@ void ClientHandler::CloseMainWindow() {
     clientHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
     return NO;
   }
-
+    
   // Clean ourselves up after clearing the stack of anything that might have the
   // window on it.
   [(NSObject*)[window delegate] performSelectorOnMainThread:@selector(cleanup:)
