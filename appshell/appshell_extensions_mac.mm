@@ -193,13 +193,11 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
             parameters = [NSArray arrayWithObjects:
                            @"--remote-debugging-port=9222", 
                            @"--allow-file-access-from-files",
-                           urlString,
                            nil];
         }
         else {
             parameters = [NSArray arrayWithObjects:
                            @"--allow-file-access-from-files",
-                           urlString,
                            nil];
         }
 
@@ -213,7 +211,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         if( ![ws launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:&error] ) {
             return ERR_UNKNOWN;
         }
-        return NO_ERROR;
     }
     
     // Tell the Browser to load the url
