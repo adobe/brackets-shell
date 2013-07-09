@@ -27,7 +27,15 @@ module.exports = function (grunt) {
     
     var common  = require("./tasks/common")(grunt),
         resolve = common.resolve,
-        staging = (common.platform() === "mac") ? "installer/mac/staging/<%= build.name %>.app/Contents" : "installer/win/staging";
+        staging;
+    
+    if (common.platform() === "mac") {
+        staging = "installer/mac/staging/<%= build.name %>.app/Contents"
+    } else if (common.platform() === "win") {
+        staging = "installer/win/staging";
+    } else {
+        staging = "installer/linux/debian/usr/lib/brackets";
+    }
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -63,8 +71,10 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
+            "installer-linux"   : ["installer/linux/brackets.deb"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
+            "staging-linux"     : ["<%= build.staging %>"],
             "www"               : ["<%= build.staging %>/www", "<%= build.staging %>/samples"]
         },
         "copy": {
@@ -106,6 +116,23 @@ module.exports = function (grunt) {
                 ]
             },
             */
+            "linux": {
+                "files": [
+                    {
+                        "expand"    : true,
+                        "cwd"       : "out/Release",
+                        "src"       : [
+                            "lib/**",
+                            "locales/**",
+                            "appshell*.png",
+                            "Brackets",
+                            "cef.pak",
+                            "devtools_resources.pak"
+                        ],
+                        "dest"      : "<%= build.staging %>"
+                    }
+                ]
+            },
             "www": {
                 "files": [
                     {
@@ -156,7 +183,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1453.1255"
+            "version"       : "3.1453.1279"
         },
         "node": {
             "version"       : "0.8.20"

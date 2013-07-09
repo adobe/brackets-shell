@@ -3,26 +3,19 @@
 // can be found in the LICENSE file.
 
 #include <gtk/gtk.h>
+#include <X11/Xlib.h>
 #include <string>
-#include "cefclient/client_handler.h"
+#include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 
-// ClientHandler::ClientLifeSpanHandler implementation
-bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> parentBrowser,
-                                  const CefPopupFeatures& popupFeatures,
-                                  CefWindowInfo& windowInfo,
-                                  const CefString& url,
-                                  CefRefPtr<CefClient>& client,
-                                  CefBrowserSettings& settings) {
-  REQUIRE_UI_THREAD();
-
-  return false;
-}
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
+#ifdef SHOW_TOOLBAR_UI
   REQUIRE_UI_THREAD();
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
@@ -30,6 +23,7 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
     std::string urlStr(url);
     gtk_entry_set_text(GTK_ENTRY(m_EditHwnd), urlStr.c_str());
   }
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -48,13 +42,16 @@ void ClientHandler::SendNotification(NotificationType type) {
 }
 
 void ClientHandler::SetLoading(bool isLoading) {
+#ifdef SHOW_TOOLBAR_UI
   if (isLoading)
     gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), true);
   else
     gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), false);
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
+#ifdef SHOW_TOOLBAR_UI
   if (canGoBack)
     gtk_widget_set_sensitive(GTK_WIDGET(m_BackHwnd), true);
   else
@@ -64,12 +61,38 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
     gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), true);
   else
     gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), false);
+#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::CloseMainWindow() {
-  // TODO(port): Close main window.
+  // TODO(port): Check if this is enough
+  gtk_main_quit();
 }
+
+void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
+{
+    // TODO Finish this thing
+    browser->GetHost()->SetFocus(true);
+}
+
+//#TODO Implement window handling, e.g.: CloseWindowCallback
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 	return true;
+}
+
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                  const CefKeyEvent& event,
+                                  CefEventHandle os_event,
+                                  bool* is_keyboard_shortcut) {
+    
+    // TODO
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                               const CefKeyEvent& event,
+                               CefEventHandle os_event) {
+    // TODO
+    return false;
 }

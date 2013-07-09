@@ -1,0 +1,13 @@
+Package: brackets
+Version: 0.27.0
+Section: base
+Priority: optional
+Architecture: i386
+Installed-Size: 128819
+Depends: bash (>= 2.05a-11), libnss3-1d (>= 3.14.3), libnspr4-0d (>= 3.14.3)
+Maintainer: Jason San Jose <jasonsj@adobe.com>
+Description: Brackets
+ Brackets is an open-source editor for web design and development
+ built on top of web technologies such as HTML, CSS and JavaScript.
+ The project was created and is maintained by Adobe, and is released
+ under an MIT License.
