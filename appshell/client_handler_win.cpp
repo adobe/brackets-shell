@@ -10,18 +10,25 @@
 #include "resource.h"
 #include "native_menu_model.h"
 
+#include <algorithm>
 #include <ShellAPI.h>
 
 #define CLOSING_PROP L"CLOSING"
 
 extern CefRefPtr<ClientHandler> g_handler;
-
-// WM_DROPFILES handler, defined in cefclient_win.cpp
-extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
+extern std::vector<CefString> gDroppedFiles;
 
 // Additional globals
 extern HACCEL hAccelTable;
 
+void ClientHandler::OpenDroppedFiles(CefRefPtr<CefBrowser> browser) {
+    for (unsigned int i = 0; i < gDroppedFiles.size(); i++) {
+        ExtensionString filename(gDroppedFiles[i]);
+        replace(filename.begin(), filename.end(), '\\', '/');
+        SendOpenFileCommand(browser, CefString(filename));
+    }
+    gDroppedFiles.clear();
+}
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
@@ -144,12 +151,6 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
         g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
  		return 0;
-      }
-      break;
-
-    case WM_DROPFILES:
-      if (g_handler.get() && browser.get()) {
-        return HandleDropFiles((HDROP)wParam, g_handler, browser);
       }
       break;
 
