@@ -26,6 +26,8 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
+#include <algorithm>
+
 extern std::vector<CefString> gDroppedFiles;
 
 namespace appshell_extensions {

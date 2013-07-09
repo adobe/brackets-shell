@@ -10,7 +10,6 @@
 #include "resource.h"
 #include "native_menu_model.h"
 
-#include <algorithm>
 #include <ShellAPI.h>
 
 #define CLOSING_PROP L"CLOSING"
