@@ -16,19 +16,9 @@
 #define CLOSING_PROP L"CLOSING"
 
 extern CefRefPtr<ClientHandler> g_handler;
-extern std::vector<CefString> gDroppedFiles;
 
 // Additional globals
 extern HACCEL hAccelTable;
-
-void ClientHandler::OpenDroppedFiles(CefRefPtr<CefBrowser> browser) {
-    for (unsigned int i = 0; i < gDroppedFiles.size(); i++) {
-        ExtensionString filename(gDroppedFiles[i]);
-        replace(filename.begin(), filename.end(), '\\', '/');
-        SendOpenFileCommand(browser, CefString(filename));
-    }
-    gDroppedFiles.clear();
-}
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,

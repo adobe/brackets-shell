@@ -11,14 +11,6 @@
 #include "native_menu_model.h"
 
 extern CefRefPtr<ClientHandler> g_handler;
-extern std::vector<CefString> gDroppedFiles;
-
-void ClientHandler::OpenDroppedFiles(CefRefPtr<CefBrowser> browser) {
-    for (unsigned int i = 0; i < gDroppedFiles.size(); i++) {
-        SendOpenFileCommand(browser, gDroppedFiles[i]);
-    }
-    gDroppedFiles.clear();
-}
 
 // ClientHandler::ClientLifeSpanHandler implementation
 

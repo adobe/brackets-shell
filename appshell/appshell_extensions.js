@@ -498,9 +498,21 @@ if (!appshell.app) {
         });
     };
 
-    native function OpenDroppedFiles();
-    appshell.app.openDroppedFiles = function (callback) {
-        OpenDroppedFiles(callback || _dummyCallback);
+    /**
+     * Get files and folders dropped onto the application.
+     *
+     * @param {function(err, files)} callback Asynchronous callback function with two arguments:
+     *          err - error code
+     *          files - Array of file paths
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetDroppedFiles();
+    appshell.app.getDroppedFiles = function (callback) {
+        GetDroppedFiles(function (err, files) {
+            // "files" is a string, convert to Array
+            callback(err, err ? [] : (files ? JSON.parse(files) : []));
+        });
     };
  
     /**
