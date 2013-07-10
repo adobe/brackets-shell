@@ -20,13 +20,14 @@
 // ClientHandler implementation.
 class ClientHandler : public CefClient,
                       public CefLifeSpanHandler,
+                      public CefDragHandler,
                       public CefLoadHandler,
                       public CefRequestHandler,
                       public CefDisplayHandler,
                       public CefKeyboardHandler,
                       public CefGeolocationHandler,
                       public CefContextMenuHandler {
- public:
+public:
   // Interface for process message delegates. Do not perform work in the
   // RenderDelegate constructor.
   class ProcessMessageDelegate : public virtual CefBase {
@@ -70,6 +71,9 @@ class ClientHandler : public CefClient,
   virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE {
     return this;
   }
+  virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE {
+    return this;
+  }
   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE {
     return this;
   }
@@ -99,6 +103,11 @@ class ClientHandler : public CefClient,
   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
+  
+  // CefDragHandler methods
+  virtual bool OnDragEnter(CefRefPtr<CefBrowser> browser,
+                           CefRefPtr<CefDragData> dragData,
+                           DragOperationsMask mask) OVERRIDE;
 
   // CefLoadHandler methods
   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,

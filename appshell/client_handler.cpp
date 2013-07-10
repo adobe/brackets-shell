@@ -120,6 +120,21 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
 }
 
+std::vector<CefString> gDroppedFiles;
+
+bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefDragData> dragData,
+                                DragOperationsMask mask) {
+    REQUIRE_UI_THREAD();
+    
+    if (dragData->IsFile()) {
+        gDroppedFiles.clear();
+        // Store the dragged files in a vector for later use
+        dragData->GetFileNames(gDroppedFiles);
+    }
+    return false;
+}
+
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame) {
   REQUIRE_UI_THREAD();

@@ -26,6 +26,10 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
+#include <algorithm>
+
+extern std::vector<CefString> gDroppedFiles;
+
 namespace appshell_extensions {
 
 class ProcessMessageDelegate : public ClientHandler::ProcessMessageDelegate {
@@ -429,6 +433,34 @@ public:
                 error = GetPendingFilesToOpen(files);
                 responseArgs->SetString(2, files.c_str());
             }
+        } else if (message_name == "GetDroppedFiles") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                std::wstring files;
+                
+                files = L"[";
+                for (unsigned int i = 0; i < gDroppedFiles.size(); i++) {
+                    std::wstring file(gDroppedFiles[i]);
+                    // Convert windows paths to unix paths
+                    replace(file.begin(), file.end(), '\\', '/');
+                    files += L"\"";
+                    files += file;
+                    files += L"\"";
+                    if (i < gDroppedFiles.size() - 1) {
+                        files += L", ";
+                    }
+                }
+                files += L"]";
+                gDroppedFiles.clear();
+                
+                responseArgs->SetString(2, files.c_str());
+            }
+            
         } else if (message_name == "AddMenu") {
             // Parameters:
             //  0: int32 - callback id
