@@ -441,7 +441,7 @@ public:
             }
             
             if (error == NO_ERROR) {
-                std::wstring    files;
+                std::wstring files;
                 
                 files = L"[";
                 for (unsigned int i = 0; i < gDroppedFiles.size(); i++) {
