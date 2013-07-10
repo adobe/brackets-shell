@@ -585,23 +585,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   if (!hWndMain)
     return FALSE;
 
-  DragAcceptFiles(hWndMain, TRUE);
   RestoreWindowPlacement(hWndMain, showCmd);
   UpdateWindow(hWndMain);
 
   return TRUE;
-}
-
-LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser) {
-    UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-    for (UINT i = 0; i < fileCount; i++) {
-        wchar_t filename[MAX_PATH];
-        DragQueryFile(hDrop, i, filename, MAX_PATH);
-        std::wstring pathStr(filename);
-        replace(pathStr.begin(), pathStr.end(), '\\', '/');
-        handler->SendOpenFileCommand(browser, CefString(pathStr));
-    }
-    return 0;
 }
 
 //
@@ -879,12 +866,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
-
-    case WM_DROPFILES:
-        if (g_handler.get()) {
-            return HandleDropFiles((HDROP)wParam, g_handler, g_handler->GetBrowser());
-        }
-        return 0;
 
     case WM_INITMENUPOPUP:
         // Notify before popping up
