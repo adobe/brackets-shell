@@ -14,13 +14,13 @@
 
 #define CLOSING_PROP L"CLOSING"
 
-extern CefRefPtr<ClientHandler> g_handler;
+extern CefRefPtr<ClientHandler> gHandler;
 
 // WM_DROPFILES handler, defined in cefclient_win.cpp
 extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
 
 // Additional globals
-extern HACCEL hAccelTable;
+extern HACCEL gAccelTable;
 
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
@@ -110,7 +110,7 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         switch (wmId)
         {
           case IDM_CLOSE:
-            if (g_handler.get() && browser.get()) {
+            if (gHandler.get() && browser.get()) {
               HWND browserHwnd = browser->GetHost()->GetWindowHandle();
               HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
               if (closing) {
@@ -119,21 +119,21 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
               }
 
  		      CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
- 		      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+ 		      gHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
 			}
 			return 0;
           default:
             ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(wmId);
             if (commandId.size() > 0) {
               CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
-              g_handler->SendJSCommand(browser, commandId, callback);
+              gHandler->SendJSCommand(browser, commandId, callback);
             }
         }
 	  }
       break;
 
     case WM_CLOSE:
-      if (g_handler.get() && browser.get()) {
+      if (gHandler.get() && browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
         if (closing) {
@@ -142,14 +142,14 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
 
         CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-        g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+        gHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
  		return 0;
       }
       break;
 
     case WM_DROPFILES:
-      if (g_handler.get() && browser.get()) {
-        return HandleDropFiles((HDROP)wParam, g_handler, browser);
+      if (gHandler.get() && browser.get()) {
+        return HandleDropFiles((HDROP)wParam, gHandler, browser);
       }
       break;
 
@@ -254,7 +254,7 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
         return false;
     }
 
-    if (::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
+    if (::TranslateAccelerator(frameHwnd, gAccelTable, os_event)) {
         return true;
     }
 

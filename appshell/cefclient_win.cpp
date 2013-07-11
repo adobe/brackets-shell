@@ -24,67 +24,31 @@
 #include <algorithm>
 #include <ShellAPI.h>
 #include <ShlObj.h>
- 
-#define MAX_LOADSTRING 100
-
-#ifdef SHOW_TOOLBAR_UI
-#define MAX_URL_LENGTH  255
-#define BUTTON_WIDTH 72
-#define URLBAR_HEIGHT  24
-#endif // SHOW_TOOLBAR_UI
-
-#define CLOSING_PROP L"CLOSING"
 
 // Global Variables:
-DWORD g_appStartupTime;
-HINSTANCE hInst;   // current instance
-HACCEL hAccelTable;
-HWND hWndMain;
-std::wstring gFilesToOpen; // Filenames passed as arguments to app
-TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
-char szWorkingDir[MAX_PATH];  // The current working directory
+HINSTANCE       gInstance;
+DWORD           gAppStartupTime;
+HACCEL          gAccelTable;
+std::wstring    gFilesToOpen;           // Filenames passed as arguments to app
 
-TCHAR szInitialUrl[MAX_PATH] = {0};
+// Static Variables
+static char     gWorkingDir[MAX_PATH] = {0};
+static TCHAR    gInitialUrl[MAX_PATH] = {0};
+
+// Externals
+extern CefRefPtr<ClientHandler> gHandler;
+
 
 // Forward declarations of functions included in this code module:
-ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale);
 BOOL InitInstance(HINSTANCE, int);
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
 // The global ClientHandler reference.
-extern CefRefPtr<ClientHandler> g_handler;
 
 #if defined(OS_WIN)
 // Add Common Controls to the application manifest because it's required to
 // support the default tooltip implementation.
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")  // NOLINT(whitespace/line_length)
 #endif
-
-// Registry access functions
-void EnsureTrailingSeparator(LPWSTR pRet);
-void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet);
-bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
-bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
-
-// Registry key strings
-#define PREF_APPSHELL_BASE		L"Software"
-#define PREF_WINPOS_FOLDER		L"Window Position"
-#define PREF_LEFT				L"Left"
-#define PREF_TOP				L"Top"
-#define PREF_WIDTH				L"Width"
-#define PREF_HEIGHT				L"Height"
-#define PREF_RESTORE_LEFT		L"Restore Left"
-#define PREF_RESTORE_TOP		L"Restore Top"
-#define PREF_RESTORE_RIGHT		L"Restore Right"
-#define PREF_RESTORE_BOTTOM		L"Restore Bottom"
-#define PREF_SHOWSTATE			L"Show State"
-
-// Window state functions
-void SaveWindowRect(HWND hWnd);
-void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
-void RestoreWindowPlacement(HWND hWnd, int showCmd);
 
 // If 'str' ends with a colon followed by some digits, then remove the colon and digits. For example:
 //    "c:\bob\abc.txt:123:456" will be changed to "c:\bob\abc.txt:123"
@@ -147,132 +111,132 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow) {
-  UNREFERENCED_PARAMETER(hPrevInstance);
-  UNREFERENCED_PARAMETER(lpCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
-  g_appStartupTime = timeGetTime();
+    gAppStartupTime = timeGetTime();
 
-  CefMainArgs main_args(hInstance);
-  CefRefPtr<ClientApp> app(new ClientApp);
+    CefMainArgs main_args(hInstance);
+    CefRefPtr<ClientApp> app(new ClientApp);
 
-  // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
-  if (exit_code >= 0)
-    return exit_code;
+    // Execute the secondary process, if any.
+    int exit_code = CefExecuteProcess(main_args, app.get());
+    if (exit_code >= 0)
+        return exit_code;
 
-  // Retrieve the current working directory.
-  if (_getcwd(szWorkingDir, MAX_PATH) == NULL)
-    szWorkingDir[0] = 0;
+    // Retrieve the current working directory.
+    if (_getcwd(gWorkingDir, MAX_PATH) == NULL)
+        gWorkingDir[0] = 0;
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(0, NULL);
+    // Parse command line arguments. The passed in values are ignored on Windows.
+    AppInitCommandLine(0, NULL);
 
-  CefSettings settings;
+    CefSettings settings;
 
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
+    // Populate the settings based on command line arguments.
+    AppGetSettings(settings, app);
 
-  // Check command
-  if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
-  }
+    // Check command
+    if (CefString(&settings.cache_path).length() == 0)
+	    CefString(&settings.cache_path) = AppGetCachePath();
 
-  // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+    // Initialize CEF.
+    CefInitialize(main_args, settings, app.get());
 
-  // Initialize global strings
-  LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-  LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
-  MyRegisterClass(hInstance, *(app->GetCurrentLanguage().GetStruct()));
- 
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
-  }
-  else {
-	// If the shift key is not pressed, look for the index.html file 
-	if (GetAsyncKeyState(VK_SHIFT) == 0) {
-	// Get the full pathname for the app. We look for the index.html
-	// file relative to this location.
-	wchar_t appPath[MAX_PATH];
-	wchar_t *pathRoot;
-	GetModuleFileName(NULL, appPath, MAX_PATH);
+    CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+    if (cmdLine->HasSwitch(cefclient::kStartupPath)) 
+    {
+	    wcscpy(gInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
+    }
+    else 
+    {
+        // If the shift key is not pressed, look for the index.html file 
+        if (GetAsyncKeyState(VK_SHIFT) == 0) 
+        {
+            // Get the full pathname for the app. We look for the index.html
+            // file relative to this location.
+            wchar_t appPath[MAX_PATH];
+            wchar_t *pathRoot;
+            GetModuleFileName(NULL, appPath, MAX_PATH);
 
-	// Strip the .exe filename (and preceding "\") from the appPath
-	// and store in pathRoot
-	pathRoot = wcsrchr(appPath, '\\');
+            // Strip the .exe filename (and preceding "\") from the appPath
+            // and store in pathRoot
+            pathRoot = wcsrchr(appPath, '\\');
 
-	// Look for .\dev\src\index.html first
-	wcscpy(pathRoot, L"\\dev\\src\\index.html");
+            // Look for .\dev\src\index.html first
+            wcscpy(pathRoot, L"\\dev\\src\\index.html");
 
-	// If the file exists, use it
-	if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-	}
+            // If the file exists, use it
+            if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) 
+	            wcscpy(gInitialUrl, appPath);
 
-	if (!wcslen(szInitialUrl)) {
-		// Look for .\www\index.html next
-		wcscpy(pathRoot, L"\\www\\index.html");
-		if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-		}
-	}
-	}
-  }
+            if (!wcslen(gInitialUrl)) 
+            {
+	            // Look for .\www\index.html next
+	            wcscpy(pathRoot, L"\\www\\index.html");
+	            if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES)
+	                wcscpy(gInitialUrl, appPath);
+            }
+        }
+    }
 
-  if (!wcslen(szInitialUrl)) {
-      // If we got here, either the startup file couldn't be found, or the user pressed the
-      // shift key while launching. Prompt to select the index.html file.
-      OPENFILENAME ofn = {0};
-      ofn.lStructSize = sizeof(ofn);
-      ofn.lpstrFile = szInitialUrl;
-      ofn.nMaxFile = MAX_PATH;
-      ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
-      ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
-      ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
+    if (!wcslen(gInitialUrl)) 
+    {
+        // If we got here, either the startup file couldn't be found, or the user pressed the
+        // shift key while launching. Prompt to select the index.html file.
+        OPENFILENAME ofn = {0};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.lpstrFile = gInitialUrl;
+        ofn.nMaxFile = MAX_PATH;
+        ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+        ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
-      if (!GetOpenFileName(&ofn)) {
+        if (!GetOpenFileName(&ofn)) {
         // User cancelled, exit the app
         CefShutdown();
         return 0;
-      }
-  }
-
-  // Perform application initialization
-  if (!InitInstance (hInstance, nCmdShow))
-    return FALSE;
-
-  // Start the node server process
-  startNodeProcess();
-
-  gFilesToOpen = GetFilenamesFromCommandLine();
-
-  int result = 0;
-
-  if (!settings.multi_threaded_message_loop) {
-    // Run the CEF message loop. This function will block until the application
-    // recieves a WM_QUIT message.
-    CefRunMessageLoop();
-  } else {
-    MSG msg;
-
-    // Run the application message loop.
-    while (GetMessage(&msg, NULL, 0, 0)) {
-      if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
+        }
     }
 
-    result = static_cast<int>(msg.wParam);
-  }
+    // Perform application initialization
+    if (!InitInstance (hInstance, nCmdShow))
+        return FALSE;
 
-  OnBeforeShutdown();
+    // Start the node server process
+    startNodeProcess();
 
-  // Shut down CEF.
-  CefShutdown();
+    gFilesToOpen = GetFilenamesFromCommandLine();
 
-  return result;
+    int result = 0;
+
+    if (!settings.multi_threaded_message_loop) 
+    {
+        // Run the CEF message loop. This function will block until the application
+        // recieves a WM_QUIT message.
+        CefRunMessageLoop();
+    } 
+    else 
+    {
+        MSG msg;
+
+        // Run the application message loop.
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            if (!TranslateAccelerator(msg.hwnd, gAccelTable, &msg)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+
+        result = static_cast<int>(msg.wParam);
+    }
+
+    OnBeforeShutdown();
+
+    // Shut down CEF.
+    CefShutdown();
+
+    return result;
 }
 
 // Add trailing separator, if necessary
@@ -354,205 +318,6 @@ bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
 	return result;
 }
 
-// write integer value to registry key
-bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
-{
-	HKEY hKey;
-	bool result = false;
-
-	wchar_t key[MAX_PATH];
-	key[0] = '\0';
-	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
-
-	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
-	{
-		DWORD dwCount = sizeof(int);
-		if (ERROR_SUCCESS == RegSetValueEx(hKey, pEntry, 0, REG_DWORD, (LPBYTE)&val, dwCount))
-			result = true;
-		RegCloseKey(hKey);
-	}
-
-	return result;
-}
-
-void SaveWindowRect(HWND hWnd)
-{
-	// Save position of active window
-	if (!hWnd)
-		return;
-
-	WINDOWPLACEMENT wp;
-	memset(&wp, 0, sizeof(WINDOWPLACEMENT));
-	wp.length = sizeof(WINDOWPLACEMENT);
-
-	if (GetWindowPlacement(hWnd, &wp))
-	{
-		// Only save window positions for "restored" and "maximized" states.
-		// If window is closed while "minimized", we don't want it to open minimized
-		// for next session, so don't update registry so it opens in previous state.
-		if (wp.showCmd == SW_SHOWNORMAL || wp.showCmd == SW_SHOW || wp.showCmd == SW_MAXIMIZE)
-		{
-			RECT rect;
-			if (GetWindowRect(hWnd, &rect))
-			{
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right - rect.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
-			}
-
-			if (wp.showCmd == SW_MAXIMIZE)
-			{
-				// When window is maximized, we also store the "restore" size
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,   wp.rcNormalPosition.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,    wp.rcNormalPosition.top);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,  wp.rcNormalPosition.right);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM, wp.rcNormalPosition.bottom);
-			}
-
-			// Maximize is the only special case we handle
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,
-							 (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
-		}
-	}
-}
-
-void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
-{
-	// Start with Registry data
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
-
-	// If window size has changed, we may need to alter window size
-	HMONITOR	hMonitor;
-	MONITORINFO	mi;
-	RECT		rcOrig, rcMax;
-
-	// Get the nearest monitor to the passed rect
-	rcOrig.left   = left;
-	rcOrig.top    = top;
-	rcOrig.right  = left + width;
-	rcOrig.bottom = top  + height;
-	hMonitor = MonitorFromRect(&rcOrig, MONITOR_DEFAULTTONEAREST);
-
-	// Get the monitor rect
-	mi.cbSize = sizeof(mi);
-	GetMonitorInfo(hMonitor, &mi);
-	rcMax = mi.rcMonitor;
-
-	if (showCmd == SW_MAXIMIZE)
-	{
-		// For maximized case, just use monitor dimensions
-		left   = rcMax.left;
-		top    = rcMax.top;
-		width  = rcMax.right  - rcMax.left;
-		height = rcMax.bottom - rcMax.top;
-	}
-	else
-	{
-		// For non-maximized case, adjust window to fit on screen
-
-		// make sure width fits
-		int rcMaxWidth = static_cast<int>(rcMax.right - rcMax.left);
-		if (width > rcMaxWidth)
-			width = rcMaxWidth;
-
-		// make sure left is on screen
-		if (left < rcMax.left)
-			left = static_cast<int>(rcMax.left);
-
-		// make sure right is on screen
-		if ((left + width) > rcMax.right)
-			left = static_cast<int>(rcMax.right) - width;
-
-		// make sure height fits
-		int rcMaxHeight = static_cast<int>(rcMax.bottom - rcMax.top);
-		if (height > rcMaxHeight)
-			height = rcMaxHeight;
-
-		// make sure top is on screen
-		if (top < rcMax.top)
-			top = static_cast<int>(rcMax.top);
-
-		// make sure bottom is on screen
-		if ((top + height) > rcMax.bottom)
-			top = static_cast<int>(rcMax.bottom) - height;
-	}
-}
-
-void RestoreWindowPlacement(HWND hWnd, int showCmd)
-{
-	if (!hWnd)
-		return;
-
-	// If window is maximized, set the "restore" window position
-	if (showCmd == SW_MAXIMIZE)
-	{
-		WINDOWPLACEMENT wp;
-		wp.length = sizeof(WINDOWPLACEMENT);
-
-		wp.flags	= 0;
-		wp.showCmd	= SW_MAXIMIZE;
-		wp.ptMinPosition.x	= -1;
-		wp.ptMinPosition.y	= -1;
-		wp.ptMaxPosition.x	= -1;
-		wp.ptMaxPosition.y	= -1;
-
-		wp.rcNormalPosition.left	= CW_USEDEFAULT;
-		wp.rcNormalPosition.top		= CW_USEDEFAULT;
-		wp.rcNormalPosition.right	= CW_USEDEFAULT;
-		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
-
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,	NULL, (int&)wp.rcNormalPosition.left);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,	NULL, (int&)wp.rcNormalPosition.top);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,	NULL, (int&)wp.rcNormalPosition.right);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM,	NULL, (int&)wp.rcNormalPosition.bottom);
-
-		// This returns an error code, but not sure what we could do on an error
-		SetWindowPlacement(hWnd, &wp);
-	}
-
-	ShowWindow(hWnd, showCmd);
-}
-
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
-//  COMMENTS:
-//
-//    This function and its usage are only necessary if you want this code
-//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
-//    function that was added to Windows 95. It is important to call this
-//    function so that the application will get 'well formed' small icons
-//    associated with it.
-//
-ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
-
-  WNDCLASSEX wcex;
-
-  wcex.cbSize = sizeof(WNDCLASSEX);
-
-  wcex.style         = CS_HREDRAW | CS_VREDRAW;
-  wcex.lpfnWndProc   = WndProc;
-  wcex.cbClsExtra    = 0;
-  wcex.cbWndExtra    = 0;
-  wcex.hInstance     = hInstance;
-  wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
-  wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
-  wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = NULL;
-  wcex.lpszClassName = szWindowClass;
-  wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-  return RegisterClassEx(&wcex);
-}
-
 //
 //   FUNCTION: InitInstance(HINSTANCE, int)
 //
@@ -564,7 +329,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 //        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
-  hInst = hInstance;  // Store instance handle in our global variable
 
   // TODO: test this cases:
   // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
@@ -631,9 +395,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     // Callback for the edit window
     switch (message) {
     case WM_CHAR:
-      if (wParam == VK_RETURN && g_handler.get()) {
+      if (wParam == VK_RETURN && gHandler.get()) {
         // When the user hits the enter key load the URL
-        CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
+        CefRefPtr<CefBrowser> browser = gHandler->GetBrowser();
         wchar_t strPtr[MAX_URL_LENGTH+1] = {0};
         *((LPWORD)strPtr) = MAX_URL_LENGTH;
         LRESULT strLen = SendMessage(hWnd, EM_GETLINE, 0, (LPARAM)strPtr);
@@ -654,59 +418,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     switch (message) {
     case WM_CREATE: {
       // Create the single static handler class instance
-      g_handler = new ClientHandler();
-      g_handler->SetMainHwnd(hWnd);
+      gHandler = new ClientHandler();
+      gHandler->SetMainHwnd(hWnd);
 
       // Create the child windows used for navigation
       RECT rect;
       int x = 0;
 
       GetClientRect(hWnd, &rect);
-
-#ifdef SHOW_TOOLBAR_UI
-      backWnd = CreateWindow(L"BUTTON", L"Back",
-                              WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON
-                              | WS_DISABLED, x, 0, BUTTON_WIDTH, URLBAR_HEIGHT,
-                              hWnd, (HMENU) IDC_NAV_BACK, hInst, 0);
-      x += BUTTON_WIDTH;
-
-      forwardWnd = CreateWindow(L"BUTTON", L"Forward",
-                                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON
-                                | WS_DISABLED, x, 0, BUTTON_WIDTH,
-                                URLBAR_HEIGHT, hWnd, (HMENU) IDC_NAV_FORWARD,
-                                hInst, 0);
-      x += BUTTON_WIDTH;
-
-      reloadWnd = CreateWindow(L"BUTTON", L"Reload",
-                                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON
-                                | WS_DISABLED, x, 0, BUTTON_WIDTH,
-                                URLBAR_HEIGHT, hWnd, (HMENU) IDC_NAV_RELOAD,
-                                hInst, 0);
-      x += BUTTON_WIDTH;
-
-      stopWnd = CreateWindow(L"BUTTON", L"Stop",
-                              WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON
-                              | WS_DISABLED, x, 0, BUTTON_WIDTH, URLBAR_HEIGHT,
-                              hWnd, (HMENU) IDC_NAV_STOP, hInst, 0);
-      x += BUTTON_WIDTH;
-
-      editWnd = CreateWindow(L"EDIT", 0,
-                              WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT |
-                              ES_AUTOVSCROLL | ES_AUTOHSCROLL| WS_DISABLED,
-                              x, 0, rect.right - BUTTON_WIDTH * 4,
-                              URLBAR_HEIGHT, hWnd, 0, hInst, 0);
-
-      // Assign the edit window's WNDPROC to this function so that we can
-      // capture the enter key
-      editWndOldProc =
-          reinterpret_cast<WNDPROC>(GetWindowLongPtr(editWnd, GWLP_WNDPROC));
-      SetWindowLongPtr(editWnd, GWLP_WNDPROC,
-          reinterpret_cast<LONG_PTR>(WndProc));
-      g_handler->SetEditHwnd(editWnd);
-      g_handler->SetButtonHwnds(backWnd, forwardWnd, reloadWnd, stopWnd);
-
-      rect.top += URLBAR_HEIGHT;
-#endif // SHOW_TOOLBAR_UI
 
       CefWindowInfo info;
       CefBrowserSettings settings;
@@ -718,46 +437,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
       // Creat the new child browser window
       CefBrowserHost::CreateBrowser(info,
-          static_cast<CefRefPtr<CefClient> >(g_handler),
-          szInitialUrl, settings);
+          static_cast<CefRefPtr<CefClient> >(gHandler),
+          gInitialUrl, settings);
 
       return 0;
     }
 
     case WM_COMMAND: {
       CefRefPtr<CefBrowser> browser;
-      if (g_handler.get())
-        browser = g_handler->GetBrowser();
+      if (gHandler.get())
+        browser = gHandler->GetBrowser();
 
       wmId    = LOWORD(wParam);
       wmEvent = HIWORD(wParam);
       // Parse the menu selections:
       switch (wmId) {
       case IDM_EXIT:
-        if (g_handler.get()) {
-          g_handler->QuittingApp(true);
-    	  g_handler->DispatchCloseToNextBrowser();
+        if (gHandler.get()) {
+          gHandler->QuittingApp(true);
+    	  gHandler->DispatchCloseToNextBrowser();
     	} else {
           DestroyWindow(hWnd);
 		}
         return 0;
       case ID_WARN_CONSOLEMESSAGE:
-/*
-        if (g_handler.get()) {
-          std::wstringstream ss;
-          ss << L"Console messages will be written to "
-              << std::wstring(CefString(g_handler->GetLogFile()));
-          MessageBox(hWnd, ss.str().c_str(), L"Console Messages",
-              MB_OK | MB_ICONINFORMATION);
-        }
-*/
         return 0;
       case ID_WARN_DOWNLOADCOMPLETE:
       case ID_WARN_DOWNLOADERROR:
-        if (g_handler.get()) {
+        if (gHandler.get()) {
           std::wstringstream ss;
           ss << L"File \"" <<
-              std::wstring(CefString(g_handler->GetLastDownloadFile())) <<
+              std::wstring(CefString(gHandler->GetLastDownloadFile())) <<
               L"\" ";
 
           if (wmId == ID_WARN_DOWNLOADCOMPLETE)
@@ -769,29 +479,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
               MB_OK | MB_ICONINFORMATION);
         }
         return 0;
-#ifdef SHOW_TOOLBAR_UI
-      case IDC_NAV_BACK:   // Back button
-        if (browser.get())
-          browser->GoBack();
-        return 0;
-      case IDC_NAV_FORWARD:  // Forward button
-        if (browser.get())
-          browser->GoForward();
-        return 0;
-      case IDC_NAV_RELOAD:  // Reload button
-        if (browser.get())
-          browser->Reload();
-        return 0;
-      case IDC_NAV_STOP:  // Stop button
-        if (browser.get())
-          browser->StopLoad();
-        return 0;
-#endif // SHOW_TOOLBAR_UI
+
       default:
-          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
+          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(gHandler->GetBrowser())).getCommandId(wmId);
           if (commandId.size() > 0) {
-              CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
-              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(gHandler->GetBrowser(), commandId);
+              gHandler->SendJSCommand(gHandler->GetBrowser(), commandId, callback);
           }
       }
       break;
@@ -803,10 +496,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       return 0;
 
     case WM_SETFOCUS:
-      if (g_handler.get() && g_handler->GetBrowser()) {
+      if (gHandler.get() && gHandler->GetBrowser()) {
         // Pass focus to the browser window
         CefWindowHandle hwnd =
-            g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
         if (hwnd)
           PostMessage(hwnd, WM_SETFOCUS, wParam, NULL);
       }
@@ -815,26 +508,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
     case WM_SIZE:
       // Minimizing resizes the window to 0x0 which causes our layout to go all
       // screwy, so we just ignore it.
-      if (wParam != SIZE_MINIMIZED && g_handler.get() &&
-          g_handler->GetBrowser()) {
+      if (wParam != SIZE_MINIMIZED && gHandler.get() &&
+          gHandler->GetBrowser()) {
         CefWindowHandle hwnd =
-            g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
         if (hwnd) {
           // Resize the browser window and address bar to match the new frame
           // window size
           RECT rect;
           GetClientRect(hWnd, &rect);
-#ifdef SHOW_TOOLBAR_UI
-          rect.top += URLBAR_HEIGHT;
 
-          int urloffset = rect.left + BUTTON_WIDTH * 4;
-#endif // SHOW_TOOLBAR_UI
 
           HDWP hdwp = BeginDeferWindowPos(1);
-#ifdef SHOW_TOOLBAR_UI
-          hdwp = DeferWindowPos(hdwp, editWnd, NULL, urloffset,
-            0, rect.right - urloffset, URLBAR_HEIGHT, SWP_NOZORDER);
-#endif // SHOW_TOOLBAR_UI
+
           hdwp = DeferWindowPos(hdwp, hwnd, NULL,
             rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
             SWP_NOZORDER);
@@ -844,9 +530,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
 
     case WM_ERASEBKGND:
-      if (g_handler.get() && g_handler->GetBrowser()) {
+      if (gHandler.get() && gHandler->GetBrowser()) {
         CefWindowHandle hwnd =
-            g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
         if (hwnd) {
           // Dont erase the background if the browser window has been loaded
           // (this avoids flashing)
@@ -856,21 +542,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       break;
 
     case WM_CLOSE:
-      if (g_handler.get()) {
+      if (gHandler.get()) {
 
         HWND hWnd = GetActiveWindow();
         SaveWindowRect(hWnd);
 
         // If we already initiated the browser closing, then let default window proc handle it.
-        HWND browserHwnd = g_handler->GetBrowser()->GetHost()->GetWindowHandle();
+        HWND browserHwnd = gHandler->GetBrowser()->GetHost()->GetWindowHandle();
         HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
         if (closing) {
 		    RemoveProp(browserHwnd, CLOSING_PROP);
 			break;
 		}
 
-        g_handler->QuittingApp(true);
-        g_handler->DispatchCloseToNextBrowser();
+        gHandler->QuittingApp(true);
+        gHandler->DispatchCloseToNextBrowser();
         return 0;
       }
       break;
@@ -881,18 +567,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       return 0;
 
     case WM_DROPFILES:
-        if (g_handler.get()) {
-            return HandleDropFiles((HDROP)wParam, g_handler, g_handler->GetBrowser());
+        if (gHandler.get()) {
+            return HandleDropFiles((HDROP)wParam, gHandler, gHandler->GetBrowser());
         }
         return 0;
 
     case WM_INITMENUPOPUP:
         // Notify before popping up
-        g_handler->SendJSCommand(g_handler->GetBrowser(), APP_BEFORE_MENUPOPUP);
+        gHandler->SendJSCommand(gHandler->GetBrowser(), APP_BEFORE_MENUPOPUP);
 
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
-        void* menuParent = getMenuParent(g_handler->GetBrowser());
+        void* menuParent = getMenuParent(gHandler->GetBrowser());
         for (int i = 0; i < count; i++) {
             UINT id = GetMenuItemID(menu, i);
 
@@ -911,28 +597,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
   }
 }
 
-// Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
-  UNREFERENCED_PARAMETER(lParam);
-  switch (message) {
-  case WM_INITDIALOG:
-    return (INT_PTR)TRUE;
-
-  case WM_COMMAND:
-    if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
-      EndDialog(hDlg, LOWORD(wParam));
-      return (INT_PTR)TRUE;
-    }
-    break;
-  }
-  return (INT_PTR)FALSE;
-}
-
-
 // Global functions
 
 std::string AppGetWorkingDirectory() {
-  return szWorkingDir;
+  return gWorkingDir;
 }
 
 CefString AppGetCachePath() {

@@ -31,7 +31,7 @@
 #include <ShlObj.h>
 #include <string>
 
-extern DWORD g_appStartupTime;
+extern DWORD gAppStartupTime;
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -61,19 +61,19 @@ CefString ClientApp::GetCurrentLanguage()
 
 std::string ClientApp::GetExtensionJSSource()
 {
-    extern HINSTANCE hInst;
+    extern HINSTANCE gInstance;
 
-    HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(IDS_APPSHELL_EXTENSIONS), MAKEINTRESOURCE(256));
+    HRSRC hRes = ::FindResource(gInstance, MAKEINTRESOURCE(IDS_APPSHELL_EXTENSIONS), MAKEINTRESOURCE(256));
     DWORD dwSize;
     LPBYTE pBytes = NULL;
 
     if(hRes)
     {
-        HGLOBAL hGlob = LoadResource(hInst, hRes);
+        HGLOBAL hGlob = ::LoadResource(gInstance, hRes);
         if(hGlob)
         {
-            dwSize = SizeofResource(hInst, hRes);
-            pBytes = (LPBYTE)LockResource(hGlob);
+            dwSize = ::SizeofResource(gInstance, hRes);
+            pBytes = (LPBYTE)::LockResource(hGlob);
         }
     }
 
@@ -87,7 +87,7 @@ std::string ClientApp::GetExtensionJSSource()
 
 double ClientApp::GetElapsedMilliseconds()
 {
-    return (timeGetTime() - g_appStartupTime);
+    return (timeGetTime() - gAppStartupTime);
 }
 
 CefString ClientApp::AppGetSupportDirectory() 

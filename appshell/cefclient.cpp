@@ -19,19 +19,19 @@
 #include "util.h"
 #include "config.h"
 
-CefRefPtr<ClientHandler> g_handler;
+CefRefPtr<ClientHandler> gHandler;
 CefRefPtr<CefCommandLine> g_command_line;
 
 CefRefPtr<CefBrowser> AppGetBrowser() {
-  if (!g_handler.get())
+  if (!gHandler.get())
     return NULL;
-  return g_handler->GetBrowser();
+  return gHandler->GetBrowser();
 }
 
 CefWindowHandle AppGetMainHwnd() {
-  if (!g_handler.get())
+  if (!gHandler.get())
     return NULL;
-  return g_handler->GetMainHwnd();
+  return gHandler->GetMainHwnd();
 }
 
 void AppInitCommandLine(int argc, const char* const* argv) {

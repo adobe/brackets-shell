@@ -50,8 +50,7 @@ static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
 time_t FiletimeToTime(FILETIME const& ft);
 
-extern HINSTANCE hInst;
-extern HACCEL hAccelTable;
+extern HACCEL       gAccelTable;
 extern std::wstring gFilesToOpen;
 
 // constants
