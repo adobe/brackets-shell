@@ -53,6 +53,7 @@ protected:
 	virtual void PostNonClientDestory();
 
 private:
-	void RegisterWndClass();
+	static ATOM RegisterWndClass();
+    static ATOM mWndClassAtom;
 };
 

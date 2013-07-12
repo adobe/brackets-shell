@@ -25,7 +25,7 @@
 extern HINSTANCE	            gInstance;
 extern CefRefPtr<ClientHandler> gHandler;
 
-static const wchar_t		gWindowClassname[] = L"cef_main_winow";
+static const wchar_t		gWindowClassname[] = L"CEFCLIENT";
 static const wchar_t		gWindowPostionFolder[] = L"Window Position";
 
 static const wchar_t		gPrefLeft[] = L"Left";
@@ -42,11 +42,13 @@ static const wchar_t		gPrefShowState[] = L"Show State";
 static const long			gMinWindowWidth = 390;
 static const long			gMinWindowHeight = 200;
 
+ATOM cef_main_window::mWndClassAtom = cef_main_window::RegisterWndClass();
+
 
 // Globals
 wchar_t                     gClosing[] = L"CLOSING";
 
-void cef_main_window::RegisterWndClass()
+ATOM cef_main_window::RegisterWndClass()
 {
 	static ATOM classAtom = 0;
 	if (classAtom == 0) 
@@ -71,7 +73,9 @@ void cef_main_window::RegisterWndClass()
 
 		classAtom = RegisterClassEx(&wcex);
 	}
+    return classAtom;
 }
+
 
 cef_main_window::cef_main_window() 
 {
