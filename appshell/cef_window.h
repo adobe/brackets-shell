@@ -29,7 +29,7 @@ public:
     cef_window(void);
     virtual ~cef_window(void);
 
-    static cef_window* Create(LPCTSTR szClass, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent = NULL, cef_menu* menu = NULL);
+    BOOL Create(LPCTSTR szClass, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent = NULL, cef_menu* menu = NULL);
     bool SubclassWindow (HWND hWnd);
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
@@ -79,6 +79,9 @@ public:
 
     void DragAcceptFiles(BOOL fAccept)
     { return ::DragAcceptFiles(mWnd, fAccept); }
+
+    BOOL ShowWindow(int nCmdShow)
+    { return ::ShowWindow(mWnd, nCmdShow); }
 
 protected:
     HWND mWnd;

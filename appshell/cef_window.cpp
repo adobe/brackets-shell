@@ -55,7 +55,7 @@ static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
     
     LPCREATESTRUCT lpcs = ((LPCBT_CREATEWND)lParam)->lpcs;
 
-    if (lpcs->lpCreateParams == (LPVOID)gHookData.mWindow) 
+    if (lpcs->lpCreateParams && lpcs->lpCreateParams == (LPVOID)gHookData.mWindow) 
     {
         HWND hWnd = (HWND)wParam;
         gHookData.mWindow->SubclassWindow(hWnd);
@@ -105,29 +105,29 @@ bool cef_window::SubclassWindow(HWND hWnd)
     return true;
 }
 
-cef_window* cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent/*=NULL*/, cef_menu* menu/*=NULL*/)
+static HWND _xxCreateWindow(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, HWND hWndParent, HMENU hMenu, cef_window* window)
 {
-    HWND hWndParent = parent ? parent->mWnd : NULL;
-    HMENU hMenu = /*menu ? menu->m_hMenu :*/ NULL;
-
-    cef_window* window = new cef_window();
-
     ::_HookWindowCreate(window);
 
-    HWND hWnd = ::CreateWindow(szClassname, szWindowTitle, 
+    HWND result = CreateWindow(szClassname, szWindowTitle, 
                                dwStyles, x, y, width, height, hWndParent, hMenu, gInstance, (LPVOID)window);
 
 
     ::_UnHookWindowCreate();
 
-    if (hWnd == NULL) 
-    {
-        delete window;
-        return NULL;
-    }
+    return result;
+}
 
-    window->mWnd = hWnd;
-    return window;
+BOOL cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent/*=NULL*/, cef_menu* menu/*=NULL*/)
+{
+    HWND hWndParent = parent ? parent->mWnd : NULL;
+    HMENU hMenu = /*menu ? menu->m_hMenu :*/ NULL;
+
+    HWND hWndThis = _xxCreateWindow(szClassname, szWindowTitle, 
+                               dwStyles, x, y, width, height, hWndParent, hMenu, this);
+
+
+    return hWndThis && hWndThis == mWnd;
 }
 
 LRESULT cef_window::DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam)

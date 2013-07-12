@@ -422,4 +422,6 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
 		// This returns FALSE on failure, but not sure what we could in that case
 		SetWindowPlacement(&wp);
 	}
+
+    ShowWindow(showCmd);
 }
