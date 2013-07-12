@@ -22,9 +22,11 @@
 #include "resource.h"
 #include "native_menu_model.h"
 
+// external
 extern HINSTANCE	            gInstance;
 extern CefRefPtr<ClientHandler> gHandler;
 
+// constants
 static const wchar_t		gWindowClassname[] = L"CEFCLIENT";
 static const wchar_t		gWindowPostionFolder[] = L"Window Position";
 
@@ -245,7 +247,7 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
 	if (hwnd && !bMinimize) 
 	{
 		RECT rect;
-		::GetClientRect(hwnd, &rect);
+		GetClientRect(&rect);
 
 		HDWP hdwp = BeginDeferWindowPos(1);
 		hdwp = DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER);
@@ -385,10 +387,10 @@ void cef_main_window::SaveWindowRect()
 
 void cef_main_window::RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
-	::GetRegistryInt(gWindowPostionFolder, gPrefLeft,  			NULL, left);
-	::GetRegistryInt(gWindowPostionFolder, gPrefTop,   			NULL, top);
-	::GetRegistryInt(gWindowPostionFolder, gPrefWidth, 			NULL, width);
-	::GetRegistryInt(gWindowPostionFolder, gPrefHeight,			NULL, height);
+	::GetRegistryInt(gWindowPostionFolder, gPrefLeft,  			    NULL, left);
+	::GetRegistryInt(gWindowPostionFolder, gPrefTop,   			    NULL, top);
+	::GetRegistryInt(gWindowPostionFolder, gPrefWidth, 			    NULL, width);
+	::GetRegistryInt(gWindowPostionFolder, gPrefHeight,			    NULL, height);
 	::GetRegistryInt(gWindowPostionFolder, gWindowPostionFolder,	NULL, showCmd);
 }
 
@@ -412,9 +414,9 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
 		wp.rcNormalPosition.right	= CW_USEDEFAULT;
 		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
 
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreLeft,	NULL, (int&)wp.rcNormalPosition.left);
+		GetRegistryInt(gWindowPostionFolder, gPrefRestoreLeft,	    NULL, (int&)wp.rcNormalPosition.left);
 		GetRegistryInt(gWindowPostionFolder, gPrefRestoreTop,		NULL, (int&)wp.rcNormalPosition.top);
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreRight,	NULL, (int&)wp.rcNormalPosition.right);
+		GetRegistryInt(gWindowPostionFolder, gPrefRestoreRight,	    NULL, (int&)wp.rcNormalPosition.right);
 		GetRegistryInt(gWindowPostionFolder, gPrefRestoreBottom,	NULL, (int&)wp.rcNormalPosition.bottom);
 
 		// This returns FALSE on failure, but not sure what we could in that case
