@@ -54,6 +54,5 @@ protected:
 
 private:
 	static ATOM RegisterWndClass();
-    static ATOM mWndClassAtom;
 };
 

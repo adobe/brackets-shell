@@ -12,7 +12,7 @@
 
 #include <ShellAPI.h>
 
-extern wchar_t                  gClosing[];
+extern wchar_t                  gCefWindowClosingPropName[];
 extern CefRefPtr<ClientHandler> gHandler;
 
 // Additional globals
@@ -108,9 +108,9 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           case IDM_CLOSE:
             if (gHandler.get() && browser.get()) {
               HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-              BOOL closing = (BOOL)GetProp(browserHwnd, gClosing);
+              BOOL closing = (BOOL)GetProp(browserHwnd, gCefWindowClosingPropName);
               if (closing) {
-                RemoveProp(browserHwnd, gClosing);
+                RemoveProp(browserHwnd, gCefWindowClosingPropName);
                 break;
               }
 
@@ -131,9 +131,9 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_CLOSE:
       if (gHandler.get() && browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-        HANDLE closing = GetProp(browserHwnd, gClosing);
+        HANDLE closing = GetProp(browserHwnd, gCefWindowClosingPropName);
         if (closing) {
-            RemoveProp(browserHwnd, gClosing);
+            RemoveProp(browserHwnd, gCefWindowClosingPropName);
             break;
         }
 

@@ -19,6 +19,8 @@
 
 extern HINSTANCE gInstance;
 
+static wchar_t gCefClientWindowPropName[] = L"CefClientWindowPtr";
+
 struct HookData {
     HookData() 
     {
@@ -82,7 +84,7 @@ static void _UnHookWindowCreate()
 
 static LRESULT CALLBACK _WindowProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  cef_window* window = (cef_window*)::GetProp(hWnd, L"CefClientWindowPtr");
+  cef_window* window = (cef_window*)::GetProp(hWnd, ::gCefClientWindowPropName);
   if (window) 
   {
       return window->WindowProc(message, wParam, lParam);
@@ -95,13 +97,13 @@ static LRESULT CALLBACK _WindowProc (HWND hWnd, UINT message, WPARAM wParam, LPA
 
 bool cef_window::SubclassWindow(HWND hWnd) 
 {
-    if (::GetProp(hWnd, L"CefClientWindowPtr") != NULL) 
+    if (::GetProp(hWnd, ::gCefClientWindowPropName) != NULL) 
     {
         return false;
     }
 	mWnd = hWnd;
     mSuperWndProc = (WNDPROC)SetWindowLongPtr(GWLP_WNDPROC, (LONG_PTR)&_WindowProc);
-    SetProp(L"CefClientWindowPtr", (HANDLE)this);
+    SetProp(::gCefClientWindowPropName, (HANDLE)this);
     return true;
 }
 
@@ -147,7 +149,7 @@ BOOL cef_window::HandleNonClientDestroy()
 {
 	WNDPROC superWndProc = WNDPROC(GetWindowLongPtr(GWLP_WNDPROC));
 
-	RemoveProp(L"CefClientWindowPtr");
+	RemoveProp(::gCefClientWindowPropName);
 
 	DefaultWindowProc(WM_NCDESTROY, 0, 0);
 	

@@ -42,11 +42,9 @@ static const wchar_t		gPrefShowState[] = L"Show State";
 static const long			gMinWindowWidth = 390;
 static const long			gMinWindowHeight = 200;
 
-ATOM cef_main_window::mWndClassAtom = cef_main_window::RegisterWndClass();
-
 
 // Globals
-wchar_t                     gClosing[] = L"CLOSING";
+wchar_t                     gCefWindowClosingPropName[] = L"CLOSING";
 
 ATOM cef_main_window::RegisterWndClass()
 {
@@ -209,10 +207,10 @@ BOOL cef_main_window::HandleClose()
 	{
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND hwnd = SafeGetCefBrowserHwnd();
-        BOOL closing = (BOOL)::GetProp(hwnd, gClosing);
+        BOOL closing = (BOOL)::GetProp(hwnd, ::gCefWindowClosingPropName);
         if (closing) 
 		{
-			::RemoveProp(hwnd, gClosing);
+			::RemoveProp(hwnd, ::gCefWindowClosingPropName);
 		} 
 		else 
 		{
