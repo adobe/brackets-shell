@@ -30,7 +30,7 @@ module.exports = function (grunt) {
         staging;
     
     if (common.platform() === "mac") {
-        staging = "installer/mac/staging/<%= build.name %>.app/Contents"
+        staging = "installer/mac/staging/<%= build.name %>.app/Contents";
     } else if (common.platform() === "win") {
         staging = "installer/win/staging";
     } else {
@@ -84,20 +84,14 @@ module.exports = function (grunt) {
                         "expand"    : true,
                         "cwd"       : "Release/",
                         "src"       : [
-                            "**",
-                            "!*.pdb",
-                            "!dev/**",
-                            "!obj/**",
-                            "!lib/**",
-                            "!avformat-54.dll",
-                            "!avutil-51.dll",
-                            "!avcodec-54.dll",
-                            "!d3dcompiler_43.dll",
-                            "!d3dx9_43.dll",
-                            "!libEGL.dll",
-                            "!libGLESv2.dll",
-                            "!cefclient.exe",
-                            "!debug.log"
+                            "locales/**",
+                            "node-core/**",
+                            "Brackets.exe",
+                            "Brackets-node.exe",
+                            "cef.pak",
+                            "devtools_resources.pak",
+                            "icudt.dll",
+                            "libcef.dll"
                         ],
                         "dest"      : "installer/win/staging/"
                     }
