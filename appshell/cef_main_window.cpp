@@ -17,14 +17,16 @@
  **************************************************************************/
 #include "cef_main_window.h"
 #include "cef_registry.h"
+#include "client_handler.h"
 #include "resource.h"
+#include "native_menu_model.h"
 
 extern HINSTANCE	        gInstance;
 extern TCHAR		        gInitialUrl[];
 
 extern CefRefPtr<ClientHandler> gHandler;
 
-static const TCHAR			gWindowClassname[] = _T("cef_main_winow");
+static const wchar_t		gWindowClassname[] = L"cef_main_winow";
 static const wchar_t		gWindowPostionFolder[] = L"Window Position";
 
 static const wchar_t		gPrefLeft[] = L"Left";
@@ -41,6 +43,10 @@ static const wchar_t		gPrefShowState[] = L"Show State";
 static const long			gMinWindowWidth = 390;
 static const long			gMinWindowHeight = 200;
 
+
+// Globals
+const wchar_t               gClosing[] = L"CLOSING";
+
 void cef_main_window::RegisterWndClass()
 {
 	static ATOM classAtom = 0;
@@ -56,8 +62,8 @@ void cef_main_window::RegisterWndClass()
 		wcex.lpfnWndProc   = DefWindowProc;
 		wcex.cbClsExtra    = 0;
 		wcex.cbWndExtra    = 0;
-		wcex.hInstance     = hInstance;
-		wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
+		wcex.hInstance     = gInstance;
+		wcex.hIcon         = LoadIcon(gInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
 		wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 		wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
@@ -86,20 +92,19 @@ BOOL cef_main_window::Create()
 	  styles |= WS_MAXIMIZE;
 
 	static TCHAR szTitle[100];
-	LoadString(::g_hInst, IDS_APP_TITLE, szTitle, _countof(szTitle));	
+	LoadString(::gInstance, IDS_APP_TITLE, szTitle, _countof(szTitle));	
 
-	if (!cef_window::CreateWindow(::gWindowClassname, szTitle,
-								styles, left, top, width, height, NULL, NULL, hInstance, NULL)) 
+	if (!cef_window::Create(::gWindowClassname, szTitle,
+								styles, left, top, width, height))
 	{
-		return false;
+		return FALSE;
 	}
 
-	NativeMenuModel::getInstance(m_hWnd).setTag(L"help", HELP_MENUITEMTAG);
-	HMENU mainMenu = GetMenu();  
-	NativeMenuModel::getInstance(m_hWnd).setOsItem(HELP_MENUITEMTAG, (void*)mainMenu);
-	
+    DragAcceptFiles(TRUE);
 	RestoreWindowPlacement(showCmd);
 	UpdateWindow();
+
+    return TRUE;
 }
 
 void cef_main_window::PostNonClientDestory()
@@ -112,7 +117,7 @@ BOOL cef_main_window::HandleCreate()
 {
 	// Create the single static handler class instance
     gHandler = new ClientHandler();
-    gHandler->SetMainHwnd(m_hWnd);
+    gHandler->SetMainHwnd(mWnd);
 
     RECT rect;
     int x = 0;
@@ -125,7 +130,7 @@ BOOL cef_main_window::HandleCreate()
     settings.web_security = STATE_DISABLED;
 
     // Initialize window info to the defaults for a child window
-    info.SetAsChild(m_hWnd, rect);
+    info.SetAsChild(mWnd, rect);
 
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
@@ -148,30 +153,32 @@ BOOL cef_main_window::HandleEraseBackground()
 	return (SafeGetCefBrowserHwnd() != NULL);
 }
 
-BOOL cef_main_window::HandleSetFocus()
+BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
 {
     // Pass focus to the browser window
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
     if (hwnd) 
 	{
-		::PostMessage(hwnd, WM_SETFOCUS, wParam, NULL);
+		::PostMessage(hwnd, WM_SETFOCUS, (WPARAM)hLosingFocus, NULL);
 		return TRUE;
-	}
 	}
 	return FALSE;
 }
 
 BOOL cef_main_window::HandlePaint()
 {
-	PAINTSTRUCT* ps;
-	BeginPaint(ps);
-	EndPaint(ps);
+    // avoid painting
+    PAINTSTRUCT ps;
+	BeginPaint(&ps);
+	EndPaint(&ps);
+    return TRUE;
 }
 
 BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
 	mmi->ptMinTrackSize.x = ::gMinWindowWidth;
 	mmi->ptMinTrackSize.y = ::gMinWindowHeight;
+    return TRUE;
 }
 
 BOOL cef_main_window::HandleDestroy()
@@ -188,10 +195,10 @@ BOOL cef_main_window::HandleClose()
 	{
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND hwnd = SafeGetCefBrowserHwnd();
-        HANDLE closing = GetProp(hwnd, CLOSING_PROP);
+        HANDLE closing = ::GetProp(hwnd, gClosing);
         if (closing) 
 		{
-			RemoveProp(hwnd, CLOSING_PROP);
+			::RemoveProp(hwnd, gClosing);
 		} 
 		else 
 		{
@@ -209,7 +216,9 @@ BOOL cef_main_window::HandleExitCommand()
 	if (gHandler.get()) {
 		gHandler->QuittingApp(true);
 		gHandler->DispatchCloseToNextBrowser();
-	} else {
+	}
+    else 
+    {
 		DestroyWindow();
 	}
 	return TRUE;
@@ -224,7 +233,7 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
 	if (hwnd && !bMinimize) 
 	{
 		RECT rect;
-		::GetClientRect(hWnd, &rect);
+		::GetClientRect(hwnd, &rect);
 
 		HDWP hdwp = BeginDeferWindowPos(1);
 		hdwp = DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER);
@@ -240,20 +249,21 @@ BOOL cef_main_window::HandleInitMenuPopup(HMENU hMenuPopup)
     int count = ::GetMenuItemCount(hMenuPopup);
     void* menuParent = ::getMenuParent(gHandler->GetBrowser());
     for (int i = 0; i < count; i++) {
-        UINT id = ::GetMenuItemID(menu, i);
+        UINT id = ::GetMenuItemID(hMenuPopup, i);
 
         bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
         UINT flagEnabled = enabled ? MF_ENABLED : (MF_GRAYED | MF_DISABLED);
-        EnableMenuItem(menu, id,  flagEnabled | MF_BYCOMMAND);
+        EnableMenuItem(hMenuPopup, id,  flagEnabled | MF_BYCOMMAND);
 
         bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
         UINT flagChecked = checked ? MF_CHECKED : MF_UNCHECKED;
-        ::CheckMenuItem(menu, id, flagChecked | MF_BYCOMMAND);
+        ::CheckMenuItem(hMenuPopup, id, flagChecked | MF_BYCOMMAND);
     }
 	return FALSE;
 }
 
-BOOL cef_main_winow::HandleCommand(UINT commandId)
+
+BOOL cef_main_window::HandleCommand(UINT commandId)
 {
 	switch (commandId) 
 	{
@@ -261,10 +271,10 @@ BOOL cef_main_winow::HandleCommand(UINT commandId)
 		HandleExitCommand();
 		return TRUE;
 	default:
-        ExtensionString commandId = NativeMenuModel::getInstance(::getMenuParent(gHandler->GetBrowser())).getCommandId(commandId);
-        if (commandId.size() > 0) 
+        ExtensionString commandString = NativeMenuModel::getInstance(::getMenuParent(gHandler->GetBrowser())).getCommandId(commandId);
+        if (commandString.size() > 0) 
 		{
-            gHandler->SendJSCommand(gHandler->GetBrowser(), commandId);
+            gHandler->SendJSCommand(gHandler->GetBrowser(), commandString);
 			return TRUE;
         }
 	}
@@ -285,7 +295,7 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 			return 0L;
 		break;
 	case WM_SETFOCUS:
-		if (HandleSetFocus())
+		if (HandleSetFocus((HWND)wParam))
 			return 0L;
 		break;
 	case WM_PAINT:
@@ -309,7 +319,7 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 			return 0L;
 		break;
 	case WM_INITMENUPOPUP:
-		if (HandleInitMenuPopup((HMENU)wParam)
+		if (HandleInitMenuPopup((HMENU)wParam))
 			return 0L;
 		break;
 	case WM_COMMAND:

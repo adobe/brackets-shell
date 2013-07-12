@@ -16,7 +16,6 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Adobe Systems Incorporated.
  **************************************************************************/
-#include <winuser.h>
 #include "cef_window.h"
 
 class cef_main_window : public cef_window
@@ -41,14 +40,15 @@ protected:
 
 	BOOL HandleEraseBackground();
 	BOOL HandleCreate();
-	BOOL HandleSetFocus();
+	BOOL HandleSetFocus(HWND hLosingFocus);
 	BOOL HandleDestroy();
 	BOOL HandleClose();
 	BOOL HandleSize(BOOL bMinimize);
 	BOOL HandleInitMenuPopup(HMENU hMenuPopup);
 	BOOL HandleCommand(UINT commandId);
 	BOOL HandleExitCommand();
-
+    BOOL HandlePaint();
+    BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
 
 	virtual void PostNonClientDestory();
 

@@ -56,7 +56,8 @@ BOOL InitInstance(HINSTANCE, int);
 //    "c:\bob\abc.txt" will not be changed
 // (Note: we could do this with a regular expression, but there is no regex library currently
 // built into brackets-shell, and I don't want to add one just for this simple case).
-void StripColonNumber(std::wstring& str) {
+static void StripColonNumber(std::wstring& str) 
+{
     bool gotDigits = false;
     int index;
     for (index = str.size() - 1; index >= 0; index--) {
@@ -70,7 +71,8 @@ void StripColonNumber(std::wstring& str) {
 }
 
 // Determine if 'str' is a valid filename.
-bool IsFilename(const std::wstring& str) {
+static bool IsFilename(const std::wstring& str) 
+{
     // Strip off trailing line and column number, if any.
     std::wstring temp(str);
     StripColonNumber(temp);
@@ -80,20 +82,25 @@ bool IsFilename(const std::wstring& str) {
     return (GetFileAttributes(temp.c_str()) != INVALID_FILE_ATTRIBUTES);
 }
 
-std::wstring GetFilenamesFromCommandLine() {
+static std::wstring GetFilenamesFromCommandLine() 
+{
     std::wstring result = L"[]";
 
-    if (AppGetCommandLine()->HasArguments()) {
+    if (AppGetCommandLine()->HasArguments()) 
+    {
         bool firstEntry = true;
         std::vector<CefString> args;
         AppGetCommandLine()->GetArguments(args);
         std::vector<CefString>::iterator iterator;
 
         result = L"[";
-        for (iterator = args.begin(); iterator != args.end(); iterator++) {
+        for (iterator = args.begin(); iterator != args.end(); iterator++) 
+        {
             std::wstring argument = (*iterator).ToWString();
-            if (IsFilename(argument)) {
-                if (!firstEntry) {
+            if (IsFilename(argument)) 
+            {
+                if (!firstEntry) 
+                {
                     result += L",";
                 }
                 firstEntry = false;
@@ -110,7 +117,8 @@ std::wstring GetFilenamesFromCommandLine() {
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
-                     int       nCmdShow) {
+                     int       nCmdShow) 
+{
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -193,9 +201,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
 
         if (!GetOpenFileName(&ofn)) {
-        // User cancelled, exit the app
-        CefShutdown();
-        return 0;
+            // User cancelled, exit the app
+            CefShutdown();
+            return 0;
         }
     }
 
@@ -237,85 +245,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     CefShutdown();
 
     return result;
-}
-
-// Add trailing separator, if necessary
-void EnsureTrailingSeparator(LPWSTR pRet)
-{
-	if (!pRet)
-		return;
-
-	int len = wcslen(pRet);
-	if (len > 0 && wcscmp(&(pRet[len-1]), L"\\") != 0)
-	{
-		wcscat(pRet, L"\\");
-	}
-}
-
-// Helper method to build Registry Key string
-void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
-{
-	// Check for required params
-	ASSERT(pBase && pApp && pRet);
-	if (!pBase || !pApp || !pRet)
-		return;
-
-	// Base
-	wcscpy(pRet, pBase);
-
-	// Group (optional)
-	if (pGroup && (pGroup[0] != '\0'))
-	{
-		EnsureTrailingSeparator(pRet);
-		wcscat(pRet, pGroup);
-	}
-
-	// App name
-	EnsureTrailingSeparator(pRet);
-	wcscat(pRet, pApp);
-
-	// Folder (optional)
-	if (pFolder && (pFolder[0] != '\0'))
-	{
-		EnsureTrailingSeparator(pRet);
-		wcscat(pRet, pFolder);
-	}
-}
-
-// get integer value from registry key
-// caller can either use return value to determine success/fail, or pass a default to be used on fail
-bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
-{
-	HKEY hKey;
-	bool result = false;
-
-	wchar_t key[MAX_PATH];
-	key[0] = '\0';
-	GetKey(PREF_APPSHELL_BASE, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
-
-	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, (LPCWSTR)key, 0, KEY_READ, &hKey))
-	{
-		DWORD dwValue = 0;
-		DWORD dwType = 0;
-		DWORD dwCount = sizeof(DWORD);
-		if (ERROR_SUCCESS == RegQueryValueEx(hKey, pEntry, NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
-		{
-			result = true;
-			ASSERT(dwType == REG_DWORD);
-			ASSERT(dwCount == sizeof(dwValue));
-			ret = (int)dwValue;
-		}
-		RegCloseKey(hKey);
-	}
-
-	if (!result)
-	{
-		// couldn't read value, so use default, if specified
-		if (pDefault)
-			ret = *pDefault;
-	}
-
-	return result;
 }
 
 //
@@ -375,75 +304,53 @@ LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
                          LPARAM lParam) {
-  static HWND backWnd = NULL, forwardWnd = NULL, reloadWnd = NULL,
-      stopWnd = NULL, editWnd = NULL;
-  static WNDPROC editWndOldProc = NULL;
+    static HWND backWnd = NULL, forwardWnd = NULL, reloadWnd = NULL,
+        stopWnd = NULL, editWnd = NULL;
+    static WNDPROC editWndOldProc = NULL;
 
-  // Static members used for the find dialog.
-  static FINDREPLACE fr;
-  static WCHAR szFindWhat[80] = {0};
-  static WCHAR szLastFindWhat[80] = {0};
-  static bool findNext = false;
-  static bool lastMatchCase = false;
+    // Static members used for the find dialog.
+    static FINDREPLACE fr;
+    static WCHAR szFindWhat[80] = {0};
+    static WCHAR szLastFindWhat[80] = {0};
+    static bool findNext = false;
+    static bool lastMatchCase = false;
 
-  int wmId, wmEvent;
-  PAINTSTRUCT ps;
-  HDC hdc;
+    int wmId, wmEvent;
+    PAINTSTRUCT ps;
+    HDC hdc;
 
-#ifdef SHOW_TOOLBAR_UI
-  if (hWnd == editWnd) {
-    // Callback for the edit window
-    switch (message) {
-    case WM_CHAR:
-      if (wParam == VK_RETURN && gHandler.get()) {
-        // When the user hits the enter key load the URL
-        CefRefPtr<CefBrowser> browser = gHandler->GetBrowser();
-        wchar_t strPtr[MAX_URL_LENGTH+1] = {0};
-        *((LPWORD)strPtr) = MAX_URL_LENGTH;
-        LRESULT strLen = SendMessage(hWnd, EM_GETLINE, 0, (LPARAM)strPtr);
-        if (strLen > 0) {
-          strPtr[strLen] = 0;
-          browser->GetMainFrame()->LoadURL(strPtr);
-        }
-
-        return 0;
-      }
-    }
-    return (LRESULT)CallWindowProc(editWndOldProc, hWnd, message, wParam,
-                                   lParam);
-  } else
-#endif // SHOW_TOOLBAR_UI
-  {
     // Callback for the main window
     switch (message) {
-    case WM_CREATE: {
-      // Create the single static handler class instance
-      gHandler = new ClientHandler();
-      gHandler->SetMainHwnd(hWnd);
+    case WM_CREATE: 
+        {
+            // Create the single static handler class instance
+            gHandler = new ClientHandler();
+            gHandler->SetMainHwnd(hWnd);
 
-      // Create the child windows used for navigation
-      RECT rect;
-      int x = 0;
+            // Create the child windows used for navigation
+            RECT rect;
+            int x = 0;
 
-      GetClientRect(hWnd, &rect);
+            GetClientRect(hWnd, &rect);
 
-      CefWindowInfo info;
-      CefBrowserSettings settings;
+            CefWindowInfo info;
+            CefBrowserSettings settings;
 
-      settings.web_security = STATE_DISABLED;
+            settings.web_security = STATE_DISABLED;
 
-      // Initialize window info to the defaults for a child window
-      info.SetAsChild(hWnd, rect);
+            // Initialize window info to the defaults for a child window
+            info.SetAsChild(hWnd, rect);
 
-      // Creat the new child browser window
-      CefBrowserHost::CreateBrowser(info,
-          static_cast<CefRefPtr<CefClient> >(gHandler),
-          gInitialUrl, settings);
+            // Creat the new child browser window
+            CefBrowserHost::CreateBrowser(info,
+                static_cast<CefRefPtr<CefClient> >(gHandler),
+                gInitialUrl, settings);
 
-      return 0;
-    }
+            return 0;
+        } 
 
-    case WM_COMMAND: {
+    case WM_COMMAND: 
+        {
       CefRefPtr<CefBrowser> browser;
       if (gHandler.get())
         browser = gHandler->GetBrowser();
@@ -549,9 +456,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND browserHwnd = gHandler->GetBrowser()->GetHost()->GetWindowHandle();
-        HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+        HANDLE closing = GetProp(browserHwnd, gClosing);
         if (closing) {
-		    RemoveProp(browserHwnd, CLOSING_PROP);
+		    RemoveProp(browserHwnd, gClosing);
 			break;
 		}
 

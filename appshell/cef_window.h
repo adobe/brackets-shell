@@ -18,6 +18,7 @@
  **************************************************************************/
 #include <windows.h>
 #include <winuser.h>
+#include <Shellapi.h>
 
 class cef_window;
 class cef_menu;
@@ -35,44 +36,53 @@ public:
     LRESULT DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 	HMENU GetMenu() 
-	{ return ::GetMenu(m_hWnd); }
+	{ return ::GetMenu(mWnd); }
 
 	BOOL UpdateWindow()
-	{ return ::UpdateWindow(m_hWnd); }
+	{ return ::UpdateWindow(mWnd); }
 
 	BOOL GetWindowPlacement(LPWINDOWPLACEMENT wp)
-	{ return ::GetWindowPlacement(m_hWnd, wp); }
+	{ return ::GetWindowPlacement(mWnd, wp); }
 
 	BOOL SetWindowPlacement(LPWINDOWPLACEMENT wp)
-	{ return ::SetWindowPlacement(m_hWnd, wp); }
+	{ return ::SetWindowPlacement(mWnd, wp); }
 
 	BOOL GetWindowRect(LPRECT r)
-	{ return ::GetWindowRect(m_hWnd, r); }
+	{ return ::GetWindowRect(mWnd, r); }
 
 	BOOL GetClientRect(LPRECT r)
-	{ return ::GetClientRect(m_hWnd, r); }
+	{ return ::GetClientRect(mWnd, r); }
 
 	HDC BeginPaint(PAINTSTRUCT* ps)
-	{ return ::BeginPaint(m_hWnd, ps); }
+	{ return ::BeginPaint(mWnd, ps); }
 
 	BOOL EndPaint(PAINTSTRUCT* ps) 
-	{ return ::EndPaint(m_hWnd, ps); }
+	{ return ::EndPaint(mWnd, ps); }
 
 	BOOL DestroyWindow()
-	{ return ::DestroyWindow(m_hWnd); }
+	{ return ::DestroyWindow(mWnd); }
 
     BOOL SetProp(LPCWSTR lpString, HANDLE hData)
-    { return ::SetProp(m_hWnd, lpString, hData); }
+    { return ::SetProp(mWnd, lpString, hData); }
 
-    HANDLE SetProp(LPCWSTR lpString)
-    { return ::GetProp(m_hWnd, lpString); }
+    HANDLE GetProp(LPCWSTR lpString)
+    { return ::GetProp(mWnd, lpString); }
 
     HANDLE RemoveProp(LPCWSTR lpString)
-    { return ::RemoveProp(m_hWnd, lpString); }
+    { return ::RemoveProp(mWnd, lpString); }
+
+    LONG GetWindowLongPtr(int nIndex) 
+    { return ::GetWindowLongPtr(mWnd, nIndex); }
+
+    LONG SetWindowLongPtr(int nIndex, LONG dwNewLong) 
+    { return ::SetWindowLongPtr(mWnd, nIndex, dwNewLong); }
+
+    void DragAcceptFiles(BOOL fAccept)
+    { return ::DragAcceptFiles(mWnd, fAccept); }
 
 protected:
-    HWND m_hWnd;
-    WNDPROC m_superWndProc;
+    HWND mWnd;
+    WNDPROC mSuperWndProc;
 
 	BOOL HandleNonClientDestroy();
 	virtual void PostNonClientDestory();

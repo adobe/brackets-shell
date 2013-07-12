@@ -26,20 +26,20 @@ struct HookData {
     }
     void Reset()
     {
-        m_hOldHook = NULL;
-        m_window = NULL;        
+        mOldHook = NULL;
+        mWindow = NULL;        
     }
 
-    HHOOK m_hOldHook;
-    cef_window* m_window;
-} g_HookData;
+    HHOOK       mOldHook;
+    cef_window* mWindow;
+} gHookData;
 
 
 
 
 cef_window::cef_window(void) :
-    m_hWnd(NULL),
-    m_superWndProc(NULL)
+    mWnd(NULL),
+    mSuperWndProc(NULL)
 {
 }
 
@@ -51,33 +51,33 @@ cef_window::~cef_window(void)
 static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code != HCBT_CREATEWND)
-        return CallNextHookEx(g_HookData.m_hOldHook, code, wParam, lParam);
+        return CallNextHookEx(gHookData.mOldHook, code, wParam, lParam);
     
     LPCREATESTRUCT lpcs = ((LPCBT_CREATEWND)lParam)->lpcs;
 
-    if (lpcs->lpCreateParams == (LPVOID)g_HookData.m_window) 
+    if (lpcs->lpCreateParams == (LPVOID)gHookData.mWindow) 
     {
         HWND hWnd = (HWND)wParam;
-        g_HookData.m_window->SubclassWindow(hWnd);
-        g_HookData.Reset();
+        gHookData.mWindow->SubclassWindow(hWnd);
+        gHookData.Reset();
     }
 
-    return CallNextHookEx(g_HookData.m_hOldHook, code, wParam, lParam);
+    return CallNextHookEx(gHookData.mOldHook, code, wParam, lParam);
 }
 
 static void _HookWindowCreate(cef_window* window)
 {
-    if (g_HookData.m_hOldHook || g_HookData.m_window) 
+    if (gHookData.mOldHook || gHookData.mWindow) 
         return;
 
-    g_HookData.m_hOldHook = ::SetWindowsHookEx(WH_CBT, _HookProc, NULL, ::GetCurrentThreadId());
-    g_HookData.m_window = window;
+    gHookData.mOldHook = ::SetWindowsHookEx(WH_CBT, _HookProc, NULL, ::GetCurrentThreadId());
+    gHookData.mWindow = window;
 }
 
 
 static void _UnHookWindowCreate()
 {
-    g_HookData.Reset();
+    gHookData.Reset();
 }
 
 static LRESULT CALLBACK _WindowProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -99,15 +99,15 @@ bool cef_window::SubclassWindow(HWND hWnd)
     {
         return false;
     }
-	m_hWnd = hWnd;
-    m_superWndProc = (WNDPROC)::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)&_WindowProc);
+	mWnd = hWnd;
+    mSuperWndProc = (WNDPROC)SetWindowLongPtr(GWLP_WNDPROC, (LONG_PTR)&_WindowProc);
     SetProp(L"CefClientWindowPtr", (HANDLE)this);
     return true;
 }
 
 cef_window* cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent/*=NULL*/, cef_menu* menu/*=NULL*/)
 {
-    HWND hWndParent = parent ? parent->m_hWnd : NULL;
+    HWND hWndParent = parent ? parent->mWnd : NULL;
     HMENU hMenu = /*menu ? menu->m_hMenu :*/ NULL;
 
     cef_window* window = new cef_window();
@@ -126,41 +126,41 @@ cef_window* cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD
         return NULL;
     }
 
-    window->m_hWnd = hWnd;
+    window->mWnd = hWnd;
     return window;
 }
 
 LRESULT cef_window::DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (m_superWndProc)
+    if (mSuperWndProc)
     {
-        return ::CallWindowProc(m_superWndProc, m_hWnd, message, wParam, lParam);
+        return ::CallWindowProc(mSuperWndProc, mWnd, message, wParam, lParam);
     } 
     else 
     {
-        return ::DefWindowProc(m_hWnd, message, wParam, lParam);
+        return ::DefWindowProc(mWnd, message, wParam, lParam);
     }
 
 }
 
 BOOL cef_window::HandleNonClientDestroy()
 {
-	WNDPROC superWndProc = WNDPROC(GetWindowLongPtr(m_hWnd, GWLP_WNDPROC));
+	WNDPROC superWndProc = WNDPROC(GetWindowLongPtr(GWLP_WNDPROC));
 
 	RemoveProp(L"CefClientWindowPtr");
 
 	DefaultWindowProc(WM_NCDESTROY, 0, 0);
 	
-	if ((WNDPROC(GetWindowLongPtr(m_hWnd, GWLP_WNDPROC)) == superWndProc) && (m_superWndProc != NULL))
-		SetWindowLongPtr(m_hWnd, GWLP_WNDPROC, reinterpret_cast<INT_PTR>(m_superWndProc));
+	if ((WNDPROC(GetWindowLongPtr(GWLP_WNDPROC)) == superWndProc) && (mSuperWndProc != NULL))
+		SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<INT_PTR>(mSuperWndProc));
 	
-	m_superWndProc = NULL;
+	mSuperWndProc = NULL;
 	return TRUE;
 }
 
 void cef_window::PostNonClientDestory()
 {
-    m_hWnd = NULL;
+    mWnd = NULL;
 }
 
 LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)

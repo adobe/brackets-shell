@@ -12,8 +12,7 @@
 
 #include <ShellAPI.h>
 
-#define CLOSING_PROP L"CLOSING"
-
+extern const wchar_t            gClosing[];
 extern CefRefPtr<ClientHandler> gHandler;
 
 // WM_DROPFILES handler, defined in cefclient_win.cpp
@@ -112,9 +111,9 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           case IDM_CLOSE:
             if (gHandler.get() && browser.get()) {
               HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-              HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+              HANDLE closing = GetProp(browserHwnd, gClosing);
               if (closing) {
-                RemoveProp(browserHwnd, CLOSING_PROP);
+                RemoveProp(browserHwnd, gClosing);
                 break;
               }
 
@@ -135,9 +134,9 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_CLOSE:
       if (gHandler.get() && browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-        HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
+        HANDLE closing = GetProp(browserHwnd, gClosing);
         if (closing) {
-            RemoveProp(browserHwnd, CLOSING_PROP);
+            RemoveProp(browserHwnd, gClosing);
             break;
         }
 

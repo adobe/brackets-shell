@@ -35,7 +35,8 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#define CLOSING_PROP L"CLOSING"
+extern const wchar_t          gClosing[];
+
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
@@ -801,7 +802,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-        SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
+        SetProp(browserHwnd, gClosing, (HANDLE)1);
         browser->GetHost()->CloseBrowser(true);
 
         ::PostMessage(browser->IsPopup() ? browserHwnd : GetParent(browserHwnd),
@@ -1165,7 +1166,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
         BYTE fAccelFlags = FVIRTKEY;    // fVirt flags for ACCEL structure 
 
         // Save the current accelerator table. 
-        haccelOld = hAccelTable; 
+        haccelOld = gAccelTable; 
 
         // Count the number of entries in the current 
         // table, allocate a buffer for the table, and 
@@ -1176,7 +1177,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 
         if (lpaccelNew != NULL) 
         {
-            CopyAcceleratorTable(hAccelTable, lpaccelNew, numAccelerators); 
+            CopyAcceleratorTable(gAccelTable, lpaccelNew, numAccelerators); 
         }
 
         // look at the passed-in key, pull out modifiers, etc.
@@ -1277,7 +1278,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
         // Create the new accelerator table, and 
         // destroy the old one.
         DestroyAcceleratorTable(haccelOld); 
-        hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        gAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
         LocalFree(lpaccelNew);
     }
 
@@ -1291,7 +1292,7 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     int numAccelerators = 0;        // number of accelerators in table
 
     // Save the current accelerator table. 
-    haccelOld = hAccelTable; 
+    haccelOld = gAccelTable; 
 
     // Count the number of entries in the current 
     // table, allocate a buffer for the table, and 
@@ -1300,8 +1301,8 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
     lpaccelNew = (LPACCEL) LocalAlloc(LPTR, numAccelerators * sizeof(ACCEL)); 
 
     if (lpaccelNew != NULL) 
-    {
-        CopyAcceleratorTable(hAccelTable, lpaccelNew, numAccelerators); 
+    { 
+        CopyAcceleratorTable(gAccelTable, lpaccelNew, numAccelerators); 
     }
 
     // Move accelerator to the end of the table
@@ -1310,7 +1311,7 @@ int32 RemoveKeyFromAcceleratorTable(int32 tag)
         if (lpaccelNew[i].cmd == (WORD) tag) {
             lpaccelNew[i] = lpaccelNew[newItem];
             DestroyAcceleratorTable(haccelOld); 
-            hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators - 1);
+            gAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators - 1);
             return NO_ERROR;
         }
     }
