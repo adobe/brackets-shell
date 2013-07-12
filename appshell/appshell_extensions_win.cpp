@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-extern const wchar_t          gClosing[];
+extern wchar_t gClosing[];
 
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
@@ -802,7 +802,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-        SetProp(browserHwnd, gClosing, (HANDLE)1);
+        SetProp(browserHwnd, gClosing, (HANDLE)TRUE);
         browser->GetHost()->CloseBrowser(true);
 
         ::PostMessage(browser->IsPopup() ? browserHwnd : GetParent(browserHwnd),

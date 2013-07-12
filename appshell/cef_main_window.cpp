@@ -15,15 +15,14 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Adobe Systems Incorporated.
  **************************************************************************/
+#include "cefclient.h"
 #include "cef_main_window.h"
 #include "cef_registry.h"
 #include "client_handler.h"
 #include "resource.h"
 #include "native_menu_model.h"
 
-extern HINSTANCE	        gInstance;
-extern TCHAR		        gInitialUrl[];
-
+extern HINSTANCE	            gInstance;
 extern CefRefPtr<ClientHandler> gHandler;
 
 static const wchar_t		gWindowClassname[] = L"cef_main_winow";
@@ -45,7 +44,7 @@ static const long			gMinWindowHeight = 200;
 
 
 // Globals
-const wchar_t               gClosing[] = L"CLOSING";
+wchar_t                     gClosing[] = L"CLOSING";
 
 void cef_main_window::RegisterWndClass()
 {
@@ -73,6 +72,17 @@ void cef_main_window::RegisterWndClass()
 		classAtom = RegisterClassEx(&wcex);
 	}
 }
+
+cef_main_window::cef_main_window() 
+{
+
+}
+
+cef_main_window::~cef_main_window() 
+{
+
+}
+
 
 BOOL cef_main_window::Create() 
 {
@@ -135,7 +145,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(gHandler),
-        gInitialUrl, settings);
+        ::AppGetInitialURL(), settings);
 
 	return TRUE;
 }
@@ -195,7 +205,7 @@ BOOL cef_main_window::HandleClose()
 	{
         // If we already initiated the browser closing, then let default window proc handle it.
         HWND hwnd = SafeGetCefBrowserHwnd();
-        HANDLE closing = ::GetProp(hwnd, gClosing);
+        BOOL closing = (BOOL)::GetProp(hwnd, gClosing);
         if (closing) 
 		{
 			::RemoveProp(hwnd, gClosing);

@@ -25,15 +25,18 @@
 #include <ShellAPI.h>
 #include <ShlObj.h>
 
+#include "cef_main_window.h"
+
 // Global Variables:
-HINSTANCE       gInstance;
-DWORD           gAppStartupTime;
-HACCEL          gAccelTable;
-std::wstring    gFilesToOpen;           // Filenames passed as arguments to app
+HINSTANCE           gInstance;
+DWORD               gAppStartupTime;
+HACCEL              gAccelTable;
+std::wstring        gFilesToOpen;           // Filenames passed as arguments to app
+cef_main_window*    gMainWnd;
 
 // Static Variables
 static char     gWorkingDir[MAX_PATH] = {0};
-static TCHAR    gInitialUrl[MAX_PATH] = {0};
+static wchar_t  gInitialUrl[MAX_PATH] = {0};
 
 // Externals
 extern CefRefPtr<ClientHandler> gHandler;
@@ -259,262 +262,26 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 
-  // TODO: test this cases:
-  // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
-
-  int left   = CW_USEDEFAULT;
-  int top    = CW_USEDEFAULT;
-  int width  = CW_USEDEFAULT;
-  int height = CW_USEDEFAULT;
-  int showCmd = SW_SHOW;
-  RestoreWindowRect(left, top, width, height, showCmd);
-
-  DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
-  if (showCmd == SW_MAXIMIZE)
-	  styles |= WS_MAXIMIZE;
-  hWndMain = CreateWindow(szWindowClass, szTitle, styles,
-                      left, top, width, height, NULL, NULL, hInstance, NULL);
-
-  if (!hWndMain)
-    return FALSE;
-
-  DragAcceptFiles(hWndMain, TRUE);
-  RestoreWindowPlacement(hWndMain, showCmd);
-  UpdateWindow(hWndMain);
-
-  return TRUE;
-}
-
-LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser) {
-    UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-    for (UINT i = 0; i < fileCount; i++) {
-        wchar_t filename[MAX_PATH];
-        DragQueryFile(hDrop, i, filename, MAX_PATH);
-        std::wstring pathStr(filename);
-        replace(pathStr.begin(), pathStr.end(), '\\', '/');
-        handler->SendOpenFileCommand(browser, CefString(pathStr));
-    }
-    return 0;
-}
-
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
-                         LPARAM lParam) {
-    static HWND backWnd = NULL, forwardWnd = NULL, reloadWnd = NULL,
-        stopWnd = NULL, editWnd = NULL;
-    static WNDPROC editWndOldProc = NULL;
-
-    // Static members used for the find dialog.
-    static FINDREPLACE fr;
-    static WCHAR szFindWhat[80] = {0};
-    static WCHAR szLastFindWhat[80] = {0};
-    static bool findNext = false;
-    static bool lastMatchCase = false;
-
-    int wmId, wmEvent;
-    PAINTSTRUCT ps;
-    HDC hdc;
-
-    // Callback for the main window
-    switch (message) {
-    case WM_CREATE: 
-        {
-            // Create the single static handler class instance
-            gHandler = new ClientHandler();
-            gHandler->SetMainHwnd(hWnd);
-
-            // Create the child windows used for navigation
-            RECT rect;
-            int x = 0;
-
-            GetClientRect(hWnd, &rect);
-
-            CefWindowInfo info;
-            CefBrowserSettings settings;
-
-            settings.web_security = STATE_DISABLED;
-
-            // Initialize window info to the defaults for a child window
-            info.SetAsChild(hWnd, rect);
-
-            // Creat the new child browser window
-            CefBrowserHost::CreateBrowser(info,
-                static_cast<CefRefPtr<CefClient> >(gHandler),
-                gInitialUrl, settings);
-
-            return 0;
-        } 
-
-    case WM_COMMAND: 
-        {
-      CefRefPtr<CefBrowser> browser;
-      if (gHandler.get())
-        browser = gHandler->GetBrowser();
-
-      wmId    = LOWORD(wParam);
-      wmEvent = HIWORD(wParam);
-      // Parse the menu selections:
-      switch (wmId) {
-      case IDM_EXIT:
-        if (gHandler.get()) {
-          gHandler->QuittingApp(true);
-    	  gHandler->DispatchCloseToNextBrowser();
-    	} else {
-          DestroyWindow(hWnd);
-		}
-        return 0;
-      case ID_WARN_CONSOLEMESSAGE:
-        return 0;
-      case ID_WARN_DOWNLOADCOMPLETE:
-      case ID_WARN_DOWNLOADERROR:
-        if (gHandler.get()) {
-          std::wstringstream ss;
-          ss << L"File \"" <<
-              std::wstring(CefString(gHandler->GetLastDownloadFile())) <<
-              L"\" ";
-
-          if (wmId == ID_WARN_DOWNLOADCOMPLETE)
-            ss << L"downloaded successfully.";
-          else
-            ss << L"failed to download.";
-
-          MessageBox(hWnd, ss.str().c_str(), L"File Download",
-              MB_OK | MB_ICONINFORMATION);
-        }
-        return 0;
-
-      default:
-          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(gHandler->GetBrowser())).getCommandId(wmId);
-          if (commandId.size() > 0) {
-              CefRefPtr<CommandCallback> callback = new EditCommandCallback(gHandler->GetBrowser(), commandId);
-              gHandler->SendJSCommand(gHandler->GetBrowser(), commandId, callback);
-          }
-      }
-      break;
-    }
-
-    case WM_PAINT:
-      hdc = BeginPaint(hWnd, &ps);
-      EndPaint(hWnd, &ps);
-      return 0;
-
-    case WM_SETFOCUS:
-      if (gHandler.get() && gHandler->GetBrowser()) {
-        // Pass focus to the browser window
-        CefWindowHandle hwnd =
-            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
-        if (hwnd)
-          PostMessage(hwnd, WM_SETFOCUS, wParam, NULL);
-      }
-      return 0;
-
-    case WM_SIZE:
-      // Minimizing resizes the window to 0x0 which causes our layout to go all
-      // screwy, so we just ignore it.
-      if (wParam != SIZE_MINIMIZED && gHandler.get() &&
-          gHandler->GetBrowser()) {
-        CefWindowHandle hwnd =
-            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
-        if (hwnd) {
-          // Resize the browser window and address bar to match the new frame
-          // window size
-          RECT rect;
-          GetClientRect(hWnd, &rect);
-
-
-          HDWP hdwp = BeginDeferWindowPos(1);
-
-          hdwp = DeferWindowPos(hdwp, hwnd, NULL,
-            rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-            SWP_NOZORDER);
-          EndDeferWindowPos(hdwp);
-        }
-      }
-      break;
-
-    case WM_ERASEBKGND:
-      if (gHandler.get() && gHandler->GetBrowser()) {
-        CefWindowHandle hwnd =
-            gHandler->GetBrowser()->GetHost()->GetWindowHandle();
-        if (hwnd) {
-          // Dont erase the background if the browser window has been loaded
-          // (this avoids flashing)
-          return 0;
-        }
-      }
-      break;
-
-    case WM_CLOSE:
-      if (gHandler.get()) {
-
-        HWND hWnd = GetActiveWindow();
-        SaveWindowRect(hWnd);
-
-        // If we already initiated the browser closing, then let default window proc handle it.
-        HWND browserHwnd = gHandler->GetBrowser()->GetHost()->GetWindowHandle();
-        HANDLE closing = GetProp(browserHwnd, gClosing);
-        if (closing) {
-		    RemoveProp(browserHwnd, gClosing);
-			break;
-		}
-
-        gHandler->QuittingApp(true);
-        gHandler->DispatchCloseToNextBrowser();
-        return 0;
-      }
-      break;
-
-    case WM_DESTROY:
-      // The frame window has exited
-      PostQuitMessage(0);
-      return 0;
-
-    case WM_DROPFILES:
-        if (gHandler.get()) {
-            return HandleDropFiles((HDROP)wParam, gHandler, gHandler->GetBrowser());
-        }
-        return 0;
-
-    case WM_INITMENUPOPUP:
-        // Notify before popping up
-        gHandler->SendJSCommand(gHandler->GetBrowser(), APP_BEFORE_MENUPOPUP);
-
-        HMENU menu = (HMENU)wParam;
-        int count = GetMenuItemCount(menu);
-        void* menuParent = getMenuParent(gHandler->GetBrowser());
-        for (int i = 0; i < count; i++) {
-            UINT id = GetMenuItemID(menu, i);
-
-            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
-            EnableMenuItem(menu, id,  flagEnabled);
-
-            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
-            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
-            CheckMenuItem(menu, id, flagChecked);
-        }
-        break;
-    }
-
-    return DefWindowProc(hWnd, message, wParam, lParam);
-  }
+	gInstance = hInstance;  // Store instance handle in our global variable
+	gMainWnd = new cef_main_window();
+	return gMainWnd->Create();
 }
 
 // Global functions
 
 std::string AppGetWorkingDirectory() {
-  return gWorkingDir;
+    return gWorkingDir;
+}
+
+CefString AppGetInitialURL() {
+    return gInitialUrl;    
 }
 
 CefString AppGetCachePath() {
-  std::wstring cachePath = ClientApp::AppGetSupportDirectory();
-  cachePath +=  L"/cef_data";
+    std::wstring cachePath = ClientApp::AppGetSupportDirectory();
+    cachePath +=  L"/cef_data";
 
-  return CefString(cachePath);
+    return CefString(cachePath);
 }
 
 // Helper function for AppGetProductVersionString. Reads version info from

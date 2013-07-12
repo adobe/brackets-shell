@@ -12,11 +12,8 @@
 
 #include <ShellAPI.h>
 
-extern const wchar_t            gClosing[];
+extern wchar_t                  gClosing[];
 extern CefRefPtr<ClientHandler> gHandler;
-
-// WM_DROPFILES handler, defined in cefclient_win.cpp
-extern LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser);
 
 // Additional globals
 extern HACCEL gAccelTable;
@@ -111,7 +108,7 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
           case IDM_CLOSE:
             if (gHandler.get() && browser.get()) {
               HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-              HANDLE closing = GetProp(browserHwnd, gClosing);
+              BOOL closing = (BOOL)GetProp(browserHwnd, gClosing);
               if (closing) {
                 RemoveProp(browserHwnd, gClosing);
                 break;
@@ -143,12 +140,6 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
         gHandler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
  		return 0;
-      }
-      break;
-
-    case WM_DROPFILES:
-      if (gHandler.get() && browser.get()) {
-        return HandleDropFiles((HDROP)wParam, gHandler, browser);
       }
       break;
 

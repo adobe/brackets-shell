@@ -41,4 +41,8 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app);
 // Returns the application browser settings based on command line arguments.
 void AppGetBrowserSettings(CefBrowserSettings& settings);
 
+// Returns the starting URL
+CefString AppGetInitialURL();
+
+
 #endif  // CEF_TESTS_CEFCLIENT_CEFCLIENT_H_
