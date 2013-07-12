@@ -35,8 +35,8 @@ std::wstring        gFilesToOpen;           // Filenames passed as arguments to 
 cef_main_window*    gMainWnd;
 
 // Static Variables
-static char     gWorkingDir[MAX_PATH] = {0};
-static wchar_t  gInitialUrl[MAX_PATH] = {0};
+static char         gWorkingDir[MAX_PATH] = {0};
+static wchar_t      gInitialUrl[MAX_PATH] = {0};
 
 // Externals
 extern CefRefPtr<ClientHandler> gHandler;
@@ -190,11 +190,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	                wcscpy(gInitialUrl, appPath);
             }
         }
-    }
-
-    if (!wcslen(gInitialUrl))
-    {
-        wcscpy(gInitialUrl, L"C:\\Users\\jsbooher\\Documents\\GitHub\\brackets\\src\\index.html");
     }
 
     if (!wcslen(gInitialUrl)) 
