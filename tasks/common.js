@@ -186,8 +186,19 @@ module.exports = function (grunt) {
                     var closeResult = {
                         code: code,
                         stdout: stdout.toString(),
-                        stderr: stderr.toString()
-                    };
+                        stderr: stderr.toString(),
+                        toString: function() {
+                            if (code === 0) {
+                                return this.stdout;
+                            } else {
+                                if (stderr.length > 0) {
+                                    return this.stderr;
+                                } else {
+                                    return this.stdout;
+                                }
+                            }
+                        }
+                   };
                     
                     if (code !== 0) {
                         grunt.verbose.error("Error code: " + code);
