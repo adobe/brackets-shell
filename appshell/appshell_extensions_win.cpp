@@ -580,6 +580,11 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
         return ERR_INVALID_PARAMS;
     }
 
+    DWORD dwAttr;
+    dwAttr = GetFileAttributes(path.c_str());
+    if (INVALID_FILE_ATTRIBUTES == dwAttr)
+        return ConvertWinErrorCode(GetLastError());
+
     ExtensionString drive = path.substr(0, path.find('/') + 1);
     isRemote = GetDriveType(drive.c_str()) == DRIVE_REMOTE;
 
