@@ -362,6 +362,11 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
         return ERR_INVALID_PARAMS;
     }
 
+    // No need to detect network drive if the path does not exist.
+    if (![[NSFileManager defaultManager] fileExistsAtPath:pathStr]) {
+        return ERR_NOT_FOUND;
+    }
+    
     // Detect remote drive
     NSString *testPath = [pathStr copy];
     while (![testPath isEqualToString:@"/"]) {

@@ -189,7 +189,8 @@ if (!appshell.app) {
      *        Possible error values:
      *          NO_ERROR
      *          ERR_INVALID_PARAMS
-     *                 
+     *          ERR_NOT_FOUND
+     *
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function IsNetworkDrive();
