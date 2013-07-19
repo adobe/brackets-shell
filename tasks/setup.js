@@ -182,6 +182,7 @@ module.exports = function (grunt) {
         q.all(links).then(function () {
             done();
         }, function (err) {
+            grunt.log.error(err);
             done(false);
         });
     });
