@@ -40,13 +40,14 @@
 #include "config.h"
 
 #define BRACKETS_NODE_BUFFER_SIZE 4096
-
 #define MAX_PATH 128
 
 // init mutex
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
+// write & read references to subprocess
+FILE* streamTo;
+FILE* streamFrom;
 
 // Threads should hold mutex before using these
 static int nodeState = BRACKETS_NODE_NOT_YET_STARTED;
@@ -54,6 +55,7 @@ static int nodeStartTime = 0;
 
 // Forward declarations
 void* nodeThread(void*);
+void* nodeReadThread(void*);
 void restartNode(bool);
 
 // Creates the thread that starts Node and then monitors the state
@@ -71,13 +73,19 @@ void startNodeProcess() {
 void* nodeThread(void* unused) {
     
     // get mutex
-    pthread_mutex_lock(&mutex);
+    if (pthread_mutex_lock(&mutex)) {
+        fprintf(stderr, 
+                "failed to acquire mutex for Node subprocess start: %s\n",
+                strerror(errno));
+        return NULL;
+    }        
     
     // TODO nodeStartTime = get time();
     
     char executablePath[MAX_PATH];
-    char scriptPath[MAX_PATH];
-    char commandLine[BRACKETS_NODE_BUFFER_SIZE];
+    char bracketsShellPath[MAX_PATH];
+    char nodeExecutablePath[MAX_PATH];
+    char nodecorePath[MAX_PATH];
 
     // get path to Brackets
     if (readlink("/proc/self/exe", executablePath, MAX_PATH) == -1) {
@@ -87,28 +95,37 @@ void* nodeThread(void* unused) {
     }
 
     // strip off 'out/Release/Brackets' for path to brackets-shell
-    // and append node executable path
     size_t pathLength = strlen(executablePath);
-    memcpy(commandLine, executablePath, pathLength - 20);
-    strcat(commandLine, NODE_EXECUTABLE_PATH);
-
+    memcpy(bracketsShellPath, executablePath, pathLength - 20);
     
+    // create node exec and node-core paths
+    strcpy(nodeExecutablePath, bracketsShellPath);
+    strcat(nodeExecutablePath, NODE_EXECUTABLE_PATH);
+    strcpy(nodecorePath, bracketsShellPath);
+    strcat(nodecorePath, NODE_CORE_PATH);
+
     // create pipes for node process stdin/stdout
     int toNode[2];
-    int fromNode[2]; // not yet implemented
+    int fromNode[2];
     
     pipe(toNode);
+    pipe(fromNode);
     
     // create the Node process
     pid_t child_pid = fork();
     if (child_pid == 0) { // child (node) process
-        // close our copy of write end
-        close(toNode[1]);
+        // close our copy of write end and
         // connect read end to stdin
+        close(toNode[1]);
         dup2(toNode[0], STDIN_FILENO);
         
+        // close our copy of read end and
+        // connect write end to stdout
+        close(fromNode[0]);
+        dup2(fromNode[1], STDOUT_FILENO);
+        
         // run node executable
-        char* arg_list[] = { commandLine, NULL};
+        char* arg_list[] = { nodeExecutablePath, nodecorePath, NULL};
         execvp(arg_list[0], arg_list);
         
         fprintf(stderr, "the Node process failed to start: %s\n", strerror(errno));
@@ -116,54 +133,101 @@ void* nodeThread(void* unused) {
     }
     else { // parent
         
-        FILE* stream;
-        // close our copy of the pipe's read end
+        // close our reference of toNode's read end
+        // and fromNode's write end
         close(toNode[0]);
-        // convert write fd to a FILE object
-        stream = fdopen(toNode[1], "w");
-        fprintf(stream, "console.log('Hello World');\n");
-        fflush(stream);
+        close(fromNode[1]);
+        
+        // convert subprocess write & read to FILE objects
+        streamTo = fdopen(toNode[1], "w");
+        streamFrom = fdopen(fromNode[0], "r");
+
+        nodeState = BRACKETS_NODE_PORT_NOT_YET_SET;
+    
+        // done launching process so release mutex
+        if (pthread_mutex_unlock(&mutex)) {
+            fprintf(stderr, 
+                "failed to release mutex for Node subprocess startup: %s\n",
+                strerror(errno));
+        }
+        
+        // start pipe read thread
+        pthread_t readthread_id;
+        if (pthread_create(&readthread_id, NULL, &nodeReadThread, NULL) != 0)
+            nodeState = BRACKETS_NODE_FAILED;
+            // ugly - need to think more about what to do if read thread fails
 
     }
-    
-    
-    nodeState = BRACKETS_NODE_PORT_NOT_YET_SET;
-    
-    // done launching process so release mutex
-    pthread_mutex_unlock(&mutex);
     
     return NULL;
 }
 
-//
 
 // Thread function for the thread that reads from the Node pipe
 // Reads on anonymous pipes are always blocking (OVERLAPPED reads
 // are not possible) So, we need to do this in a separate thread
 
-
 // TODO: This code first reads to a character buffer, and then
 // copies it to a std::string. The code could be optimized to avoid
 // this double-copy
-//DWORD WINAPI NodeReadThread(LPVOID lpParam) {
-//}
+void* nodeReadThread(void* unused) {
+    
+    char charBuf[BRACKETS_NODE_BUFFER_SIZE];
+    std::string strBuf("");
+    while (fgets(charBuf, BRACKETS_NODE_BUFFER_SIZE, streamFrom) != NULL) {
+        strBuf.assign(charBuf);
+        processIncomingData(strBuf);
+    }
+}
 
 
 // Determines whether the current node process has run long
 // enough that a restart is warranted, and initiates the startup
 // if so. Can also optionally terminate the running process.
 void restartNode(bool terminateCurrentProcess) {
+    
 }
 
 // Sends data to the node process. If the write fails completely,
 // calls restartNode.
 void sendData(const std::string &data) {
+    
+    if (pthread_mutex_lock(&mutex)) {
+        fprintf(stderr, 
+            "failed to acquire mutex for write to Node subprocess: %s\n",
+            strerror(errno));
+        return;
+    }
+
+    // write to pipe
+    fprintf(streamTo, "%s", data.c_str());
+    
+    if (pthread_mutex_unlock(&mutex)) {
+            fprintf(stderr, 
+            "failed to release mutex for write to Node subprocess: %s\n",
+            strerror(errno));
+    }
 }
 
-// Thread-safe way to access nodeState variable 
+// Returns nodeState variable 
 int getNodeState() {
+    
+    return nodeState;
 }
 
 // Thread-safe way to set nodeState variable
 void setNodeState(int newState) {
+
+    if (pthread_mutex_lock(&mutex)) {
+            fprintf(stderr, 
+            "failed to acquire mutex for setting Node state: %s\n",
+            strerror(errno));
+            return;
+    }
+    nodeState = newState;
+    if (pthread_mutex_unlock(&mutex)) {
+            fprintf(stderr, 
+            "failed to release mutex for Node set state: %s\n",
+            strerror(errno));
+    }
 }
