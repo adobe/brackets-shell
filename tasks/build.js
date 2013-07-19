@@ -122,7 +122,8 @@ module.exports = function (grunt) {
                 grunt.config("build.build-branch", branch);
                 
                 done();
-            }, function () {
+            }, function (err) {
+                grunt.log.error(err);
                 done(false);
             });
     });
@@ -140,7 +141,8 @@ module.exports = function (grunt) {
                 grunt.config("build.build-number", buildNum);
                 
                 done();
-            }, function () {
+            }, function (err) {
+                grunt.log.error(err);
                 done(false);
             });
     });
@@ -159,6 +161,7 @@ module.exports = function (grunt) {
                 
                 done();
             }, function (err) {
+                grunt.log.error(err);
                 done(false);
             });
     });

@@ -198,7 +198,7 @@ module.exports = function (grunt) {
                                 }
                             }
                         }
-                   };
+                    };
                     
                     if (code !== 0) {
                         grunt.verbose.error("Error code: " + code);
