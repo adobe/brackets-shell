@@ -22,4 +22,4 @@ msbuild.exe appshell.sln /t:Clean /p:Platform=Win32 /p:Configuration=Release
 msbuild.exe appshell.sln /t:Build /p:Platform=Win32 /p:Configuration=Release
 
 :Exit
-exit /b
+exit /b %ERRORLEVEL%
