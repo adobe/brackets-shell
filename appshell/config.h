@@ -56,7 +56,7 @@
 
 // Path for node resources is in dependencies dir and relative to the location of the appshell executable
 #define NODE_EXECUTABLE_PATH "deps/node/bin/node"
-#define NODE_CORE_PATH "node-core"
+#define NODE_CORE_PATH "appshell/node-core"
 
 #endif
 
