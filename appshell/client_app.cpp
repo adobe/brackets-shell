@@ -301,12 +301,19 @@ bool ClientApp::OnProcessMessageReceived(
             CefRefPtr<CefV8Value> callbackFunction = callback_map_[callbackId].second;
             CefV8ValueList arguments;
             context->Enter();
-               
-            for (size_t i = 1; i < messageArgs->GetSize(); i++) {
-                arguments.push_back(ListValueToV8Value(messageArgs, i));
+            
+            // Sanity check to make sure the context is still attched to a browser.
+            // Async callbacks could be initiated after a browser instance has been deleted,
+            // which can lead to bad things. If the browser instance has been deleted, don't
+            // invoke this callback. 
+            if (context->GetBrowser()) {
+                for (size_t i = 1; i < messageArgs->GetSize(); i++) {
+                    arguments.push_back(ListValueToV8Value(messageArgs, i));
+                }
+                
+                callbackFunction->ExecuteFunction(NULL, arguments);
             }
             
-            callbackFunction->ExecuteFunction(NULL, arguments);
             context->Exit();
             
             callback_map_.erase(callbackId);
