@@ -346,21 +346,26 @@ int DeleteFileOrDirectory(ExtensionString filename)
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
     // if ~/.local/share/Trash/files exists, do a kernelspace copy before delete
+    char ubuntuTrashPath[] = "%s/.local/share/Trash/files/";
     char trashpath[PATH_MAX];
     int existfd, trashfd;
     struct stat stat_buf;
-    sprintf(trashpath, "%s/.local/share/Trash/files/", getenv("HOME"));
+    
+    char *home = getenv("HOME");
+    snprintf(trashpath, sizeof(ubuntuTrashPath)+sizeof(home), ubuntuTrashPath, home);
+
     if (access(trashpath, F_OK) == 0) {
-        strcat(trashpath, basename(filename.c_str()));
         // if any of this fails, ignore and simply fallthru to the delete
         if ((existfd = open(filename.c_str(), O_RDONLY)) != -1) {
+
+            const char *basefilename = basename(filename.c_str());
+            strncat(trashpath, basefilename, sizeof(basefilename));
             if ((trashfd = open(trashpath,
-                           O_WRONLY|O_CREAT,
+                           O_WRONLY|O_CREAT|O_TRUNC,
                            S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) != -1) {
-                // find size of existing file
+                // find size of existing file and duplicate
                 fstat(existfd, &stat_buf);
                 sendfile(trashfd, existfd, 0, stat_buf.st_size);
-
                 close(existfd);
                 close(trashfd);
             }
