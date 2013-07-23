@@ -30,8 +30,11 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/sendfile.h>
 #include <X11/Xlib.h>
+
 
 GtkWidget* _menuWidget;
 
@@ -335,14 +338,40 @@ int SetPosixPermissions(ExtensionString filename, int32 mode)
 
 int DeleteFileOrDirectory(ExtensionString filename)
 {
-    if(unlink(filename.c_str())==-1)
+    if (unlink(filename.c_str()) == -1)
         return ConvertLinuxErrorCode(errno);
     return NO_ERROR;
 }
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    // TOdO
+    // if ~/.local/share/Trash/files exists, do a kernelspace copy before delete
+    char trashpath[PATH_MAX];
+    int existfd, trashfd;
+    struct stat stat_buf;
+    sprintf(trashpath, "%s/.local/share/Trash/files/", getenv("HOME"));
+    if (access(trashpath, F_OK) == 0) {
+        strcat(trashpath, basename(filename.c_str()));
+        // if any of this fails, ignore and simply fallthru to the delete
+        if ((existfd = open(filename.c_str(), O_RDONLY)) != -1) {
+            if ((trashfd = open(trashpath,
+                           O_WRONLY|O_CREAT,
+                           S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) != -1) {
+                // find size of existing file
+                fstat(existfd, &stat_buf);
+                sendfile(trashfd, existfd, 0, stat_buf.st_size);
+
+                close(existfd);
+                close(trashfd);
+            }
+        }
+    }
+
+    int error = DeleteFileOrDirectory(filename);
+    // callback for display update
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
+
 }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
