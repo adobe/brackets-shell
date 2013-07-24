@@ -20,12 +20,13 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint es5:true, vars: true, plusplus: true, regexp: true*/
+/*jslint es5:true, vars: true, plusplus: true, regexp: true, nomen: true*/
 /*global module, require, process, Buffer*/
 module.exports = function (grunt) {
     "use strict";
     
     var q               = require("q"),
+        fs              = require("fs"),
         child_process   = require("child_process"),
         path            = require("path"),
         common          = {},
@@ -187,7 +188,7 @@ module.exports = function (grunt) {
                         code: code,
                         stdout: stdout.toString(),
                         stderr: stderr.toString(),
-                        toString: function() {
+                        toString: function () {
                             if (code === 0) {
                                 return this.stdout;
                             } else {
@@ -234,6 +235,18 @@ module.exports = function (grunt) {
         return _platform;
     }
     
+    function arch() {
+        if (platform() === "linux") {
+            if (process.arch === "x64") {
+                return "64";
+            } else {
+                return "32";
+            }
+        }
+        
+        return "";
+    }
+    
     function deleteFile(path, options) {
         if (grunt.file.exists(path)) {
             grunt.file.delete(path, options);
@@ -249,8 +262,10 @@ module.exports = function (grunt) {
     common.spawn = spawn;
     common.resolve = resolve;
     common.platform = platform;
+    common.arch = arch;
     common.deleteFile = deleteFile;
     common.writeJSON = writeJSON;
+    common.rename = q.denodeify(fs.rename);
     
     return common;
 };

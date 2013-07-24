@@ -27,11 +27,12 @@ module.exports = function (grunt) {
     
     var common  = require("./tasks/common")(grunt),
         resolve = common.resolve,
+        platform = common.platform(),
         staging;
     
-    if (common.platform() === "mac") {
+    if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
-    } else if (common.platform() === "win") {
+    } else if (platform === "win") {
         staging = "installer/win/staging";
     } else {
         staging = "installer/linux/debian/usr/lib/brackets";
@@ -40,13 +41,23 @@ module.exports = function (grunt) {
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
         "curl-dir": {
-            /* linux not supported yet */
-            /*
-            linux: {
-                dest        : "<%= cef_zip %>",
-                src         : "https://docs.google.com/file/d/0B7as0diokeHxeTNqZFIyNWZKSWM/edit?usp=sharing"
+            /* linux */
+            "cef-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
-            */
+            "cef-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux64_release.zip"
+            },
+            "node-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x86.tar.gz"
+            },
+            "node-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
             /* mac */
             "cef-mac": {
                 "dest"      : "downloads/",
@@ -71,7 +82,7 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/brackets.deb"],
+            "installer-linux"   : ["installer/linux/*.deb"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
