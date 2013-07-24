@@ -90,7 +90,7 @@ module.exports = function (grunt) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
                 grunt.task.run(["cef-clean", "cef-extract", "cef-symlinks"]);
             } else {
-                grunt.task.run(["cef-download","cef-clean", "cef-extract", "cef-symlinks"]);
+                grunt.task.run(["cef-download", "cef-clean", "cef-extract", "cef-symlinks"]);
             }
         } else {
             grunt.verbose.writeln("Skipping CEF download. Found deps/cef/" + txtName);
