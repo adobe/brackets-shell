@@ -45,21 +45,18 @@ module.exports = function (grunt) {
     
     // cross-platform symbolic link
     link = (function () {
-        var symlink;
+        var typeArg,
+            symlink;
         
         if (process.platform === "win32") {
-            symlink = q.denodeify(fs.symlink);
-            
-            return function (srcpath, destpath) {
-                return symlink(srcpath, destpath, "junction");
-            };
-        } else {
-            symlink = q.denodeify(fs.link);
-            
-            return function (srcpath, destpath) {
-                return symlink(srcpath, destpath);
-            };
+            typeArg = "junction";
         }
+        
+        symlink = q.denodeify(fs.symlink);
+        
+        return function (srcpath, destpath) {
+            return symlink(srcpath, destpath, typeArg);
+        };
     }());
     
     function unzip(src, dest) {
