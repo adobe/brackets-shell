@@ -177,7 +177,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1547.1337"
+            "version"       : "3.1453.1279"
         },
         "node": {
             "version"       : "0.8.20"
