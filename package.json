@@ -25,6 +25,6 @@
     },
     "scripts": {
         "preinstall": "scripts/preinstall.sh",
-        "postinstall": "grunt build"
+        "postinstall": "grunt"
     }
 }
