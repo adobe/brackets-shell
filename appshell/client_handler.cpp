@@ -173,6 +173,8 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
 void ClientHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
                                               TerminationStatus status) {
+  if (browser->GetIdentifier() != m_BrowserId)
+    return;
   // Reloading the main page. It would be better to load a simple error page
   CefRefPtr<CefFrame> frame = browser->GetMainFrame();
   std::string url = frame->GetURL();
