@@ -142,6 +142,28 @@ std::wstring GetFilenamesFromCommandLine() {
     return result;
 }
 
+// EnumWindowsProc callback function
+//   searches for the most top-most Brackets application window
+BOOL CALLBACK FindFirstBracketsInstance(_In_  HWND hwnd, _In_  LPARAM lParam)
+{
+	ASSERT(lParam != NULL);	// must be passed an HWND pointer to return, if found
+
+	// check for the Brackets application window by class name and title
+	WCHAR cName[MAX_PATH+1] = {0}, cTitle[MAX_PATH+1] = {0};
+	::GetClassName(hwnd, cName, MAX_PATH);
+	::GetWindowText(hwnd, cTitle, MAX_PATH);
+	if ((wcscmp(cName, L"CEFCLIENT") == 0) && (wcsstr(cTitle, L"Brackets") != 0)) {
+		// found it!  return the window handle and stop searching
+		*(HWND*)lParam = hwnd;
+		return FALSE;
+	}
+
+	return TRUE;	// otherwise, continue searching
+}
+
+// forward declaration
+void ConvertToUnixPath(ExtensionString& filename);
+
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -166,6 +188,30 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Parse command line arguments. The passed in values are ignored on Windows.
   AppInitCommandLine(0, NULL);
+
+  // Determine if we should use an already running instance of Brackets.
+  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, L"BSCTODO_MUTEX_NAME");
+  if (hMutex == NULL) {
+	  // first instance of this app, so create the mutex and continue execution of this instance.
+	  hMutex = ::CreateMutex(NULL, FALSE, L"BSCTODO_MUTEX_NAME");
+  } else if (AppGetCommandLine()->HasArguments()) {
+	  // for subsequent instances, re-use an already running instance if we're being called to
+	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
+	  HWND hFirstInstanceWnd = NULL;
+	  ::EnumWindows(FindFirstBracketsInstance, (LPARAM)&hFirstInstanceWnd);
+	  ASSERT(hFirstInstanceWnd != NULL);
+	  ::SetForegroundWindow(hFirstInstanceWnd);
+
+	  // pass the filename to open to the other application instance
+	  std::wstring wstrFilename = lpCmdLine;
+	  ConvertToUnixPath(wstrFilename);
+	  COPYDATASTRUCT data;
+	  data.dwData = 555;	//BSCTODO
+	  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+	  data.lpData = (LPVOID)wstrFilename.c_str();
+	  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+	  return 0;
+  }
 
   CefSettings settings;
 
@@ -271,6 +317,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Shut down CEF.
   CefShutdown();
+
+  // release the mutex
+  ReleaseMutex(hMutex);
 
   return result;
 }
@@ -866,6 +915,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+	case WM_COPYDATA:
+		if (lParam != NULL) {
+			PCOPYDATASTRUCT data = (PCOPYDATASTRUCT)lParam;
+			if ((data->dwData == 555) && (data->cbData > 0)) {
+				std::wstring wstrFilename = (LPCWSTR)data->lpData;
+				CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
+				g_handler->SendOpenFileCommand(browser, CefString(wstrFilename.c_str()));
+				//MessageBox(hWnd, wstrFilename.c_str(), L"WM_COPYDATA Received", MB_OK | MB_ICONINFORMATION);
+			}
+		}
+		break;
 
     case WM_INITMENUPOPUP:
         // Notify before popping up
