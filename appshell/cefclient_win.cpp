@@ -72,6 +72,11 @@ void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR
 bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
 bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
 
+void GetFileVersionString(std::wstring &retVersion, bool wantsOnlyMajorMinor = false);
+
+// Explorer File Association Registry function
+bool RegisterApplicationFileAssociations();
+
 // Registry key strings
 #define PREF_APPSHELL_BASE		L"Software"
 #define PREF_WINPOS_FOLDER		L"Window Position"
@@ -293,6 +298,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       }
   }
 
+  // create/update file association Registry entries
+  RegisterApplicationFileAssociations();
+
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
@@ -433,6 +441,139 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 
 	return result;
 }
+
+// Explorer File Association Registry functions
+
+LPCWSTR GetApplicationProgId()
+{
+	static std::wstring wstrApplicationProgId;	// cached ProgId
+	if (wstrApplicationProgId.empty())
+	{
+		std::wstring wstrFileVer;
+		GetFileVersionString(wstrFileVer, true);
+		wstrApplicationProgId = L"Brackets.Document." + wstrFileVer;
+	}
+	return (LPCWSTR)wstrApplicationProgId.c_str();
+}
+
+// register the file version-specific Prog Id and Shell verbs
+bool RegisterProgIdKeys()
+{
+	HKEY hKey;
+	bool result = false;
+
+	//; Define ProgID
+	//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY]
+	//@="Brackets Document"
+	std::wstring wstr = L"SOFTWARE\\Classes\\";
+	wstr += GetApplicationProgId();
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CLASSES_ROOT, wstr.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL))
+	{
+		wstr = WINDOW_TITLE L" Document";	// Prog ID short name
+		if (ERROR_SUCCESS == RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof (WCHAR)))
+		{
+			//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell]
+			//@="Open"
+			HKEY hShellKey;
+			if (ERROR_SUCCESS == RegCreateKeyEx(hKey, L"Shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hShellKey, NULL))
+			{
+				wstr = L"Open";
+				RegSetValueEx(hShellKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+
+				//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell\Open\Command]
+				//@="C:\\...\\Brackets.exe \"%1\""
+				HKEY hCmdKey;
+				if (ERROR_SUCCESS == RegCreateKeyEx(hShellKey, L"Open\\Command", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hCmdKey, NULL))
+				{
+					HMODULE module = GetModuleHandle(NULL);
+					WCHAR executablePath[MAX_PATH+1] = {0};
+					GetModuleFileName(module, executablePath, MAX_PATH);
+					wstr = executablePath;
+					wstr += L"\"%1\"";
+					RegSetValueEx(hCmdKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+				}
+
+				result = true;
+			}
+		}
+		RegCloseKey(hKey);
+	}
+
+	return result;
+}
+
+bool RegisterOpenWithByExtensionKeys(LPCWSTR pFileExtension)
+{
+	HKEY hKey;
+	bool result = false;
+
+	if (pFileExtension != NULL && wcslen(pFileExtension) > 0)
+	{
+		std::wstring wstrKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\";
+		wstrKey += pFileExtension;
+		wstrKey += L"\\OpenWithProgids";
+
+		//; Register with Open With... menu by Extension
+		//[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.js\OpenWithProgids]
+		if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, wstrKey.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+		{
+			if (ERROR_SUCCESS == RegSetValueEx(hKey, GetApplicationProgId(), 0, REG_SZ, NULL, 0))
+				result = true;
+			RegCloseKey(hKey);
+		}
+	}
+
+	return result;
+}
+
+
+bool RegisterApplicationFileAssociations()
+{
+	// Register the top-level Prog Id
+	// note: on Win7 and above, will need admin access.
+	RegisterProgIdKeys();
+
+	// Register Explorer "Open With..." keys for individual file extensions
+	static const std::wstring wstrExtensions[] = {
+		// list taken from src/language/languages.json
+		L".txt",
+		L".groovy",
+		L".ini", L".properties",
+		L".css",
+		L".scss",
+		L".html", L".htm", L".shtm", L".shtml", L".xhtml", L".cfm", L".cfml", L".dhtml", L".xht", L".tpl", L".twig", L".hbs", L".handlebars", L".kit", L".jsp", L".aspx",
+		L".ejs",
+		L".js", L".jsx",
+		L".json",
+		L".svg", L".xml", L".wxs", L".wxl", L".wsdl", L".rss", L".atom", L".rdf", L".xslt", L".xul", L".xbl", L".mathml", L".config",
+		L".php", L".php3", L".php4", L".php5", L".phtm", L".phtml", L".ctp",
+		L".c", L".h", L".i",
+		L".cc", L".cp", L".cpp", L".c++", L".cxx", L".hh", L".hpp", L".hxx", L".h++", L".ii",
+		L".cs", L".cshtml", L".asax", L".ashx",
+		L".java",
+		L".scala", L".sbt",
+		L".coffee", L".cf", L".cson",
+		L".clj",
+		L".pl", L".pm",
+		L".rb", L".ru", L".gemspec", L".rake",
+		L".py", L".pyw", L".wsgi",
+		L".sass",
+		L".lua",
+		L".sql",
+		L".diff", L".patch",
+		L".md", L".markdown",
+		L".yaml", L".yml",
+		L".hx",
+		L".sh",
+		L".less",
+		L""		// last entry
+	};
+	for (int idx=0; !wstrExtensions[idx].empty(); ++idx)
+		RegisterOpenWithByExtensionKeys(wstrExtensions[idx].c_str());
+
+	return true;
+}
+
 
 void SaveWindowRect(HWND hWnd)
 {
@@ -1003,7 +1144,7 @@ CefString AppGetCachePath() {
 
 // Helper function for AppGetProductVersionString. Reads version info from
 // VERSIONINFO and writes it into the passed in std::wstring.
-void GetFileVersionString(std::wstring &retVersion) {
+void GetFileVersionString(std::wstring &retVersion, bool wantsOnlyMajorMinor /* = false */) {
   DWORD dwSize = 0;
   BYTE *pVersionInfo = NULL;
   VS_FIXEDFILEINFO *pFileInfo = NULL;
@@ -1038,7 +1179,9 @@ void GetFileVersionString(std::wstring &retVersion) {
   delete[] pVersionInfo;
 
   std::wostringstream versionStream(L"");
-  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
+  versionStream << major << L"." << minor;
+  if (!wantsOnlyMajorMinor)
+	  versionStream << L"." << hotfix << L"." << other; 
   retVersion = versionStream.str();
 }
 
