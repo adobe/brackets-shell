@@ -161,7 +161,7 @@ BOOL CALLBACK FindFirstBracketsInstance(HWND hwnd, LPARAM lParam)
 	WCHAR cName[MAX_PATH+1] = {0}, cTitle[MAX_PATH+1] = {0};
 	::GetClassName(hwnd, cName, MAX_PATH);
 	::GetWindowText(hwnd, cTitle, MAX_PATH);
-	if ((wcscmp(cName, szWindowClass) == 0) && (wcsstr(cTitle, WINDOW_TITLE) != 0)) {
+	if ((wcscmp(cName, szWindowClass) == 0) && (wcsstr(cTitle, APP_NAME) != 0)) {
 		// found it!  return the window handle and stop searching
 		*(HWND*)lParam = hwnd;
 		return FALSE;
@@ -444,6 +444,7 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 
 // Explorer File Association Registry functions
 
+// returns the ProgId string
 LPCWSTR GetApplicationProgId()
 {
 	static std::wstring wstrApplicationProgId;	// cached ProgId
@@ -451,50 +452,51 @@ LPCWSTR GetApplicationProgId()
 	{
 		std::wstring wstrFileVer;
 		GetFileVersionString(wstrFileVer, true);
-		wstrApplicationProgId = L"Brackets.Document." + wstrFileVer;
+		wstrApplicationProgId = APP_NAME L".Document." + wstrFileVer;
 	}
 	return (LPCWSTR)wstrApplicationProgId.c_str();
 }
 
-// register the file version-specific Prog Id and Shell verbs
+// register the application, version-specific Prog Id and Shell verbs
 bool RegisterProgIdKeys()
 {
 	HKEY hKey;
 	bool result = false;
 
 	//; Define ProgID
-	//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY]
+	//[HKEY_CURRENT_USER\SOFTWARE\Classes\Brackets.Document.XX.YY]
 	//@="Brackets Document"
 	std::wstring wstr = L"SOFTWARE\\Classes\\";
 	wstr += GetApplicationProgId();
-	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CLASSES_ROOT, wstr.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL))
+	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, wstr.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL))
 	{
-		wstr = WINDOW_TITLE L" Document";	// Prog ID short name
-		if (ERROR_SUCCESS == RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof (WCHAR)))
+		wstr = APP_NAME L" Document";	// Prog ID short name
+		RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof (WCHAR));
+
+		//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell]
+		//@="Open"
+		HKEY hShellKey;
+		if (ERROR_SUCCESS == RegCreateKeyEx(hKey, L"Shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hShellKey, NULL))
 		{
-			//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell]
-			//@="Open"
-			HKEY hShellKey;
-			if (ERROR_SUCCESS == RegCreateKeyEx(hKey, L"Shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hShellKey, NULL))
+			wstr = L"Open";
+			RegSetValueEx(hShellKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+
+			//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell\Open\Command]
+			//@="C:\\...\\Brackets.exe \"%1\""
+			HKEY hCmdKey;
+			if (ERROR_SUCCESS == RegCreateKeyEx(hShellKey, L"Open\\Command", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hCmdKey, NULL))
 			{
-				wstr = L"Open";
-				RegSetValueEx(hShellKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+				HMODULE module = GetModuleHandle(NULL);
+				WCHAR executablePath[MAX_PATH+1] = {0};
+				GetModuleFileName(module, executablePath, MAX_PATH);
+				wstr = executablePath;
+				wstr += L" \"%1\"";
+				RegSetValueEx(hCmdKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
 
-				//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell\Open\Command]
-				//@="C:\\...\\Brackets.exe \"%1\""
-				HKEY hCmdKey;
-				if (ERROR_SUCCESS == RegCreateKeyEx(hShellKey, L"Open\\Command", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hCmdKey, NULL))
-				{
-					HMODULE module = GetModuleHandle(NULL);
-					WCHAR executablePath[MAX_PATH+1] = {0};
-					GetModuleFileName(module, executablePath, MAX_PATH);
-					wstr = executablePath;
-					wstr += L"\"%1\"";
-					RegSetValueEx(hCmdKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
-				}
-
+				RegCloseKey(hCmdKey);
 				result = true;
 			}
+			RegCloseKey(hShellKey);
 		}
 		RegCloseKey(hKey);
 	}
@@ -502,6 +504,7 @@ bool RegisterProgIdKeys()
 	return result;
 }
 
+// register for Explorer "Open With..." menu or dialog for an given file extension
 bool RegisterOpenWithByExtensionKeys(LPCWSTR pFileExtension)
 {
 	HKEY hKey;
@@ -526,7 +529,7 @@ bool RegisterOpenWithByExtensionKeys(LPCWSTR pFileExtension)
 	return result;
 }
 
-
+// register keys and entries to associate file types with the application
 bool RegisterApplicationFileAssociations()
 {
 	// Register the top-level Prog Id
