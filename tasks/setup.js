@@ -20,6 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
+/*jslint vars:true*/
 /*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
@@ -40,26 +41,23 @@ module.exports = function (grunt) {
         },
         /* use promises instead of callbacks */
         link,
-        rename          = q.denodeify(fs.rename),
+        rename          = common.rename,
         exec            = common.exec;
     
     // cross-platform symbolic link
     link = (function () {
-        var symlink;
+        var typeArg,
+            symlink;
         
         if (process.platform === "win32") {
-            symlink = q.denodeify(fs.symlink);
-            
-            return function (srcpath, destpath) {
-                return symlink(srcpath, destpath, "junction");
-            };
-        } else {
-            symlink = q.denodeify(fs.link);
-            
-            return function (srcpath, destpath) {
-                return symlink(srcpath, destpath);
-            };
+            typeArg = "junction";
         }
+        
+        symlink = q.denodeify(fs.symlink);
+        
+        return function (srcpath, destpath) {
+            return symlink(srcpath, destpath, typeArg);
+        };
     }());
     
     function unzip(src, dest) {
@@ -69,7 +67,7 @@ module.exports = function (grunt) {
 
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config      = "cef-" + common.platform(),
+        var config      = "cef-" + common.platform() + common.arch(),
             zipSrc      = grunt.config("curl-dir." + config + ".src"),
             zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
             zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
@@ -86,12 +84,15 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
+            var cefTasks = ["cef-clean", "cef-extract", "cef-symlinks"];
+            
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
-                grunt.task.run(["cef-clean", "cef-extract", "cef-symlinks"]);
             } else {
-                grunt.task.run(["cef-download","cef-clean", "cef-extract", "cef-symlinks"]);
+                cefTasks.unshift("cef-download");
             }
+            
+            grunt.task.run(cefTasks);
         } else {
             grunt.verbose.writeln("Skipping CEF download. Found deps/cef/" + txtName);
         }
@@ -144,13 +145,13 @@ module.exports = function (grunt) {
             // rename version stamped name to cef
             return rename("deps/" + zipName, "deps/cef");
         }).then(function () {
-            // write empty file with zip file 
-            grunt.file.write("deps/cef/" + zipName + ".txt", "");
-
-            if (common.platform() !== "win") {
+            if (common.platform() === "mac") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
                 return exec("chmod u+x deps/cef/tools/*");
             }
+            
+            // write empty file with zip file 
+            grunt.file.write("deps/cef/" + zipName + ".txt", "");
             
             // return a resolved promise
             return q.resolve();
@@ -190,14 +191,14 @@ module.exports = function (grunt) {
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
         var platform    = common.platform(),
-            config      = "node-" + platform,
+            config      = "node-" + platform + common.arch(),
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             nodeDest    = [],
             dest        = grunt.config("curl-dir." + config + ".dest"),
-            curlTask    = "curl-dir:node-" + platform,
+            curlTask    = "curl-dir:" + config,
             setupTask   = "node-" + platform,
-            nodeVersion = grunt.config("node-version"),
-            npmVersion  = grunt.config("npm-version"),
+            nodeVersion = grunt.config("node.version"),
+            npmVersion  = grunt.config("npm.version"),
             txtName     = "version-" + nodeVersion + ".txt",
             missingDest = false;
         
@@ -230,7 +231,7 @@ module.exports = function (grunt) {
     
     function nodeWriteVersion() {
         // write empty file with node-version name
-        grunt.file.write("deps/node/version-" + grunt.config("node-version") + ".txt", "");
+        grunt.file.write("deps/node/version-" + grunt.config("node.version") + ".txt", "");
     }
     
     // task: node-win32
@@ -292,23 +293,35 @@ module.exports = function (grunt) {
         });
     });
     
+    // task: node-linux
+    grunt.registerTask("node-linux", ["node-mac"]);
+    
     // task: node-clean
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {
         common.deleteFile("deps/node", { force: true });
     });
     
     // task: create-project
-    grunt.registerTask("create-project", "Create Xcode/VisualStudio project", function () {
+    grunt.registerTask("create-project", "Create Xcode/VisualStudio/Makefile project", function () {
         var done = this.async(),
-            promise;
+            promise,
+            gypCommand;
+        
+        // TODO why doesn't gyp (in the repository) work for linux?
+        if (common.platform() === "linux") {
+            gypCommand = "gyp --depth .";
+        } else {
+            gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
+        }
         
         grunt.log.writeln("Building project files");
         
         // this is a hack to fix issues with node-gyp picking up this file during 'npm install'
         // see https://github.com/TooTallNate/node-gyp/issues/216
-        promise = rename("appshell.gyp.txt", "appshell.gyp").then(function () {
-            return exec("bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'");
-        });
+        grunt.file.copy("appshell.gyp.txt", "appshell.gyp");
+        
+        // Run gyp
+        promise = exec(gypCommand);
         
         if (common.platform() === "mac") {
             promise = promise.then(function () {
@@ -318,8 +331,6 @@ module.exports = function (grunt) {
         }
         
         promise.then(function () {
-            return rename("appshell.gyp", "appshell.gyp.txt");
-        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);

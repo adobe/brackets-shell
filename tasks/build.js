@@ -28,6 +28,7 @@ module.exports = function (grunt) {
     
     var common      = require("./common")(grunt),
         q           = require("q"),
+        semver      = require("semver"),
         spawn       = common.spawn,
         resolve     = common.resolve,
         platform    = common.platform(),
@@ -78,6 +79,18 @@ module.exports = function (grunt) {
         });
     });
     
+    // task: build-linux
+    grunt.registerTask("build-linux", "Build linux shell", function () {
+        var done = this.async();
+        
+        spawn("make").then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+    
     // task: git
     grunt.registerMultiTask("git", "Pull specified repo branch from origin", function () {
         var repo = this.data.repo;
@@ -93,6 +106,7 @@ module.exports = function (grunt) {
             
             var done = this.async(),
                 promise = spawn([
+                    "git fetch origin",
                     "git checkout " + this.data.branch,
                     "git pull origin " + this.data.branch,
                     "git submodule sync",
@@ -195,6 +209,12 @@ module.exports = function (grunt) {
         grunt.task.run("copy:win");
     });
     
+    // task: stage-linux
+    grunt.registerTask("stage-linux", "Stage linux executable files", function () {
+        // stage platform-specific binaries, then package www files
+        grunt.task.run("copy:linux");
+    });
+    
     // task: package
     grunt.registerTask("package", "Package www files", function () {
         grunt.task.run(["clean:www", "copy:www", "copy:samples", "write-config"]);
@@ -214,13 +234,13 @@ module.exports = function (grunt) {
         common.writeJSON(configPath, configJSON);
     });
     
-    // task: installer
+    // task: build-installer
     grunt.registerTask("build-installer", "Build installer", function () {
         // TODO update brackets.config.json
         grunt.task.run(["clean:installer-" + platform, "build-installer-" + platform]);
     });
     
-    // task: installer-mac
+    // task: build-installer-mac
     grunt.registerTask("build-installer-mac", "Build mac installer", function () {
         var done = this.async();
         
@@ -232,11 +252,26 @@ module.exports = function (grunt) {
         });
     });
     
-    // task: installer
+    // task: build-installer-win
     grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
         
         spawn(["cmd.exe /c ant.bat -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+    
+    // task: build-installer-linux
+    grunt.registerTask("build-installer-linux", "Build linux installer", function () {
+        var done = this.async(),
+            sprint = semver.parse(grunt.config("pkg").version).minor;
+        
+        spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
+            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + ".deb");
+        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);

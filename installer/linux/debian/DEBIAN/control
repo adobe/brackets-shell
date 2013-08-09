@@ -1,8 +1,8 @@
 Package: brackets
-Version: 0.27.0
+Version: 0.28.0-8528
 Section: base
 Priority: optional
-Architecture: i386
+Architecture: all
 Installed-Size: 128819
 Depends: bash (>= 2.05a-11), libnss3-1d (>= 3.14.3), libnspr4-0d (>= 3.14.3)
 Maintainer: Jason San Jose <jasonsj@adobe.com>
