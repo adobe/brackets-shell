@@ -44,11 +44,11 @@ module.exports = function (grunt) {
             /* linux */
             "cef-linux32": {
                 "dest"      : "downloads/",
-                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux32_release.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
             "cef-linux64": {
                 "dest"      : "downloads/",
-                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux64_release.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64_release.zip"
             },
             "node-linux32": {
                 "dest"      : "downloads/",
