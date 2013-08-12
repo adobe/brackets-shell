@@ -42,6 +42,110 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
       </Component>
     </DirectoryRef>
     
+    <Component Id="FileAssociations" Guid="{D0195E8D-0881-42B6-9B4F-DA84D9396506}" Directory="INSTALLDIR" KeyPath="yes">
+        <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities" Name="ApplicationDescription" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities" Name="ApplicationIcon" Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities" Name="ApplicationName" Value="!(loc.ProductName)" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="$(var.ProductVersionName)" Value="SOFTWARE\$(var.ProductVersionName)\Capabilities" Type="string" />
+
+        <!-- File associations -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".groovy" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ini" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".properties" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".css" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".scss" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".html" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".htm" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".shtm" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".shtml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xhtml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cfm" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cfm1" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cfc" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".dhtml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xht" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".tpl" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".twig" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".hbs" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".handlebars" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".kit" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".jsp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".aspx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ejs" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".js" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".jsx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".json" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".svg" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".wxs" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".wxl" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".wsdl" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".rss" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".atom" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".rdf" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xslt" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xul" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".xbl" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".mathml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".config" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".php" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".php3" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".php4" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".php5" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".phtm" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".phtml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ctp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".c" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".h" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".i" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cc" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cpp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".c++" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cxx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".hh" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".hpp" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".hxx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".h++" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ii" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cs" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cshtml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".asax" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ashx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".java" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".scala" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".sbt" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".coffee" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cf" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".cson" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".clj" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".pl" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".pm" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".rb" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".ru" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".gemspec" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".rake" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".py" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".pyw" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".wsgi" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".sass" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".lua" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".sql" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".diff" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".patch" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".md" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".markdown" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".yaml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".yml" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".hx" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".sh" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.ProductVersionName)\Capabilities\FileAssociations" Value="ECCCFileExt" Name=".less" Type="string" />
+
+        <RegistryValue Root="HKCR" Key="ECCCFileExt\shell\open\command" Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\$(var.ExeName).exe\shell\open" Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
+
+    </Component>
     <!-- Start Menu Shortcuts-->
     <UIRef Id="WixUI_MyInstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
@@ -78,6 +182,8 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
       <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
         
       <ComponentRef  Id='StartMenuShortcut' />
+
+      <ComponentRef  Id='FileAssociations' />
     </Feature>                  
   </Product>
 </Wix>
