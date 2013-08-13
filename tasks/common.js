@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint es5:true, vars: true, plusplus: true, regexp: true*/
+/*jslint es5:true, vars: true, plusplus: true, regexp: true, nomen: true*/
 /*global module, require, process, Buffer*/
 module.exports = function (grunt) {
     "use strict";
@@ -187,7 +187,7 @@ module.exports = function (grunt) {
                         code: code,
                         stdout: stdout.toString(),
                         stderr: stderr.toString(),
-                        toString: function() {
+                        toString: function () {
                             if (code === 0) {
                                 return this.stdout;
                             } else {

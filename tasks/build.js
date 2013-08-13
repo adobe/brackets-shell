@@ -93,6 +93,7 @@ module.exports = function (grunt) {
             
             var done = this.async(),
                 promise = spawn([
+                    "git fetch origin",
                     "git checkout " + this.data.branch,
                     "git pull origin " + this.data.branch,
                     "git submodule sync",
