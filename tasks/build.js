@@ -287,7 +287,7 @@ module.exports = function (grunt) {
         grunt.file.recurse("installer/linux/debian/package-root", function (abspath) {
             templateData.size += fs.statSync(abspath).size;
         });
-        templateData.size = templateData.size / 1000;
+        templateData.size = Math.round(templateData.size / 1000);
         
         // write file
         content = grunt.template.process(template, { data: templateData });
