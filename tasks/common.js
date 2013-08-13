@@ -238,9 +238,9 @@ module.exports = function (grunt) {
     function arch() {
         if (platform() === "linux") {
             if (process.arch === "x64") {
-                return "64";
+                return 64;
             } else {
-                return "32";
+                return 32;
             }
         }
         

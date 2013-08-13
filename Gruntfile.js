@@ -35,11 +35,12 @@ module.exports = function (grunt) {
     } else if (platform === "win") {
         staging = "installer/win/staging";
     } else {
-        staging = "installer/linux/debian/usr/lib/brackets";
+        staging = "installer/linux/debian/package-root/usr/lib/brackets";
     }
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
+        "config-json":      staging + "/www/config.json",
         "curl-dir": {
             /* linux */
             "cef-linux32": {
@@ -82,7 +83,7 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/*.deb"],
+            "installer-linux"   : ["installer/linux/debian/*.deb"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],

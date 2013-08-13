@@ -41,6 +41,7 @@ tools
 /installer/mac/staging/
 /installer/linux/*.deb
 /installer/linux/debian/package-root/usr/lib/
+/installer/linux/debian/package-root/DEBIAN/
 /installer/win/staging/
 *.wixpdb
 *.wixobj

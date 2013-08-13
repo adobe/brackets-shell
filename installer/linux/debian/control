@@ -1,9 +1,9 @@
 Package: brackets
-Version: 0.28.0-8528
+Version: <%= version %>
 Section: base
 Priority: optional
-Architecture: all
-Installed-Size: 128819
+Architecture: <%= arch %>
+Installed-Size: <%= size %>
 Depends: bash (>= 2.05a-11), libnss3-1d (>= 3.14.3), libnspr4-0d (>= 3.14.3)
 Maintainer: Jason San Jose <jasonsj@adobe.com>
 Description: Brackets

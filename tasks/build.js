@@ -26,7 +26,8 @@
 module.exports = function (grunt) {
     "use strict";
     
-    var common      = require("./common")(grunt),
+    var fs          = require("fs"),
+        common      = require("./common")(grunt),
         q           = require("q"),
         semver      = require("semver"),
         spawn       = common.spawn,
@@ -131,10 +132,12 @@ module.exports = function (grunt) {
         
         spawn(["git status"], { cwd: wwwRepo })
             .then(function (result) {
-                var branch = /On branch (.*)/.exec(result.stdout.trim())[1];
-                
-                grunt.log.writeln("Build branch " + branch);
-                grunt.config("build.build-branch", branch);
+                var branch = /On branch (.*)/.exec(result.stdout.trim());
+               
+                if (branch && branch[1]) {
+                    grunt.log.writeln("Build branch " + branch);
+                    grunt.config("build.build-branch", branch);
+                }
                 
                 done();
             }, function (err) {
@@ -224,14 +227,17 @@ module.exports = function (grunt) {
     grunt.registerTask("write-config", "Update version data in www config.json payload", function () {
         grunt.task.requires(["build-num", "build-branch", "build-sha"]);
         
-        var configPath = grunt.config("build.staging") + "/www/config.json",
-            configJSON = grunt.file.readJSON(configPath);
+        var configJSON = grunt.file.readJSON(grunt.config("config-json")),
+            branch     = grunt.config("build.build-branch");
         
         configJSON.version = configJSON.version.substr(0, configJSON.version.lastIndexOf("-") + 1) + grunt.config("build.build-number");
-        configJSON.repository.branch = grunt.config("build.build-branch");
         configJSON.repository.SHA = grunt.config("build.build-sha");
+
+        if (branch) {
+            configJSON.repository.branch = branch;
+        }
         
-        common.writeJSON(configPath, configJSON);
+        common.writeJSON(grunt.config("config-json"), configJSON);
     });
     
     // task: build-installer
@@ -266,11 +272,32 @@ module.exports = function (grunt) {
     
     // task: build-installer-linux
     grunt.registerTask("build-installer-linux", "Build linux installer", function () {
+        grunt.task.requires(["package"]);
+        
+        var template = grunt.file.read("installer/linux/debian/control"),
+            templateData = {},
+            content;
+        
+        // populate debian control template fields
+        templateData.version = grunt.file.readJSON(grunt.config("config-json")).version;
+        templateData.size = 0;
+        templateData.arch = (common.arch() === 64) ? "amd64" : "i386";
+
+        // uncompressed file size
+        grunt.file.recurse("installer/linux/debian/package-root", function (abspath) {
+            templateData.size += fs.statSync(abspath).size;
+        });
+        templateData.size = templateData.size / 1000;
+        
+        // write file
+        content = grunt.template.process(template, { data: templateData });
+        grunt.file.write("installer/linux/debian/package-root/DEBIAN/control", content);
+        
         var done = this.async(),
             sprint = semver.parse(grunt.config("pkg").version).minor;
         
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
-            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + ".deb");
+            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.deb");
         }).then(function () {
             done();
         }, function (err) {
