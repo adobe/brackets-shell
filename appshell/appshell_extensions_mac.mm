@@ -451,6 +451,18 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     return ConvertNSErrorCode(error, true);
 }
 
+
+
+void PostNativeKeyEvent(CefRefPtr<CefBrowser> browser, int keyCode)
+{
+    NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+    [[NSApp mainWindow] makeKeyAndOrderFront:window];
+    
+    CGEventRef e = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)keyCode, true);
+    CGEventPost(kCGSessionEventTap, e);
+    CFRelease(e);
+}
+
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];

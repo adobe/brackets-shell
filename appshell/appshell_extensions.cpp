@@ -661,7 +661,19 @@ public:
         } else if (message_name == "DragWindow") {     
             // Parameters: none       
             DragWindow(browser);
-        } 
+        } else if (message_name == "PostNativeKeyEvent") {
+            int keyCode = -1;
+            if ((argList->GetSize() == 2) && (argList->GetType(1) == VTYPE_INT)) {
+                keyCode = argList->GetInt(1);
+            } else {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR && keyCode != -1) {
+                PostNativeKeyEvent(browser, keyCode);
+            }
+
+        }
         else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;

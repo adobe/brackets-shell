@@ -277,6 +277,12 @@ if (!appshell.app) {
         }, path);
     };
  
+    // dummy
+    native function PostNativeKeyEvent();
+    appshell.app.postNativeKeyEvent = function (keycode, callback) {
+        PostNativeKeyEvent(callback || _dummyCallback, keycode);
+    }
+ 
     /**
      * Quits native shell application
      */
