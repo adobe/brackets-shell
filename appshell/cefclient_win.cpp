@@ -207,24 +207,24 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
 	  HWND hFirstInstanceWnd = NULL;
 	  ::EnumWindows(FindSuitableBracketsInstance, (LPARAM)&hFirstInstanceWnd);
-	  if (hFirstInstanceWnd != NULL) {
-		  ::SetForegroundWindow(hFirstInstanceWnd);
-		  if (::IsIconic(hFirstInstanceWnd))
-			::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
-
-		  // message the other Brackets instance to actually open the given filename
-		  std::wstring wstrFilename = lpCmdLine;
-		  ConvertToUnixPath(wstrFilename);
-		  // note: WM_COPYDATA will manage passing the string across process space
-		  COPYDATASTRUCT data;
-		  data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-		  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
-		  data.lpData = (LPVOID)wstrFilename.c_str();
-		  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
-	  
-		  // exit this instance
-		  return 0;
-	  }
+      if (hFirstInstanceWnd != NULL) {
+          ::SetForegroundWindow(hFirstInstanceWnd);
+          if (::IsIconic(hFirstInstanceWnd))
+              ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
+    
+          // message the other Brackets instance to actually open the given filename
+          std::wstring wstrFilename = lpCmdLine;
+          ConvertToUnixPath(wstrFilename);
+          // note: WM_COPYDATA will manage passing the string across process space
+          COPYDATASTRUCT data;
+          data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
+          data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+          data.lpData = (LPVOID)wstrFilename.c_str();
+          ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+      
+          // exit this instance
+          return 0;
+      }
 	  // otherwise, fall thru and launch a new instance
   }
 
