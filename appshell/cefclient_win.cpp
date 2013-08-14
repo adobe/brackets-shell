@@ -209,6 +209,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	  ::EnumWindows(FindFirstBracketsInstance, (LPARAM)&hFirstInstanceWnd);
 	  ASSERT(hFirstInstanceWnd != NULL);
 	  ::SetForegroundWindow(hFirstInstanceWnd);
+	  if (::IsIconic(hFirstInstanceWnd))
+		::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
 
 	  // message the other Brackets instance to actually open the given filename
 	  std::wstring wstrFilename = lpCmdLine;
