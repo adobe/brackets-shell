@@ -272,10 +272,13 @@ if (!appshell.app) {
                 isDirectory: function () {
                     return isDir;
                 },
-                mtime: new Date(modtime * 1000) // modtime is seconds since 1970, convert to ms
+                mtime: new Date(modtime * 1000), // modtime is seconds since 1970, convert to ms
+                path: path
             });
         }, path);
     };
+ 
+ 
  
     /**
      * Quits native shell application
@@ -419,6 +422,40 @@ if (!appshell.app) {
         MoveFileOrDirectoryToTrash(callback || _dummyCallback, path);
     };    
 
+    /**
+     * Copy src to dest, replacing the file at dest if it already exists.
+     *
+     * @param {string} path The path of the file to copy.
+     * @param {string} data The destination to copy the file to
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_UNSUPPORTED_ENCODING
+     *          ERR_OUT_OF_SPACE
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function CopyFile();
+    appshell.fs.copyFile = function (src, dest, callback) {
+        CopyFile(callback || _dummyCallback, src, dest);
+    };
+ 
+
+    /** Return the home directory as the second argument of the callback function */
+    native function GetHomeDir();
+    appshell.fs.getHomeDir = function (callback) {
+        GetHomeDir(callback);
+    };
+ 
+    /** Return the home directory as the second argument of the callback function */
+    native function GetDocumentsDir();
+    appshell.fs.getDocumentsDir = function (callback) {
+        GetDocumentsDir(callback);
+    };
+ 
+ 
     /**
      * Return the number of milliseconds that have elapsed since the application
      * was launched. 

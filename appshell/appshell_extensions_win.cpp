@@ -918,6 +918,36 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
     return NO_ERROR;
 }
 
+int32 GetHomeDir(ExtensionString& expandedPath) 
+{
+    TCHAR localAppPath[MAX_PATH] = {0};
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
+    expandedPath = localAppPath;
+    ConvertToUnixPath(expandedPath);
+    return 0;
+}
+
+int32 GetDocumentsDir(ExtensionString& expandedPath) 
+{
+    TCHAR localAppPath[MAX_PATH] = {0};
+    SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, localAppPath);
+    expandedPath = localAppPath;
+    ConvertToUnixPath(expandedPath);
+
+    return 0;
+}
+
+int32 CopyFile(ExtensionString src, ExtensionString dest)
+{
+    ConvertToNativePath(src);
+    ConvertToNativePath(dest);
+
+    if (!CopyFile(src.c_str(), dest.c_str(), FALSE)) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+    return NO_ERROR;
+}
+
 int32 GetPendingFilesToOpen(ExtensionString& files) {
     files = gFilesToOpen;
     ConvertToUnixPath(files);

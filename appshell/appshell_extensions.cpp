@@ -421,6 +421,30 @@ public:
                 ExtensionString path = argList->GetString(1);
                 error = ShowFolderInOSWindow(path);
             }
+        } else if (message_name == "GetHomeDir") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString result;
+                error = GetHomeDir(result);
+                responseArgs->SetString(2, result);
+            }
+        } else if (message_name == "GetDocumentsDir") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString result;
+                error = GetDocumentsDir(result);
+                responseArgs->SetString(2, result);
+            }
         } else if (message_name == "GetPendingFilesToOpen") {
             // Parameters:
             //  0: int32 - callback id
@@ -432,6 +456,24 @@ public:
                 ExtensionString files;
                 error = GetPendingFilesToOpen(files);
                 responseArgs->SetString(2, files.c_str());
+            }
+        } else if (message_name == "CopyFile") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - filename
+            //  2: string - dest filename
+            if (argList->GetSize() != 3 ||
+                argList->GetType(1) != VTYPE_STRING ||
+                argList->GetType(2) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString src = argList->GetString(1);
+                ExtensionString dest = argList->GetString(2);
+                
+                error = CopyFile(src, dest);
+                // No additional response args for this function
             }
         } else if (message_name == "GetDroppedFiles") {
             // Parameters:
