@@ -24,12 +24,12 @@ if [ -x "$UPDATE_MENUS" ]; then
   update-menus
 fi
 
-DEFAULT_ARCH="i386"
+DEFAULT_ARCH="`uname -m`"
 
 get_lib_dir() {
   if [ "$DEFAULT_ARCH" = "i386" ]; then
     LIBDIR=lib/i386-linux-gnu
-  elif [ "$DEFAULT_ARCH" = "amd64" ]; then
+  elif [ "$DEFAULT_ARCH" = "x86_64" ]; then
     LIBDIR=lib/x86_64-linux-gnu
   else
     echo Unknown CPU Architecture: "$DEFAULT_ARCH"
