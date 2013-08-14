@@ -147,7 +147,7 @@ std::wstring GetFilenamesFromCommandLine() {
 
 // EnumWindowsProc callback function
 //  - searches for an already running Brackets application window
-BOOL CALLBACK FindFirstBracketsInstance(HWND hwnd, LPARAM lParam)
+BOOL CALLBACK FindSuitableBracketsInstance(HWND hwnd, LPARAM lParam)
 {
 	ASSERT(lParam != NULL);	// must be passed an HWND pointer to return, if found
 
@@ -206,7 +206,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	  // for subsequent instances, re-use an already running instance if we're being called to
 	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
 	  HWND hFirstInstanceWnd = NULL;
-	  ::EnumWindows(FindFirstBracketsInstance, (LPARAM)&hFirstInstanceWnd);
+	  ::EnumWindows(FindSuitableBracketsInstance, (LPARAM)&hFirstInstanceWnd);
 	  if (hFirstInstanceWnd != NULL) {
 		  ::SetForegroundWindow(hFirstInstanceWnd);
 		  if (::IsIconic(hFirstInstanceWnd))
