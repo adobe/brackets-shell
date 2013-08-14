@@ -40,8 +40,9 @@ tools
 
 /installer/mac/staging/
 /installer/linux/*.deb
-/installer/linux/debian/package-root/usr/lib/
-/installer/linux/debian/package-root/DEBIAN/
+/installer/linux/debian/package-root/opt/*
+!/installer/linux/debian/package-root/opt/brackets/brackets.desktop
+/installer/linux/debian/package-root/DEBIAN/control
 /installer/win/staging/
 *.wixpdb
 *.wixobj

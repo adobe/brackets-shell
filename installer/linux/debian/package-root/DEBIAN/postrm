@@ -1,0 +1,2 @@
+#!/bin/sh
+rm -rf "/opt/brackets/libudev.so.0"
