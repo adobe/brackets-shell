@@ -3,7 +3,6 @@
 # grunt-contrib-copy doesn't preserve permissions
 # https://github.com/gruntjs/grunt/issues/615
 chmod 775 debian/package-root/opt/brackets/Brackets
-chmod 775 debian/package-root/DEBIAN/postinst
 
 # set permissions on subdirectories
 find debian -type d -exec chmod 755 {} \;

@@ -3,4 +3,4 @@
   hints="Code Editor" \
   title="Brackets" \
   icon="/opt/brackets/appshell32.png" \
-  command="/opt/brackets/Brackets"
+  command="/usr/bin/brackets"
