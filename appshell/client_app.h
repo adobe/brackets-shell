@@ -92,6 +92,7 @@ class ClientApp : public CefApp,
   CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
   static CefString AppGetSupportDirectory();
+  static CefString AppGetDocumentsDirectory();
 
 private:
   // Creates all of the RenderDelegate objects. Implemented in

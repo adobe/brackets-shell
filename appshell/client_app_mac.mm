@@ -91,3 +91,7 @@ CefString ClientApp::AppGetSupportDirectory() {
   return CefString([supportDirectory UTF8String]);
 }
 
+CefString ClientApp::AppGetDocumentsDirectory() {
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    return CefString([documentsDirectory UTF8String]);
+}
