@@ -35,8 +35,8 @@
 
 #define CLOSING_PROP L"CLOSING"
 
-#define FIRST_INSTANCE_MUTEX_NAME	L"FIRST_INSTANCE_MUTEX"
-#define ID_WM_COPYDATA_SENDOPENFILECOMMAND	1001
+#define FIRST_INSTANCE_MUTEX_NAME	L".Shell.Instance"
+#define ID_WM_COPYDATA_SENDOPENFILECOMMAND	(WM_USER+1001)
 
 // Global Variables:
 DWORD g_appStartupTime;
@@ -47,7 +47,6 @@ std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
-static const TCHAR szMutexName[] = APP_NAME FIRST_INSTANCE_MUTEX_NAME;	// proper name of first instance mutex
 
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
@@ -202,7 +201,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
 
   // Determine if we should use an already running instance of Brackets.
-  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, szMutexName);
+  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, APP_NAME FIRST_INSTANCE_MUTEX_NAME);
   if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
 	  // for subsequent instances, re-use an already running instance if we're being called to
 	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
@@ -231,7 +230,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   if (hMutex == NULL) {
 	  // first instance of this app, so create the mutex and continue execution of this instance.
-	  hMutex = ::CreateMutex(NULL, FALSE, szMutexName);
+	  hMutex = ::CreateMutex(NULL, FALSE, APP_NAME FIRST_INSTANCE_MUTEX_NAME);
   }
 
   CefSettings settings;
