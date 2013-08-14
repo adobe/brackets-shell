@@ -35,6 +35,9 @@
 
 #define CLOSING_PROP L"CLOSING"
 
+#define FIRST_INSTANCE_MUTEX_NAME	L"FIRST_INSTANCE_MUTEX"
+#define ID_WM_COPYDATA_SENDOPENFILECOMMAND	1001
+
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
@@ -44,6 +47,7 @@ std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
+static const TCHAR szMutexName[] = APP_NAME FIRST_INSTANCE_MUTEX_NAME;	// proper name of first instance mutex
 
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
@@ -142,6 +146,28 @@ std::wstring GetFilenamesFromCommandLine() {
     return result;
 }
 
+// EnumWindowsProc callback function
+//  - searches for an already running Brackets application window
+BOOL CALLBACK FindFirstBracketsInstance(HWND hwnd, LPARAM lParam)
+{
+	ASSERT(lParam != NULL);	// must be passed an HWND pointer to return, if found
+
+	// check for the Brackets application window by class name and title
+	WCHAR cName[MAX_PATH+1] = {0}, cTitle[MAX_PATH+1] = {0};
+	::GetClassName(hwnd, cName, MAX_PATH);
+	::GetWindowText(hwnd, cTitle, MAX_PATH);
+	if ((wcscmp(cName, szWindowClass) == 0) && (wcsstr(cTitle, APP_NAME) != 0)) {
+		// found it!  return the window handle and stop searching
+		*(HWND*)lParam = hwnd;
+		return FALSE;
+	}
+
+	return TRUE;	// otherwise, continue searching
+}
+
+// forward declaration; implemented in appshell_extensions_win.cpp
+void ConvertToUnixPath(ExtensionString& filename);
+
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -167,6 +193,37 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Parse command line arguments. The passed in values are ignored on Windows.
   AppInitCommandLine(0, NULL);
 
+  // Initialize global strings
+  LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+  LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
+
+  // Determine if we should use an already running instance of Brackets.
+  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, szMutexName);
+  if (hMutex == NULL) {
+	  // first instance of this app, so create the mutex and continue execution of this instance.
+	  hMutex = ::CreateMutex(NULL, FALSE, szMutexName);
+  } else if (AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
+	  // for subsequent instances, re-use an already running instance if we're being called to
+	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
+	  HWND hFirstInstanceWnd = NULL;
+	  ::EnumWindows(FindFirstBracketsInstance, (LPARAM)&hFirstInstanceWnd);
+	  ASSERT(hFirstInstanceWnd != NULL);
+	  ::SetForegroundWindow(hFirstInstanceWnd);
+
+	  // message the other Brackets instance to actually open the given filename
+	  std::wstring wstrFilename = lpCmdLine;
+	  ConvertToUnixPath(wstrFilename);
+	  // note: WM_COPYDATA will manage passing the string across process space
+	  COPYDATASTRUCT data;
+	  data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
+	  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+	  data.lpData = (LPVOID)wstrFilename.c_str();
+	  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+	  
+	  // exit this instance
+	  return 0;
+  }
+
   CefSettings settings;
 
   // Populate the settings based on command line arguments.
@@ -180,9 +237,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
-  // Initialize global strings
-  LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-  LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
+  // Register window class
   MyRegisterClass(hInstance, *(app->GetCurrentLanguage().GetStruct()));
  
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
@@ -271,6 +326,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Shut down CEF.
   CefShutdown();
+
+  // release the first instance mutex
+  if (hMutex != NULL)
+	  ReleaseMutex(hMutex);
 
   return result;
 }
@@ -866,6 +925,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+	case WM_COPYDATA:
+		// handle the interprocess communication request from another Brackets running instance
+		if (lParam != NULL) {
+			PCOPYDATASTRUCT data = (PCOPYDATASTRUCT)lParam;
+			if ((data->dwData == ID_WM_COPYDATA_SENDOPENFILECOMMAND) && (data->cbData > 0)) {
+				// another Brackets instance requests that we open the given filename
+				std::wstring wstrFilename = (LPCWSTR)data->lpData;
+				// Windows Explorer might enclose the filename in double-quotes.  We need to strip these off.
+				if ((wstrFilename.front() == '\"') && wstrFilename.back() == '\"')
+					wstrFilename = wstrFilename.substr(1, wstrFilename.length() - 2);
+				ASSERT(g_handler != NULL);
+				CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
+				// call into Javascript code to handle the open file command
+				ASSERT(browser != NULL);
+				g_handler->SendOpenFileCommand(browser, CefString(wstrFilename.c_str()));
+			}
+		}
+		break;
 
     case WM_INITMENUPOPUP:
         // Notify before popping up
