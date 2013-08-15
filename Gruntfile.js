@@ -133,7 +133,7 @@ module.exports = function (grunt) {
                             "appshell*.png",
                             "Brackets",
                             "cef.pak",
-                            "devtools_resources.pak",
+                            "devtools_resources.pak"
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
