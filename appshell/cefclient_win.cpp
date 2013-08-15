@@ -35,7 +35,7 @@
 
 #define CLOSING_PROP L"CLOSING"
 
-#define FIRST_INSTANCE_MUTEX_NAME	L".Shell.Instance"
+#define FIRST_INSTANCE_MUTEX_NAME	(APP_NAME L".Shell.Instance")
 #define ID_WM_COPYDATA_SENDOPENFILECOMMAND	(WM_USER+1001)
 
 // Global Variables:
@@ -201,36 +201,36 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
 
   // Determine if we should use an already running instance of Brackets.
-  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, APP_NAME FIRST_INSTANCE_MUTEX_NAME);
+  HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
   if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
 	  // for subsequent instances, re-use an already running instance if we're being called to
 	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
 	  HWND hFirstInstanceWnd = NULL;
 	  ::EnumWindows(FindSuitableBracketsInstance, (LPARAM)&hFirstInstanceWnd);
-      if (hFirstInstanceWnd != NULL) {
-          ::SetForegroundWindow(hFirstInstanceWnd);
-          if (::IsIconic(hFirstInstanceWnd))
-              ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
-    
-          // message the other Brackets instance to actually open the given filename
-          std::wstring wstrFilename = lpCmdLine;
-          ConvertToUnixPath(wstrFilename);
-          // note: WM_COPYDATA will manage passing the string across process space
-          COPYDATASTRUCT data;
-          data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-          data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
-          data.lpData = (LPVOID)wstrFilename.c_str();
-          ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
-      
-          // exit this instance
-          return 0;
-      }
+	  if (hFirstInstanceWnd != NULL) {
+		  ::SetForegroundWindow(hFirstInstanceWnd);
+		  if (::IsIconic(hFirstInstanceWnd))
+			  ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
+		  
+		  // message the other Brackets instance to actually open the given filename
+		  std::wstring wstrFilename = lpCmdLine;
+		  ConvertToUnixPath(wstrFilename);
+		  // note: WM_COPYDATA will manage passing the string across process space
+		  COPYDATASTRUCT data;
+		  data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
+		  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+		  data.lpData = (LPVOID)wstrFilename.c_str();
+		  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+
+		  // exit this instance
+		  return 0;
+	  }
 	  // otherwise, fall thru and launch a new instance
   }
 
   if (hMutex == NULL) {
 	  // first instance of this app, so create the mutex and continue execution of this instance.
-	  hMutex = ::CreateMutex(NULL, FALSE, APP_NAME FIRST_INSTANCE_MUTEX_NAME);
+	  hMutex = ::CreateMutex(NULL, FALSE, FIRST_INSTANCE_MUTEX_NAME);
   }
 
   CefSettings settings;
