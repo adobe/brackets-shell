@@ -31,6 +31,40 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     <DirectoryRef Id="INSTALLDIR">
     </DirectoryRef>
 
+    <DirectoryRef Id="AppDataFolder">
+	    <Directory Id="MyAppDataFolder" Name="$(var.ProductAppDataLocation)">
+	        <Component Id="MyAppDataFolder" Guid="{C5EA56AE-B7FA-44E6-A7B8-95A25F7EECAF}">
+	            <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+	            <CreateFolder />
+	            <RemoveFolder Id="MyAppDataFolder" On="uninstall" />
+	        </Component>
+	        <Directory Id="CefDataFolder" Name="cef_data">
+	            <Component Id="CleanupCefDataFolderOnUninstall" Guid="{C909E958-57CC-4E3C-A2FE-D70F97D76FBB}">
+	                <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+	                <CreateFolder />
+	                <RemoveFile Id="CefDataFiles" Name="*" On="uninstall" />
+	                <RemoveFolder Id="CefDataFolder" On="uninstall" />
+	            </Component>
+	            <Directory Id="LocalStorage" Name="Local Storage">
+	                <Component Id="CleanupLocalStorageFolderOnUninstall" Guid="{EFEB32DA-5843-4332-B048-B0BDB6D2DB33}">
+	                    <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+	                    <CreateFolder />
+	                    <RemoveFile Id="LocalStorageFiles" Name="*" On="uninstall" />
+	                    <RemoveFolder Id="LocalStorage" On="uninstall" />
+	                </Component>
+	            </Directory>
+	            <Directory Id="GPUCache" Name="GPUCache">
+	                <Component Id="CleanupGPUCacheFolderOnUninstall" Guid="{2C12742D-3C52-4E06-B22C-8E9A1F645FE8}">
+	                    <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+	                    <CreateFolder />
+	                    <RemoveFile Id="GPUCacheFiles" Name="*" On="uninstall" />
+	                    <RemoveFolder Id="GPUCache" On="uninstall" />
+	                </Component>
+	            </Directory>
+	        </Directory>
+	    </Directory>
+    </DirectoryRef>
+
     <DirectoryRef Id="ProgramMenuFolder">
       <Component Id="StartMenuShortcut" Guid="{1395c753-d0eb-f77e-4b02-db126696c37b}" Win64="no" >
         <Shortcut Id="AppShortcut" Name="!(loc.ProductName) $(var.ProductVersionName)"
@@ -42,6 +76,29 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
       </Component>
     </DirectoryRef>
     
+    <Component Id="FileAssociations" Guid="{D0195E8D-0881-42B6-9B4F-DA84D9396506}" Directory="INSTALLDIR" KeyPath="yes">
+        <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationIcon" Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="!(loc.ProductName) $(var.ProductVersionName)" Value="SOFTWARE\$(var.RegistryRoot)\Capabilities" Type="string" />
+
+        <!-- File associations -->
+        <?define SupportedFiletypes=txt;groovy;ini;properties;css;scss;html;htm;shtm;shtml;xhtml;cfm;cfm1;cfc;dhtml;xht;tpl;twig;hbs;handlebars;kit;jsp;aspx;ejs;js;jsx;json;svg;xml;wxs;wxl;wsdl;rss;atom;rdf;xslt;xul;xbl;mathml;config;php;php3;php4;php5;phtm;phtml;ctp;c;h;i;cc;cp;cpp;c++;cxx;hh;hpp;hxx;h++;ii;cs;cshtml;asax;ashx;java;scala;sbt;coffee;cson;cf;clj;pl;pm;rb;ru;gemspec;rake;py;pyw;wsgi;sass;less;lua;sql;diff;patch;md;markdown;yaml;yml;hx;sh?>
+
+        <?foreach filetype in $(var.SupportedFiletypes)?>
+        <!-- associate program with file type -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities\FileAssociations" Value="!(loc.ProductName) $(var.ProductVersionName) FileExt" Name=".$(var.filetype)" Type="string" />
+
+        <!-- associate each supported filetype with application -->
+        <RegistryValue Root="HKCR" Key=".$(var.filetype)" Value="text" Name="PerceivedType" Type="string" />
+        <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value="" Name="!(loc.ProductName) $(var.ProductVersionName) FileExt" Type="string" />
+        <?endforeach?>
+
+        <!-- create ProgId entry -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\shell\open\command" Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\$(var.ExeName).exe\shell\open" Name="FriendlyAppName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
+
+    </Component>
     <!-- Start Menu Shortcuts-->
     <UIRef Id="WixUI_MyInstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
@@ -68,6 +125,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
         <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName) $(var.ProductVersionName)'/>
       </Directory>
       <Directory Id="ProgramMenuFolder"/>
+      <Directory Id="AppDataFolder" />
     </Directory>
     
     <!-- Set default install location -->    
@@ -78,6 +136,14 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
       <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
         
       <ComponentRef  Id='StartMenuShortcut' />
+
+      <ComponentRef  Id='FileAssociations' />
+
+      <!-- For cleaning up cef data on uninstall -->
+      <ComponentRef Id="CleanupLocalStorageFolderOnUninstall" />
+      <ComponentRef Id="CleanupGPUCacheFolderOnUninstall" />
+      <ComponentRef Id="CleanupCefDataFolderOnUninstall" />
+      <ComponentRef Id="MyAppDataFolder" />
     </Feature>                  
   </Product>
 </Wix>

@@ -12,11 +12,12 @@ default="build.mul">
   <!-- See also: product name definitions in Brackets_<locale>.wxl -->
   <property name="product.shortname" value="Brackets"/>
   <property name="product.fullname" value="Brackets"/>
+  <property name="product.AppData.location" value="Brackets"/>
   <property name="product.sprint.number" value="30"/>
   <property name="product.version.number" value="0.${product.sprint.number}"/>
   <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
   <property name="product.manufacturer" value="brackets.io"/>
-  <property name="product.registry.root" value="${product.shortname}"/>
+  <property name="product.registry.root" value="${product.shortname} ${product.version.name}"/>
   
   
   <!-- Installer properties -->
@@ -53,6 +54,7 @@ default="build.mul">
 		              -dcodepage=1252
 		              -dProductVersionNumber='${product.version.number}'
 		              -dProductVersionName='${product.version.name}'
+		              -dProductAppDataLocation='${product.AppData.location}'
 		              -dProductManufacturer='${product.manufacturer}'
 		              -dRegistryRoot='${product.registry.root}'
 		              -dExeName='${product.shortname}'
@@ -107,6 +109,7 @@ default="build.mul">
 		              -dcodepage=1252
 		              -dProductVersionNumber='${product.version.number}'
 		              -dProductVersionName='${product.version.name}'
+		              -dProductAppDataLocation='${product.AppData.location}'
 		              -dProductManufacturer='${product.manufacturer}'
 		              -dRegistryRoot='${product.registry.root}'
 		              -dExeName='${product.shortname}'
