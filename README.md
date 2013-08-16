@@ -16,17 +16,18 @@ If you run into any issues with this new shell, please file a bug in the
 ## Running
 
 NOTE: There are no downloads for the brackets-shell. You either need to 
-build from source, or grab the [latest Brackets installer](https://github.com/adobe/brackets/downloads) 
+build from source, or grab the [latest Brackets installer](http://download.brackets.io) 
 and run the shell from that.
 
 When the app is launched, it first looks for an index.html file in the following locations:
 * Mac - Brackets.app/Contents/dev/src/index.html, Brackets.app/Contents/www/index.html
 * Win - dev/src/index.html, www/index.html (these folders must be in the same folder as Brackets.exe)
+* Linux - dev/src/index.html, www/index.html (these folders must be in the same folder as the Brackets executable)
 
 If the index.html can't be found, you'll be prompted to find the brackets index.html file. 
 Make sure you select the brackets/src/index.html file, and *not* some other file. 
 
-The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on the mac and `{USER}\AppData\Roaming\Brackets\cef_data` on Windows.
+The preferences are stored in `{USER}/Library/Application Support/Brackets/cef_data` on Mac, `{USER}\AppData\Roaming\Brackets\cef_data` on Windows, and `~/.Brackets/cef_data` on Linux.
 
 ## Building
 
