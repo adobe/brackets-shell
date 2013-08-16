@@ -1,10 +1,10 @@
 Package: brackets
-Version: 0.27.0
-Section: base
+Version: <%= version %>
+Section: devel
 Priority: optional
-Architecture: i386
-Installed-Size: 128819
-Depends: bash (>= 2.05a-11), libnss3-1d (>= 3.14.3), libnspr4-0d (>= 3.14.3)
+Architecture: <%= arch %>
+Installed-Size: <%= size %>
+Depends: bash (>= 2.05a-11), libnss3-1d (>= 3.14.3), libnspr4-0d (>= 3.14.3), libudev0 (>= 147) | libudev1 (>= 198)
 Maintainer: Jason San Jose <jasonsj@adobe.com>
 Description: Brackets
  Brackets is an open-source editor for web design and development
