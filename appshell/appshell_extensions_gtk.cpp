@@ -342,7 +342,20 @@ int DeleteFileOrDirectory(ExtensionString filename)
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    // TOdO
+    int error = NO_ERROR;
+    GFile *file = g_file_new_for_path(filename.c_str());
+    GError *gerror = NULL;
+    if (!g_file_trash(file, NULL, &gerror)) {
+        if (gerror->code == G_IO_ERROR_NOT_FOUND)
+            error = ERR_NOT_FOUND;
+        else
+            error = ERR_UNKNOWN;
+        g_error_free(gerror);
+    }
+    g_object_unref(file);
+    
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
 }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
