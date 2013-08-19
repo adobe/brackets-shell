@@ -30,8 +30,11 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/sendfile.h>
 #include <X11/Xlib.h>
+
 
 GtkWidget* _menuWidget;
 
@@ -187,7 +190,25 @@ int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString proposedNewFilename,
                      ExtensionString& newFilePath)
 {
-    // TODO
+
+    GtkWidget *dialog = gtk_file_chooser_dialog_new(title.c_str(),
+                                         NULL,
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                         NULL);
+    gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), TRUE);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), initialDirectory.c_str());
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), proposedNewFilename.c_str());
+    
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        newFilePath.assign(filename);
+
+        g_free(filename);
+    }
+
+    gtk_widget_destroy(dialog);
     return NO_ERROR;
 }
 
@@ -335,14 +356,45 @@ int SetPosixPermissions(ExtensionString filename, int32 mode)
 
 int DeleteFileOrDirectory(ExtensionString filename)
 {
-    if(unlink(filename.c_str())==-1)
+    if (unlink(filename.c_str()) == -1)
         return ConvertLinuxErrorCode(errno);
     return NO_ERROR;
 }
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    // TOdO
+    // if ~/.local/share/Trash/files exists, do a kernelspace copy before delete
+    char ubuntuTrashPath[] = "%s/.local/share/Trash/files/";
+    char trashpath[PATH_MAX];
+    int existfd, trashfd;
+    struct stat stat_buf;
+    
+    char *home = getenv("HOME");
+    snprintf(trashpath, sizeof(ubuntuTrashPath)+sizeof(home), ubuntuTrashPath, home);
+
+    if (access(trashpath, F_OK) == 0) {
+        // if any of this fails, ignore and simply fallthru to the delete
+        if ((existfd = open(filename.c_str(), O_RDONLY)) != -1) {
+
+            const char *basefilename = basename(filename.c_str());
+            strncat(trashpath, basefilename, sizeof(basefilename));
+            if ((trashfd = open(trashpath,
+                           O_WRONLY|O_CREAT|O_TRUNC,
+                           S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) != -1) {
+                // find size of existing file and duplicate
+                fstat(existfd, &stat_buf);
+                sendfile(trashfd, existfd, 0, stat_buf.st_size);
+                close(existfd);
+                close(trashfd);
+            }
+        }
+    }
+
+    int error = DeleteFileOrDirectory(filename);
+    // callback for display update
+    response->GetArgumentList()->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
+
 }
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
