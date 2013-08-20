@@ -585,8 +585,10 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
             [[NSFileManager defaultManager] removeItemAtPath:destination error:&error];
         
         [[NSFileManager defaultManager] copyItemAtPath:source toPath:destination error:&error];
+
+        return ConvertNSErrorCode(error, false);
     }
-    return ConvertNSErrorCode(error, false);
+    return ERR_NOT_FOUND;
 }
 
 
