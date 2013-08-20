@@ -421,30 +421,6 @@ public:
                 ExtensionString path = argList->GetString(1);
                 error = ShowFolderInOSWindow(path);
             }
-        } else if (message_name == "GetHomeDir") {
-            // Parameters:
-            //  0: int32 - callback id
-            if (argList->GetSize() != 1) {
-                error = ERR_INVALID_PARAMS;
-            }
-            
-            if (error == NO_ERROR) {
-                ExtensionString result;
-                error = GetHomeDir(result);
-                responseArgs->SetString(2, result);
-            }
-        } else if (message_name == "GetDocumentsDir") {
-            // Parameters:
-            //  0: int32 - callback id
-            if (argList->GetSize() != 1) {
-                error = ERR_INVALID_PARAMS;
-            }
-            
-            if (error == NO_ERROR) {
-                ExtensionString result;
-                error = GetDocumentsDir(result);
-                responseArgs->SetString(2, result);
-            }
         } else if (message_name == "GetPendingFilesToOpen") {
             // Parameters:
             //  0: int32 - callback id

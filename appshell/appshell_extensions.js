@@ -272,8 +272,7 @@ if (!appshell.app) {
                 isDirectory: function () {
                     return isDir;
                 },
-                mtime: new Date(modtime * 1000), // modtime is seconds since 1970, convert to ms
-                path: path
+                mtime: new Date(modtime * 1000) // modtime is seconds since 1970, convert to ms
             });
         }, path);
     };
@@ -441,20 +440,6 @@ if (!appshell.app) {
     appshell.fs.copyFile = function (src, dest, callback) {
         CopyFile(callback || _dummyCallback, src, dest);
     };
- 
-
-    /** Return the home directory as the second argument of the callback function */
-    native function GetHomeDir();
-    appshell.fs.getHomeDir = function (callback) {
-        GetHomeDir(callback);
-    };
- 
-    /** Return the home directory as the second argument of the callback function */
-    native function GetDocumentsDir();
-    appshell.fs.getDocumentsDir = function (callback) {
-        GetDocumentsDir(callback);
-    };
- 
  
     /**
      * Return the number of milliseconds that have elapsed since the application
@@ -765,8 +750,22 @@ if (!appshell.app) {
     native function GetApplicationSupportDirectory();
     appshell.app.getApplicationSupportDirectory = function () {
         return GetApplicationSupportDirectory();
-    }
+    };
   
+    /**
+     * Returns the full path of the user's documents directory.
+     * On the Mac, it's /Users/<user>/Documents
+     * On Windows, it's C:\Users\<user>\Documents (Windows Vista, 7, 8),
+     *                  C:\Documents and Settings\<user>\My Documents (Windows XP)
+     *
+     * @return {string} Full path of the application support directory
+     */
+    native function GetUserDocumentsDirectory();
+    appshell.app.getUserDocumentsDirectory = function () {
+        return GetUserDocumentsDirectory();
+    };
+
+
     /**
      * Open the specified folder in an OS file window.
      *
@@ -778,7 +777,7 @@ if (!appshell.app) {
     native function ShowOSFolder();
     appshell.app.showOSFolder = function (path, callback) {
         ShowOSFolder(callback || _dummyCallback, path);
-    }
+    };
  
     /**
      * Open the extensions folder in an OS file window.
