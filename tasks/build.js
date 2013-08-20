@@ -284,7 +284,7 @@ module.exports = function (grunt) {
         templateData.arch = (common.arch() === 64) ? "amd64" : "i386";
 
         // uncompressed file size
-        grunt.file.recurse("installer/linux/debian/package-root", function (abspath) {
+        grunt.file.recurse("installer/linux/debian/package-root/opt", function (abspath) {
             templateData.size += fs.statSync(abspath).size;
         });
         templateData.size = Math.round(templateData.size / 1000);

@@ -41,6 +41,32 @@ get_lib_dir() {
   fi
 }
 
+NSS_FILES="libnspr4.so.0d libplds4.so.0d libplc4.so.0d libssl3.so.1d \
+    libnss3.so.1d libsmime3.so.1d libnssutil3.so.1d"
+
+add_nss_symlinks() {
+  get_lib_dir
+  for f in $NSS_FILES
+  do
+    target=$(echo $f | sed 's/\.[01]d$//')
+    if [ -f "/$LIBDIR/$target" ]; then
+      ln -snf "/$LIBDIR/$target" "/opt/brackets/$f"
+    elif [ -f "/usr/$LIBDIR/$target" ]; then
+      ln -snf "/usr/$LIBDIR/$target" "/opt/brackets/$f"
+    else
+      echo $f not found in "/$LIBDIR/$target" or "/usr/$LIBDIR/$target".
+      exit 1
+    fi
+  done
+}
+
+remove_nss_symlinks() {
+  for f in $NSS_FILES
+  do
+    rm -rf "/opt/google/chrome/$f"
+  done
+}
+
 # Fedora 18 now has libudev.so.1. http://crbug.com/145160
 # Same for Ubuntu 13.04. http://crbug.com/226002
 LIBUDEV_0=libudev.so.0
@@ -66,6 +92,9 @@ add_udev_symlinks() {
 remove_udev_symlinks() {
   rm -rf "/opt/brackets/$LIBUDEV_0"
 }
+
+remove_nss_symlinks
+add_nss_symlinks
 
 remove_udev_symlinks
 add_udev_symlinks
