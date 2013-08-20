@@ -560,20 +560,6 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
     }];
 }
 
-int32 GetHomeDir(ExtensionString& expandedPath)
-{
-    NSString* path = [[NSString stringWithUTF8String:"~"] stringByExpandingTildeInPath];
-    expandedPath = [path UTF8String];
-    return NO_ERROR;
-}
-
-int32 GetDocumentsDir(ExtensionString& expandedPath)
-{
-    NSString* path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    expandedPath = [path UTF8String];
-    return NO_ERROR;
-}
-
 int32 CopyFile(ExtensionString src, ExtensionString dest)
 {
     NSError* error = nil;
