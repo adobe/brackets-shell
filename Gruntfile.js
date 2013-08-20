@@ -131,8 +131,10 @@ module.exports = function (grunt) {
                         "src"       : [
                             "lib/**",
                             "locales/**",
+                            "node-core/**",
                             "appshell*.png",
                             "Brackets",
+                            "Brackets-node",
                             "cef.pak",
                             "devtools_resources.pak"
                         ],
