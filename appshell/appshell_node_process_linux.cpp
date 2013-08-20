@@ -83,25 +83,27 @@ void* nodeThread(void* unused) {
     // TODO nodeStartTime = get time();
     
     char executablePath[MAX_PATH];
+    char bracketsDirPath[MAX_PATH];
     char nodeExecutablePath[MAX_PATH];
     char nodecorePath[MAX_PATH];
 
     // get path to Brackets
-    if (readlink("/proc/self/cwd", executablePath, MAX_PATH) == -1) {
+    if (readlink("/proc/self/exe", executablePath, MAX_PATH) == -1) {
         fprintf(stderr, "cannot find Brackets path: %s\n", strerror(errno));
         pthread_mutex_unlock(&mutex);
         return NULL;
     }
 
+    // strip off trailing executable name
+    char* lastIndexOf = strrchr(executablePath, '/');
+    memcpy(bracketsDirPath, executablePath, lastIndexOf - executablePath + 1);
+    
     // create node exec and node-core paths
-    strcat(executablePath, "/");
-    strcpy(nodeExecutablePath, executablePath);
+    strcpy(nodeExecutablePath, bracketsDirPath);
     strcat(nodeExecutablePath, NODE_EXECUTABLE_PATH);
-    strcpy(nodecorePath, executablePath);
+    strcpy(nodecorePath, bracketsDirPath);
     strcat(nodecorePath, NODE_CORE_PATH);
     
-    fprintf(stderr, nodeExecutablePath);
-
     // create pipes for node process stdin/stdout
     int toNode[2];
     int fromNode[2];

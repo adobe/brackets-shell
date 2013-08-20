@@ -50,6 +50,7 @@
 
 #endif
 #ifdef OS_LINUX
+// TODO linux preferences
 //#define GROUP_NAME @""
 //#define APP_NAME @"Brackets"
 //#define WINDOW_TITLE APP_NAME
@@ -59,9 +60,6 @@
 #define NODE_CORE_PATH "node-core"
 
 #endif
-
-
-
 
 #define REMOTE_DEBUGGING_PORT 9234
 

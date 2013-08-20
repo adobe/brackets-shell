@@ -76,7 +76,7 @@ int GetInitialUrl() {
      
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
       {
-        szInitialUrl.append(gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog)));
+        szInitialUrl = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
         gtk_widget_destroy (dialog);
         return 0;
       }
