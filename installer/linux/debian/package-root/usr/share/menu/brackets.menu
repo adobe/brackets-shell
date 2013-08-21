@@ -1,0 +1,6 @@
+?package(brackets):needs="x11" \
+  section="Development" \
+  hints="Code Editor" \
+  title="Brackets" \
+  icon="/opt/brackets/appshell32.png" \
+  command="/usr/bin/brackets"

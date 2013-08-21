@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Brackets
 Type=Application
-Categories=Application
-Exec=/usr/lib/brackets/Brackets %U
+Categories=Development
+Exec=/opt/brackets/brackets %U
 Icon=brackets
 MimeType=text/html;

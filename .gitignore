@@ -39,8 +39,9 @@ libcef_dll
 tools
 
 /installer/mac/staging/
-/installer/linux/brackets.deb
-/installer/linux/debian/usr/lib/
+/installer/linux/*.deb
+/installer/linux/debian/package-root/opt/*
+/installer/linux/debian/package-root/DEBIAN/control
 /installer/win/staging/
 *.wixpdb
 *.wixobj

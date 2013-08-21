@@ -27,26 +27,39 @@ module.exports = function (grunt) {
 
     var common  = require("./tasks/common")(grunt),
         resolve = common.resolve,
+        platform = common.platform(),
         staging;
-
-    if (common.platform() === "mac") {
+    
+    if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
-    } else if (common.platform() === "win") {
+    } else if (platform === "win") {
         staging = "installer/win/staging";
     } else {
-        staging = "installer/linux/debian/usr/lib/brackets";
+        staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
+        "config-json":      staging + "/www/config.json",
         "curl-dir": {
-            /* linux not supported yet */
-            /*
-            linux: {
-                dest        : "<%= cef_zip %>",
-                src         : "https://docs.google.com/file/d/0B7as0diokeHxeTNqZFIyNWZKSWM/edit?usp=sharing"
+            /* linux */
+            /* FIXME (jasonsanjose) no 32-bit 3.1547.1354, revert to cef.version variable for the next CEF upgrade */
+            "cef-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "http://dev.brackets.io/cef/cef_binary_3.1547.1357_linux32_release.zip"
             },
-            */
+            "cef-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64_release.zip"
+            },
+            "node-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x86.tar.gz"
+            },
+            "node-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
             /* mac */
             "cef-mac": {
                 "dest"      : "downloads/",
@@ -71,7 +84,7 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/brackets.deb"],
+            "installer-linux"   : ["installer/linux/debian/*.deb"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
@@ -114,7 +127,7 @@ module.exports = function (grunt) {
                 "files": [
                     {
                         "expand"    : true,
-                        "cwd"       : "out/Release",
+                        "cwd"       : "out/Release/",
                         "src"       : [
                             "lib/**",
                             "locales/**",
@@ -122,6 +135,15 @@ module.exports = function (grunt) {
                             "Brackets",
                             "cef.pak",
                             "devtools_resources.pak"
+                        ],
+                        "dest"      : "<%= build.staging %>"
+                    },
+                    {
+                        "expand"    : true,
+                        "cwd"       : "installer/linux/debian/",
+                        "src"       : [
+                            "brackets.desktop",
+                            "brackets"
                         ],
                         "dest"      : "<%= build.staging %>"
                     }

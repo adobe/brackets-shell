@@ -1,0 +1,100 @@
+#!/bin/sh
+#
+# Copyright (c) 2009 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Add icons to the system icons
+XDG_ICON_RESOURCE="`which xdg-icon-resource 2> /dev/null`"
+if [ ! -x "$XDG_ICON_RESOURCE" ]; then
+  echo "Error: Could not find xdg-icon-resource" >&2
+  exit 1
+fi
+for icon in "/opt/brackets/appshell"*.png; do
+  size="${icon##*/appshell}"
+  "$XDG_ICON_RESOURCE" install --novendor --size "${size%.png}" "$icon" "brackets"
+done
+
+# Add an entry to the system menu
+XDG_DESKTOP_MENU="`which xdg-desktop-menu 2> /dev/null`"
+UPDATE_MENUS="`which update-menus 2> /dev/null`"
+if [ ! -x "$XDG_DESKTOP_MENU" ]; then
+  echo "Error: Could not find xdg-desktop-menu" >&2
+  exit 1
+fi
+"$XDG_DESKTOP_MENU" install /opt/brackets/brackets.desktop --novendor
+
+if [ -x "$UPDATE_MENUS" ]; then
+  update-menus
+fi
+
+DEFAULT_ARCH="`uname -m`"
+
+get_lib_dir() {
+  if [ "$DEFAULT_ARCH" = "i686" ]; then
+    LIBDIR=lib/i386-linux-gnu
+  elif [ "$DEFAULT_ARCH" = "x86_64" ]; then
+    LIBDIR=lib/x86_64-linux-gnu
+  else
+    echo Unknown CPU Architecture: "$DEFAULT_ARCH"
+    exit 1
+  fi
+}
+
+NSS_FILES="libnspr4.so.0d libplds4.so.0d libplc4.so.0d libssl3.so.1d \
+    libnss3.so.1d libsmime3.so.1d libnssutil3.so.1d"
+
+add_nss_symlinks() {
+  get_lib_dir
+  for f in $NSS_FILES
+  do
+    target=$(echo $f | sed 's/\.[01]d$//')
+    if [ -f "/$LIBDIR/$target" ]; then
+      ln -snf "/$LIBDIR/$target" "/opt/brackets/$f"
+    elif [ -f "/usr/$LIBDIR/$target" ]; then
+      ln -snf "/usr/$LIBDIR/$target" "/opt/brackets/$f"
+    else
+      echo $f not found in "/$LIBDIR/$target" or "/usr/$LIBDIR/$target".
+      exit 1
+    fi
+  done
+}
+
+remove_nss_symlinks() {
+  for f in $NSS_FILES
+  do
+    rm -rf "/opt/google/chrome/$f"
+  done
+}
+
+# Fedora 18 now has libudev.so.1. http://crbug.com/145160
+# Same for Ubuntu 13.04. http://crbug.com/226002
+LIBUDEV_0=libudev.so.0
+LIBUDEV_1=libudev.so.1
+
+add_udev_symlinks() {
+  get_lib_dir
+  if [ -f "/$LIBDIR/$LIBUDEV_0" -o -f "/usr/$LIBDIR/$LIBUDEV_0" -o -f "/lib/$LIBUDEV_0" ]; then
+    return 0
+  fi
+
+  if [ -f "/$LIBDIR/$LIBUDEV_1" ]; then
+    ln -snf "/$LIBDIR/$LIBUDEV_1" "/opt/brackets/$LIBUDEV_0"
+  elif [ -f "/usr/$LIBDIR/$LIBUDEV_1" ];
+  then
+    ln -snf "/usr/$LIBDIR/$LIBUDEV_1" "/opt/brackets/$LIBUDEV_0"
+  else
+    echo "$LIBUDEV_1" not found in "$LIBDIR" or "/usr/$LIBDIR".
+    exit 1
+  fi
+}
+
+remove_udev_symlinks() {
+  rm -rf "/opt/brackets/$LIBUDEV_0"
+}
+
+remove_nss_symlinks
+add_nss_symlinks
+
+remove_udev_symlinks
+add_udev_symlinks
