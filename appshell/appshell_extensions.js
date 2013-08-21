@@ -764,6 +764,14 @@ if (!appshell.app) {
     appshell.app.dragWindow = function () {
         DragWindow();
     };
+
+    /**
+     * Registers application as the default program to open common web files
+     */
+    native function RegisterAsDefaultEditorForCommonFileTypes();
+    appshell.app.registerAsDefaultEditorForCommonFileTypes = function () {
+        RegisterAsDefaultEditorForCommonFileTypes();
+    };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;

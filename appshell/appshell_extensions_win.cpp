@@ -21,6 +21,11 @@
  * 
  */ 
 
+#ifndef OS_WIN
+#define OS_WIN 1
+#endif
+
+#include "config.h"
 #include "appshell_extensions.h"
 #include "native_menu_model.h"
 #include "client_handler.h"
@@ -34,6 +39,7 @@
 #include <Shobjidl.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sstream>
 
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
@@ -1684,11 +1690,147 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     return NO_ERROR;
 }
 
-void DragWindow(CefRefPtr<CefBrowser> browser) {
+void DragWindow(CefRefPtr<CefBrowser> browser)
+{
     ReleaseCapture();
     HWND browserHwnd = (HWND)getMenuParent(browser);
     SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 }
-    
 
+// Explorer File Association Registry functions
 
+// returns the Registry Root string
+static LPCWSTR GetProductRegistryRoot()
+{
+	static std::wstring wstrProductRegistryRoot;	// cached Registry Root
+	if (wstrProductRegistryRoot.empty())
+	{
+		wstrProductRegistryRoot = APP_NAME;		// default
+
+		HMODULE module = GetModuleHandle(NULL);
+		TCHAR executablePath[MAX_PATH+1] = {0};
+		GetModuleFileName(module, executablePath, MAX_PATH);
+
+		DWORD dwSize = GetFileVersionInfoSize(executablePath, NULL);
+		if (dwSize > 0)
+		{
+			BYTE *pVersionInfo = new BYTE[dwSize];
+			if (::GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo))
+			{
+				VS_FIXEDFILEINFO *pFileInfo = NULL;
+				UINT pLenFileInfo = 0;
+				if (VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo))
+				{
+					std::wostringstream versionStream(L"");
+					versionStream << ((pFileInfo->dwFileVersionMS) & 0xffff); 
+					wstrProductRegistryRoot = APP_REGISTRY_ROOT_PREFIX;
+					wstrProductRegistryRoot += versionStream.str();
+				}
+				delete[] pVersionInfo;
+			}
+		}
+	}
+	return (LPCWSTR)wstrProductRegistryRoot.c_str();
+}
+
+// returns the ProgId string
+static LPCWSTR GetApplicationProgId()
+{
+	static std::wstring wstrApplicationProgId;	// cached ProgId
+	if (wstrApplicationProgId.empty())
+	{
+		//std::wstring wstrFileVer;
+		//GetFileVersionString(wstrFileVer, true);
+		//wstrApplicationProgId = APP_NAME L".Document." + wstrFileVer;
+	}
+	return (LPCWSTR)wstrApplicationProgId.c_str();
+}
+
+// register the application, version-specific Prog Id and Shell verbs
+static bool RegisterProgIdKeys()
+{
+	bool result = false;
+
+	////; Define ProgID
+	////[HKEY_CURRENT_USER\SOFTWARE\Classes\Brackets.Document.XX.YY]
+	////@="Brackets Document"
+	//std::wstring wstr = L"SOFTWARE\\Classes\\";
+	//wstr += GetApplicationProgId();
+	//HKEY hKey;
+	//if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, wstr.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL))
+	//{
+	//	wstr = APP_NAME L" Document";	// Prog ID short name
+	//	RegSetValueEx(hKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof (WCHAR));
+
+	//	//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell]
+	//	//@="Open"
+	//	HKEY hShellKey;
+	//	if (ERROR_SUCCESS == RegCreateKeyEx(hKey, L"Shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hShellKey, NULL))
+	//	{
+	//		wstr = L"Open";
+	//		RegSetValueEx(hShellKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+
+	//		//[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Brackets.Document.XX.YY\Shell\Open\Command]
+	//		//@="C:\\...\\Brackets.exe \"%1\""
+	//		HKEY hCmdKey;
+	//		if (ERROR_SUCCESS == RegCreateKeyEx(hShellKey, L"Open\\Command", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hCmdKey, NULL))
+	//		{
+	//			HMODULE module = GetModuleHandle(NULL);
+	//			WCHAR executablePath[MAX_PATH+1] = {0};
+	//			GetModuleFileName(module, executablePath, MAX_PATH);
+	//			wstr = executablePath;
+	//			wstr += L" \"%1\"";
+	//			RegSetValueEx(hCmdKey, NULL, 0, REG_SZ, (LPBYTE)wstr.c_str(), (wstr.length() + 1) * sizeof(WCHAR));
+
+	//			RegCloseKey(hCmdKey);
+	//			result = true;
+	//		}
+	//		RegCloseKey(hShellKey);
+	//	}
+	//	RegCloseKey(hKey);
+	//}
+
+	return result;
+}
+
+// register for Explorer "Open With..." menu or dialog for an given file extension
+static bool RegisterOpenWithByExtensionKeys(LPCWSTR pFileExtension)
+{
+	bool result = false;
+
+	//if (pFileExtension != NULL && wcslen(pFileExtension) > 0)
+	//{
+	//	std::wstring wstrKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\";
+	//	wstrKey += pFileExtension;
+	//	wstrKey += L"\\OpenWithProgids";
+
+	//	//; Register with Open With... menu by Extension
+	//	//[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.js\OpenWithProgids]
+	//	HKEY hKey;
+	//	if (ERROR_SUCCESS == RegCreateKeyEx(HKEY_CURRENT_USER, wstrKey.c_str(), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL))
+	//	{
+	//		if (ERROR_SUCCESS == RegSetValueEx(hKey, GetApplicationProgId(), 0, REG_SZ, NULL, 0))
+	//			result = true;
+	//		RegCloseKey(hKey);
+	//	}
+	//}
+
+	return result;
+}
+
+void RegisterAsDefaultEditorForCommonFileTypes()
+{
+	// Register the top-level Prog Id
+	// note: on Win7 and above, will need admin access.
+	RegisterProgIdKeys();
+
+	// Register as default shell open for individual file extensions
+	static const std::wstring wstrExtensions[] = {
+		L".html", L".htm",
+		L".js",
+		L".css",
+		L""	// last entry
+	};
+	for (int idx=0; !wstrExtensions[idx].empty(); ++idx)
+		RegisterOpenWithByExtensionKeys(wstrExtensions[idx].c_str());
+}

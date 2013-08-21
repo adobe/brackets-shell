@@ -1118,3 +1118,8 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
         [win displayIfNeeded];
     }
 }
+
+void RegisterAsDefaultEditorForCommonFileTypes()
+{
+	// not implemented
+}

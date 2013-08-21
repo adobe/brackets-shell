@@ -30,6 +30,7 @@
 // This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
 #define APP_NAME L"Brackets"
+#define APP_REGISTRY_ROOT_PREFIX L"Brackets Sprint "
 #define WINDOW_TITLE APP_NAME
 
 // Paths for node resources are relative to the location of the appshell executable
