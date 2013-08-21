@@ -106,6 +106,8 @@ int32 DeleteFileOrDirectory(ExtensionString filename);
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response);
 
+int32 CopyFile(ExtensionString src, ExtensionString dest);
+
 int32 GetNodeState(int32& state);
 
 void OnBeforeShutdown();

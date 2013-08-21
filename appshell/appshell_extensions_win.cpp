@@ -918,6 +918,17 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
     return NO_ERROR;
 }
 
+int32 CopyFile(ExtensionString src, ExtensionString dest)
+{
+    ConvertToNativePath(src);
+    ConvertToNativePath(dest);
+
+    if (!CopyFile(src.c_str(), dest.c_str(), FALSE)) {
+        return ConvertWinErrorCode(GetLastError());
+    }
+    return NO_ERROR;
+}
+
 int32 GetPendingFilesToOpen(ExtensionString& files) {
     files = gFilesToOpen;
     ConvertToUnixPath(files);
