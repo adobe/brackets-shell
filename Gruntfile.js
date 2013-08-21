@@ -142,7 +142,8 @@ module.exports = function (grunt) {
                         "expand"    : true,
                         "cwd"       : "installer/linux/debian/",
                         "src"       : [
-                            "brackets.desktop"
+                            "brackets.desktop",
+                            "brackets"
                         ],
                         "dest"      : "<%= build.staging %>"
                     }
