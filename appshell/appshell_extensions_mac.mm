@@ -560,6 +560,23 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
     }];
 }
 
+int32 CopyFile(ExtensionString src, ExtensionString dest)
+{
+    NSError* error = nil;
+    NSString* source = [NSString stringWithUTF8String:src.c_str()];
+    NSString* destination = [NSString stringWithUTF8String:dest.c_str()];
+    
+    if ( [[NSFileManager defaultManager] isReadableFileAtPath:source] ) {
+        if ( [[NSFileManager defaultManager] isReadableFileAtPath:destination] )
+            [[NSFileManager defaultManager] removeItemAtPath:destination error:&error];
+        
+        [[NSFileManager defaultManager] copyItemAtPath:source toPath:destination error:&error];
+
+        return ConvertNSErrorCode(error, false);
+    }
+    return ERR_NOT_FOUND;
+}
+
 
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list)
 {

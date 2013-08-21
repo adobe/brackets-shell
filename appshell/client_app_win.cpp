@@ -104,3 +104,15 @@ CefString ClientApp::AppGetSupportDirectory()
     return CefString(appSupportPath);
 }
 
+
+CefString ClientApp::AppGetDocumentsDirectory()
+{
+    wchar_t dataPath[MAX_PATH] = {0};
+    SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, dataPath);
+    std::wstring appUserDocuments = dataPath;
+
+    // Convert '\\' to '/'
+    replace(appUserDocuments.begin(), appUserDocuments.end(), '\\', '/');
+
+    return CefString(appUserDocuments);
+}
