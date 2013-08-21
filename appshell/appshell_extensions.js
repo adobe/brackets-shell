@@ -277,6 +277,8 @@ if (!appshell.app) {
         }, path);
     };
  
+ 
+ 
     /**
      * Quits native shell application
      */
@@ -419,6 +421,26 @@ if (!appshell.app) {
         MoveFileOrDirectoryToTrash(callback || _dummyCallback, path);
     };    
 
+    /**
+     * Copy src to dest, replacing the file at dest if it already exists.
+     *
+     * @param {string} path The path of the file to copy.
+     * @param {string} data The destination to copy the file to
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one argument (err).
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_UNSUPPORTED_ENCODING
+     *          ERR_OUT_OF_SPACE
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function CopyFile();
+    appshell.fs.copyFile = function (src, dest, callback) {
+        CopyFile(callback || _dummyCallback, src, dest);
+    };
+ 
     /**
      * Return the number of milliseconds that have elapsed since the application
      * was launched. 
@@ -728,8 +750,22 @@ if (!appshell.app) {
     native function GetApplicationSupportDirectory();
     appshell.app.getApplicationSupportDirectory = function () {
         return GetApplicationSupportDirectory();
-    }
+    };
   
+    /**
+     * Returns the full path of the user's documents directory.
+     * On the Mac, it's /Users/<user>/Documents
+     * On Windows, it's C:\Users\<user>\Documents (Windows Vista, 7, 8),
+     *                  C:\Documents and Settings\<user>\My Documents (Windows XP)
+     *
+     * @return {string} Full path of the application support directory
+     */
+    native function GetUserDocumentsDirectory();
+    appshell.app.getUserDocumentsDirectory = function () {
+        return GetUserDocumentsDirectory();
+    };
+
+
     /**
      * Open the specified folder in an OS file window.
      *
@@ -741,7 +777,7 @@ if (!appshell.app) {
     native function ShowOSFolder();
     appshell.app.showOSFolder = function (path, callback) {
         ShowOSFolder(callback || _dummyCallback, path);
-    }
+    };
  
     /**
      * Open the extensions folder in an OS file window.
