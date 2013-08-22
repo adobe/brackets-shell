@@ -49,6 +49,17 @@
 #define NODE_CORE_PATH @"/Contents/node-core"
 
 #endif
+#ifdef OS_LINUX
+// TODO linux preferences
+//#define GROUP_NAME @""
+//#define APP_NAME @"Brackets"
+//#define WINDOW_TITLE APP_NAME
+
+// Path for node resources is in dependencies dir and relative to the location of the appshell executable
+#define NODE_EXECUTABLE_PATH "Brackets-node"
+#define NODE_CORE_PATH "node-core"
+
+#endif
 
 #define REMOTE_DEBUGGING_PORT 9234
 

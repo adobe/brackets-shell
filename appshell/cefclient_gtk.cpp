@@ -1,4 +1,4 @@
-  // Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
+#include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 char szWorkingDir[512];  // The current working directory
@@ -24,7 +25,7 @@ bool isReallyClosing = false;
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
 
-//Application startup time
+// Application startup time
 time_t g_appStartupTime;
 
 void destroy(void) {
@@ -75,7 +76,7 @@ int GetInitialUrl() {
      
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
       {
-        szInitialUrl.append(gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog)));
+        szInitialUrl = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
         gtk_widget_destroy (dialog);
         return 0;
       }
@@ -247,6 +248,9 @@ int main(int argc, char* argv[]) {
   // Install an signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
   signal(SIGTERM, TerminationSignalHandler);
+    
+  // Start the node server process
+  startNodeProcess();
 
   CefRunMessageLoop();
 
