@@ -42,7 +42,8 @@ module.exports = function (grunt) {
         /* use promises instead of callbacks */
         link,
         rename          = common.rename,
-        exec            = common.exec;
+        exec            = common.exec,
+        platform        = common.platform();
     
     // cross-platform symbolic link
     link = (function () {
@@ -67,7 +68,7 @@ module.exports = function (grunt) {
 
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config      = "cef-" + common.platform() + common.arch(),
+        var config      = "cef-" + platform + common.arch(),
             zipSrc      = grunt.config("curl-dir." + config + ".src"),
             zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
             zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
@@ -145,7 +146,7 @@ module.exports = function (grunt) {
             // rename version stamped name to cef
             return rename("deps/" + zipName, "deps/cef");
         }).then(function () {
-            if (common.platform() === "mac") {
+            if (platform === "mac") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
                 return exec("chmod u+x deps/cef/tools/*");
             }
@@ -190,8 +191,7 @@ module.exports = function (grunt) {
     
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
-        var platform    = common.platform(),
-            config      = "node-" + platform + common.arch(),
+        var config      = "node-" + platform + common.arch(),
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             nodeDest    = [],
             dest        = grunt.config("curl-dir." + config + ".dest"),
@@ -308,7 +308,7 @@ module.exports = function (grunt) {
             gypCommand;
         
         // TODO why doesn't gyp (in the repository) work for linux?
-        if (common.platform() === "linux") {
+        if (platform === "linux") {
             gypCommand = "gyp --depth .";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
@@ -319,7 +319,7 @@ module.exports = function (grunt) {
         // Run gyp
         promise = exec(gypCommand);
         
-        if (common.platform() === "mac") {
+        if (platform === "mac") {
             promise = promise.then(function () {
                 // FIXME port to JavaScript?
                 return exec("bash scripts/fix-xcode.sh");

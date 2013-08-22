@@ -257,8 +257,21 @@
             {
               'destination': '<(PRODUCT_DIR)',
               'files': [
-                '<@(appshell_bundle_resources_linux)',
+                '<@(appshell_bundle_resources_linux)'
               ],
+            },
+            {
+              # Copy node executable to the output directory
+              'destination': '<(PRODUCT_DIR)',
+              'files': ['deps/node/bin/Brackets-node'],
+            },
+            {
+              # Copy node server files to the output directory
+              # The '/' at the end of the 'files' directory is very important and magically
+              # causes 'xcopy' to get used instead of 'copy' for recursive copies.
+              # This seems to be an undocumented feature of gyp.
+             'destination': '<(PRODUCT_DIR)',
+              'files': ['appshell/node-core/'],
             },
           ],
           'sources': [
