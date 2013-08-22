@@ -94,3 +94,8 @@ CefString ClientApp::AppGetSupportDirectory()
     return home_dir.append("/.Brackets");
 }
 
+CefString ClientApp::AppGetDocumentsDirectory() 
+{
+    std::string home_dir(getenv("HOME"));
+    return home_dir;
+}

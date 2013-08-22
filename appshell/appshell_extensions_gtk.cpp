@@ -403,6 +403,10 @@ int ConvertLinuxErrorCode(int errorCode, bool isReading)
     }
 }
 
+int32 CopyFile(ExtensionString src, ExtensionString dest)
+{
+}
+
 int32 GetPendingFilesToOpen(ExtensionString& files)
 {
 }
