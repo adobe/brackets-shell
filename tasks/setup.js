@@ -316,10 +316,6 @@ module.exports = function (grunt) {
         
         grunt.log.writeln("Building project files");
         
-        // this is a hack to fix issues with node-gyp picking up this file during 'npm install'
-        // see https://github.com/TooTallNate/node-gyp/issues/216
-        grunt.file.copy("appshell.gyp.txt", "appshell.gyp");
-        
         // Run gyp
         promise = exec(gypCommand);
         

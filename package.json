@@ -24,6 +24,8 @@
         "semver": "2.0.11"
     },
     "scripts": {
-        "postinstall": "grunt"
+        "preinstall": "echo 'Workaround https://github.com/TooTallNate/node-gyp/issues/216'; mv appshell.gyp .appshell.gyp",
+        "install": "",
+        "postinstall": "mv .appshell.gyp appshell.gyp; grunt"
     }
 }
