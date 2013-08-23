@@ -431,9 +431,9 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     	return ConvertLinuxErrorCode(errno);
  
     if ((out_fd = creat(dest.c_str(), COPYMORE)) == -1) {
-	    result = ConvertLinuxErrorCode(errno);
+        result = ConvertLinuxErrorCode(errno);
         close(in_fd);
-    	return result;
+        return result;
     }
  
  
@@ -442,7 +442,7 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     {
     	if (write(out_fd, buf, n_chars) != n_chars)
   	    {
-	        result = ConvertLinuxErrorCode(errno);
+            result = ConvertLinuxErrorCode(errno);
       	    close(in_fd);
             close(out_fd);
             unlink(dest.c_str());
@@ -457,7 +457,7 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     if (n_chars == -1)
     {
         result = ConvertLinuxErrorCode(errno);
-	    unlink(dest.c_str());
+        unlink(dest.c_str());
         return result;
     }
  
