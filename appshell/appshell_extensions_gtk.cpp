@@ -428,7 +428,7 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
  
     /* open files */
     if ((in_fd = open(src.c_str(), O_RDONLY)) == -1)
-    	return ConvertLinuxErrorCode(errno);
+        return ConvertLinuxErrorCode(errno);
  
     if ((out_fd = creat(dest.c_str(), COPYMORE)) == -1) {
         result = ConvertLinuxErrorCode(errno);
@@ -438,29 +438,35 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
  
  
     /* copy file */
-    while((n_chars = read(in_fd, buf, BUFFERSIZE)) > 0)
-    {
-    	if (write(out_fd, buf, n_chars) != n_chars)
-        {
+    while((n_chars = read(in_fd, buf, BUFFERSIZE)) > 0) {
+        if (write(out_fd, buf, n_chars) != n_chars) {
             result = ConvertLinuxErrorCode(errno);
-      	    close(in_fd);
+            close(in_fd);
             close(out_fd);
             unlink(dest.c_str());
             return result;
         }
     }
 
+    /* save the errno in case we need it later*/
     result = ConvertLinuxErrorCode(errno);
 
     /* close and we're done */
     close(in_fd);
     close(out_fd);
 
+    /* check for a read failure */
     if (n_chars == -1) {
         unlink(dest.c_str());
+        /* make sure we actually report an error */
+        if (result == NO_ERROR) 
+            result = ERR_CANT_READ;
+
         return result;
     }
 
+    /* ignore whatever was in the global errno 
+        and just return success */
     return NO_ERROR;
 }
 
