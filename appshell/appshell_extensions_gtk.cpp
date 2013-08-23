@@ -450,18 +450,18 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     	}
     }
 
+    result = ConvertLinuxErrorCode(errno);
+
     /* close and we're done */
     close(in_fd);
     close(out_fd);
 
     if (n_chars == -1)
     {
-        result = ConvertLinuxErrorCode(errno);
         unlink(dest.c_str());
-        return result;
     }
  
-    return NO_ERROR;
+    return result;
 }
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
