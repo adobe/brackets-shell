@@ -97,5 +97,5 @@ CefString ClientApp::AppGetSupportDirectory()
 CefString ClientApp::AppGetDocumentsDirectory() 
 {
     std::string home_dir(getenv("HOME"));
-    return home_dir;
+    return home_dir.append("/Documents");
 }

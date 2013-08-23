@@ -26,12 +26,16 @@
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
 
+#include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
+
+#define BUFFERSIZE 1024
+#define COPYMORE 0644
 
 GtkWidget* _menuWidget;
 
@@ -418,6 +422,46 @@ int ConvertLinuxErrorCode(int errorCode, bool isReading)
 
 int32 CopyFile(ExtensionString src, ExtensionString dest)
 {
+    int in_fd, out_fd, n_chars, result;
+    char buf[BUFFERSIZE];
+ 
+ 
+    /* open files */
+    if ((in_fd = open(src.c_str(), O_RDONLY)) == -1)
+    	return ConvertLinuxErrorCode(errno);
+ 
+    if ((out_fd = creat(dest.c_str(), COPYMORE)) == -1) {
+	result = ConvertLinuxErrorCode(errno);
+        close(in_fd);
+    	return result;
+    }
+ 
+ 
+    /* copy file */
+    while((n_chars = read(in_fd, buf, BUFFERSIZE)) > 0)
+    {
+    	if (write(out_fd, buf, n_chars) != n_chars)
+  	{
+	    result = ConvertLinuxErrorCode(errno);
+      	    close(in_fd);
+            close(out_fd);
+            unlink(dest.c_str());
+            return result;
+    	}
+    }
+
+    /* close and we're done */
+    close(in_fd);
+    close(out_fd);
+
+    if (n_chars == -1)
+    {
+        result = ConvertLinuxErrorCode(errno);
+	unlink(dest.c_str());
+        return result;
+    }
+ 
+    return NO_ERROR;
 }
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
