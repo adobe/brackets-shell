@@ -456,10 +456,12 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     close(in_fd);
     close(out_fd);
 
-    if (n_chars == -1)
+    if (n_chars == -1) {
         unlink(dest.c_str());
- 
-    return result;
+        return result;
+    }
+
+    return NO_ERROR;
 }
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
