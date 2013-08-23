@@ -457,9 +457,7 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     close(out_fd);
 
     if (n_chars == -1)
-    {
         unlink(dest.c_str());
-    }
  
     return result;
 }
