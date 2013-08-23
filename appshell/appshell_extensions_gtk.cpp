@@ -441,13 +441,13 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
     while((n_chars = read(in_fd, buf, BUFFERSIZE)) > 0)
     {
     	if (write(out_fd, buf, n_chars) != n_chars)
-  	    {
+        {
             result = ConvertLinuxErrorCode(errno);
       	    close(in_fd);
             close(out_fd);
             unlink(dest.c_str());
             return result;
-    	}
+        }
     }
 
     result = ConvertLinuxErrorCode(errno);
