@@ -26,16 +26,12 @@
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
 
-#include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <X11/Xlib.h>
-
-#define BUFFERSIZE 1024
-#define COPYMORE 0644
 
 GtkWidget* _menuWidget;
 
