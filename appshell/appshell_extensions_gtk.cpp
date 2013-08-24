@@ -400,7 +400,7 @@ int ConvertGnomeErrorCode(GError* gerror, bool isReading)
         return NO_ERROR;
 
     if (gerror->domain == G_FILE_ERROR) {
-     switch(gerror->code) {
+        switch(gerror->code) {
         case G_FILE_ERROR_EXIST:
             return ERR_FILE_EXISTS;
         case G_FILE_ERROR_NOTDIR:
