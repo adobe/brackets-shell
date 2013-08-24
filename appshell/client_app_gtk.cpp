@@ -97,6 +97,8 @@ CefString ClientApp::AppGetSupportDirectory()
 
 CefString ClientApp::AppGetDocumentsDirectory() 
 {
-    std::string documents_dir (xdg_user_dir_lookup_with_fallback("DOCUMENTS", getenv("HOME")));
+    char *dir = xdg_user_dir_lookup_with_fallback("DOCUMENTS", getenv("HOME"));
+    std::string documents_dir (dir);
+    free(dir);
     return documents_dir;
 }
