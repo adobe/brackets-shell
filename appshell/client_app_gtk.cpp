@@ -34,6 +34,7 @@
 
 extern time_t g_appStartupTime;
 extern char _binary_appshell_appshell_extensions_js_start;
+extern char *xdg_user_dir_lookup_with_fallback (const char *type, const char *fallback);
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -96,6 +97,6 @@ CefString ClientApp::AppGetSupportDirectory()
 
 CefString ClientApp::AppGetDocumentsDirectory() 
 {
-    std::string home_dir(getenv("HOME"));
-    return home_dir.append("/Documents");
+    std::string documents_dir (xdg_user_dir_lookup_with_fallback("DOCUMENTS", getenv("HOME")));
+    return documents_dir;
 }
