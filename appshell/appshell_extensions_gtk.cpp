@@ -36,6 +36,7 @@
 GtkWidget* _menuWidget;
 
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
+int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
 extern bool isReallyClosing;
 
@@ -366,16 +367,15 @@ int DeleteFileOrDirectory(ExtensionString filename)
     return NO_ERROR;
 }
 
+
+
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
     int error = NO_ERROR;
     GFile *file = g_file_new_for_path(filename.c_str());
     GError *gerror = NULL;
     if (!g_file_trash(file, NULL, &gerror)) {
-        if (gerror->code == G_IO_ERROR_NOT_FOUND)
-            error = ERR_NOT_FOUND;
-        else
-            error = ERR_UNKNOWN;
+        error = ConvertGnomeErrorCode(gerror);
         g_error_free(gerror);
     }
     g_object_unref(file);
@@ -419,6 +419,51 @@ int ShowFolderInOSWindow(ExtensionString pathname)
     return NO_ERROR;
 }
 
+
+int ConvertGnomeErrorCode(GError* gerror, bool isReading) 
+{
+    if (gerror == NULL) 
+        return NO_ERROR;
+
+    if (gerror->domain == G_FILE_ERROR) {
+        switch(gerror->code) {
+        case G_FILE_ERROR_EXIST:
+            return ERR_FILE_EXISTS;
+        case G_FILE_ERROR_NOTDIR:
+            return ERR_NOT_DIRECTORY;
+        case G_FILE_ERROR_ISDIR:
+            return ERR_NOT_FILE;
+        case G_FILE_ERROR_NXIO:
+        case G_FILE_ERROR_NOENT:
+            return ERR_NOT_FOUND;
+        case G_FILE_ERROR_NOSPC:
+            return ERR_OUT_OF_SPACE;
+        case G_FILE_ERROR_INVAL:
+            return ERR_INVALID_PARAMS;
+        case G_FILE_ERROR_ROFS:
+            return ERR_CANT_WRITE;
+        case G_FILE_ERROR_BADF:
+        case G_FILE_ERROR_ACCES:
+        case G_FILE_ERROR_PERM:
+        case G_FILE_ERROR_IO:
+           return isReading ? ERR_CANT_READ : ERR_CANT_WRITE;
+        default:
+            return ERR_UNKNOWN;
+        }  
+    } else if (gerror->domain == G_IO_ERROR) {
+        switch(gerror->code) {
+        case G_IO_ERROR_NOT_FOUND:
+            return ERR_NOT_FOUND;
+        case G_IO_ERROR_NO_SPACE:
+            return ERR_OUT_OF_SPACE;
+        case G_IO_ERROR_INVALID_ARGUMENT:
+            return ERR_INVALID_PARAMS;
+        default:
+            return ERR_UNKNOWN;
+        }
+    }
+}
+
 int ConvertLinuxErrorCode(int errorCode, bool isReading)
 {
 //    printf("LINUX ERROR! %d %s\n", errorCode, strerror(errorCode));
@@ -444,6 +489,19 @@ int ConvertLinuxErrorCode(int errorCode, bool isReading)
 
 int32 CopyFile(ExtensionString src, ExtensionString dest)
 {
+    int error = NO_ERROR;
+    GFile *source = g_file_new_for_path(src.c_str());
+    GFile *destination = g_file_new_for_path(dest.c_str());
+    GError *gerror = NULL;
+
+    if (!g_file_copy(source, destination, (GFileCopyFlags)(G_FILE_COPY_OVERWRITE|G_FILE_COPY_NOFOLLOW_SYMLINKS|G_FILE_COPY_TARGET_DEFAULT_PERMS), NULL, NULL, NULL, &gerror)) {
+        error = ConvertGnomeErrorCode(gerror);
+        g_error_free(gerror);
+    }
+    g_object_unref(source);
+    g_object_unref(destination);
+
+    return error;    
 }
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
