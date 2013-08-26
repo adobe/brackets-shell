@@ -6,6 +6,8 @@
 #    http://linuxmafia.com/faq/Admin/release-files.html
 
 
+DISTRO="unknown"
+
 if [[ -f /etc/os-release ]]; then
     . /etc/os-release
     DISTRO=$ID
@@ -13,16 +15,15 @@ elif [[ -f /etc/lsb_release ]]; then
     . /etc/lsb_release
     DISTRO=$DISTRIB_ID
 else
-    echo "Error: non-standard /etc/*release file are currently not supported" 2>&1
+    echo "Error: non-standard /etc/*release files are currently not supported" 2>&1
     exit 1
 fi;
 
 
-if [[ $DISTRO == "ubuntu" ]]; then
-    bash ubuntu_builder.sh
-elif [[ $DISTRO == "arch" ]]; then
-    bash arch_builder.sh
+if [[ -f ${DISTRO}_builder.sh ]]; then
+    bash ${DISTRO}_builder.sh
 else
-    echo "Error: can't build package for distribution \"${DISTRO}\"" 2>&1
+    echo "Error: ${DISTRO}_builder.sh not found" 2>&1
+    echo "       Can't build package for distribution \"${DISTRO}\"" 2>&1
     exit 1
 fi;
