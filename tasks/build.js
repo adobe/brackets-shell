@@ -273,32 +273,10 @@ module.exports = function (grunt) {
     // task: build-installer-linux
     grunt.registerTask("build-installer-linux", "Build linux installer", function () {
         grunt.task.requires(["package"]);
-        
-        var template = grunt.file.read("installer/linux/debian/control"),
-            templateData = {},
-            content;
-        
-        // populate debian control template fields
-        templateData.version = grunt.file.readJSON(grunt.config("config-json")).version;
-        templateData.size = 0;
-        templateData.arch = (common.arch() === 64) ? "amd64" : "i386";
+        grunt.file.write("installer/linux/linux/version", semver.parse(grunt.config("pkg").version).minor);
 
-        // uncompressed file size
-        grunt.file.recurse("installer/linux/debian/package-root/opt", function (abspath) {
-            templateData.size += fs.statSync(abspath).size;
-        });
-        templateData.size = Math.round(templateData.size / 1000);
-        
-        // write file
-        content = grunt.template.process(template, { data: templateData });
-        grunt.file.write("installer/linux/debian/package-root/DEBIAN/control", content);
-        
-        var done = this.async(),
-            sprint = semver.parse(grunt.config("pkg").version).minor;
-        
+        var done = this.async();
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
-            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.deb");
-        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
