@@ -132,7 +132,6 @@
       'appshell/cefclient_gtk.cpp',
       'appshell/client_handler_gtk.cpp',
       'appshell/resource_util_linux.cpp',
-      'appshell/xdg-user-dir-lookup.cpp',
     ],
     'appshell_sources_mac_helper': [
       'appshell/appshell_extensions.cpp',

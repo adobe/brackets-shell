@@ -31,10 +31,10 @@
 //#include <MMSystem.h>
 //#include <ShlObj.h>
 #include <string>
+#include <glib.h>
 
 extern time_t g_appStartupTime;
 extern char _binary_appshell_appshell_extensions_js_start;
-extern char *xdg_user_dir_lookup_with_fallback (const char *type, const char *fallback);
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -97,8 +97,11 @@ CefString ClientApp::AppGetSupportDirectory()
 
 CefString ClientApp::AppGetDocumentsDirectory() 
 {
-    char *dir = xdg_user_dir_lookup_with_fallback("DOCUMENTS", getenv("HOME"));
-    std::string documents_dir (dir);
-    free(dir);
-    return documents_dir;
+    const char *dir = g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS);
+    if (dir == NULL)  {
+        return AppGetSupportDirectory();
+    } else {
+        std::string documents_dir (dir);
+        return documents_dir;
+    }
 }
