@@ -15,6 +15,8 @@ elif [[ -f /etc/lsb_release ]]; then
 fi;
 
 
-if [[ $DISTRO == 'ubuntu' ]]; then
-    bash ubuntu_installer.sh
+if [[ $DISTRO == "ubuntu" ]]; then
+    bash ubuntu_builder.sh
+elif [[ $DISTRO == "arch" ]]; then
+    bash arch_builder.sh
 fi;
