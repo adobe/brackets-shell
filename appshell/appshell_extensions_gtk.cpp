@@ -187,8 +187,34 @@ int32 ShowSaveDialog(ExtensionString title,
                      ExtensionString proposedNewFilename,
                      ExtensionString& newFilePath)
 {
-    // TODO
-    return NO_ERROR;
+	GtkWidget *openSaveDialog;
+
+	openSaveDialog = gtk_file_chooser_dialog_new(title.c_str(),
+						NULL,
+						GTK_FILE_CHOOSER_ACTION_SAVE,
+						GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+						GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+						NULL);
+
+	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (openSaveDialog), TRUE);	
+	if (! initialDirectory.empty())
+	{
+		gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (openSaveDialog), proposedNewFilename.c_str());
+
+		ExtensionString folderURI = std::string("file:///") + initialDirectory;
+		gtk_file_chooser_set_current_folder_uri (GTK_FILE_CHOOSER (openSaveDialog), folderURI.c_str());
+	}
+	
+	if (gtk_dialog_run (GTK_DIALOG (openSaveDialog)) == GTK_RESPONSE_ACCEPT)
+	{
+		char* filePath;
+		filePath = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (openSaveDialog));
+		newFilePath = filePath;
+		g_free (filePath);
+	}
+	
+	gtk_widget_destroy (openSaveDialog);
+	return NO_ERROR;
 }
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
