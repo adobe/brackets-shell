@@ -44,6 +44,7 @@
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
+void RemoveTrailingSlash(ExtensionString& filename);
 int ConvertErrnoCode(int errorCode, bool isReading = true);
 int ConvertWinErrorCode(int errorCode, bool isReading = true);
 static std::wstring GetPathToLiveBrowser();
@@ -763,8 +764,18 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
         return ERR_NOT_FOUND;
     }
 
+    // Windows XP doesn't like Posix Paths
+    //  It will work but the filenames in the recycle
+    //  bin are hidden so convert to a native path.
+    ConvertToNativePath(filename);
+
+    // Windows XP doesn't like directory names
+    //	that end with a trailing slash so remove it
+    RemoveTrailingSlash(filename);
+
     WCHAR filepath[MAX_PATH+1] = {0};
     wcscpy(filepath, filename.c_str());
+
     SHFILEOPSTRUCT operation = {0};
 
     operation.wFunc = FO_DELETE;
@@ -834,6 +845,16 @@ void ConvertToUnixPath(ExtensionString& filename)
 {
     // Convert '\\' to '/'
     replace(filename.begin(), filename.end(), '\\', '/');
+}
+
+bool isSlash(ExtensionString::value_type wc) { return wc == '/' || wc == '\\'; }
+
+void RemoveTrailingSlash(ExtensionString& filename)
+{
+    int last = filename.length() - 1;
+    if ((last >= 0) && isSlash(filename.at(last))) {
+        filename.erase(last);
+    }
 }
 
 // Maps errors from errno.h to the brackets error codes
