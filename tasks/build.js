@@ -273,7 +273,15 @@ module.exports = function (grunt) {
     // task: build-installer-linux
     grunt.registerTask("build-installer-linux", "Build linux installer", function () {
         grunt.task.requires(["package"]);
-        grunt.file.write("installer/linux/linux/version", semver.parse(grunt.config("pkg").version).minor);
+
+        // INFO file
+        var template = grunt.file.read("installer/linux/linux/.INFO.template"),
+            templateData = {},
+            content;
+        templateData.version = grunt.config("pkg").version;
+        templateData.minorVersion = semver.parse(grunt.config("pkg").version).minor;
+        content = grunt.template.process(template, { data: templateData });
+        grunt.file.write("installer/linux/linux/INFO", content);
 
         var done = this.async();
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {

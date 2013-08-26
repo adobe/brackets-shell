@@ -15,7 +15,7 @@ else
     ARCH="i386"
 fi;
 # brackets version number
-VERSION=`cat linux/version | tr -d " \t\n\r"`
+VERSION=`. linux/INFO; echo ${MINOR_VERSION}`
 # deb package name
 PKG_NAME="brackets-sprint${VERSION}-0ubuntu1-${ARCH}.deb" 
 

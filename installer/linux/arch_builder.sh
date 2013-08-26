@@ -8,7 +8,7 @@
 #
 
 # brackets version number
-VERSION=`cat linux/version | tr -d " \t\n\r"`
+VERSION=`. linux/INFO; echo ${MINOR_VERSION}`
 
 
 #
@@ -42,7 +42,7 @@ clean() {
 pkgbuild() {
     awk -v ver=${VERSION} \
         'BEGIN{FS="=";OFS="="} {\
-        sub(/^pkgver=.*/, $1"="'ver'); \
+        sub(/^pkgver=.*/, $1"=sprint"'ver'); \
         print}' PKGBUILD > PKGBUILD.new
     rm -f PKGBUILD
     mv PKGBUILD.new PKGBUILD
