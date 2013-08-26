@@ -42,7 +42,7 @@ clean() {
 pkgbuild() {
     awk -v ver=${VERSION} \
         'BEGIN{FS="=";OFS="="} {\
-        sub(/^pkgver=/, $1"="'ver'); \
+        sub(/^pkgver=.*/, $1"="'ver'); \
         print}' PKGBUILD > PKGBUILD.new
     rm -f PKGBUILD
     mv PKGBUILD.new PKGBUILD

@@ -106,9 +106,9 @@ control() {
     cd "package-root/DEBIAN"
     awk -v arch=${ARCH} -v ver=${VERSION} -v size=${_SIZE} \
        'BEGIN{FS=":";OFS=":"}{ \
-        sub(/^Version:/, $1": "'ver'); \
-        sub(/^Architecture:/, $1": "'arch'); \
-        sub(/^Installed-Size:/, $1": "'size'); \
+        sub(/^Version:.*/, $1": "'ver'); \
+        sub(/^Architecture:.*/, $1": "'arch'); \
+        sub(/^Installed-Size:.*/, $1": "'size'); \
         print}' control > control.temp
 
     rm -f control
