@@ -48,9 +48,9 @@ prepare() {
         "postrm" \
         "package-root/DEBIAN/postrm"
 
-    # copy src directory
+    # copy staging directory
     cp -dpr --no-preserve=ownership \
-        "../src" \
+        "../staging" \
         "package-root/opt/brackets"
 
     # copy files from resource directory
