@@ -45,18 +45,21 @@ package() {
 	ln -s /usr/lib/libudev.so ${pkgdir}/usr/lib/libudev.so.0
 
 	echo "  -> Installing program..."
+	install -dm755 "${pkgdir}/usr/bin"
 	install -Dm755 \
 		"Brackets" \
 		"${pkgdir}/opt/${pkgname}/Brackets"
 
 	install -Dm755 \
 		"brackets" \
-		"${pkgdir}/usr/bin/brackets"
+		"${pkgdir}/opt/${pkgname}/brackets"
+
+	ln -s "/opt/${pkgname}/brackets" "${pkgdir}/usr/bin/brackets"
 
 	for _file in *.pak; do
 		install -Dm644 \
 			"${_file}" \
-			"${pkgdir}/${_file}"
+			"${pkgdir}/opt/${pkgname}/${_file}"
 	done
 
 	for _file in "lib/"*; do
@@ -69,7 +72,7 @@ package() {
 	for _file in "locales/"*; do
 		install -Dm644 \
 			"${_file}" \
-			"${pkgdir}/opt/${pkgname}/locales/${_file}"
+			"${pkgdir}/opt/${pkgname}/${_file}"
 	done
 
 	cp -dpr --no-preserve=ownership \

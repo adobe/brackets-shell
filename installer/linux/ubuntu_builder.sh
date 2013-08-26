@@ -26,6 +26,7 @@ PKG_NAME="brackets-sprint${VERSION}-0ubuntu1-${ARCH}.deb"
 
 # create build filesystem
 prepare() {
+    rm -rf package-root
     # create dirs
     mkdir -p package-root/DEBIAN
     mkdir -p package-root/opt
@@ -56,7 +57,8 @@ prepare() {
     # copy files from resource directory
     cp -dpr --no-preserve=ownership \
         "../linux/brackets" \
-        "package-root/usr/bin/brackets"
+        "package-root/opt/brackets/brackets"
+    ln -s "/opt/brackets/brackets" "package-root/usr/bin/brackets"
     cp -dpr --no-preserve=ownership \
         "../linux/brackets.desktop" \
         "package-root/opt/brackets/brackets.desktop"
@@ -72,7 +74,7 @@ prepare() {
 
     # grunt-contrib-copy doesn't preserve permissions
     # https://github.com/gruntjs/grunt/issues/615 
-    chmod 755 package-root/usr/bin/brackets
+    chmod 755 package-root/opt/brackets/brackets
     chmod 755 package-root/opt/brackets/Brackets
     chmod 755 package-root/opt/brackets/Brackets-node
     chmod 755 package-root/DEBIAN/prerm
@@ -100,18 +102,15 @@ control() {
     # size of all files in opt dir (in kB)
     local _SIZE=`du -shb package-root/opt/ | \
                 awk '{printf "%.0f\n", $1 / 1000}'`
-    # update control file (very ugly way)
+    # update control file
     cd "package-root/DEBIAN"
-    awk 'BEGIN{FS=":";OFS=":"} \
-        /^Version:/{$2=" "'"${VERSION}"'}{print}' control > control.temp
-    rm -f control
-    mv control.temp control
-    awk 'BEGIN{FS=":";OFS=":"} \
-        /^Architecture:/{$2=" "'"${ARCH}"'}{print}' control > control.temp
-    rm -f control
-    mv control.temp control
-    awk 'BEGIN{FS=":";OFS=":"} \
-        /^Installed-Size:/{$2=" "'"${_SIZE}"'}{print}' control > control.temp
+    awk -v arch=${ARCH} -v ver=${VERSION} -v size=${_SIZE} \
+       'BEGIN{FS=":";OFS=":"}{ \
+        sub(/^Version:/, $1": "'ver'); \
+        sub(/^Architecture:/, $1": "'arch'); \
+        sub(/^Installed-Size:/, $1": "'size'); \
+        print}' control > control.temp
+
     rm -f control
     mv control.temp control
     cd ../..

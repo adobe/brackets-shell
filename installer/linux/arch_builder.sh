@@ -40,8 +40,10 @@ clean() {
 
 # update pkgbuild file
 pkgbuild() {
-    awk 'BEGIN{FS="=";OFS="="} \
-        /^pkgver=/{$2="sprint"'"${VERSION}"'}{print}' PKGBUILD > PKGBUILD.new
+    awk -v ver=${VERSION} \
+        'BEGIN{FS="=";OFS="="} {\
+        sub(/^pkgver=/, $1"="'ver'); \
+        print}' PKGBUILD > PKGBUILD.new
     rm -f PKGBUILD
     mv PKGBUILD.new PKGBUILD
 }
