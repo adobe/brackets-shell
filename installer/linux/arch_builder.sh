@@ -28,12 +28,12 @@ prepare() {
     pkgbuild
 
     # delete old package
-    rm -f *.tar.*
+    rm -f *pkg.tar*
 }
 
 # postbuild clean
 clean() {
-    mv *.tar.* ../
+    mv *pkg.tar* ../
     rm -rf src
     rm -rf pkg
 }

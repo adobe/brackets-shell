@@ -85,7 +85,7 @@ module.exports = function (grunt) {
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
             "installer-linux"   : ["installer/linux/*.deb",
-                                   "installer/linux/*.tar.*"],
+                                   "installer/linux/*.pkg.tar*"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
