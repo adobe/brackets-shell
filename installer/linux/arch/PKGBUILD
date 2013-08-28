@@ -6,7 +6,7 @@ pkgdesc="A code editor for HTML, CSS and JavaScript. "
 arch=("i686" "x86_64")
 url="http://brackets.io"
 license=("MIT")
-depends=("nodejs" "gconf" "nspr" "systemd")
+depends=("brackets-lib" "gconf" "nodejs" "nspr" "systemd")
 makedepends=("prelink")
 optdepends=(
 	"alsa-lib: <future use>"
@@ -36,13 +36,6 @@ prepare() {
 
 package() {
 	cd ${srcdir}
-
-	echo "  -> Library hacks..."
-	install -dm755 "${pkgdir}/usr/lib"
-	ln -s /usr/lib/libasound.so ${pkgdir}/usr/lib/libasound.so.2
-	ln -s /usr/lib/libnspr4.so ${pkgdir}/usr/lib/libnspr4.so.0d
-	ln -s /usr/lib/libplc4.so ${pkgdir}/usr/lib/libplc4.so.0d
-	ln -s /usr/lib/libudev.so ${pkgdir}/usr/lib/libudev.so.0
 
 	echo "  -> Installing program..."
 	install -dm755 "${pkgdir}/usr/bin"
