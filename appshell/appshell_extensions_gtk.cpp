@@ -512,37 +512,65 @@ GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
 {
     GtkWidget* window = (GtkWidget*)getMenuParent(browser);
     GtkWidget* widget;
-    GList *children, *iter;
+    GList *children, *iter, *iter2;
 
     children = gtk_container_get_children(GTK_CONTAINER(window));
+    
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_CONTAINER(widget))
-            return widget;
+        if (GTK_IS_VBOX(widget)) {
+            GList* vboxChildren = gtk_container_get_children(GTK_CONTAINER(widget));
+//            g_message("%d", g_list_length(vboxChildren));
+            
+            for(iter2 = vboxChildren; iter2 != NULL; iter2 = g_list_next(iter2)) {
+                GtkWidget* menu = (GtkWidget*)iter2->data;
+                g_message("%s", GTK_OBJECT_TYPE_NAME(menu));
+                if(GTK_IS_MENU_BAR(menu)) {
+                    g_message("Found menu bar");
+                    return menu;
+                }
+            }
+        };
     }
 
     return NULL;
 }
 
+
+GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
+                        GCallback callback) {
+  GtkWidget* entry = gtk_menu_item_new_with_label(text);
+  g_signal_connect(entry, "activate", callback, NULL);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_widget), entry);
+  return entry;
+}
+
+GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
+  GtkWidget* menu_widget = gtk_menu_new();
+  GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
+  return menu_widget;
+}
+
+// Callback for Debug > Get Source... menu item.
+gboolean GetSourceActivated(GtkWidget* widget) {
+  return FALSE;
+}
+
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId)
 {
-    // if (tag == kTagNotFound) {
-    //     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
-    // } else {
-    //     // menu already there
-    //     return NO_ERROR;
-    // }
-
     GtkWidget* menuBar = GetMenuBar(browser);
-    GtkWidget* menuWidget = gtk_menu_new();
-    GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    
+    g_message("Create new Menu '%s'", title.c_str());
+    
+    GtkWidget* menuWidget = CreateMenu(menuBar, title.c_str());
+    gtk_widget_show_all(menuBar);
 
     // FIXME add lookup for menu widgets
-    _menuWidget = menuWidget;
+     _menuWidget = menuWidget;
     
     return NO_ERROR;
 }
@@ -554,11 +582,17 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
-    GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", FakeCallback, NULL);
-    // FIXME add lookup for menu widgets
-    gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    g_message("Adding new menu item '%s'", itemTitle.c_str());
 
+    if (itemTitle == "---") {
+        GtkWidget* separator = gtk_separator_menu_item_new();
+        gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), separator);
+    } else {
+        GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+        g_signal_connect(entry, "activate", FakeCallback, NULL);
+        // FIXME add lookup for menu widgets
+        gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    }
     return NO_ERROR;
 }
 

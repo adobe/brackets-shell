@@ -49,7 +49,7 @@ typedef std::wstring ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     if (browser.get() && browser->GetHost()) {
         HWND frameHwnd = browser->GetHost()->GetWindowHandle();
-        return (browser->IsPopup()) ? frameHwnd : GetParent(frameHwnd);
+        return (browser->IsPopup()) ? frameHwnd : GetParent(frameHwnd); 
     }
     return NULL;
 }
@@ -59,7 +59,7 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac u
 #else
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
-    gtk_widget_get_ancestor(
+    return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
         GTK_TYPE_WINDOW);
 }

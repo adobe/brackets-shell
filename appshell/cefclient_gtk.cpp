@@ -114,26 +114,26 @@ CefString AppGetCachePath() {
   return CefString(cachePath);
 }
 
-GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
-                        GCallback callback) {
-  GtkWidget* entry = gtk_menu_item_new_with_label(text);
-  g_signal_connect(entry, "activate", callback, NULL);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_widget), entry);
-  return entry;
-}
-
-GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
-  GtkWidget* menu_widget = gtk_menu_new();
-  GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
-  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
-  return menu_widget;
-}
-
-// Callback for Debug > Get Source... menu item.
-gboolean GetSourceActivated(GtkWidget* widget) {
-  return FALSE;
-}
+// GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
+//                         GCallback callback) {
+//   GtkWidget* entry = gtk_menu_item_new_with_label(text);
+//   g_signal_connect(entry, "activate", callback, NULL);
+//   gtk_menu_shell_append(GTK_MENU_SHELL(menu_widget), entry);
+//   return entry;
+// }
+// 
+// GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
+//   GtkWidget* menu_widget = gtk_menu_new();
+//   GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
+//   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
+//   gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
+//   return menu_widget;
+// }
+// 
+// // Callback for Debug > Get Source... menu item.
+// gboolean GetSourceActivated(GtkWidget* widget) {
+//   return FALSE;
+// }
 
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
@@ -210,9 +210,9 @@ int main(int argc, char* argv[]) {
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
 
   GtkWidget* menuBar = gtk_menu_bar_new();
-  // GtkWidget* debug_menu = CreateMenu(menuBar, "Tests");
-  // AddMenuEntry(debug_menu, "Hello World Menu",
-  //              G_CALLBACK(GetSourceActivated));
+//   GtkWidget* debug_menu = CreateMenu(menuBar, "Tests");
+//   AddMenuEntry(debug_menu, "Hello World Menu",
+//                G_CALLBACK(GetSourceActivated));
 
   gtk_box_pack_start(GTK_BOX(vbox), menuBar, FALSE, FALSE, 0);
 
