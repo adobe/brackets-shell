@@ -40,8 +40,13 @@ tools
 
 /installer/mac/staging/
 /installer/linux/*.deb
-/installer/linux/debian/package-root/opt/*
-/installer/linux/debian/package-root/DEBIAN/control
+/installer/linux/*.pkg.tar*
+/installer/linux/linux/INFO
+/installer/linux/arch/PKGBUILD
+/installer/linux/arch/*/
+/installer/linux/ubuntu/control
+/installer/linux/ubuntu/*/
+/installer/linux/staging/
 /installer/win/staging/
 *.wixpdb
 *.wixobj

@@ -275,7 +275,7 @@ module.exports = function (grunt) {
         grunt.task.requires(["package"]);
 
         // INFO file
-        var template = grunt.file.read("installer/linux/linux/.INFO.template"),
+        var template = grunt.file.read("installer/linux/linux/INFO.template"),
             templateData = {},
             content;
         templateData.version = grunt.config("pkg").version;

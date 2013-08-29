@@ -36,6 +36,7 @@ clean() {
     mv *pkg.tar* ../
     rm -rf src
     rm -rf pkg
+    rm -f PKGBUILD
 }
 
 # update pkgbuild file
@@ -43,9 +44,7 @@ pkgbuild() {
     awk -v ver=${VERSION} \
         'BEGIN{FS="=";OFS="="} {\
         sub(/^pkgver=.*/, $1"=sprint"'ver'); \
-        print}' PKGBUILD > PKGBUILD.new
-    rm -f PKGBUILD
-    mv PKGBUILD.new PKGBUILD
+        print}' PKGBUILD.template > PKGBUILD
 }
 
 

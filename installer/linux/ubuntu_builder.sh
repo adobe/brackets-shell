@@ -37,8 +37,8 @@ prepare() {
 
     # copy package files
     cp -dpr --no-preserve=ownership \
-        "control" \
-        "package-root/DEBIAN/control"
+        "control.template" \
+        "package-root/DEBIAN/control.template"
     cp -dpr --no-preserve=ownership \
         "postinst" \
         "package-root/DEBIAN/postinst"
@@ -109,10 +109,9 @@ control() {
         sub(/^Version:.*/, $1": "'ver'); \
         sub(/^Architecture:.*/, $1": "'arch'); \
         sub(/^Installed-Size:.*/, $1": "'size'); \
-        print}' control > control.temp
+        print}' control.template > control
+    rm -f control.template
 
-    rm -f control
-    mv control.temp control
     cd ../..
 }
 
