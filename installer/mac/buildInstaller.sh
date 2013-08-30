@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # config
-releaseName="Brackets Sprint 30"
+releaseName="Brackets Sprint 31"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"
