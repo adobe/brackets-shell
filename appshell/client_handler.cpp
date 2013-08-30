@@ -21,6 +21,7 @@ enum client_menu_ids {
 };
 
 ClientHandler::BrowserWindowMap ClientHandler::browser_window_map_;
+ClientHandler::BrowserWindowMap ClientHandler::modal_browser_window_map_;
 
 ClientHandler::ClientHandler()
   : m_MainHwnd(NULL),
@@ -347,6 +348,24 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
   }
 
   return browser->SendProcessMessage(PID_RENDERER, message);
+}
+
+bool ClientHandler::HasModalDialog(CefRefPtr<CefBrowser> browser) {
+    if (browser.get() && modal_browser_window_map_.size() > 0) {
+        BrowserWindowMap::const_iterator it = modal_browser_window_map_.find(browser->GetHost()->GetWindowHandle());
+        return it != modal_browser_window_map_.end();
+    }
+    return false;
+}
+
+void ClientHandler::SetModal(CefRefPtr<CefBrowser> browser, bool hasModalDialog) {
+    if (browser.get()) {
+        if (hasModalDialog) {
+            modal_browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
+        } else {
+            modal_browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
+        }
+    }
 }
 
 void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &filename) {

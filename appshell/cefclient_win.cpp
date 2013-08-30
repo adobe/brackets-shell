@@ -912,7 +912,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 
     case WM_CLOSE:
       if (g_handler.get()) {
-
+        bool hasModalDialog = g_handler->HasModalDialog(g_handler->GetBrowser());
         HWND hWnd = GetActiveWindow();
         SaveWindowRect(hWnd);
 
@@ -924,8 +924,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
 			break;
 		}
 
-        g_handler->QuittingApp(true);
-        g_handler->DispatchCloseToNextBrowser();
+        if (!hasModalDialog) {
+            g_handler->QuittingApp(true);
+            g_handler->DispatchCloseToNextBrowser();
+        }
         return 0;
       }
       break;
@@ -961,11 +963,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
         void* menuParent = getMenuParent(g_handler->GetBrowser());
+        bool hasModalDialog = g_handler->HasModalDialog(g_handler->GetBrowser());
+
         for (int i = 0; i < count; i++) {
             UINT id = GetMenuItemID(menu, i);
 
             bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            UINT flagEnabled = (enabled && !hasModalDialog) ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
             EnableMenuItem(menu, id,  flagEnabled);
 
             bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);

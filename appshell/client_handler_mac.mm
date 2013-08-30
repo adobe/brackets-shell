@@ -136,10 +136,14 @@ void ClientHandler::CloseMainWindow() {
     NSInteger menuState = NSOffState;
     NSUInteger tag = [menuItem tag];
     NativeMenuModel menus = NativeMenuModel::getInstance(getMenuParent(browser));
+    ExtensionString commandId = menus.getCommandId(tag);
     if (menus.isMenuItemChecked(tag)) {
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
+    if (clientHandler->HasModalDialog(browser) && !IsEditCommandId(commandId)) {
+      return false;
+    }
     return menus.isMenuItemEnabled(tag);
 }
 
@@ -149,6 +153,15 @@ void ClientHandler::CloseMainWindow() {
 
 - (void)setWindow:(NSWindow*)win {
   window = win;
+}
+
+- (bool)isShowingModalDialog {
+  bool hasModalDialog = false;
+  if (clientHandler.get() && clientHandler->GetBrowserId()) {
+    CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
+    hasModalDialog = clientHandler->HasModalDialog(browser);
+  }
+  return hasModalDialog;
 }
 
 - (void)setIsReallyClosing {

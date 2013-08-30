@@ -730,6 +730,14 @@ if (!appshell.app) {
     };
  
     /**
+     * Set the global variable that represents the display of a modal dialog.
+     */
+    native function SetModal();
+    appshell.app.setModal = function (hasModalDialog, callback) {
+        SetModal(callback || _dummyCallback, hasModalDialog);
+    };
+
+    /**
      * Return the user's language per operating system preferences.
      */
     native function GetCurrentLanguage();

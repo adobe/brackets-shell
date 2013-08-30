@@ -130,6 +130,7 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     case WM_CLOSE:
       if (g_handler.get() && browser.get()) {
+        bool hasModalDialog = g_handler->HasModalDialog(browser);
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
         HANDLE closing = GetProp(browserHwnd, CLOSING_PROP);
         if (closing) {
@@ -137,8 +138,10 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
         }
 
-        CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-        g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+        if (!hasModalDialog) {
+            CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+            g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+        }
  		return 0;
       }
       break;
@@ -147,11 +150,13 @@ LRESULT CALLBACK PopupWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HMENU menu = (HMENU)wParam;
         int count = GetMenuItemCount(menu);
         void* menuParent = getMenuParent(browser);
+        bool hasModalDialog = g_handler->HasModalDialog(browser);
+
         for (int i = 0; i < count; i++) {
             UINT id = GetMenuItemID(menu, i);
 
             bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            UINT flagEnabled = (enabled && !hasModalDialog) ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
             EnableMenuItem(menu, id,  flagEnabled);
 
             bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
@@ -239,8 +244,11 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                     bool* is_keyboard_shortcut) {
     HWND frameHwnd = (HWND)getMenuParent(browser);
 
-    // Don't call ::TranslateAccelerator if we don't have a menu for the current window.
-    if (!GetMenu(frameHwnd)) {
+    // Don't call ::TranslateAccelerator if we don't have a menu for the current window or
+    // if we have a modal dialog showing for the current window.
+    if (!GetMenu(frameHwnd) || 
+        (modal_browser_window_map_.size() > 0 && browser.get() && 
+        modal_browser_window_map_.find(browser->GetHost()->GetWindowHandle()) != modal_browser_window_map_.end())) {
         return false;
     }
 
