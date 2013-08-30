@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 
 GtkWidget* _menuWidget;
@@ -40,48 +41,16 @@ int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
 extern bool isReallyClosing;
 
-static const char* GetPathToLiveBrowser() 
-{
-    //#TODO Use execlp and be done with it! No need to reinvent the wheel; so badly that too!
-    char *envPath = getenv( "PATH" ), *path, *dir, *currentPath;
-
-    //# copy PATH and not modify the original
-    path=(char *)malloc(strlen(envPath)+1);
-    strcpy(path, envPath);
-
-    // Prepend a forward-slash. For convenience
-    const char* executable="/google-chrome";
-    struct stat buf;
-    int len;
- 
-    for ( dir = strtok( path, ":" ); dir; dir = strtok( NULL, ":" ) )
-    {
-        len=strlen(dir)+strlen(executable);
-        // if((strrchr(dir,'/')-dir)==strlen(dir))
-        // {
-        //     currentPath = (char*)malloc(len);
-        //     strcpy(currentPath,dir);
-        // } else
-        // {
-        // stat handles consecutive forward slashes automatically. No need for above
-            currentPath = (char *)malloc(len+1);
-            strncpy(currentPath,dir,len);
-        //}
-        strcat(currentPath,executable);
-    
-        if(stat(currentPath,&buf)==0 && S_ISREG(buf.st_mode))
-            return currentPath;
-    }
-
-    return "";
-}
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {    
-    //# COnsider using execlp and avoid all this path mess!
-    const char  *appPath = GetPathToLiveBrowser(),
-                *arg1 = "--allow-file-access-from-files";
-    std::string arg2(" ");
+    // Supported browsers (order matters):
+    //   - google-chorme 
+    //   - chromium-browser - chromium executable name (in ubuntu)
+    //   - chromium - other chromium executable name (in arch linux)
+    std::string browsers[3] = {"google-chrome", "chromium-browser", "chromium"},
+                arg1("--allow-file-access-from-files"),
+                arg2(" ");
 
     if(enableRemoteDebugging)
         arg2.assign("--remote-debugging-port=9222");
@@ -95,10 +64,16 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         case -1:    //# Something went wrong
                 return ConvertLinuxErrorCode(errno);
         case 0:     //# I'm the child. When I successfully exec, parent is resumed. Or when I _exec()
-                execl(appPath, arg1, argURL.c_str(), arg2.c_str(),(char *)0);
-
+                // check for supported browsers (in PATH directories)
+                for (size_t i = 0; i < sizeof(browsers) / sizeof(browsers[0]); i++) {
+                    if (execlp(browsers[i].c_str(), browsers[i].c_str(), arg1.c_str(), argURL.c_str(), arg2.c_str(), NULL) != -1) {
+                        // browser is found in os; stop iterating
+                        break;
+                    }
+                }
                 error=errno;
                 _exit(0);
+
         default:
                 if(error!=0)
                 {
