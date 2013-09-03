@@ -25,6 +25,7 @@
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
+#include "native_menu_model.h"
 
 #include <errno.h>
 #include <dirent.h>
@@ -508,7 +509,7 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
 {
 }
 
-GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
+GtkWidget* GetMenu(CefRefPtr<CefBrowser> browser)
 {
     GtkWidget* window = (GtkWidget*)getMenuParent(browser);
     GtkWidget* widget;
@@ -546,7 +547,7 @@ GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
   return entry;
 }
 
-GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
+GtkWidget* _CreateMenu(GtkWidget* menu_bar, const char* text) {
   GtkWidget* menu_widget = gtk_menu_new();
   GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
@@ -559,20 +560,245 @@ gboolean GetSourceActivated(GtkWidget* widget) {
   return FALSE;
 }
 
+// Return index where menu or menu item should be placed.
+// -1 indicates append. -2 indicates 'before' - WINAPI supports
+// placing a menu before an item without needing the position.
+
+const int kAppend = -1;
+const int kBefore = -2;
+
+int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
+{
+    g_message("GetMenuPosition: commandId (%s), parentId (%s), index (%d)", commandId.c_str(), parentId.c_str(), index);
+
+    index = -1;
+    parentId = ExtensionString();
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
+
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    GtkWidget* parentMenu = (GtkWidget*) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    if (parentMenu == NULL) {
+//        parentMenu = GetMenu((HWND)getMenuParent(browser));
+    } else {
+        parentId = NativeMenuModel::getInstance(getMenuParent(browser)).getParentId(tag);
+    }
+
+    GList *menuItems = gtk_container_get_children(GTK_CONTAINER(parentMenu));
+    guint elements = g_list_length(menuItems);
+    guint i;
+
+    for(i = 0; i < elements; i++) {
+        GtkWidget* menuItem = (GtkWidget*)g_list_nth_data(menuItems, i);
+
+//         if (GTK_IS_MENU_ITEM(menuItem))
+        gint objectTag;
+        g_object_get(menuItem, "tag", &objectTag, NULL);
+        if (objectTag == tag) {
+            index = i;
+            return NO_ERROR;
+        }
+    }
+
+//     int len = GetMenuItemCount(parentMenu);
+//     for (int i = 0; i < len; i++) {
+//         MENUITEMINFO parentItemInfo;
+//         memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
+//         parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+//         parentItemInfo.fMask = MIIM_ID;
+//
+//         if (!GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo)) {
+//             int err = GetLastError();
+//             return ConvertErrnoCode(err);
+//         }
+//         if (parentItemInfo.wID == (UINT)tag) {
+//             index = i;
+//             return NO_ERROR;
+//         }
+//     }
+
+    return ERR_NOT_FOUND;
+}
+
+GtkWidget* getMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& id)
+{
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(id);
+
+//     MENUITEMINFO parentItemInfo = {0};
+//     parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+//     parentItemInfo.fMask = MIIM_SUBMENU;
+//     if (!GetMenuItemInfo((HMENU)model.getOsItem(tag), tag, FALSE, &parentItemInfo)) {
+//         return 0;
+//     }
+//     return parentItemInfo.hSubMenu;
+}
+
+int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& parentId, const ExtensionString& position, const ExtensionString& relativeId, int32& positionIdx)
+{
+    g_message("getNewMenuPosition: parentId (%s), position (%s), relativeId (%s), positionIdx (%d)", parentId.c_str(), position.c_str(), relativeId.c_str(), positionIdx);
+
+    int32 errCode = NO_ERROR;
+    ExtensionString pos = position;
+    ExtensionString relId = relativeId;
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+
+    if (pos.size() == 0)
+    {
+        positionIdx = kAppend;
+    } else if (pos == "first") {
+        positionIdx = 0;
+    } else if (pos == "firstInSection" || pos == "lastInSection") {
+        int32 startTag = model.getTag(relId);
+        GtkWidget* startItem = (GtkWidget*) model.getOsItem(startTag);
+        ExtensionString startParentId = model.getParentId(startTag);
+        GtkWidget* parentMenu = (GtkWidget*) model.getOsItem(model.getTag(startParentId));
+        int32 idx;
+
+        if (startParentId != parentId) {
+            // Section is in a different menu
+            positionIdx = -1;
+            return ERR_NOT_FOUND;
+        }
+
+//         parentMenu = getMenu(browser, startParentId);
+//
+//         GetMenuPosition(browser, relId, startParentId, idx);
+//
+//         if (pos == L"firstInSection") {
+//             // Move backwards until reaching the beginning of the menu or a separator
+//             while (idx >= 0) {
+//                 if (isSeparator(parentMenu, idx)) {
+//                     break;
+//                 }
+//                 idx--;
+//             }
+//             if (idx < 0) {
+//                 positionIdx = 0;
+//             } else {
+//                 idx++;
+//                 pos = L"before";
+//             }
+//         } else { // "lastInSection"
+//             int32 numItems = GetMenuItemCount(parentMenu);
+//             // Move forwards until reaching the end of the menu or a separator
+//             while (idx < numItems) {
+//                 if (isSeparator(parentMenu, idx)) {
+//                     break;
+//                 }
+//                 idx++;
+//             }
+//             if (idx == numItems) {
+//                 positionIdx = -1;
+//             } else {
+//                 idx--;
+//                 pos = L"after";
+//             }
+//         }
+//
+//         if (pos == L"before" || pos == L"after") {
+//             MENUITEMINFO itemInfo = {0};
+//             itemInfo.cbSize = sizeof(MENUITEMINFO);
+//             itemInfo.fMask = MIIM_ID;
+//
+//             if (!GetMenuItemInfo(parentMenu, idx, TRUE, &itemInfo)) {
+//                 int err = GetLastError();
+//                 return ConvertErrnoCode(err);
+//             }
+//             relId = model.getCommandId(itemInfo.wID);
+//         }
+    }
+
+    if ((pos == "before" || pos == "after") && relId.size() > 0) {
+        if (pos == "before") {
+            positionIdx = kBefore;
+        } else {
+            positionIdx = kAppend;
+        }
+
+        ExtensionString newParentId;
+        errCode = GetMenuPosition(browser, relId, newParentId, positionIdx);
+
+        if (parentId.size() > 0 && parentId != newParentId) {
+            errCode = ERR_NOT_FOUND;
+        }
+
+        // If we don't find the relative ID, return an error and
+        // set positionIdx to kAppend. The item will be appended and an
+        // error will be shown in the console.
+        if (errCode == ERR_NOT_FOUND) {
+            positionIdx = kAppend;
+        } else if (positionIdx >= 0 && pos == "after") {
+            positionIdx += 1;
+        }
+     }
+
+    return errCode;
+}
+
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId)
 {
-    GtkWidget* menuBar = GetMenuBar(browser);
-    
-    g_message("Create new Menu '%s'", title.c_str());
-    
-    GtkWidget* menuWidget = CreateMenu(menuBar, title.c_str());
-    gtk_widget_show_all(menuBar);
+    g_message("AddMenu: title (%s), command (%s), position (%s), relativeId (%s)", title.c_str(), command.c_str(), position.c_str(), relativeId.c_str());
 
-    // FIXME add lookup for menu widgets
-     _menuWidget = menuWidget;
-    
-    return NO_ERROR;
+    GtkWidget* mainMenu = NULL;
+    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
+
+        GtkWidget* menuBar = GetMenu(browser);
+        mainMenu = _CreateMenu(menuBar, title.c_str());
+        gtk_widget_show_all(menuBar);
+
+        NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
+    } else {
+        // menu already there
+        return NO_ERROR;
+    }
+
+    bool inserted = false;
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, "", position, relativeId, positionIdx);
+
+    g_message("New Menu Position: (%d)", positionIdx);
+
+    if (positionIdx >= 0 || positionIdx == kBefore)
+    {
+        GtkWidget* menu_widget = gtk_menu_new();
+        GtkWidget* menu_header = gtk_menu_item_new_with_label(title.c_str());
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
+
+        g_object_set(menu_header, "tag", tag, NULL);
+
+        if (positionIdx >= 0) {
+            gtk_menu_shell_append(GTK_MENU_SHELL(mainMenu), menu_header);
+
+//             InsertMenuItem(mainMenu, positionIdx, TRUE, &menuInfo);
+            inserted = true;
+        }
+        else
+        {
+            int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+            if (relativeTag >= 0 && positionIdx == kBefore) {
+//                 InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo);
+                inserted = true;
+            } else {
+                // menu is already there
+                return NO_ERROR;
+            }
+        }
+    }
+
+//     if (inserted == false)
+//     {
+//         if (!AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str())) {
+//             return ConvertErrnoCode(GetLastError());
+//         }
+//     }
+
+    return errCode;
 }
 
 void FakeCallback() {
@@ -582,18 +808,129 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
-    g_message("Adding new menu item '%s'", itemTitle.c_str());
+    g_message("AddMenuItem: parentCommand (%s), itemTitle (%s), command (%s), key (%s), displayStr (%s), position (%s), relativeId (%s)", parentCommand.c_str(), itemTitle.c_str(), command.c_str(), key.c_str(), displayStr.c_str(), position.c_str(), relativeId.c_str());
 
-    if (itemTitle == "---") {
-        GtkWidget* separator = gtk_separator_menu_item_new();
-        gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), separator);
-    } else {
-        GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-        g_signal_connect(entry, "activate", FakeCallback, NULL);
-        // FIXME add lookup for menu widgets
-        gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    int32 parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
+    if (parentTag == kTagNotFound) {
+        return ERR_NOT_FOUND;
     }
-    return NO_ERROR;
+
+    GtkWidget* menu = (GtkWidget* )NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
+    if (menu == NULL)
+        return ERR_NOT_FOUND;
+
+    bool isSeparator = (itemTitle == "---");
+    GtkWidget* submenu = NULL;
+    if (isSeparator) {
+        submenu = gtk_separator_menu_item_new();
+    } else {
+        submenu = gtk_menu_item_new_with_label(itemTitle.c_str());
+        g_signal_connect(submenu, "activate", FakeCallback, NULL);
+    }
+//     return NO_ERROR;
+
+//     HMENU submenu = NULL;
+//     MENUITEMINFO parentItemInfo;
+//
+//     memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
+//     parentItemInfo.cbSize = sizeof(MENUITEMINFO);
+//     parentItemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+//     //get the menuitem containing this one, see if it has a sub menu. If it doesn't, add one.
+//     if (!GetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
+//         return ConvertErrnoCode(GetLastError());
+//     }
+//     if (parentItemInfo.hSubMenu == NULL) {
+//         parentItemInfo.hSubMenu = CreateMenu();
+//         parentItemInfo.fMask = MIIM_SUBMENU;
+//         if (!SetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
+//             return ConvertErrnoCode(GetLastError());
+//         }
+//     }
+//     submenu = parentItemInfo.hSubMenu;
+    int32 tag = -1;
+    ExtensionString title;
+    ExtensionString keyStr;
+    ExtensionString displayKeyStr;
+
+    tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
+    } else {
+        return NO_ERROR;
+    }
+
+    title = itemTitle.c_str();
+    keyStr = key.c_str();
+
+    if (key.length() > 0 && displayStr.length() == 0) {
+//         displayKeyStr = GetDisplayKeyString(keyStr);
+    } else {
+        displayKeyStr = displayStr;
+    }
+
+    if (displayKeyStr.length() > 0) {
+        title = title + "\t" + displayKeyStr;
+    }
+    int32 positionIdx;
+    int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
+    bool inserted = false;
+//     if (positionIdx >= 0 || positionIdx == kBefore)
+//     {
+//         MENUITEMINFO menuInfo;
+//         memset(&menuInfo, 0, sizeof(MENUITEMINFO));
+//         menuInfo.cbSize = sizeof(MENUITEMINFO);
+//         menuInfo.wID = (UINT)tag;
+//         menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;
+//         menuInfo.fType = MFT_STRING;
+//         if (isSeparator) {
+//             menuInfo.fType = MFT_SEPARATOR;
+//         }
+//         menuInfo.dwTypeData = (LPWSTR)title.c_str();
+//         menuInfo.cch = itemTitle.size();
+//         if (positionIdx >= 0) {
+//             InsertMenuItem(submenu, positionIdx, TRUE, &menuInfo);
+//             inserted = true;
+//         }
+//         else
+//         {
+//             int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+//             if (relativeTag >= 0 && positionIdx == kBefore) {
+//                 InsertMenuItem(submenu, relativeTag, FALSE, &menuInfo);
+//                 inserted = true;
+//             } else {
+//                 // menu is already there
+//                 return NO_ERROR;
+//             }
+//         }
+//     }
+
+//     if (!inserted)
+//     {
+//         BOOL res;
+//
+//         if (isSeparator)
+//         {
+//             res = AppendMenu(submenu, MF_SEPARATOR, NULL, NULL);
+//         } else {
+//             res = AppendMenu(submenu, MF_STRING, tag, title.c_str());
+//         }
+//
+//         if (!res) {
+//             return ConvertErrnoCode(GetLastError());
+//         }
+//     }
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), submenu);
+    g_object_set(submenu, "tag", tag, NULL);
+
+    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
+//     DrawMenuBar((HWND)getMenuParent(browser));
+
+//     if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
+//         title = title.substr(0, title.find('\t'));
+//         SetMenuTitle(browser, command, title);
+//     }
+
+    return errCode;
 }
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
@@ -626,10 +963,10 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
     return NO_ERROR;
 }
 
-int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
-{
-    return NO_ERROR;
-}
+// int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
+// {
+//     return NO_ERROR;
+// }
 
 void DragWindow(CefRefPtr<CefBrowser> browser)
 {
