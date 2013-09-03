@@ -43,10 +43,9 @@ module.exports = function (grunt) {
         "config-json":      staging + "/www/config.json",
         "curl-dir": {
             /* linux */
-            /* FIXME (jasonsanjose) no 32-bit 3.1547.1354, revert to cef.version variable for the next CEF upgrade */
             "cef-linux32": {
                 "dest"      : "downloads/",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_3.1547.1357_linux32_release.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
             "cef-linux64": {
                 "dest"      : "downloads/",
