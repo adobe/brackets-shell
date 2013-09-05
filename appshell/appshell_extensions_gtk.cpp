@@ -47,12 +47,21 @@ int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
 extern bool isReallyClosing;
 
+int GErrorToErrorCode(GError *gerror) {
+    int error = ConvertGnomeErrorCode(gerror);
+    
+    // uncomment to see errors printed to the console
+    //g_warning(gerror->message);
+    g_error_free(gerror);
+    
+    return error;
+}
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
     const char *launch = "%s --allow-file-access-from-files %s %s";
-    const char *remoteDebugging = "";
-    const char *profilePath = "%s\\live-dev-profile";
+    gchar *remoteDebugging = "";
+    gchar *profilePath = "%s\\live-dev-profile";
     gchar *cmdline;
     int error = NO_ERROR;
     GError *gerror = NULL;
@@ -78,6 +87,9 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         g_free(cmdline);
     }
+    
+    g_free(profilePath);
+    g_free(remoteDebugging);
 
     return error;
 }
@@ -271,36 +283,23 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
-
-    if(encoding != "utf8")
+    if (encoding != "utf8")
         return NO_ERROR;    //#TODO ERR_UNSUPPORTED_ENCODING
 
-    struct stat buf;
-    if(stat(filename.c_str(),&buf)==-1)
-        return ConvertLinuxErrorCode(errno);
-
-    if(!S_ISREG(buf.st_mode))
-        return NO_ERROR;    //# TODO ERR_CANT_READ when cleaninp up errors
-
-    FILE* file = fopen(filename.c_str(),"r");
-    if(file == NULL)
-    {
-        return ConvertLinuxErrorCode(errno);
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    gchar *file_get_contents = NULL;
+    gsize len = 0;
+    
+    if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
+        error = GErrorToErrorCode(gerror);
     }
 
-    fseek(file, 0, SEEK_END);
-    long int size = ftell(file);
-    rewind(file);
+    contents.assign(file_get_contents, len);
+    
+    g_free(file_get_contents);
 
-    char* content = (char*)calloc(size + 1, 1);
-
-    fread(content,1,size,file);
-    if(fclose(file)==EOF)
-        return ConvertLinuxErrorCode(errno);
-
-    contents = content;
-
-    return NO_ERROR;
+    return error;
 }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
@@ -389,6 +388,8 @@ int ShowFolderInOSWindow(ExtensionString pathname)
         g_warning(gerror->message);
         g_error_free(gerror);
     }
+    
+    g_free(uri);
 
     return error;
 }
