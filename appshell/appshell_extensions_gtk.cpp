@@ -526,9 +526,8 @@ GtkWidget* GetMenu(CefRefPtr<CefBrowser> browser)
             
             for(iter2 = vboxChildren; iter2 != NULL; iter2 = g_list_next(iter2)) {
                 GtkWidget* menu = (GtkWidget*)iter2->data;
-                g_message("%s", GTK_OBJECT_TYPE_NAME(menu));
                 if(GTK_IS_MENU_BAR(menu)) {
-                    g_message("Found menu bar");
+                    g_message("Found the menubar");
                     return menu;
                 }
             }
@@ -551,7 +550,7 @@ GtkWidget* _CreateMenu(GtkWidget* menu_bar, const char* text) {
   GtkWidget* menu_widget = gtk_menu_new();
   GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
-  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
+//  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
   return menu_widget;
 }
 
@@ -564,60 +563,75 @@ gboolean GetSourceActivated(GtkWidget* widget) {
 // -1 indicates append. -2 indicates 'before' - WINAPI supports
 // placing a menu before an item without needing the position.
 
+// TODO: I need to find a way to attach the tag from the NativeMenuModel to the
+// gtk Menu/MenuItem like we do this for Windows and Mac
+// keep track of mapping from gtk widget to NativeMenuModel tag
+typedef std::map<int, const void*> tagToMenuWidgetMapping;
+tagToMenuWidgetMapping tag2Widget;
+
+const void* findWidgetForTag(const int tag) {
+    tagToMenuWidgetMapping::iterator  it = tag2Widget.find(tag);
+    
+    if (it != tag2Widget.end()) {
+        return it->second;
+    }
+    
+    return NULL;
+}
+
+void mapTagToWidget(const int tag, const void* widget) {
+    tagToMenuWidgetMapping::iterator foundItem = tag2Widget.find(tag);
+    
+    if(foundItem == tag2Widget.end()) {
+        tag2Widget[tag] = widget;
+    }
+}
+
 const int kAppend = -1;
 const int kBefore = -2;
 
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
 {
-    g_message("GetMenuPosition: commandId (%s), parentId (%s), index (%d)", commandId.c_str(), parentId.c_str(), index);
+    g_message("GetMenuPosition: commandId=%s, parentId=%s", commandId.c_str(), parentId.c_str());
 
     index = -1;
     parentId = ExtensionString();
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);
-
+    
     if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
 
+    g_message("Found tag %d for commandId (%s)", tag, commandId.c_str());
+
     GtkWidget* parentMenu = (GtkWidget*) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(tag);
+    g_message("Found Objecttype '%s'", GTK_OBJECT_TYPE_NAME(parentMenu));
     if (parentMenu == NULL) {
 //        parentMenu = GetMenu((HWND)getMenuParent(browser));
     } else {
         parentId = NativeMenuModel::getInstance(getMenuParent(browser)).getParentId(tag);
     }
 
-    GList *menuItems = gtk_container_get_children(GTK_CONTAINER(parentMenu));
+    GList *menuItems = gtk_container_get_children(GTK_CONTAINER(GetMenu(browser)));
     guint elements = g_list_length(menuItems);
     guint i;
 
-    for(i = 0; i < elements; i++) {
-        GtkWidget* menuItem = (GtkWidget*)g_list_nth_data(menuItems, i);
-
-//         if (GTK_IS_MENU_ITEM(menuItem))
-        gint objectTag;
-        g_object_get(menuItem, "tag", &objectTag, NULL);
-        if (objectTag == tag) {
-            index = i;
-            return NO_ERROR;
-        }
+    const void* targetWidget = findWidgetForTag(tag);
+    if (targetWidget) {
+        g_message("Found target widget");
+        g_message("=> Found Objecttype %s", GTK_OBJECT_TYPE_NAME(targetWidget));
     }
 
-//     int len = GetMenuItemCount(parentMenu);
-//     for (int i = 0; i < len; i++) {
-//         MENUITEMINFO parentItemInfo;
-//         memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
-//         parentItemInfo.cbSize = sizeof(MENUITEMINFO);
-//         parentItemInfo.fMask = MIIM_ID;
-//
-//         if (!GetMenuItemInfo(parentMenu, i, TRUE, &parentItemInfo)) {
-//             int err = GetLastError();
-//             return ConvertErrnoCode(err);
-//         }
-//         if (parentItemInfo.wID == (UINT)tag) {
-//             index = i;
-//             return NO_ERROR;
-//         }
-//     }
+    for(i = 0; i < elements; i++) {
+        GtkWidget* menuItem = (GtkWidget*)g_list_nth_data(menuItems, i);
+        g_message("=> Found Objecttype %s with label %s", GTK_OBJECT_TYPE_NAME(menuItem), gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem)));
+        
+        if (menuItem == targetWidget) {
+            index = i;
+            g_message("Found at position %d", index);
+            return NO_ERROR;
+        }
+    }        
 
     return ERR_NOT_FOUND;
 }
@@ -744,15 +758,27 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
     g_message("AddMenu: title (%s), command (%s), position (%s), relativeId (%s)", title.c_str(), command.c_str(), position.c_str(), relativeId.c_str());
 
     GtkWidget* mainMenu = NULL;
+    GtkWidget* menuLabel = NULL;
+    GtkWidget* menuBar = NULL;
+    
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
     if (tag == kTagNotFound) {
+        g_message("No tag found for %s. Create new tag", command.c_str());
         tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
 
-        GtkWidget* menuBar = GetMenu(browser);
-        mainMenu = _CreateMenu(menuBar, title.c_str());
-        gtk_widget_show_all(menuBar);
-
+        menuBar = GetMenu(browser);
+        
+        mainMenu = gtk_menu_new();
+        menuLabel = gtk_menu_item_new_with_label(title.c_str());
+        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuLabel), mainMenu);
+        
         NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
+
+        // update our model
+        // this is not good! the NativeMenuModel maps tag => mainMenu and I
+        // need to map tag => menuLabel to get my hand to the menu... There must
+        // be a better way
+        mapTagToWidget(tag, menuLabel);
     } else {
         // menu already there
         return NO_ERROR;
@@ -766,16 +792,9 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
 
     if (positionIdx >= 0 || positionIdx == kBefore)
     {
-        GtkWidget* menu_widget = gtk_menu_new();
-        GtkWidget* menu_header = gtk_menu_item_new_with_label(title.c_str());
-        gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
-
-        g_object_set(menu_header, "tag", tag, NULL);
-
         if (positionIdx >= 0) {
-            gtk_menu_shell_append(GTK_MENU_SHELL(mainMenu), menu_header);
+            gtk_menu_shell_insert(GTK_MENU_SHELL(menuBar), menuLabel, positionIdx);
 
-//             InsertMenuItem(mainMenu, positionIdx, TRUE, &menuInfo);
             inserted = true;
         }
         else
@@ -791,12 +810,12 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
         }
     }
 
-//     if (inserted == false)
-//     {
-//         if (!AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str())) {
-//             return ConvertErrnoCode(GetLastError());
-//         }
-//     }
+    if (inserted == false) {
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuLabel);
+//        g_message("Inserted new Menu");
+    }
+
+    gtk_widget_show_all(menuBar);
 
     return errCode;
 }
@@ -920,7 +939,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 //         }
 //     }
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), submenu);
-    g_object_set(submenu, "tag", tag, NULL);
 
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
 //     DrawMenuBar((HWND)getMenuParent(browser));
