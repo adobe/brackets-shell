@@ -64,7 +64,7 @@ module.exports = function (grunt) {
             if (result.stderr.match('xcrun: Error')) {
               grunt.log.error('Unable to run : ' + result.cmd + ' ' + result.args.join(' '));
               grunt.log.error(result.stderr);
-              done(false);
+              return done(false);
             }
             done();
         }, function (err) {
