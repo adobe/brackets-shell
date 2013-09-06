@@ -41,6 +41,19 @@ int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
 extern bool isReallyClosing;
 
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
+
+static gboolean MenuHandler_Callback(GtkWidget *widget,
+                            gpointer user_data) {
+    g_message("Menu Handler called %d", (int32) user_data);
+    ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId((int32) user_data);
+    if (commandId.size() > 0) {
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+        g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+    }
+}
+
 static const char* GetPathToLiveBrowser() 
 {
     //#TODO Use execlp and be done with it! No need to reinvent the wheel; so badly that too!
@@ -537,7 +550,6 @@ GtkWidget* GetMenu(CefRefPtr<CefBrowser> browser)
     return NULL;
 }
 
-
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
                         GCallback callback) {
   GtkWidget* entry = gtk_menu_item_new_with_label(text);
@@ -552,11 +564,6 @@ GtkWidget* _CreateMenu(GtkWidget* menu_bar, const char* text) {
   gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
 //  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
   return menu_widget;
-}
-
-// Callback for Debug > Get Source... menu item.
-gboolean GetSourceActivated(GtkWidget* widget) {
-  return FALSE;
 }
 
 // Return index where menu or menu item should be placed.
@@ -616,6 +623,8 @@ int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& comm
     guint elements = g_list_length(menuItems);
     guint i;
 
+//    int32 attachedTag = (int32) gtk_object_get_data(GTK_OBJECT(parentMenu), "tag");
+//    g_message("Found attached tag %d", attachedTag);
     const void* targetWidget = findWidgetForTag(tag);
     if (targetWidget) {
         g_message("Found target widget");
@@ -779,6 +788,8 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
         // need to map tag => menuLabel to get my hand to the menu... There must
         // be a better way
         mapTagToWidget(tag, menuLabel);
+        // this could be a way to attach the tag to the widget
+//        gtk_object_set_data (GTK_OBJECT(menuLabel), "tag", (gpointer) tag);
     } else {
         // menu already there
         return NO_ERROR;
@@ -812,15 +823,11 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
 
     if (inserted == false) {
         gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuLabel);
-//        g_message("Inserted new Menu");
     }
 
     gtk_widget_show_all(menuBar);
 
     return errCode;
-}
-
-void FakeCallback() {
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
@@ -844,28 +851,8 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         submenu = gtk_separator_menu_item_new();
     } else {
         submenu = gtk_menu_item_new_with_label(itemTitle.c_str());
-        g_signal_connect(submenu, "activate", FakeCallback, NULL);
     }
-//     return NO_ERROR;
 
-//     HMENU submenu = NULL;
-//     MENUITEMINFO parentItemInfo;
-//
-//     memset(&parentItemInfo, 0, sizeof(MENUITEMINFO));
-//     parentItemInfo.cbSize = sizeof(MENUITEMINFO);
-//     parentItemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
-//     //get the menuitem containing this one, see if it has a sub menu. If it doesn't, add one.
-//     if (!GetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
-//         return ConvertErrnoCode(GetLastError());
-//     }
-//     if (parentItemInfo.hSubMenu == NULL) {
-//         parentItemInfo.hSubMenu = CreateMenu();
-//         parentItemInfo.fMask = MIIM_SUBMENU;
-//         if (!SetMenuItemInfo(menu, parentTag, FALSE, &parentItemInfo)) {
-//             return ConvertErrnoCode(GetLastError());
-//         }
-//     }
-//     submenu = parentItemInfo.hSubMenu;
     int32 tag = -1;
     ExtensionString title;
     ExtensionString keyStr;
@@ -890,57 +877,42 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (displayKeyStr.length() > 0) {
         title = title + "\t" + displayKeyStr;
     }
+
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
     bool inserted = false;
-//     if (positionIdx >= 0 || positionIdx == kBefore)
-//     {
-//         MENUITEMINFO menuInfo;
-//         memset(&menuInfo, 0, sizeof(MENUITEMINFO));
-//         menuInfo.cbSize = sizeof(MENUITEMINFO);
-//         menuInfo.wID = (UINT)tag;
-//         menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;
-//         menuInfo.fType = MFT_STRING;
-//         if (isSeparator) {
-//             menuInfo.fType = MFT_SEPARATOR;
-//         }
-//         menuInfo.dwTypeData = (LPWSTR)title.c_str();
-//         menuInfo.cch = itemTitle.size();
-//         if (positionIdx >= 0) {
-//             InsertMenuItem(submenu, positionIdx, TRUE, &menuInfo);
-//             inserted = true;
-//         }
-//         else
-//         {
-//             int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-//             if (relativeTag >= 0 && positionIdx == kBefore) {
-//                 InsertMenuItem(submenu, relativeTag, FALSE, &menuInfo);
-//                 inserted = true;
-//             } else {
-//                 // menu is already there
-//                 return NO_ERROR;
-//             }
-//         }
-//     }
+    if (positionIdx >= 0 || positionIdx == kBefore)
+    {
+         if (positionIdx >= 0) {
+             gtk_menu_shell_append(GTK_MENU_SHELL(menu), submenu);
 
-//     if (!inserted)
-//     {
-//         BOOL res;
-//
-//         if (isSeparator)
-//         {
-//             res = AppendMenu(submenu, MF_SEPARATOR, NULL, NULL);
-//         } else {
-//             res = AppendMenu(submenu, MF_STRING, tag, title.c_str());
-//         }
-//
-//         if (!res) {
-//             return ConvertErrnoCode(GetLastError());
-//         }
-//     }
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), submenu);
+             inserted = true;
+         }
+         else
+         {
+             int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+             if (relativeTag >= 0 && positionIdx == kBefore) {
+ //                InsertMenuItem(submenu, relativeTag, FALSE, &menuInfo);
+                 inserted = true;
+             } else {
+                 // menu is already there
+                 return NO_ERROR;
+             }
+         }
+     }
+
+     if (!inserted)
+     {
+         gtk_menu_shell_append(GTK_MENU_SHELL(menu), submenu);
+     }
 
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
+    
+    if (!isSeparator) {
+        g_signal_connect(submenu, "activate", GTK_SIGNAL_FUNC(MenuHandler_Callback), (gpointer) tag);
+    }
+ 
+    gtk_widget_show_all(menu);
 //     DrawMenuBar((HWND)getMenuParent(browser));
 
 //     if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
