@@ -185,6 +185,8 @@ module.exports = function (grunt) {
                 }
                 child.on("close", function (code) {
                     var closeResult = {
+                        cmd: cmd,
+                        args: args,
                         code: code,
                         stdout: stdout.toString(),
                         stderr: stderr.toString(),

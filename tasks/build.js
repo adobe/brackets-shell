@@ -60,7 +60,12 @@ module.exports = function (grunt) {
         spawn([
             "xcodebuild -project appshell.xcodeproj -config Release clean",
             "xcodebuild -project appshell.xcodeproj -config Release build"
-        ]).then(function () {
+        ]).then(function (result) {
+            if (result.stderr.match('xcrun: Error')) {
+              grunt.log.error('Unable to run : ' + result.cmd + ' ' + result.args.join(' '));
+              grunt.log.error(result.stderr);
+              done(false);
+            }
             done();
         }, function (err) {
             grunt.log.error(err);
