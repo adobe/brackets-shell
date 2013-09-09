@@ -81,18 +81,9 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    //Check environment variables first;
-    std::string home_dir(getenv("HOME"));
-
-    if(home_dir.length()==0)
-    {
-        //If no environment variable, use the system provided home directory
-        struct passwd *pw = getpwuid(getuid());
-        home_dir = pw->pw_dir;
-    }
-
-    // ~/.config/Brackets? ~/.Brackets ?? We'll see, later.
-    return home_dir.append("/.Brackets");
+    // FIXME (jasonsanjose): hardcode "brackets"...why doesn't g_get_prgname() work here?
+    gchar *supportDir = g_strdup_printf("%s/brackets", g_get_user_config_dir());
+    return std::string(supportDir);
 }
 
 CefString ClientApp::AppGetDocumentsDirectory() 

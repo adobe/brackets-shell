@@ -166,7 +166,6 @@ int main(int argc, char* argv[]) {
   // Check cache_path setting
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
-    printf("No cache_path supplied by default\n");
   }
 
   szInitialUrl = AppGetRunningDirectory();
