@@ -50,11 +50,16 @@ char szWorkingDir[MAX_PATH];  // The current working directory
 
 TCHAR szInitialUrl[MAX_PATH] = {0};
 
+bool gPortableInstall = false;	// true if this is a portable install -- ie don't serialize anything outside of app folder
+static RECT grectWindow;		// persisted window position for next launch
+static RECT grectRestore;		// persisted restored window position if left maximized for next launch
+
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+bool CheckIfPortableInstall();
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -183,6 +188,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   CefMainArgs main_args(hInstance);
   CefRefPtr<ClientApp> app(new ClientApp);
+
+  // check if this is a portable install
+  gPortableInstall = CheckIfPortableInstall();
 
   // Execute the secondary process, if any.
   int exit_code = CefExecuteProcess(main_args, app.get());
@@ -443,6 +451,114 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 	return result;
 }
 
+// persists window size and state for next launch
+void WriteWindowPlacement(int showCmd)
+{
+	if (!gPortableInstall)
+	{
+		// for normal installations, serialize to the Registry
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   grectWindow.left);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    grectWindow.top);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  grectWindow.right - grectWindow.left);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, grectWindow.bottom - grectWindow.top);
+
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,   grectRestore.left);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,    grectRestore.top);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,  grectRestore.right);
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM, grectRestore.bottom);
+
+		WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE, showCmd);
+	}
+	else
+	{
+		// for portable installations, serialize to a file in the app folder
+		std::wstring filename = ClientApp::AppGetSupportDirectory();
+		filename += L"\\lastWindowState.dat";
+		HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_WRITE,
+			FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (INVALID_HANDLE_VALUE != hFile)
+		{
+			DWORD dwBytesWritten;
+			std::stringstream streambuf;
+			streambuf << grectWindow.left << ' ';
+			streambuf << grectWindow.top << ' ';
+			streambuf << grectWindow.right - grectWindow.left << ' ';
+			streambuf << grectWindow.bottom - grectWindow.top << ' ';
+			streambuf << grectRestore.left << ' ';
+			streambuf << grectRestore.top << ' ';
+			streambuf << grectRestore.right << ' ';
+			streambuf << grectRestore.bottom << ' ';
+			streambuf << showCmd;
+			std::string contents = streambuf.str();
+ 			::WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL);
+
+			::CloseHandle(hFile);
+		}
+	}
+}
+
+// read window size and state persisted from previous launch
+void ReadWindowPlacement(int& showCmd)
+{
+	::SetRect(&grectWindow, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+	::SetRect(&grectRestore, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+	showCmd = SW_SHOW;
+
+	if (!gPortableInstall)
+	{
+		// for normal installations, serialize from the Registry
+		int ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,	NULL, ival);
+		grectWindow.left = ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,	NULL, ival);
+		grectWindow.top = ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,	NULL, ival);
+		grectWindow.right = ival - grectWindow.left;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,	NULL, ival);
+		grectWindow.bottom = ival - grectWindow.top;
+
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,	NULL, ival);
+		grectRestore.left = ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,	NULL, ival);
+		grectRestore.top = ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,	NULL, ival);
+		grectRestore.right = ival;
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM,	NULL, ival);
+		grectRestore.bottom = ival;
+
+		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
+	}
+	else
+	{
+		// for portable installations, serialize from a file in the app folder
+		std::wstring filename = ClientApp::AppGetSupportDirectory();
+		filename += L"\\lastWindowState.dat";
+		HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
+			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (INVALID_HANDLE_VALUE != hFile)
+		{
+			DWORD dwFileSize = ::GetFileSize(hFile, NULL);
+			DWORD dwBytesRead;
+			BYTE* buffer = (BYTE*)malloc(dwFileSize);
+			if (buffer && ::ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL))
+			{
+				std::string contents((char*)buffer, dwBytesRead);
+				std::stringstream streambuf(contents);
+				streambuf >> grectWindow.left;
+				streambuf >> grectWindow.top;
+				streambuf >> grectWindow.right;
+				streambuf >> grectWindow.bottom;
+				streambuf >> grectRestore.left;
+				streambuf >> grectRestore.top;
+				streambuf >> grectRestore.right;
+				streambuf >> grectRestore.bottom;
+				streambuf >> showCmd;
+			}
+			::CloseHandle(hFile);
+		}
+	}
+}
+
 void SaveWindowRect(HWND hWnd)
 {
 	// Save position of active window
@@ -455,6 +571,10 @@ void SaveWindowRect(HWND hWnd)
 
 	if (GetWindowPlacement(hWnd, &wp))
 	{
+		// only update the restore rect if we're currently maximized.
+		if (wp.showCmd == SW_MAXIMIZE)
+			::CopyRect(&grectRestore, &wp.rcNormalPosition);
+
 		// Only save window positions for "restored" and "maximized" states.
 		// If window is closed while "minimized", we don't want it to open minimized
 		// for next session, so don't update registry so it opens in previous state.
@@ -462,38 +582,17 @@ void SaveWindowRect(HWND hWnd)
 		{
 			RECT rect;
 			if (GetWindowRect(hWnd, &rect))
-			{
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,   rect.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,    rect.top);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,  rect.right - rect.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT, rect.bottom - rect.top);
-			}
+				::CopyRect(&grectWindow, &rect);
 
-			if (wp.showCmd == SW_MAXIMIZE)
-			{
-				// When window is maximized, we also store the "restore" size
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,   wp.rcNormalPosition.left);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,    wp.rcNormalPosition.top);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,  wp.rcNormalPosition.right);
-				WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM, wp.rcNormalPosition.bottom);
-			}
-
-			// Maximize is the only special case we handle
-			WriteRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,
-							 (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
+			WriteWindowPlacement(
+				// Maximize is the only special case we handle
+				(wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
 		}
 	}
 }
 
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
-	// Start with Registry data
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
-	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
-
 	// If window size has changed, we may need to alter window size
 	HMONITOR	hMonitor;
 	MONITORINFO	mi;
@@ -569,15 +668,10 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 		wp.ptMaxPosition.x	= -1;
 		wp.ptMaxPosition.y	= -1;
 
-		wp.rcNormalPosition.left	= CW_USEDEFAULT;
-		wp.rcNormalPosition.top		= CW_USEDEFAULT;
-		wp.rcNormalPosition.right	= CW_USEDEFAULT;
-		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
-
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_LEFT,	NULL, (int&)wp.rcNormalPosition.left);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_TOP,	NULL, (int&)wp.rcNormalPosition.top);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_RIGHT,	NULL, (int&)wp.rcNormalPosition.right);
-		GetRegistryInt(PREF_WINPOS_FOLDER, PREF_RESTORE_BOTTOM,	NULL, (int&)wp.rcNormalPosition.bottom);
+		wp.rcNormalPosition.left	= grectRestore.left;
+		wp.rcNormalPosition.top		= grectRestore.top;
+		wp.rcNormalPosition.right	= grectRestore.right;
+		wp.rcNormalPosition.bottom	= grectRestore.bottom;
 
 		// This returns an error code, but not sure what we could do on an error
 		SetWindowPlacement(hWnd, &wp);
@@ -637,11 +731,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   // TODO: test this cases:
   // - window in secondary monitor when shutdown, disconnect secondary monitor, restart
 
-  int left   = CW_USEDEFAULT;
-  int top    = CW_USEDEFAULT;
-  int width  = CW_USEDEFAULT;
-  int height = CW_USEDEFAULT;
-  int showCmd = SW_SHOW;
+  int showCmd;
+  ReadWindowPlacement(showCmd);
+
+  int left   = grectWindow.left;
+  int top    = grectWindow.top;
+  int width  = grectWindow.left != CW_USEDEFAULT ? grectWindow.right - grectWindow.left : CW_USEDEFAULT;
+  int height = grectWindow.top != CW_USEDEFAULT ? grectWindow.bottom - grectWindow.top : CW_USEDEFAULT;
   RestoreWindowRect(left, top, width, height, showCmd);
 
   DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
@@ -1063,4 +1159,17 @@ CefString AppGetProductVersionString() {
   s.append(L"/");
   s.append(version);
   return CefString(s);
+}
+
+// check if this is a portable installation
+//   to be a portable installation, the installer should write the empty file to the app folder
+bool CheckIfPortableInstall()
+{
+	std::wstring filename = ClientApp::AppGetAppDirectory();
+	filename += L"/isPortableInstall.dat";
+	HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
+		FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	bool result = INVALID_HANDLE_VALUE != hFile;
+	::CloseHandle(hFile);
+	return result;
 }

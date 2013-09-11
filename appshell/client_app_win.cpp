@@ -90,12 +90,48 @@ double ClientApp::GetElapsedMilliseconds()
     return (timeGetTime() - g_appStartupTime);
 }
 
+extern bool gPortableInstall;	// defined in cefclient_win.cpp
+
+// returns the directory to which the app has been installed
+CefString ClientApp::AppGetAppDirectory()
+{
+	// find the full pathname of the app .exe
+	std::wstring appPath;
+	HMODULE hModule = ::GetModuleHandle(NULL);
+	if (hModule)
+	{
+		WCHAR filename[MAX_PATH+1] = {0};
+		::GetModuleFileName(hModule, filename, MAX_PATH);
+		appPath = filename;
+
+		// strip off the filename and extension
+		int idx = appPath.rfind('\\');
+		if (idx >= 0)
+			appPath = appPath.substr(0, idx);
+	}
+
+    // Convert '\\' to '/'
+    replace(appPath.begin(), appPath.end(), '\\', '/');
+
+	return CefString(appPath);
+}
+
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    wchar_t dataPath[MAX_PATH];
-    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+	std::wstring appSupportPath;
+	if (!gPortableInstall)
+	{
+		// for normal installations, use the user's APPDATA folder
+	    wchar_t dataPath[MAX_PATH];
+		SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+		appSupportPath = dataPath;
+	}
+	else
+	{
+		// for portable installations, use the app's installed folder
+		appSupportPath = ClientApp::AppGetAppDirectory();
+	}
   
-    std::wstring appSupportPath = dataPath;
     appSupportPath +=  L"\\" GROUP_NAME APP_NAME;
 
     // Convert '\\' to '/'
