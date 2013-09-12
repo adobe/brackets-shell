@@ -551,7 +551,6 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
     }
 }
 
-
 void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
@@ -657,7 +656,7 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
         return HTSYSMENU;
 
     // Left Border
-    if ( ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
+    if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
     {
         // it's important that we know if the mouse is on a corner so that
         //    the right mouse cursor is displayed
@@ -671,7 +670,7 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     }
 
     // Right Border
-    if ( ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
+    if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
     {
         // it's important that we know if the mouse is on a corner so that
         //    the right mouse cursor is displayed
@@ -685,10 +684,10 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     }
 
     // Top and Bottom Borders
-    if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
+    if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
          return HTTOP;
              
-    if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+    if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
          return HTBOTTOM;
 
     return HTMENU;
@@ -989,4 +988,3 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
     return lr;
 }
-

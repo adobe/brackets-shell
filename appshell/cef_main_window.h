@@ -30,34 +30,34 @@ public:
 
     static HWND FindFirstTopLevelInstance();
 
-	BOOL Create();
-	
-	void ShowHelp();
-	void ShowAbout();
+    BOOL Create();
+    
+    void ShowHelp();
+    void ShowAbout();
 
     static LPCWSTR GetBracketsWindowTitleText();
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
-	void SaveWindowRect();
-	void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
-	void RestoreWindowPlacement(int showCmd);
+    void SaveWindowRect();
+    void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
+    void RestoreWindowPlacement(int showCmd);
 
-	BOOL HandleEraseBackground();
-	BOOL HandleCreate();
-	BOOL HandleSetFocus(HWND hLosingFocus);
-	BOOL HandleDestroy();
-	BOOL HandleClose();
-	BOOL HandleSize(BOOL bMinimize);
-	BOOL HandleInitMenuPopup(HMENU hMenuPopup);
-	BOOL HandleCommand(UINT commandId);
-	BOOL HandleExitCommand();
+    BOOL HandleEraseBackground();
+    BOOL HandleCreate();
+    BOOL HandleSetFocus(HWND hLosingFocus);
+    BOOL HandleDestroy();
+    BOOL HandleClose();
+    BOOL HandleSize(BOOL bMinimize);
+    BOOL HandleInitMenuPopup(HMENU hMenuPopup);
+    BOOL HandleCommand(UINT commandId);
+    BOOL HandleExitCommand();
     BOOL HandlePaint();
     BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
     BOOL HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData);
 
-	virtual void PostNcDestroy();
+    virtual void PostNcDestroy();
     virtual void GetCefBrowserRect(RECT& rect);
     virtual const CefRefPtr<CefBrowser> GetBrowser();
 
@@ -65,7 +65,7 @@ protected:
     static BOOL CALLBACK FindSuitableBracketsInstanceHelper(HWND hwnd, LPARAM lParam);
 
 private:
-	static ATOM RegisterWndClass();
+    static ATOM RegisterWndClass();
 };
 
-#define ID_WM_COPYDATA_SENDOPENFILECOMMAND	(WM_USER+1001)
+#define ID_WM_COPYDATA_SENDOPENFILECOMMAND    (WM_USER+1001)

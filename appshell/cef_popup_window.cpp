@@ -27,7 +27,7 @@
 #include "native_menu_model.h"
 
 // Externals
-extern HINSTANCE	            hInst;
+extern HINSTANCE                hInst;
 
 // Constants
 static wchar_t   gCefWindowClosingPropName[] = L"CLOSING";
@@ -45,7 +45,7 @@ cef_popup_window::~cef_popup_window(void)
 
 void cef_popup_window::PostNcDestroy()
 {
-	delete this;
+    delete this;
 }
 
 BOOL cef_popup_window::HandleClose()
@@ -108,15 +108,15 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
 LRESULT cef_popup_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 
-	{
-	case WM_CLOSE:
-		if (HandleClose())
-			return 0L;
-		break;
-	case WM_COMMAND:
-		if (HandleCommand(LOWORD(wParam)))
-			return 0L;
-		break;
+    {
+    case WM_CLOSE:
+        if (HandleClose())
+            return 0L;
+        break;
+    case WM_COMMAND:
+        if (HandleCommand(LOWORD(wParam)))
+            return 0L;
+        break;
     }
 
     LRESULT lr = cef_host_window::WindowProc(message, wParam, lParam);

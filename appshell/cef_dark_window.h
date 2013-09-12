@@ -42,21 +42,21 @@ class cef_dark_window : public cef_window
     class NonClientButtonStateData
     {
     public:
-	    NonClientButtonStateData() 
-	    {
-		    Reset() ;
-	    }
+        NonClientButtonStateData() 
+        {
+            Reset() ;
+        }
 
-	    void Reset ( void ) 
-	    {
-		    mActiveButton = 0 ;
-		    mButtonDown = false ;
-		    mButtonOver = false ;
-	    }
+        void Reset ( void ) 
+        {
+            mActiveButton = 0 ;
+            mButtonDown = false ;
+            mButtonOver = false ;
+        }
 
-	    UINT mActiveButton;
-	    bool mButtonDown ;
-	    bool mButtonOver ;
+        UINT mActiveButton;
+        bool mButtonDown ;
+        bool mButtonOver ;
     };
 
 public:

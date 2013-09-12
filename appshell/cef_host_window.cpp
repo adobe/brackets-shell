@@ -65,9 +65,9 @@ BOOL cef_host_window::HandleInitMenuPopup(HMENU hMenuPopup)
 BOOL cef_host_window::DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback/*=0*/)
 {
     if (commandString.size() > 0) 
-	{
+    {
         g_handler->SendJSCommand(GetBrowser(), commandString, callback);
-		return TRUE;
+        return TRUE;
     }
     return FALSE;
 }
@@ -84,12 +84,12 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
 
 LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message) 
-	{
-	case WM_INITMENUPOPUP:
-		if (HandleInitMenuPopup((HMENU)wParam))
-			return 0L;
-		break;
+    switch (message) 
+    {
+    case WM_INITMENUPOPUP:
+        if (HandleInitMenuPopup((HMENU)wParam))
+            return 0L;
+        break;
     }
 
     LRESULT lr = cef_dark_window::WindowProc(message, wParam, lParam);

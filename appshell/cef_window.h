@@ -34,8 +34,8 @@ static __inline int RectHeight(const RECT &r) { return r.bottom - r.top; }
 static __inline void RectSwapLeftRight(RECT &r) 
 {
     LONG temp = r.left;
-	r.left = r.right;
-	r.right = temp;
+    r.left = r.right;
+    r.right = temp;
 }
 
 // Undocumented Flags for GetDCEx()
@@ -192,7 +192,7 @@ protected:
     virtual void PostNcDestroy();
 
     void ComputeLogicalClientRect(RECT& rectClient);
-	void ComputeLogicalWindowRect (RECT& rectWindow);
+    void ComputeLogicalWindowRect (RECT& rectWindow);
 
     BOOL TrackNonClientMouseEvents(bool track = true);
 };

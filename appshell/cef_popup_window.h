@@ -33,8 +33,8 @@ public:
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
-	BOOL HandleClose();
-	BOOL HandleCommand(UINT commandId);
+    BOOL HandleClose();
+    BOOL HandleCommand(UINT commandId);
 
     void InitSystemIcon();
 

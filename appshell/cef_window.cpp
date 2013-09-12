@@ -159,10 +159,10 @@ BOOL cef_window::HandleNcDestroy()
     RemoveProp(::gCefClientWindowPropName);
 
     DefaultWindowProc(WM_NCDESTROY, 0, 0);
-	
+    
     if ((WNDPROC(GetWindowLongPtr(GWLP_WNDPROC)) == superWndProc) && (mSuperWndProc != NULL))
-	    SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<INT_PTR>(mSuperWndProc));
-	
+        SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<INT_PTR>(mSuperWndProc));
+    
     mSuperWndProc = NULL;
 
     PostNcDestroy();
@@ -179,17 +179,17 @@ LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch(message)
     {
-	    case WM_NCDESTROY:
-		    if (HandleNcDestroy())
-			    return 0L;
-		    break;
+        case WM_NCDESTROY:
+            if (HandleNcDestroy())
+                return 0L;
+            break;
     }
-	
+    
     LRESULT lr = DefaultWindowProc(message, wParam, lParam);
-	
+    
     if (message == WM_NCDESTROY) 
     {
-	    PostNcDestroy();
+        PostNcDestroy();
     }
 
     return lr;
@@ -212,7 +212,7 @@ void cef_window::ScreenToNonClient(LPRECT r) const
 }
 
 // Computes the client rect relative to the Window Rect
-//	Used to compute the clipping region, etc...
+//    Used to compute the clipping region, etc...
 void cef_window::ComputeLogicalClientRect(RECT& rectClient)
 {
     WINDOWINFO wi ;
@@ -256,54 +256,54 @@ void cef_window::NonClientToScreen(LPRECT r) const
 
 void cef_window::ScreenToClient(LPRECT lpRect) const
 {
-	::ScreenToClient(mWnd, (LPPOINT)lpRect);
-	::ScreenToClient(mWnd, ((LPPOINT)lpRect)+1);
-	if (GetExStyle() & WS_EX_LAYOUTRTL)
-		::RectSwapLeftRight(*lpRect);
+    ::ScreenToClient(mWnd, (LPPOINT)lpRect);
+    ::ScreenToClient(mWnd, ((LPPOINT)lpRect)+1);
+    if (GetExStyle() & WS_EX_LAYOUTRTL)
+        ::RectSwapLeftRight(*lpRect);
 }
 
 void cef_window::ClientToScreen(LPRECT lpRect) const
 {
-	::ClientToScreen(mWnd, (LPPOINT)lpRect);
-	::ClientToScreen(mWnd, ((LPPOINT)lpRect)+1);
-	if (GetExStyle() & WS_EX_LAYOUTRTL)
-		::RectSwapLeftRight(*lpRect);
+    ::ClientToScreen(mWnd, (LPPOINT)lpRect);
+    ::ClientToScreen(mWnd, ((LPPOINT)lpRect)+1);
+    if (GetExStyle() & WS_EX_LAYOUTRTL)
+        ::RectSwapLeftRight(*lpRect);
 }
 
 // Turns mouse tracking on or off
-//	we track non-client mouse events when the user moves the
-//	mouse over one of our buttons. We want a WM_NCMOUSELEAVE
-//	message so we can redraw the buttons in the non-hovered 
-//	state this method tells windows we want the WM_NCMOUSELEAVE
-//	message.  It can tell it that we don't care anymore too, 
-//	which is nice...
+//    we track non-client mouse events when the user moves the
+//    mouse over one of our buttons. We want a WM_NCMOUSELEAVE
+//    message so we can redraw the buttons in the non-hovered 
+//    state this method tells windows we want the WM_NCMOUSELEAVE
+//    message.  It can tell it that we don't care anymore too, 
+//    which is nice...
 BOOL cef_window::TrackNonClientMouseEvents( bool track/*=true*/) 
 {
-	TRACKMOUSEEVENT tme ;
-	::ZeroMemory( &tme, sizeof ( tme ) ) ;
+    TRACKMOUSEEVENT tme ;
+    ::ZeroMemory( &tme, sizeof ( tme ) ) ;
 
-	tme.cbSize = sizeof ( tme ) ;
+    tme.cbSize = sizeof ( tme ) ;
 
-	tme.dwFlags = TME_QUERY ;
-	tme.hwndTrack = mWnd ;
-	 
-	::TrackMouseEvent ( &tme ) ;
+    tme.dwFlags = TME_QUERY ;
+    tme.hwndTrack = mWnd ;
+     
+    ::TrackMouseEvent ( &tme ) ;
 
-	/// i.e. if we're currently tracking and the caller
-	//	 wanted to track or if we're not currently tracking and
-	//	 the caller wanted to turn off tracking then just bail
-	if ((( tme.dwFlags & TME_LEAVE ) == TME_LEAVE ) == track ) 
-			return FALSE; // nothing to do...
+    /// i.e. if we're currently tracking and the caller
+    //     wanted to track or if we're not currently tracking and
+    //     the caller wanted to turn off tracking then just bail
+    if ((( tme.dwFlags & TME_LEAVE ) == TME_LEAVE ) == track ) 
+            return FALSE; // nothing to do...
 
-	tme.dwFlags = TME_LEAVE|TME_NONCLIENT;
+    tme.dwFlags = TME_LEAVE|TME_NONCLIENT;
 
-	if ( !track ) 
-		tme.dwFlags |= TME_CANCEL;
+    if ( !track ) 
+        tme.dwFlags |= TME_CANCEL;
 
-	// The previous call to TrackMouseEvent destroys the hwndTrack 
-	//	and cbSize members so we have to re-initialize them.
-	tme.hwndTrack = mWnd ;
-	tme.cbSize = sizeof ( tme ) ;
+    // The previous call to TrackMouseEvent destroys the hwndTrack 
+    //    and cbSize members so we have to re-initialize them.
+    tme.hwndTrack = mWnd ;
+    tme.cbSize = sizeof ( tme ) ;
 
-	return ::TrackMouseEvent ( &tme );
+    return ::TrackMouseEvent ( &tme );
 }
