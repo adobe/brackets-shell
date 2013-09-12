@@ -713,8 +713,7 @@ void cef_dark_window::UpdateNonClientButtons ()
     HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectButtons);
 
     if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
-        DoDrawFrame(hdc);           // essentially this will erase the buttons
-        DoDrawSystemIcons(hdc);
+        DoPaintNonClientArea(hdc);
     }
 
     ::DeleteObject(hrgnUpdate);
