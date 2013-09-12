@@ -96,7 +96,6 @@ cef_dark_window::cef_dark_window() :
 
 cef_dark_window::~cef_dark_window()
 {
-
 }
 
 void cef_dark_window::DoFinalCleanup()
@@ -105,7 +104,6 @@ void cef_dark_window::DoFinalCleanup()
         Gdiplus::GdiplusShutdown(gdiplusToken);
     }
 }
-
 
 void cef_dark_window::InitDrawingResources()
 {
@@ -223,7 +221,6 @@ BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
     }
     return FALSE;
 }
-
 
 void cef_dark_window::ComputeWindowIconRect(RECT& rect)
 {
@@ -808,7 +805,6 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
     }
 
     return FALSE;    
-
 }
 
 void cef_dark_window::HandleNcMouseLeave() 
