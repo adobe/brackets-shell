@@ -104,8 +104,10 @@ void cef_dark_window::InitDrawingResources()
     mNcMetrics.cbSize = sizeof (mNcMetrics);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
 
-    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+    if (gdiplusToken == NULL) {
+        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+    }
 
     LoadSysButtonImages();
 
@@ -170,8 +172,6 @@ BOOL cef_dark_window::HandleNcDestroy()
 {
 	TrackNonClientMouseEvents(false);
 
-    BOOL result = cef_window::HandleNcDestroy();
-
     delete mSysCloseButton;
     delete mSysRestoreButton;
     delete mSysMinimizeButton;
@@ -190,8 +190,33 @@ BOOL cef_dark_window::HandleNcDestroy()
     ::DeleteObject(mHighlightBrush);
     ::DeleteObject(mHoverBrush);
 
-    return result;
+    return cef_window::HandleNcDestroy();
 }
+
+BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
+{
+    switch (uFlags) {
+    case SPI_SETICONTITLELOGFONT:
+    case SPI_SETHIGHCONTRAST:
+    case SPI_SETNONCLIENTMETRICS:
+    case SPI_SETFONTSMOOTHING:
+    case SPI_SETFONTSMOOTHINGTYPE:
+    case SPI_SETFONTSMOOTHINGCONTRAST:
+    case SPI_SETFONTSMOOTHINGORIENTATION:
+        mNonClientData.Reset();
+
+        ::DeleteObject(mCaptionFont);
+        mCaptionFont = NULL;
+
+        ::DeleteObject(mMenuFont);
+        mMenuFont = NULL;
+
+        ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
+        break;
+    }
+    return FALSE;
+}
+
 
 void cef_dark_window::ComputeWindowIconRect(RECT& rect)
 {
@@ -880,11 +905,13 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     return FALSE;
 }
 
-
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{
+    case WM_SETTINGCHANGE:
+        HandleSettingChange((UINT)wParam, (LPCWSTR)lParam);
+        break;
     case WM_NCMOUSELEAVE:
         HandleNcMouseLeave();
         break;

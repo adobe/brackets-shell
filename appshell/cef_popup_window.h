@@ -38,7 +38,7 @@ protected:
 
     void InitSystemIcon();
 
-    virtual void PostNcDestory();
+    virtual void PostNcDestroy();
     virtual const CefRefPtr<CefBrowser> GetBrowser();
 
     CefRefPtr<CefBrowser> mBrowser;

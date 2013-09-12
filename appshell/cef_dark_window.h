@@ -75,6 +75,7 @@ protected:
     BOOL HandleNcLeftButtonDown(UINT uHitTest);
     BOOL HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS);
     BOOL HandleDrawItem(LPDRAWITEMSTRUCT lpDIS);
+    BOOL HandleSettingChange(UINT uFlags, LPCWSTR lpszSection);
 
     int HandleNcHitTest(LPPOINT ptHit);
     void HandleNcMouseLeave();

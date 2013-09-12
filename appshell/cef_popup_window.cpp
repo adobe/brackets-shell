@@ -43,7 +43,7 @@ cef_popup_window::~cef_popup_window(void)
 
 }
 
-void cef_popup_window::PostNcDestory()
+void cef_popup_window::PostNcDestroy()
 {
 	delete this;
 }

@@ -189,7 +189,7 @@ protected:
     WNDPROC mSuperWndProc;
 
     BOOL HandleNcDestroy();
-    virtual void PostNcDestory();
+    virtual void PostNcDestroy();
 
     void ComputeLogicalClientRect(RECT& rectClient);
 	void ComputeLogicalWindowRect (RECT& rectWindow);

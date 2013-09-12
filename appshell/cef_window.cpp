@@ -164,10 +164,13 @@ BOOL cef_window::HandleNcDestroy()
 	    SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<INT_PTR>(mSuperWndProc));
 	
     mSuperWndProc = NULL;
+
+    PostNcDestroy();
+
     return TRUE;
 }
 
-void cef_window::PostNcDestory()
+void cef_window::PostNcDestroy()
 {
     mWnd = NULL;
 }
@@ -186,7 +189,7 @@ LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 	
     if (message == WM_NCDESTROY) 
     {
-	    PostNcDestory();
+	    PostNcDestroy();
     }
 
     return lr;
