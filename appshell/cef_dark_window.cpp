@@ -201,7 +201,8 @@ BOOL cef_dark_window::HandleNcDestroy()
 
 BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
 {
-    switch (uFlags) {
+    switch (uFlags)
+    {
     case SPI_SETICONTITLELOGFONT:
     case SPI_SETHIGHCONTRAST:
     case SPI_SETNONCLIENTMETRICS:
@@ -880,7 +881,7 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 
     UpdateNonClientButtons() ;
 
-    switch (mNonClientData.mActiveButton)
+    switch (mNonClientData.mActiveButton) 
     {
     case HTCLOSE:
         SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
