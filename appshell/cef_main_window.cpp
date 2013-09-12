@@ -45,8 +45,8 @@ static const wchar_t        kPrefRestoreRight[] = L"Restore Right";
 static const wchar_t        kPrefRestoreBottom[]    = L"Restore Bottom";
 static const wchar_t        kPrefShowState[] = L"Show State";
 
-static const long            kMinWindowWidth = 390;
-static const long            kMinWindowHeight = 200;
+static const long           kMinWindowWidth = 390;
+static const long           kMinWindowHeight = 200;
 
 static const int            kBorderThickness = 4;
 // Globals
