@@ -42,4 +42,3 @@ protected:
     BOOL DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback = 0);
     CefString GetCommandString(UINT commandId);
 };
-

@@ -196,4 +196,3 @@ protected:
 
     BOOL TrackNonClientMouseEvents(bool track = true);
 };
-

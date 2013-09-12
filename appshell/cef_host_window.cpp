@@ -95,4 +95,3 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     LRESULT lr = cef_dark_window::WindowProc(message, wParam, lParam);
     return lr;
 }
-
