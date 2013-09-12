@@ -395,7 +395,7 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
 
     switch ( mNonClientData.mActiveButton )
     {
-    case HTCLOSE:				
+    case HTCLOSE:                
         CloseButton = mHoverSysCloseButton;
         break;
  
@@ -660,12 +660,12 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     if ( ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
     {
         // it's important that we know if the mouse is on a corner so that
-        //	the right mouse cursor is displayed
+        //    the right mouse cursor is displayed
         if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
- 	        return HTTOPLEFT;
+             return HTTOPLEFT;
  
         if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME) )
- 	        return HTBOTTOMLEFT;
+             return HTBOTTOMLEFT;
  
         return HTLEFT;
     }
@@ -673,23 +673,23 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     // Right Border
     if ( ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
     {
-	    // it's important that we know if the mouse is on a corner so that
-	    //	the right mouse cursor is displayed
-	    if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
- 		    return HTTOPRIGHT;
+        // it's important that we know if the mouse is on a corner so that
+        //    the right mouse cursor is displayed
+        if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+            return HTTOPRIGHT;
  
-	    if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
- 		    return HTBOTTOMRIGHT;
+        if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+            return HTBOTTOMRIGHT;
  
- 	    return HTRIGHT;
+        return HTRIGHT;
     }
 
     // Top and Bottom Borders
     if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
- 	    return HTTOP;
- 			
+         return HTTOP;
+             
     if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
- 	    return HTBOTTOM;
+         return HTBOTTOM;
 
     return HTMENU;
 }
@@ -698,14 +698,14 @@ void cef_dark_window::UpdateNonClientButtons ()
 {
     HDC hdc = GetWindowDC();
 
- 	RECT rectCloseButton ;
- 	ComputeCloseButtonRect (rectCloseButton) ;
+    RECT rectCloseButton ;
+    ComputeCloseButtonRect (rectCloseButton) ;
  
- 	RECT rectMaximizeButton ;
- 	ComputeMaximizeButtonRect ( rectMaximizeButton ) ;
+    RECT rectMaximizeButton ;
+    ComputeMaximizeButtonRect ( rectMaximizeButton ) ;
  
- 	RECT rectMinimizeButton ;
- 	ComputeMinimizeButtonRect ( rectMinimizeButton ) ;
+    RECT rectMinimizeButton ;
+    ComputeMinimizeButtonRect ( rectMinimizeButton ) ;
 
     RECT rectWindow ;
     ComputeLogicalWindowRect ( rectWindow ) ;
@@ -815,14 +815,14 @@ void cef_dark_window::HandleNcMouseLeave()
 {
     switch (mNonClientData.mActiveButton)
     {
-	case HTCLOSE:
-	case HTMAXBUTTON:
-	case HTMINBUTTON:
-	    mNonClientData.mActiveButton = HTNOWHERE;
-	    mNonClientData.mButtonOver = true;
-	    mNonClientData.mButtonDown = false;
-	    UpdateNonClientButtons ();
-	    break;
+    case HTCLOSE:
+    case HTMAXBUTTON:
+    case HTMINBUTTON:
+        mNonClientData.mActiveButton = HTNOWHERE;
+        mNonClientData.mButtonOver = true;
+        mNonClientData.mButtonDown = false;
+        UpdateNonClientButtons ();
+        break;
     }
 
     mNonClientData.Reset();
@@ -834,19 +834,19 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     {
         mNonClientData.mActiveButton = uHitTest;
 
- 		mNonClientData.mButtonOver = true;
- 		mNonClientData.mButtonDown = false;
-	 		
-		UpdateNonClientButtons ();
-	 
- 		switch (uHitTest)
- 		{
- 		case HTCLOSE:
- 		case HTMAXBUTTON:
- 		case HTMINBUTTON:
+        mNonClientData.mButtonOver = true;
+        mNonClientData.mButtonDown = false;
+             
+        UpdateNonClientButtons ();
+     
+        switch (uHitTest)
+        {
+        case HTCLOSE:
+        case HTMAXBUTTON:
+        case HTMINBUTTON:
             TrackNonClientMouseEvents();
             return TRUE;
- 		}
+        }
     }
 
     return FALSE;
@@ -866,7 +866,7 @@ BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
     case HTMAXBUTTON:
     case HTMINBUTTON:
         TrackNonClientMouseEvents();
-	    return TRUE;
+        return TRUE;
 
     default:
         return FALSE;
@@ -884,23 +884,23 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     switch (mNonClientData.mActiveButton)
     {
     case HTCLOSE:
-	    SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
-	    mNonClientData.Reset() ;
+        SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
+        mNonClientData.Reset() ;
         TrackNonClientMouseEvents();
-	    return TRUE;
+        return TRUE;
     case HTMAXBUTTON:
         if (IsZoomed()) 
-		    SendMessage (WM_SYSCOMMAND, SC_RESTORE, (LPARAM)POINTTOPOINTS(*point));
+            SendMessage (WM_SYSCOMMAND, SC_RESTORE, (LPARAM)POINTTOPOINTS(*point));
         else 
             SendMessage (WM_SYSCOMMAND, SC_MAXIMIZE, (LPARAM)POINTTOPOINTS(*point));
-	    mNonClientData.Reset() ;
+        mNonClientData.Reset() ;
         TrackNonClientMouseEvents();
-	    return TRUE;
+        return TRUE;
     case HTMINBUTTON:
-	    SendMessage (WM_SYSCOMMAND, SC_MINIMIZE, (LPARAM)POINTTOPOINTS(*point));
-	    mNonClientData.Reset() ;
+        SendMessage (WM_SYSCOMMAND, SC_MINIMIZE, (LPARAM)POINTTOPOINTS(*point));
+        mNonClientData.Reset() ;
         TrackNonClientMouseEvents();
-	    return TRUE;
+        return TRUE;
     }
     
     mNonClientData.Reset();
@@ -909,8 +909,8 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message) 
-	{
+    switch (message) 
+    {
     case WM_SETTINGCHANGE:
         HandleSettingChange((UINT)wParam, (LPCWSTR)lParam);
         break;
