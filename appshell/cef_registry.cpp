@@ -131,4 +131,3 @@ bool WriteRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int val)
 
 	return result;
 }
-

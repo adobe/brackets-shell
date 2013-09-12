@@ -127,3 +127,4 @@ protected:
     NONCLIENTMETRICS             mNcMetrics;
     NonClientButtonStateData     mNonClientData;
 };
+

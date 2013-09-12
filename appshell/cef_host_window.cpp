@@ -82,29 +82,10 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
     return DoCommand(GetCommandString(commandId), callback);
 }
 
-
-/*
-BOOL cef_host_window::HandleClose()
-{
-}
-BOOL cef_host_window::HandleCommand(UINT commandId)
-{
-
-}
-*/
-
 LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message) 
 	{
-/*	case WM_COMMAND:
-		if (HandleCommand(LOWORD(wParam)))
-			return 0L;
-		break;
-   	case WM_CLOSE:
-		if (HandleClose())
-			return 0L;
-		break;*/
 	case WM_INITMENUPOPUP:
 		if (HandleInitMenuPopup((HMENU)wParam))
 			return 0L;
