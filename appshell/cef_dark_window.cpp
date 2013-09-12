@@ -345,7 +345,7 @@ void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
             mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
         
         if (!mWindowIcon)
-            mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICON));;
+            mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICON));
 
         if (!mWindowIcon) 
             mWindowIcon = ::LoadIcon(NULL, IDI_APPLICATION);

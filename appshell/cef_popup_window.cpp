@@ -27,7 +27,7 @@
 #include "native_menu_model.h"
 
 // Externals
-extern HINSTANCE                hInst;
+extern HINSTANCE hInst;
 
 // Constants
 static wchar_t   gCefWindowClosingPropName[] = L"CLOSING";

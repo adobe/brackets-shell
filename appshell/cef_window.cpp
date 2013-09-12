@@ -117,20 +117,20 @@ bool cef_window::SubclassWindow(HWND hWnd)
 
 static HWND _xxCreateWindow(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, HWND hWndParent, HMENU hMenu, cef_window* window)
 {
-    ::_HookWindowCreate(window);
+    _HookWindowCreate(window);
 
     HWND result = CreateWindow(szClassname, szWindowTitle, 
-                               dwStyles, x, y, width, height, hWndParent, hMenu, ::hInst, (LPVOID)window);
+                               dwStyles, x, y, width, height, hWndParent, hMenu, hInst, (LPVOID)window);
 
 
-    ::_UnHookWindowCreate();
+    _UnHookWindowCreate();
     return result;
 }
 
 BOOL cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent/*=NULL*/, cef_menu* menu/*=NULL*/)
 {
     HWND hWndParent = parent ? parent->mWnd : NULL;
-    HMENU hMenu = /*menu ? menu->m_hMenu :*/ NULL;
+    HMENU hMenu = NULL;
 
     HWND hWndThis = _xxCreateWindow(szClassname, szWindowTitle, 
                                dwStyles, x, y, width, height, hWndParent, hMenu, this);
