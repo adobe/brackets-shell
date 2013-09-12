@@ -23,6 +23,10 @@ CefWindowHandle AppGetMainHwnd();
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
 
+// Returns the starting URL
+CefString AppGetInitialURL();
+
+
 // Returns the default CEF cache location
 CefString AppGetCachePath();
 
