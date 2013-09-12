@@ -128,6 +128,9 @@ BOOL cef_main_window::Create()
 void cef_main_window::PostNcDestroy()
 {
 	delete this;
+    // After the main window is destroyed 
+    //  do final cleanup...
+    DoFinalCleanup();
 }
 
 void cef_main_window::GetCefBrowserRect(RECT& rect)

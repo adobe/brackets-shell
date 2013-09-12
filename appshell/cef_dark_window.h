@@ -98,6 +98,7 @@ protected:
     virtual void ComputeCloseButtonRect(RECT& rect);
     virtual void ComputeMenuBarRect(RECT& rect);
 
+    void DoFinalCleanup();
     void InitDrawingResources();
     void LoadSysButtonImages();
 

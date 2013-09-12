@@ -99,6 +99,14 @@ cef_dark_window::~cef_dark_window()
 
 }
 
+void cef_dark_window::DoFinalCleanup()
+{
+    if (gdiplusToken != NULL) {
+        Gdiplus::GdiplusShutdown(gdiplusToken);
+    }
+}
+
+
 void cef_dark_window::InitDrawingResources()
 {
     mNcMetrics.cbSize = sizeof (mNcMetrics);
@@ -181,8 +189,6 @@ BOOL cef_dark_window::HandleNcDestroy()
     delete mHoverSysRestoreButton;
     delete mHoverSysMinimizeButton;
     delete mHoverSysMaximizeButton;
-
-    Gdiplus::GdiplusShutdown(gdiplusToken);
 
     ::DeleteObject(mBackgroundBrush);
     ::DeleteObject(mCaptionFont);
