@@ -198,9 +198,9 @@ LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 void cef_window::ScreenToNonClient(LPRECT r) const
 {
     WINDOWINFO wi ;
-    ::ZeroMemory ( &wi, sizeof ( wi ) ) ;
-    wi.cbSize = sizeof ( wi ) ;
-    GetWindowInfo ( &wi ) ;
+    ::ZeroMemory (&wi, sizeof (wi)) ;
+    wi.cbSize = sizeof (wi) ;
+    GetWindowInfo (&wi) ;
 
     int height = ::RectHeight(*r);
     int width = ::RectWidth(*r);
@@ -216,9 +216,9 @@ void cef_window::ScreenToNonClient(LPRECT r) const
 void cef_window::ComputeLogicalClientRect(RECT& rectClient)
 {
     WINDOWINFO wi ;
-    ::ZeroMemory (&wi, sizeof ( wi ) ) ;
-    wi.cbSize = sizeof ( wi ) ;
-    GetWindowInfo ( &wi ) ;
+    ::ZeroMemory (&wi, sizeof (wi)) ;
+    wi.cbSize = sizeof (wi) ;
+    GetWindowInfo (&wi) ;
 
     ::CopyRect(&rectClient, &wi.rcClient);
 
@@ -277,33 +277,33 @@ void cef_window::ClientToScreen(LPRECT lpRect) const
 //    state this method tells windows we want the WM_NCMOUSELEAVE
 //    message.  It can tell it that we don't care anymore too, 
 //    which is nice...
-BOOL cef_window::TrackNonClientMouseEvents( bool track/*=true*/) 
+BOOL cef_window::TrackNonClientMouseEvents(bool track/*=true*/) 
 {
     TRACKMOUSEEVENT tme ;
-    ::ZeroMemory( &tme, sizeof ( tme ) ) ;
+    ::ZeroMemory(&tme, sizeof (tme)) ;
 
-    tme.cbSize = sizeof ( tme ) ;
+    tme.cbSize = sizeof (tme) ;
 
     tme.dwFlags = TME_QUERY ;
     tme.hwndTrack = mWnd ;
      
-    ::TrackMouseEvent ( &tme ) ;
+    ::TrackMouseEvent (&tme) ;
 
     /// i.e. if we're currently tracking and the caller
     //     wanted to track or if we're not currently tracking and
     //     the caller wanted to turn off tracking then just bail
-    if ((( tme.dwFlags & TME_LEAVE ) == TME_LEAVE ) == track ) 
+    if (((tme.dwFlags & TME_LEAVE) == TME_LEAVE) == track) 
             return FALSE; // nothing to do...
 
     tme.dwFlags = TME_LEAVE|TME_NONCLIENT;
 
-    if ( !track ) 
+    if (!track) 
         tme.dwFlags |= TME_CANCEL;
 
     // The previous call to TrackMouseEvent destroys the hwndTrack 
     //    and cbSize members so we have to re-initialize them.
     tme.hwndTrack = mWnd ;
-    tme.cbSize = sizeof ( tme ) ;
+    tme.cbSize = sizeof (tme) ;
 
-    return ::TrackMouseEvent ( &tme );
+    return ::TrackMouseEvent (&tme);
 }

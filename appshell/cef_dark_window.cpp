@@ -391,7 +391,7 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     Gdiplus::Image* MinimizeButton = mSysMinimizeButton;
     Gdiplus::Image* MaximizeButton = mSysMaximizeButton;
 
-    switch ( mNonClientData.mActiveButton )
+    switch (mNonClientData.mActiveButton)
     {
     case HTCLOSE:                
         CloseButton = mHoverSysCloseButton;
@@ -658,10 +658,10 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     {
         // it's important that we know if the mouse is on a corner so that
         //    the right mouse cursor is displayed
-        if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
              return HTTOPLEFT;
  
-        if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME) )
+        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
              return HTBOTTOMLEFT;
  
         return HTLEFT;
@@ -672,10 +672,10 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     {
         // it's important that we know if the mouse is on a corner so that
         //    the right mouse cursor is displayed
-        if ( ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
             return HTTOPRIGHT;
  
-        if ( ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
             return HTBOTTOMRIGHT;
  
         return HTRIGHT;
@@ -699,13 +699,13 @@ void cef_dark_window::UpdateNonClientButtons ()
     ComputeCloseButtonRect (rectCloseButton) ;
  
     RECT rectMaximizeButton ;
-    ComputeMaximizeButtonRect ( rectMaximizeButton ) ;
+    ComputeMaximizeButtonRect (rectMaximizeButton) ;
  
     RECT rectMinimizeButton ;
-    ComputeMinimizeButtonRect ( rectMinimizeButton ) ;
+    ComputeMinimizeButtonRect (rectMinimizeButton) ;
 
     RECT rectWindow ;
-    ComputeLogicalWindowRect ( rectWindow ) ;
+    ComputeLogicalWindowRect (rectWindow) ;
     ::ExcludeClipRect (hdc, rectWindow.left, rectWindow.top, rectWindow.right, rectWindow.bottom);
 
     RECT rectButtons;
