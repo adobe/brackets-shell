@@ -35,6 +35,7 @@
 // Paths for node resources are relative to the location of the appshell executable
 #define NODE_EXECUTABLE_PATH "Brackets-node.exe"
 #define NODE_CORE_PATH "node-core"
+#define FIRST_INSTANCE_MUTEX_NAME	(APP_NAME L".Shell.Instance")
 
 #endif
 #ifdef OS_MACOSX

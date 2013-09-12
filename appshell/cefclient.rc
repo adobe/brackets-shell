@@ -40,7 +40,16 @@ IDS_APPSHELL_EXTENSIONS BINARY      "appshell_extensions.js"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_CEFCLIENT           ICON                    "res\\appshell.ico"
+IDI_CEFCLIENT                   ICON            "res\\appshell.ico"
+
+IDB_CLOSE_BUTTON                PNG             "res\\close.png"
+IDB_CLOSE_HOVER_BUTTON          PNG             "res\\close-hover.png"
+IDB_MAX_BUTTON                  PNG             "res\\max.png"
+IDB_MAX_HOVER_BUTTON            PNG             "res\\max-hover.png"
+IDB_MIN_BUTTON                  PNG             "res\\min.png"
+IDB_MIN_HOVER_BUTTON            PNG             "res\\min-hover.png"
+IDB_RESTORE_BUTTON              PNG             "res\\restore.png"
+IDB_RESTORE_HOVER_BUTTON        PNG             "res\\restore-hover.png"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -78,7 +87,6 @@ END
 STRINGTABLE 
 BEGIN
     IDS_APP_TITLE           WINDOW_TITLE
-    IDC_CEFCLIENT           "CEFCLIENT"
 END
 
 #endif    // English (U.S.) resources
