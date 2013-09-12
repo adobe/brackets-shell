@@ -717,7 +717,6 @@ void cef_dark_window::UpdateNonClientButtons ()
     }
 
     ::DeleteObject(hrgnUpdate);
-
     ReleaseDC(hdc);
 }
 

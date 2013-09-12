@@ -31,27 +31,26 @@ extern HINSTANCE	            hInst;
 extern CefRefPtr<ClientHandler> g_handler;
 
 // constants
-// TODO: prefix with k instead of g
-static const wchar_t		gWindowClassname[] = L"CEFCLIENT";
-static const wchar_t		gWindowPostionFolder[] = L"Window Position";
+static const wchar_t		kWindowClassname[] = L"CEFCLIENT";
+static const wchar_t		kWindowPostionFolder[] = L"Window Position";
 
-static const wchar_t		gPrefLeft[] = L"Left";
-static const wchar_t		gPrefTop[] = L"Top";
-static const wchar_t		gPrefWidth[] = L"Width";
-static const wchar_t		gPrefHeight[] = L"Height";
+static const wchar_t		kPrefLeft[] = L"Left";
+static const wchar_t		kPrefTop[] = L"Top";
+static const wchar_t		kPrefWidth[] = L"Width";
+static const wchar_t		kPrefHeight[] = L"Height";
 
-static const wchar_t		gPrefRestoreLeft[] = L"Restore Left";
-static const wchar_t		gPrefRestoreTop[] = L"Restore Top";
-static const wchar_t		gPrefRestoreRight[] = L"Restore Right";
-static const wchar_t		gPrefRestoreBottom[]	= L"Restore Bottom";
-static const wchar_t		gPrefShowState[] = L"Show State";
+static const wchar_t		kPrefRestoreLeft[] = L"Restore Left";
+static const wchar_t		kPrefRestoreTop[] = L"Restore Top";
+static const wchar_t		kPrefRestoreRight[] = L"Restore Right";
+static const wchar_t		kPrefRestoreBottom[]	= L"Restore Bottom";
+static const wchar_t		kPrefShowState[] = L"Show State";
 
-static const long			gMinWindowWidth = 390;
-static const long			gMinWindowHeight = 200;
+static const long			kMinWindowWidth = 390;
+static const long			kMinWindowHeight = 200;
 
 static const int            kBorderThickness = 4;
 // Globals
-static wchar_t              gCefWindowClosingPropName[] = L"CLOSING";
+static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
 
 
 ATOM cef_main_window::RegisterWndClass()
@@ -71,7 +70,7 @@ ATOM cef_main_window::RegisterWndClass()
 		wcex.hCursor       = ::LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 		wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
-		wcex.lpszClassName = ::gWindowClassname;
+		wcex.lpszClassName = ::kWindowClassname;
 		wcex.hIconSm       = ::LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
 		classAtom = RegisterClassEx(&wcex);
@@ -114,7 +113,7 @@ BOOL cef_main_window::Create()
 	if (showCmd == SW_MAXIMIZE)
 	  styles |= WS_MAXIMIZE;
 
-	if (!cef_host_window::Create(::gWindowClassname, GetBracketsWindowTitleText(),
+	if (!cef_host_window::Create(::kWindowClassname, GetBracketsWindowTitleText(),
 								styles, left, top, width, height))
 	{
 		return FALSE;
@@ -196,8 +195,8 @@ BOOL cef_main_window::HandlePaint()
 
 BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
-	mmi->ptMinTrackSize.x = ::gMinWindowWidth;
-	mmi->ptMinTrackSize.y = ::gMinWindowHeight;
+	mmi->ptMinTrackSize.x = ::kMinWindowWidth;
+	mmi->ptMinTrackSize.y = ::kMinWindowHeight;
     return TRUE;
 }
 
@@ -214,10 +213,10 @@ BOOL cef_main_window::HandleClose()
 	CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
     if (hwnd)
     {
-        BOOL closing = (BOOL)::GetProp(hwnd, ::gCefWindowClosingPropName);
+        BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
         if (closing) 
 		{
-			::RemoveProp(hwnd, ::gCefWindowClosingPropName);
+			::RemoveProp(hwnd, ::kCefWindowClosingPropName);
 		} 
 		else 
 		{
@@ -290,23 +289,23 @@ void cef_main_window::SaveWindowRect()
 			RECT rect;
 			if (GetWindowRect(&rect))
 			{
-				::WriteRegistryInt(gWindowPostionFolder, gPrefLeft,   rect.left);
-				::WriteRegistryInt(gWindowPostionFolder, gPrefTop,    rect.top);
-                ::WriteRegistryInt(gWindowPostionFolder, gPrefWidth,  ::RectWidth(rect));
-				::WriteRegistryInt(gWindowPostionFolder, gPrefHeight, ::RectHeight(rect));
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefLeft,   rect.left);
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefTop,    rect.top);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefWidth,  ::RectWidth(rect));
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefHeight, ::RectHeight(rect));
 			}
 
 			if (wp.showCmd == SW_MAXIMIZE)
 			{
 				// When window is maximized, we also store the "restore" size
-				::WriteRegistryInt(gWindowPostionFolder, gPrefRestoreLeft,   wp.rcNormalPosition.left);
-				::WriteRegistryInt(gWindowPostionFolder, gPrefRestoreTop,    wp.rcNormalPosition.top);
-				::WriteRegistryInt(gWindowPostionFolder, gPrefRestoreRight,  wp.rcNormalPosition.right);
-				::WriteRegistryInt(gWindowPostionFolder, gPrefRestoreBottom, wp.rcNormalPosition.bottom);
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   wp.rcNormalPosition.left);
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    wp.rcNormalPosition.top);
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  wp.rcNormalPosition.right);
+				::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, wp.rcNormalPosition.bottom);
 			}
 
 			// Maximize is the only special case we handle
-			::WriteRegistryInt(gWindowPostionFolder, gPrefShowState,
+			::WriteRegistryInt(::kWindowPostionFolder, ::kPrefShowState,
 							 (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
 		}
 	}
@@ -315,11 +314,11 @@ void cef_main_window::SaveWindowRect()
 
 void cef_main_window::RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
-	::GetRegistryInt(gWindowPostionFolder, gPrefLeft,  			    NULL, left);
-	::GetRegistryInt(gWindowPostionFolder, gPrefTop,   			    NULL, top);
-	::GetRegistryInt(gWindowPostionFolder, gPrefWidth, 			    NULL, width);
-	::GetRegistryInt(gWindowPostionFolder, gPrefHeight,			    NULL, height);
-	::GetRegistryInt(gWindowPostionFolder, gWindowPostionFolder,	NULL, showCmd);
+	::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,  			    NULL, left);
+	::GetRegistryInt(::kWindowPostionFolder, ::kPrefTop,   			    NULL, top);
+	::GetRegistryInt(::kWindowPostionFolder, ::kPrefWidth, 			    NULL, width);
+	::GetRegistryInt(::kWindowPostionFolder, ::kPrefHeight,			    NULL, height);
+	::GetRegistryInt(::kWindowPostionFolder, ::kWindowPostionFolder,	NULL, showCmd);
 }
 
 void cef_main_window::RestoreWindowPlacement(int showCmd)
@@ -342,10 +341,10 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
 		wp.rcNormalPosition.right	= CW_USEDEFAULT;
 		wp.rcNormalPosition.bottom	= CW_USEDEFAULT;
 
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreLeft,	    NULL, (int&)wp.rcNormalPosition.left);
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreTop,		NULL, (int&)wp.rcNormalPosition.top);
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreRight,	    NULL, (int&)wp.rcNormalPosition.right);
-		GetRegistryInt(gWindowPostionFolder, gPrefRestoreBottom,	NULL, (int&)wp.rcNormalPosition.bottom);
+		GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,	    NULL, (int&)wp.rcNormalPosition.left);
+		GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,		NULL, (int&)wp.rcNormalPosition.top);
+		GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,	    NULL, (int&)wp.rcNormalPosition.right);
+		GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom,	NULL, (int&)wp.rcNormalPosition.bottom);
 
 		// This returns FALSE on failure, but not sure what we could in that case
 		SetWindowPlacement(&wp);
@@ -383,7 +382,7 @@ BOOL CALLBACK cef_main_window::FindSuitableBracketsInstanceHelper(HWND hwnd, LPA
 	::GetClassName(hwnd, cName, MAX_PATH);
 	::GetWindowText(hwnd, cTitle, MAX_PATH);
 
-	if ((wcscmp(cName, ::gWindowClassname) == 0) && (wcsstr(cTitle, GetBracketsWindowTitleText()) != 0)) {
+	if ((wcscmp(cName, ::kWindowClassname) == 0) && (wcsstr(cTitle, GetBracketsWindowTitleText()) != 0)) {
 		// found an already running instance of Brackets.  Now, check that that window
 		//   isn't currently disabled (eg. modal dialog).  If it is keep searching.
 		if ((::GetWindowLong(hwnd, GWL_STYLE) & WS_DISABLED) == 0) {
