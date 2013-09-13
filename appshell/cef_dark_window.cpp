@@ -134,7 +134,6 @@ void cef_dark_window::InitDrawingResources()
     if (mFrameOutlinePen == NULL) {
         mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
     }
-
 }
 
 void cef_dark_window::InitMenuFont()
@@ -389,7 +388,7 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     ::ZeroMemory(szCaption, textLength + 1);
     int cchCaption = GetWindowText(szCaption, textLength);
 
-    DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_END_ELLIPSIS|DT_NOPREFIX);
+    ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_END_ELLIPSIS|DT_NOPREFIX);
 
     delete []szCaption;
     ::SetTextColor(hdc, oldRGB);
@@ -765,11 +764,7 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
 
         ::GetMenuString((HMENU)lpDIS->hwndItem, lpDIS->itemID, szMenuString, _countof(szMenuString), MF_BYCOMMAND);
         
-        if (lpDIS->itemState & ODS_SELECTED) {
-//            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHighlightBrush);
-            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHoverBrush);
-//            rgbMenuText = CEF_COLOR_MENU_SELECTED_TEXT;
-        } else if (lpDIS->itemState & ODS_HOTLIGHT) {
+        if (lpDIS->itemState & ODS_SELECTED || lpDIS->itemState & ODS_HOTLIGHT) {
             ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHoverBrush);
         } else {
             ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mBackgroundBrush);
