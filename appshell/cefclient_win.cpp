@@ -1166,7 +1166,7 @@ CefString AppGetProductVersionString() {
 bool CheckIfPortableInstall()
 {
 	std::wstring filename = ClientApp::AppGetAppDirectory();
-	filename += L"/isPortableInstall.dat";
+	filename += L"/makePortable";
 	HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
 		FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	bool result = INVALID_HANDLE_VALUE != hFile;
