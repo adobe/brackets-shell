@@ -337,13 +337,13 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
 
     ::FillRect(hdc, &rectFrame, mBackgroundBrush);
 
-    HPEN old = (HPEN)::SelectObject(hdc, mFrameOutlinePen);
-    HBRUSH oldb = (HBRUSH)::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+    HGDIOBJ oldPen = ::SelectObject(hdc, mFrameOutlinePen);
+    HGDIOBJ oldbRush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
 
     ::Rectangle(hdc, 0, 0, rectFrame.right, rectFrame.bottom);
 
-    ::SelectObject(hdc, old);
-    ::SelectObject(hdc, oldb);
+    ::SelectObject(hdc, oldPen);
+    ::SelectObject(hdc, oldbRush);
 }
 
 void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
