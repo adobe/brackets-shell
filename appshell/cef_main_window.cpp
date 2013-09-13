@@ -48,11 +48,10 @@ static const wchar_t        kPrefShowState[] = L"Show State";
 static const long           kMinWindowWidth = 390;
 static const long           kMinWindowHeight = 200;
 
-static const int            kBorderThickness = 4;
 // Globals
 static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
 
-
+// The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
 {
     static ATOM classAtom = 0;
@@ -86,6 +85,7 @@ cef_main_window::~cef_main_window()
 {
 }
 
+// Loads the window title from resource string
 LPCWSTR cef_main_window::GetBracketsWindowTitleText()
 {
     bool intitialized = false;
@@ -97,6 +97,7 @@ LPCWSTR cef_main_window::GetBracketsWindowTitleText()
     return szTitle;
 }
 
+// Create Method.  Call this to create a cef_main_window instance 
 BOOL cef_main_window::Create() 
 {
     RegisterWndClass();
@@ -126,24 +127,30 @@ BOOL cef_main_window::Create()
     return TRUE;
 }
 
+// PostNcDestroy override 
 void cef_main_window::PostNcDestroy()
 {
+    // We get this notification after the window 
+    //  has been destroyed so we need to delete ourself
     delete this;
     // After the main window is destroyed 
     //  do final cleanup...
     DoFinalCleanup();
 }
 
+// Helper to get the location to place the browser
 void cef_main_window::GetCefBrowserRect(RECT& rect)
 {
     GetClientRect(&rect);
 }
 
+// Helper to get the browser 
 const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 {
     return g_handler->GetBrowser();
 }
 
+// WM_CREATE handler
 BOOL cef_main_window::HandleCreate() 
 {
     // Create the single static handler class instance
@@ -170,11 +177,13 @@ BOOL cef_main_window::HandleCreate()
     return TRUE;
 }
 
+// WM_ERASEBKGND handler
 BOOL cef_main_window::HandleEraseBackground()
 {
     return (SafeGetCefBrowserHwnd() != NULL);
 }
 
+// WM_SETFOCUS handler
 BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
 {
     // Pass focus to the browser window
@@ -187,6 +196,7 @@ BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
     return FALSE;
 }
 
+// WM_PAINT handler
 BOOL cef_main_window::HandlePaint()
 {
     // avoid painting
@@ -196,7 +206,7 @@ BOOL cef_main_window::HandlePaint()
     return TRUE;
 }
 
-
+// WM_GETMINMAXINFO handler
 BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
     mmi->ptMinTrackSize.x = ::kMinWindowWidth;
@@ -204,12 +214,14 @@ BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
     return TRUE;
 }
 
+// WM_DESTROY handler
 BOOL cef_main_window::HandleDestroy()
 {
     ::PostQuitMessage(0);
     return TRUE;
 }
 
+// WM_CLOSE handler
 BOOL cef_main_window::HandleClose()
 {
     SaveWindowRestoreRect();
@@ -233,6 +245,7 @@ BOOL cef_main_window::HandleClose()
     return FALSE;
 }
 
+// WM_COMMAND/IDM_EXIT handler
 BOOL cef_main_window::HandleExitCommand()
 {
     if (g_handler.get()) 
@@ -247,7 +260,7 @@ BOOL cef_main_window::HandleExitCommand()
     return TRUE;
 }
 
-
+// WM_SIZE handler
 BOOL cef_main_window::HandleSize(BOOL bMinimize)
 {
     // Minimizing the window to 0x0 which causes our layout to go all
@@ -266,6 +279,7 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     return FALSE;
 }
 
+// WM_COMMAND handler
 BOOL cef_main_window::HandleCommand(UINT commandId)
 {
     switch (commandId) 
@@ -277,6 +291,8 @@ BOOL cef_main_window::HandleCommand(UINT commandId)
     }
 }
 
+// Tear down helper -- 
+//  Writes the restore window placement data to the registry
 void cef_main_window::SaveWindowRestoreRect()
 {
     WINDOWPLACEMENT wp;
@@ -314,7 +330,8 @@ void cef_main_window::SaveWindowRestoreRect()
     }
 }
 
-
+// Initialization helper -- 
+//  Loads the restore window placement data from the registry
 void cef_main_window::LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
     ::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,      NULL, left);
@@ -324,6 +341,8 @@ void cef_main_window::LoadWindowRestoreRect(int& left, int& top, int& width, int
     ::GetRegistryInt(::kWindowPostionFolder, ::kPrefShowState, NULL, showCmd);
 }
 
+// Initialization helper -- 
+//  Loads the Restores data and positions the window in its previously saved state
 void cef_main_window::RestoreWindowPlacement(int showCmd)
 {
     if (showCmd == SW_MAXIMIZE)
@@ -357,6 +376,7 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
     ShowWindow(showCmd);
 }
 
+// WM_COPYDATA handler
 BOOL cef_main_window::HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData) 
 {
     if ((lpCopyData) && (lpCopyData->dwData == ID_WM_COPYDATA_SENDOPENFILECOMMAND) && (lpCopyData->cbData > 0)) {
@@ -399,6 +419,7 @@ BOOL CALLBACK cef_main_window::FindSuitableBracketsInstanceHelper(HWND hwnd, LPA
     return TRUE;    // otherwise, continue searching
 }
 
+// Locates a top level instance of Brackets already running
 HWND cef_main_window::FindFirstTopLevelInstance()
 {
     HWND hFirstInstanceWnd = NULL;
@@ -406,7 +427,7 @@ HWND cef_main_window::FindFirstTopLevelInstance()
     return hFirstInstanceWnd;
 }
 
-
+// WindowProc -- Dispatches and routes window messages
 LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 

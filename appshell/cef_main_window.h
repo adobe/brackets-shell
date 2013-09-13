@@ -22,9 +22,14 @@
  */
 #include "cef_host_window.h"
 
+// Private Message
+#define ID_WM_COPYDATA_SENDOPENFILECOMMAND    (WM_USER+1001)
+
+// This the main window implementation of the host window
 class cef_main_window : public cef_host_window
 {
 public:
+    // Construction/Destruction - Public Members
     cef_main_window(void);
     virtual ~cef_main_window(void);
 
@@ -35,15 +40,15 @@ public:
     void ShowHelp();
     void ShowAbout();
 
-    static LPCWSTR GetBracketsWindowTitleText();
-
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
+    // Initalization - Protected Members
     void SaveWindowRestoreRect();
     void LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd);
     void RestoreWindowPlacement(int showCmd);
 
+    // Message Handlers
     BOOL HandleEraseBackground();
     BOOL HandleCreate();
     BOOL HandleSetFocus(HWND hLosingFocus);
@@ -57,15 +62,17 @@ protected:
     BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
     BOOL HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData);
 
+    // Implementation
     virtual void PostNcDestroy();
     virtual void GetCefBrowserRect(RECT& rect);
     virtual const CefRefPtr<CefBrowser> GetBrowser();
 
-
+    // Find helper
     static BOOL CALLBACK FindSuitableBracketsInstanceHelper(HWND hwnd, LPARAM lParam);
+    static LPCWSTR GetBracketsWindowTitleText();
 
 private:
+    // Initialization - Private Members
     static ATOM RegisterWndClass();
 };
 
-#define ID_WM_COPYDATA_SENDOPENFILECOMMAND    (WM_USER+1001)

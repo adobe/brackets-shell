@@ -27,16 +27,21 @@
 #include <Uxtheme.h>
 #include <Shlwapi.h>
 
+// Libraries
 #pragma comment(lib, "gdiplus")
 #pragma comment(lib, "UxTheme")
 
+// Externals
 extern HINSTANCE hInst;
 
+// Module Globals (Not exported)
 static ULONG_PTR gdiplusToken = NULL;
 
+// Constants
 static const int kWindowFrameZoomFactorCX = 12;
 static const int kWindowFrameZoomFactorCY = 12;
 
+// GDI+ Helpers
 static void RECT2Rect(Gdiplus::Rect& dest, const RECT& src) {
     dest.X = src.left;
     dest.Y = src.top;   
@@ -46,6 +51,8 @@ static void RECT2Rect(Gdiplus::Rect& dest, const RECT& src) {
 
 namespace ResourceImage
 {
+    // Loads a GDI an Image from an app resource
+    //  and returns a GDI+ Image object or NULL if Failed
     Gdiplus::Image* FromResource(LPCWSTR lpResourceName)
     {
         HRSRC hResource = ::FindResource(::hInst, lpResourceName, L"PNG");
@@ -71,6 +78,9 @@ namespace ResourceImage
 
 }
 
+/*
+ * cef_dark_window
+ */
 cef_dark_window::cef_dark_window() :
     mSysCloseButton(0),
     mSysRestoreButton(0),
@@ -99,6 +109,9 @@ cef_dark_window::~cef_dark_window()
 {
 }
 
+/*
+ * DoFinalCleanup -- Called when the app is shutting down so we can shut down GDI+
+ */
 void cef_dark_window::DoFinalCleanup()
 {
     if (gdiplusToken != NULL) {
@@ -106,11 +119,20 @@ void cef_dark_window::DoFinalCleanup()
     }
 }
 
+/*
+ * InitDrawingResources -- Loads Pens, Brushes and Images used for drawing
+ */
 void cef_dark_window::InitDrawingResources()
 {
+    // Make sure that the window theme is set
+    //  to no theme so we get the right metrics
+    ::SetWindowTheme(mWnd, L"", L"");
+
+    // Fetch Non Client Metric Data
     mNcMetrics.cbSize = sizeof (mNcMetrics);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
 
+    // Startup GDI+
     if (gdiplusToken == NULL) {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -118,8 +140,7 @@ void cef_dark_window::InitDrawingResources()
 
     LoadSysButtonImages();
 
-    ::SetWindowTheme(mWnd, L"", L"");
-
+    // Create Brushes and Pens 
     if (mBackgroundBrush == NULL) {                            
         mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
     }
@@ -137,6 +158,9 @@ void cef_dark_window::InitDrawingResources()
     }
 }
 
+/*
+ * InitMenuFont -- Creates a Font object for drawing menu items
+ */
 void cef_dark_window::InitMenuFont()
 {
     if (mMenuFont == NULL) {
@@ -144,6 +168,9 @@ void cef_dark_window::InitMenuFont()
     }
 }
 
+/*
+ * LoadSysButtonImages -- Loads the images used for system buttons (close, min, max, restore) 
+ */
 void cef_dark_window::LoadSysButtonImages()
 {
     if (mSysCloseButton == NULL) {
@@ -184,12 +211,14 @@ void cef_dark_window::LoadSysButtonImages()
     }
 }
 
+// WM_NCCREATE handler
 BOOL cef_dark_window::HandleNcCreate()
 {
     InitDrawingResources();
     return FALSE;
 }
 
+// WM_NCCREATE handler
 BOOL cef_dark_window::HandleNcDestroy()
 {
     TrackNonClientMouseEvents(false);
@@ -219,6 +248,7 @@ BOOL cef_dark_window::HandleNcDestroy()
     return cef_window::HandleNcDestroy();
 }
 
+// WM_SETTINGCHANGE handler
 BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
 {
     switch (uFlags)
@@ -230,20 +260,24 @@ BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
     case SPI_SETFONTSMOOTHINGTYPE:
     case SPI_SETFONTSMOOTHINGCONTRAST:
     case SPI_SETFONTSMOOTHINGORIENTATION:
+        // Reset our state
         mNonClientData.Reset();
 
+        // Reset Fonts -- they will be recreated when needed
         ::DeleteObject(mCaptionFont);
         mCaptionFont = NULL;
 
         ::DeleteObject(mMenuFont);
         mMenuFont = NULL;
 
+        // Reload Non Client Metrics
         ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
         break;
     }
     return FALSE;
 }
 
+// Computes the Rect where the System Icon is drawn in window coordinates
 void cef_dark_window::ComputeWindowIconRect(RECT& rect)
 {
     int top = ::GetSystemMetrics (SM_CYFRAME);
@@ -261,6 +295,7 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect)
     rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
 }
 
+// Computes the Rect where the window caption is drawn in window coordinates
 void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
 {
     RECT wr;
@@ -285,6 +320,7 @@ void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
     rect.right = mr.left - ::GetSystemMetrics (SM_CXFRAME);
 }
 
+// Computes the Rect where the minimize button is drawn in window coordinates
 void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect)
 {
     ComputeMaximizeButtonRect(rect);
@@ -294,6 +330,7 @@ void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect)
     rect.bottom = rect.top + mSysMinimizeButton->GetHeight();
 }
 
+// Computes the Rect where the maximize button is drawn in window coordinates
 void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
 {
     ComputeCloseButtonRect(rect);
@@ -303,6 +340,7 @@ void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
     rect.bottom = rect.top + mSysMaximizeButton->GetHeight();
 }
 
+// Computes the Rect where the close button is drawn in window coordinates
 void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
 {
     int top = mNcMetrics.iBorderWidth;
@@ -322,6 +360,7 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
     rect.bottom = rect.top + mSysCloseButton->GetHeight();
 }
 
+// Computes the Rect where the menu bar is drawn in window coordinates
 void cef_dark_window::ComputeMenuBarRect(RECT& rect)
 {
     RECT rectClient;
@@ -337,6 +376,7 @@ void cef_dark_window::ComputeMenuBarRect(RECT& rect)
     rect.right = rectClient.right;
 }
 
+// Draw the background for the non-client area
 void cef_dark_window::DoDrawFrame(HDC hdc)
 {
     RECT rectWindow;
@@ -360,43 +400,57 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     ::SelectObject(hdc, oldbRush);
 }
 
+// Draw the System Icon
 void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
 {
     if (mWindowIcon == 0) {
+        // We haven't cached the icon yet so figure out 
+        //  which one we need.
+
+        // First try to load the small icon 
         mWindowIcon = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
 
+        // Otherwise try to use the big icon
         if (!mWindowIcon) 
             mWindowIcon = (HICON)SendMessage(WM_GETICON, ICON_BIG, 0);
 
+        // If that doesn't work check the window class for an icon
+
+        // Start with the small
         if (!mWindowIcon)
             mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
         
+        // Then try to load the big icon
         if (!mWindowIcon)
             mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICON));
 
+        // Otherwise we need an icon, so just use the standard Windows default 
+        //  application Icon which may very between versions 
         if (!mWindowIcon) 
             mWindowIcon = ::LoadIcon(NULL, IDI_APPLICATION);
     }
 
     RECT rectIcon;
     ComputeWindowIconRect(rectIcon);
-
     ::DrawIconEx(hdc, rectIcon.left, rectIcon.top, mWindowIcon, ::RectWidth(rectIcon), ::RectHeight(rectIcon), 0, NULL, DI_NORMAL);
 }
 
+// Draw the Caption Bar
 void cef_dark_window::DoDrawTitlebarText(HDC hdc)
 {
     if (mCaptionFont == 0) {
         mCaptionFont = ::CreateFontIndirect(&mNcMetrics.lfCaptionFont);
     }
 
+
+    RECT textRect;
+    ComputeWindowCaptionRect(textRect);
+
     HGDIOBJ hPreviousFont = ::SelectObject(hdc, mCaptionFont);        
 
     int oldBkMode = ::SetBkMode(hdc, TRANSPARENT);
     COLORREF oldRGB = ::SetTextColor(hdc, CEF_COLOR_NORMALTEXT);
 
-    RECT textRect;
-    ComputeWindowCaptionRect(textRect);
 
     RECT windowRect;
     GetWindowRect(&windowRect);
@@ -415,9 +469,9 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     ::DrawText(hdc, szCaption, ::wcslen(szCaption), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
 
     if (((::RectWidth(windowRect) / 2) + (::RectWidth(rectTemp) / 2) + 1) < textRect.right) {
-        ::DrawText(hdc, szCaption, cchCaption, &windowRect, DT_CENTER|DT_TOP|DT_SINGLELINE|DT_NOPREFIX);
+        ::DrawText(hdc, szCaption, cchCaption, &windowRect, DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
     } else {
-        ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_TOP|DT_SINGLELINE|DT_END_ELLIPSIS|DT_NOPREFIX);
+        ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS|DT_NOPREFIX);
     }
  
     delete []szCaption;
@@ -426,6 +480,7 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     ::SelectObject(hdc, hPreviousFont);
 }
 
+// Draw the System Icons (close/min/max/restore)
 void cef_dark_window::DoDrawSystemIcons(HDC hdc)
 {
     Gdiplus::Image* CloseButton = mSysCloseButton;
@@ -433,6 +488,8 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     Gdiplus::Image* MinimizeButton = mSysMinimizeButton;
     Gdiplus::Image* MaximizeButton = mSysMaximizeButton;
 
+    // If the mouse is over or down on a button then 
+    //  we need to pick the correct image for that button's state
     switch (mNonClientData.mActiveButton)
     {
     case HTCLOSE:                
@@ -473,6 +530,8 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     grpx.DrawImage(MinimizeButton, rect);
 }
 
+// Since menus come and go, we need to make sure
+//  that any changes to add new menus have the owner draw flags
 void cef_dark_window::EnforceOwnerDrawnMenus()
 {
     HMENU hm = GetMenu();
@@ -491,6 +550,8 @@ void cef_dark_window::EnforceOwnerDrawnMenus()
     }
 }
 
+// Enforce that the menu has our background color otherwise it 
+//  uses the system default color for the menu bar which looks funny
 void cef_dark_window::EnforceMenuBackground()
 {
     MENUBARINFO mbi = {0};
@@ -510,6 +571,7 @@ void cef_dark_window::EnforceMenuBackground()
     }
 }
 
+// Setup the device context for drawing
 void cef_dark_window::InitDeviceContext(HDC hdc)
 {
     RECT rectClipClient;
@@ -520,19 +582,14 @@ void cef_dark_window::InitDeviceContext(HDC hdc)
     ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
 }
 
+// This Really just Draws the menu bar items since it assumes 
+//  that the background has already been drawn using DoDrawFrame
 void cef_dark_window::DoDrawMenuBar(HDC hdc)
 {
-    RECT rectBar;
-    ComputeMenuBarRect(rectBar);
-
     HMENU menu = GetMenu();
     int items = ::GetMenuItemCount(menu);
-    
-    int i,
-        currentTop = rectBar.top + 1,
-        currentLeft = rectBar.left;
 
-    for (i = 0; i < items; i++) {
+    for (int i = 0; i < items; i++) {
         // Determine the menu item state and ID
         MENUITEMINFO mmi = {0};
         mmi.cbSize = sizeof (mmi);
@@ -548,6 +605,7 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         ::SetRectEmpty(&itemRect);
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
             ScreenToNonClient(&itemRect);
+            
             // Draw the menu item
             DRAWITEMSTRUCT dis = {0};
             dis.CtlType = ODT_MENU;
@@ -571,6 +629,8 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
     }
 }
 
+// Paints the entire non-client area.  
+//  Creates an in-memory DC to draw on to reduce flicker
 void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
@@ -604,6 +664,11 @@ void cef_dark_window::DoPaintNonClientArea(HDC hdc)
     ::DeleteDC(dcMem);
 }
 
+// Force Drawing the non-client area.
+//  Normally WM_NCPAINT is used but there are times when you
+//  need to force drawing the entire non-client area when
+//  legacy windows message handlers start drawing non-client
+//  artifacts over top of us
 void cef_dark_window::UpdateNonClientArea()
 {
     HDC hdc = GetWindowDC();
@@ -611,6 +676,7 @@ void cef_dark_window::UpdateNonClientArea()
     ReleaseDC(hdc);
 }
 
+// WM_NCPAINT handler
 BOOL cef_dark_window::HandleNcPaint(HRGN hUpdateRegion)
 {
     HDC hdc = GetDCEx(hUpdateRegion, DCX_WINDOW|DCX_INTERSECTRGN|DCX_USESTYLE);
@@ -620,11 +686,7 @@ BOOL cef_dark_window::HandleNcPaint(HRGN hUpdateRegion)
     return TRUE;
 }
 
-BOOL cef_dark_window::HandleSysCommand(UINT uType)
-{
-    return TRUE;
-}
-
+// WM_NCHITTEST handler
 int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
 {
     RECT rectWindow;
@@ -713,6 +775,7 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     return HTMENU;
 }
 
+// Like UpdateNonClientArea, but sets up a clipping region to just update the system buttons
 void cef_dark_window::UpdateNonClientButtons () 
 {
     HDC hdc = GetWindowDC();
@@ -746,7 +809,9 @@ void cef_dark_window::UpdateNonClientButtons ()
     ReleaseDC(hdc);
 }
 
-
+// WM_MEASUREITEM handler
+// Since we have owner drawn menus, we need to provide information about 
+//  the menus back to Windows so it can lay out the menubar appropriately.
 BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
 {
     static wchar_t szMenuString[256] = L"";
@@ -779,7 +844,8 @@ BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
     return FALSE;
 }
 
-
+// WM_DRAWITEM handler
+// Handles drawing the menu bar items with a dark background
 BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
 {
     static wchar_t szMenuString[256] = L"";
@@ -826,6 +892,7 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
     return FALSE;    
 }
 
+// WM_NCMOUSELEAVE hander -- resets our non-client state data
 void cef_dark_window::HandleNcMouseLeave() 
 {
     switch (mNonClientData.mActiveButton)
@@ -834,7 +901,7 @@ void cef_dark_window::HandleNcMouseLeave()
     case HTMAXBUTTON:
     case HTMINBUTTON:
         mNonClientData.mActiveButton = HTNOWHERE;
-        mNonClientData.mButtonOver = true;
+        mNonClientData.mButtonOver = false;
         mNonClientData.mButtonDown = false;
         UpdateNonClientButtons ();
         break;
@@ -843,6 +910,7 @@ void cef_dark_window::HandleNcMouseLeave()
     mNonClientData.Reset();
 }
 
+// WM_NCMOUSEMOVE hander 
 BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
 {
     if (mNonClientData.mActiveButton != uHitTest) 
@@ -867,6 +935,7 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     return FALSE;
 }
 
+// WM_NCLBUTTONDOWN hander 
 BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
 {
     mNonClientData.mActiveButton = uHitTest;
@@ -887,7 +956,7 @@ BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
     }
 }
 
-
+// WM_NCLBUTTONUP hander 
 BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 {
     mNonClientData.mButtonOver = false;
@@ -922,14 +991,22 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     return FALSE;
 }
 
+// WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 
     {
     case WM_SETTINGCHANGE:
+        // NOTE: We want anyone else interested in this message
+        //          to be notified of a setting change even if we handle 
+        //          the message.  Otherwise the default implementation 
+        //          may be in the wrong state
         HandleSettingChange((UINT)wParam, (LPCWSTR)lParam);
         break;
     case WM_NCMOUSELEAVE:
+        // NOTE: We want anyone else interested in this message
+        //          to be notified. Otherwise the default implementation 
+        //          may be in the wrong state
         HandleNcMouseLeave();
         break;
     case WM_NCMOUSEMOVE:
@@ -982,7 +1059,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETTEXT:
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
-        SetRedraw(FALSE);
+        // Turn off redraw when these messages
+        //  are handled by the base class to reduce flicker
+        SetRedraw(FALSE); 
         break;
     }
 
@@ -991,9 +1070,6 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     // post default message processing
     switch (message)
     {
-    case WM_SYSCOMMAND:
-        HandleSysCommand((UINT)(wParam & 0xFFF0));
-        break;
     case WM_WINDOWPOSCHANGING:
     case WM_WINDOWPOSCHANGED:
     case WM_MOVE:
@@ -1004,6 +1080,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
+    // special case -- since we turned off redraw for these 
+    //  messages to reduce flicker, we need to turn redraw 
+    //  on now and force updating the non-client area
     switch (message) 
     {
     case WM_SETTEXT:

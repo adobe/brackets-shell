@@ -22,9 +22,12 @@
  */
 #include "cef_host_window.h"
 
+// Wrapper class for secondary windows 
+//  makes popup windows dark
 class cef_popup_window : public cef_host_window
 {
 public:
+    // Construction/Destruction - Public Members
     cef_popup_window(CefRefPtr<CefBrowser> browser);
     virtual ~cef_popup_window(void);
 
@@ -33,13 +36,17 @@ public:
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
+    // Message Handlers
     BOOL HandleClose();
     BOOL HandleCommand(UINT commandId);
 
+    // Initialization
     void InitSystemIcon();
 
+    // Implementation
     virtual void PostNcDestroy();
     virtual const CefRefPtr<CefBrowser> GetBrowser();
 
+    // Attributes
     CefRefPtr<CefBrowser> mBrowser;
 };

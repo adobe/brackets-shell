@@ -43,11 +43,14 @@ cef_popup_window::~cef_popup_window(void)
 
 }
 
+// We create these on the heap so destroy them
+//  when it is safe to destroy
 void cef_popup_window::PostNcDestroy()
 {
     delete this;
 }
 
+// WM_CLOSE handler
 BOOL cef_popup_window::HandleClose()
 {
     if (SafeGetCefBrowserHwnd()) {
@@ -66,6 +69,7 @@ BOOL cef_popup_window::HandleClose()
     }
 }
 
+// WM_COMMAND handler
 BOOL cef_popup_window::HandleCommand(UINT commandId)
 {
     switch (commandId)
@@ -78,6 +82,7 @@ BOOL cef_popup_window::HandleCommand(UINT commandId)
     }
 }
 
+// Sets the icon on the popup window
 void cef_popup_window::InitSystemIcon()
 {
     HICON bigIcon = ::LoadIcon(::hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
@@ -91,6 +96,7 @@ void cef_popup_window::InitSystemIcon()
     }
 }
 
+// Subclasses the HWND and initializes the dark drawing code
 bool cef_popup_window::SubclassWindow(HWND wnd)
 {
     if (cef_host_window::SubclassWindow(wnd)) {

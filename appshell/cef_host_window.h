@@ -24,9 +24,14 @@
 #include "include/cef_browser.h"
 #include "command_callbacks.h"
 
+
+// This the base class for all windows which host a browser instance
+//  You must derive a from this class and implement GetBrowser()
+//  Or use cef_main_window or cef_popup_window which implement GetBrowser()
 class cef_host_window : public cef_dark_window
 {
 public:
+    // Construction/Destruciton - Public Members
     cef_host_window(void);
     virtual ~cef_host_window(void);
 
@@ -37,8 +42,13 @@ protected:
     // Must be impelemented in derived class
     virtual const CefRefPtr<CefBrowser> GetBrowser() = 0;
 
+    // Message Handlers 
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
+
+    // Command Implementation
     BOOL DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback = 0);
     BOOL DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback = 0);
+
+    // Helper to get a command string from command id
     CefString GetCommandString(UINT commandId);
 };

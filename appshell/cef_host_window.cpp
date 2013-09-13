@@ -24,7 +24,7 @@
 #include "native_menu_model.h"
 
 
-// external
+// externals
 extern CefRefPtr<ClientHandler> g_handler;
 
 
@@ -42,9 +42,10 @@ HWND cef_host_window::SafeGetCefBrowserHwnd()
     return NULL;
 }
 
-
+// WM_INITMENUPOPUP handler
 BOOL cef_host_window::HandleInitMenuPopup(HMENU hMenuPopup)
 {
+    // Load the menu item state from the menu state cache
     int count = ::GetMenuItemCount(hMenuPopup);
     void* menuParent = ::getMenuParent(GetBrowser());
     
@@ -62,6 +63,7 @@ BOOL cef_host_window::HandleInitMenuPopup(HMENU hMenuPopup)
     return TRUE;
 }
 
+// DoCommand Impl with a command string
 BOOL cef_host_window::DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback/*=0*/)
 {
     if (commandString.size() > 0) 
@@ -72,11 +74,13 @@ BOOL cef_host_window::DoCommand(const CefString& commandString, CefRefPtr<Comman
     return FALSE;
 }
 
+// GetCommandString: CommandID => CommandString
 CefString cef_host_window::GetCommandString(UINT commandId)
 {
     return NativeMenuModel::getInstance(::getMenuParent(GetBrowser())).getCommandId(commandId);
 }
 
+// DoCommand Impl with a command id
 BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback/*=0*/)
 {
     CefString commandString = GetCommandString(commandId);
@@ -86,6 +90,7 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
     return DoCommand(commandString, callback);
 }
 
+// Window Proc dispatches window messages
 LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 

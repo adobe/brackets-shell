@@ -22,6 +22,7 @@
  */
 #include "cef_window.h"
 
+// Placeholder 
 namespace Gdiplus
 {
     class Image;
@@ -36,7 +37,8 @@ namespace Gdiplus
 #define CEF_COLOR_MENU_SELECTED_TEXT        RGB(30, 30, 30)
 #define CEF_COLOR_MENU_DISABLED_TEXT        RGB(130, 130, 130)
 
-// Dark window theme
+// Dark window themed window Wrapper
+//  Instantiate this class and subclass any HWND to give the window a dark look
 class cef_dark_window : public cef_window
 {
     // Non-client button state data
@@ -61,16 +63,17 @@ class cef_dark_window : public cef_window
     };
 
 public:
+    // Construction/Destruction - Public Members
     cef_dark_window();
     virtual ~cef_dark_window();
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
+    // Window Message Handlers
     BOOL HandleNcCreate();
     BOOL HandleNcDestroy();
     BOOL HandleNcPaint(HRGN hUpdateRegion);
-    BOOL HandleSysCommand(UINT uType);
     BOOL HandleNcMouseMove(UINT uHitTest);
     BOOL HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point);
     BOOL HandleNcLeftButtonDown(UINT uHitTest);
@@ -81,10 +84,14 @@ protected:
     int HandleNcHitTest(LPPOINT ptHit);
     void HandleNcMouseLeave();
 
+    // Drawing Helpers
     void UpdateNonClientArea();
     void UpdateNonClientButtons();
 
+    // Drawing Initializer
     virtual void InitDeviceContext(HDC hdc);
+
+    // Drawing Methods
     virtual void DoPaintNonClientArea(HDC hdc);
     virtual void DoDrawFrame(HDC hdc);
     virtual void DoDrawSystemMenuIcon(HDC hdc);
@@ -92,6 +99,7 @@ protected:
     virtual void DoDrawSystemIcons(HDC hdc);
     virtual void DoDrawMenuBar(HDC hdc);
 
+    // Rect Computers
     virtual void ComputeWindowIconRect(RECT& rect);
     virtual void ComputeWindowCaptionRect(RECT& rect);
     virtual void ComputeMinimizeButtonRect(RECT& rect);
@@ -99,14 +107,17 @@ protected:
     virtual void ComputeCloseButtonRect(RECT& rect);
     virtual void ComputeMenuBarRect(RECT& rect);
 
+    // Drawing Initializers
     void DoFinalCleanup();
     void InitDrawingResources();
     void LoadSysButtonImages();
 
+    // Menu Initializers 
     void InitMenuFont();
     void EnforceOwnerDrawnMenus();
     void EnforceMenuBackground();
 
+    // Images, Fonts and Brushes used for Drawing
     Gdiplus::Image*              mSysCloseButton;
     Gdiplus::Image*              mSysRestoreButton;
     Gdiplus::Image*              mSysMinimizeButton;
@@ -129,7 +140,7 @@ protected:
     HBRUSH                       mHoverBrush;
     HPEN                         mFrameOutlinePen; 
 
-
+    // Metrics and State Data
     NONCLIENTMETRICS             mNcMetrics;
     NonClientButtonStateData     mNonClientData;
 };
