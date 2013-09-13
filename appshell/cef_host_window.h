@@ -31,7 +31,7 @@ public:
     virtual ~cef_host_window(void);
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
-       HWND SafeGetCefBrowserHwnd();
+    HWND SafeGetCefBrowserHwnd();
 
 protected:
     // Must be impelemented in derived class
