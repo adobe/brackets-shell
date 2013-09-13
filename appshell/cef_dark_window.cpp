@@ -85,6 +85,7 @@ cef_dark_window::cef_dark_window() :
     mHoverSysMaximizeButton(0),
     mWindowIcon(0),
     mBackgroundBrush(0),
+    mFrameOutlinePen(0),
     mCaptionFont(0),
     mMenuFont(0),
     mHighlightBrush(0),
@@ -130,6 +131,10 @@ void cef_dark_window::InitDrawingResources()
     if (mHoverBrush == NULL) {                            
         mHoverBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HOVER_BACKGROUND);
     }
+    if (mFrameOutlinePen == NULL) {
+        mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
+    }
+
 }
 
 void cef_dark_window::InitMenuFont()
@@ -192,6 +197,7 @@ BOOL cef_dark_window::HandleNcDestroy()
     ::DeleteObject(mMenuFont);
     ::DeleteObject(mHighlightBrush);
     ::DeleteObject(mHoverBrush);
+    ::DeleteObject(mFrameOutlinePen);
 
     return cef_window::HandleNcDestroy();
 }
@@ -330,6 +336,14 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     rectFrame.right = ::RectWidth(rectWindow);
 
     ::FillRect(hdc, &rectFrame, mBackgroundBrush);
+
+    HPEN old = (HPEN)::SelectObject(hdc, mFrameOutlinePen);
+    HBRUSH oldb = (HBRUSH)::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+
+    ::Rectangle(hdc, 0, 0, rectFrame.right, rectFrame.bottom);
+
+    ::SelectObject(hdc, old);
+    ::SelectObject(hdc, oldb);
 }
 
 void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
@@ -727,7 +741,7 @@ BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
 
         lpMIS->itemHeight = ::RectHeight(rectTemp);
         lpMIS->itemWidth = ::RectWidth(rectTemp);
-
+ 
         ::SelectObject(dc, fontOld);            
         ReleaseDC(dc);
         return TRUE;
@@ -752,8 +766,9 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
         ::GetMenuString((HMENU)lpDIS->hwndItem, lpDIS->itemID, szMenuString, _countof(szMenuString), MF_BYCOMMAND);
         
         if (lpDIS->itemState & ODS_SELECTED) {
-            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHighlightBrush);
-            rgbMenuText = CEF_COLOR_MENU_SELECTED_TEXT;
+//            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHighlightBrush);
+            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHoverBrush);
+//            rgbMenuText = CEF_COLOR_MENU_SELECTED_TEXT;
         } else if (lpDIS->itemState & ODS_HOTLIGHT) {
             ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHoverBrush);
         } else {
@@ -842,7 +857,6 @@ BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
     case HTMINBUTTON:
         TrackNonClientMouseEvents();
         return TRUE;
-
     default:
         return FALSE;
     }

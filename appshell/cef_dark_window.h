@@ -29,6 +29,7 @@ namespace Gdiplus
 
 // Color Constants
 #define CEF_COLOR_BACKGROUND                RGB(60, 63, 65)
+#define CEF_COLOR_FRAME_OUTLINE             RGB(42, 44, 45)
 #define CEF_COLOR_NORMALTEXT                RGB(215, 216, 217)
 #define CEF_COLOR_MENU_HILITE_BACKGROUND    RGB(247, 247, 247)
 #define CEF_COLOR_MENU_HOVER_BACKGROUND     RGB(45, 46, 48)
@@ -122,6 +123,7 @@ protected:
     HFONT                        mMenuFont;
     HBRUSH                       mHighlightBrush;
     HBRUSH                       mHoverBrush;
+    HPEN                         mFrameOutlinePen; 
 
 
     NONCLIENTMETRICS             mNcMetrics;
