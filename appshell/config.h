@@ -64,6 +64,3 @@
 
 #define REMOTE_DEBUGGING_PORT 9234
 
-// Un-comment this line to show the toolbar UI at the top of the appshell window
-// #define SHOW_TOOLBAR_UI
-

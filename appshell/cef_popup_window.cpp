@@ -83,13 +83,11 @@ void cef_popup_window::InitSystemIcon()
     HICON bigIcon = ::LoadIcon(::hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
     HICON smIcon = ::LoadIcon(::hInst, MAKEINTRESOURCE(IDI_SMALL));
     
-    if(bigIcon) {
+    if (bigIcon) {
         SendMessage(WM_SETICON, ICON_BIG, (LPARAM)bigIcon);
     }
-    if(smIcon) {
+    if (smIcon) {
         SendMessage(WM_SETICON, ICON_SMALL, (LPARAM)smIcon);
-    } else {
-        SendMessage(WM_SETICON, ICON_SMALL, (LPARAM)bigIcon);
     }
 }
 

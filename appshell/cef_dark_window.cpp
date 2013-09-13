@@ -875,27 +875,28 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     mNonClientData.mButtonOver = false;
     mNonClientData.mButtonDown = false;
 
-    UpdateNonClientButtons() ;
+    UpdateNonClientButtons();
 
     switch (mNonClientData.mActiveButton) 
     {
     case HTCLOSE:
         SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
-        mNonClientData.Reset() ;
-        TrackNonClientMouseEvents();
+        TrackNonClientMouseEvents(false);
+        mNonClientData.Reset();
         return TRUE;
     case HTMAXBUTTON:
         if (IsZoomed()) 
             SendMessage (WM_SYSCOMMAND, SC_RESTORE, (LPARAM)POINTTOPOINTS(*point));
         else 
             SendMessage (WM_SYSCOMMAND, SC_MAXIMIZE, (LPARAM)POINTTOPOINTS(*point));
-        mNonClientData.Reset() ;
-        TrackNonClientMouseEvents();
+        TrackNonClientMouseEvents(false);
+        mNonClientData.Reset();
+        UpdateNonClientButtons();
         return TRUE;
     case HTMINBUTTON:
         SendMessage (WM_SYSCOMMAND, SC_MINIMIZE, (LPARAM)POINTTOPOINTS(*point));
-        mNonClientData.Reset() ;
-        TrackNonClientMouseEvents();
+        TrackNonClientMouseEvents(false);
+        mNonClientData.Reset();
         return TRUE;
     }
     

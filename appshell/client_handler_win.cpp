@@ -21,13 +21,6 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
   REQUIRE_UI_THREAD();
-
-#ifdef SHOW_TOOLBAR_UI
-  if (m_BrowserId == browser->GetIdentifier() && frame->IsMain())   {
-    // Set the edit window text
-    SetWindowText(m_EditHwnd, std::wstring(url).c_str());
-  }
-#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -62,20 +55,9 @@ void ClientHandler::SendNotification(NotificationType type) {
 }
 
 void ClientHandler::SetLoading(bool isLoading) {
-#ifdef SHOW_TOOLBAR_UI
-  ASSERT(m_EditHwnd != NULL && m_ReloadHwnd != NULL && m_StopHwnd != NULL);
-  EnableWindow(m_EditHwnd, TRUE);
-  EnableWindow(m_ReloadHwnd, !isLoading);
-  EnableWindow(m_StopHwnd, isLoading);
-#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
-#ifdef SHOW_TOOLBAR_UI
-  ASSERT(m_BackHwnd != NULL && m_ForwardHwnd != NULL);
-  EnableWindow(m_BackHwnd, canGoBack);
-  EnableWindow(m_ForwardHwnd, canGoForward);
-#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::CloseMainWindow() {
