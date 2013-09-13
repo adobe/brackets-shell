@@ -80,6 +80,10 @@ cef_dark_window::cef_dark_window() :
     mHoverSysRestoreButton(0),
     mHoverSysMinimizeButton(0),
     mHoverSysMaximizeButton(0),
+    mPressedSysCloseButton(0),
+    mPressedSysRestoreButton(0),
+    mPressedSysMinimizeButton(0),
+    mPressedSysMaximizeButton(0),
     mWindowIcon(0),
     mBackgroundBrush(0),
     mFrameOutlinePen(0),
@@ -166,6 +170,18 @@ void cef_dark_window::LoadSysButtonImages()
     if (mHoverSysMaximizeButton == NULL) {
         mHoverSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_HOVER_BUTTON));
     }
+    if (mPressedSysCloseButton == NULL) {
+        mPressedSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_PRESSED_BUTTON));
+    }
+    if (mPressedSysRestoreButton == NULL) {
+        mPressedSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_PRESSED_BUTTON));
+    }
+    if (mPressedSysMinimizeButton == NULL) {
+        mPressedSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_PRESSED_BUTTON));
+    }
+    if (mPressedSysMaximizeButton == NULL) {
+        mPressedSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_PRESSED_BUTTON));
+    }
 }
 
 BOOL cef_dark_window::HandleNcCreate()
@@ -187,6 +203,11 @@ BOOL cef_dark_window::HandleNcDestroy()
     delete mHoverSysRestoreButton;
     delete mHoverSysMinimizeButton;
     delete mHoverSysMaximizeButton;
+
+    delete mPressedSysCloseButton;
+    delete mPressedSysRestoreButton;
+    delete mPressedSysMinimizeButton;
+    delete mPressedSysMaximizeButton;
 
     ::DeleteObject(mBackgroundBrush);
     ::DeleteObject(mCaptionFont);
@@ -415,16 +436,16 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     switch (mNonClientData.mActiveButton)
     {
     case HTCLOSE:                
-        CloseButton = mHoverSysCloseButton;
+        CloseButton = (mNonClientData.mButtonDown) ? mPressedSysCloseButton : mHoverSysCloseButton;
         break;
  
     case HTMAXBUTTON:
-        RestoreButton = mHoverSysRestoreButton;
-        MaximizeButton = mHoverSysMaximizeButton;
+        RestoreButton = (mNonClientData.mButtonDown) ? mPressedSysRestoreButton : mHoverSysRestoreButton;
+        MaximizeButton = (mNonClientData.mButtonDown) ? mPressedSysMaximizeButton : mHoverSysMaximizeButton;
         break;
  
     case HTMINBUTTON:
-        MinimizeButton = mHoverSysMinimizeButton;
+        MinimizeButton = (mNonClientData.mButtonDown) ? mPressedSysMinimizeButton : mHoverSysMinimizeButton;
         break ;
     }
 

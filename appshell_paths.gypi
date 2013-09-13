@@ -136,6 +136,10 @@
       'appshell/res/min.png',
       'appshell/res/restore-hover.png',
       'appshell/res/restore.png',
+      'appshell/res/close-pressed.png',
+      'appshell/res/max-pressed.png',
+      'appshell/res/min-pressed.png',
+      'appshell/res/restore-pressed.png',
     ],
     'appshell_sources_mac': [
       'appshell/appshell_extensions_mac.mm',

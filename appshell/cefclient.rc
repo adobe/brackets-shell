@@ -48,13 +48,16 @@ IDI_CEFCLIENT                   ICON            "res\\appshell.ico"
 //
 IDB_CLOSE_BUTTON                PNG             "res\\close.png"
 IDB_CLOSE_HOVER_BUTTON          PNG             "res\\close-hover.png"
+IDB_CLOSE_PRESSED_BUTTON        PNG             "res\\close-pressed.png"
 IDB_MAX_BUTTON                  PNG             "res\\max.png"
 IDB_MAX_HOVER_BUTTON            PNG             "res\\max-hover.png"
+IDB_MAX_PRESSED_BUTTON          PNG             "res\\max-pressed.png"
 IDB_MIN_BUTTON                  PNG             "res\\min.png"
 IDB_MIN_HOVER_BUTTON            PNG             "res\\min-hover.png"
+IDB_MIN_PRESSED_BUTTON          PNG             "res\\min-pressed.png"
 IDB_RESTORE_BUTTON              PNG             "res\\restore.png"
 IDB_RESTORE_HOVER_BUTTON        PNG             "res\\restore-hover.png"
-
+IDB_RESTORE_PRESSED_BUTTON      PNG             "res\\restore-pressed.png"
 
 
 #ifdef APSTUDIO_INVOKED

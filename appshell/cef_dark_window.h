@@ -115,6 +115,10 @@ protected:
     Gdiplus::Image*              mHoverSysRestoreButton;
     Gdiplus::Image*              mHoverSysMinimizeButton;
     Gdiplus::Image*              mHoverSysMaximizeButton;
+    Gdiplus::Image*              mPressedSysCloseButton;
+    Gdiplus::Image*              mPressedSysRestoreButton;
+    Gdiplus::Image*              mPressedSysMinimizeButton;
+    Gdiplus::Image*              mPressedSysMaximizeButton;
 
     HFONT                        mCaptionFont;
     HBRUSH                       mBackgroundBrush;

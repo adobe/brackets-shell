@@ -27,12 +27,16 @@
 
 #define IDB_CLOSE_BUTTON                300
 #define IDB_CLOSE_HOVER_BUTTON          301
-#define IDB_MAX_BUTTON                  302
-#define IDB_MAX_HOVER_BUTTON            303
-#define IDB_MIN_BUTTON                  304
-#define IDB_MIN_HOVER_BUTTON            305
-#define IDB_RESTORE_BUTTON              306
-#define IDB_RESTORE_HOVER_BUTTON        307
+#define IDB_CLOSE_PRESSED_BUTTON        302
+#define IDB_MAX_BUTTON                  303
+#define IDB_MAX_HOVER_BUTTON            304
+#define IDB_MAX_PRESSED_BUTTON          305
+#define IDB_MIN_BUTTON                  306
+#define IDB_MIN_HOVER_BUTTON            307
+#define IDB_MIN_PRESSED_BUTTON          308
+#define IDB_RESTORE_BUTTON              309
+#define IDB_RESTORE_HOVER_BUTTON        310
+#define IDB_RESTORE_PRESSED_BUTTON      311
 
 #define IDS_BINDING                     1000
 #define IDS_DIALOGS                     1001
