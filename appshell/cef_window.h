@@ -27,7 +27,7 @@
 class cef_window;
 class cef_menu;
 
-// Helpers
+// RECT helpers
 static __inline int RectWidth(const RECT &r) { return r.right - r.left; }
 static __inline int RectHeight(const RECT &r) { return r.bottom - r.top; }
 
@@ -43,27 +43,35 @@ static __inline void RectSwapLeftRight(RECT &r)
 #define DCX_USESTYLE 0x00010000
 #endif
 
+// cef_window is a basic HWND wrapper
+//  that can be used to wrap any HWND 
 class cef_window
 {
 public:
+    // Construciton/Destruction - Public Members
     cef_window(void);
     virtual ~cef_window(void);
 
+    // Initialization
     BOOL Create(LPCTSTR szClass, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent = NULL, cef_menu* menu = NULL);
     bool SubclassWindow (HWND hWnd);
 
+    // Window Message Handling
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
     LRESULT DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
+    // Message Sending
     LRESULT SendMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     { return ::SendMessage(mWnd, uMsg, wParam, lParam); }
 
     BOOL PostMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     { return ::PostMessage(mWnd, uMsg, wParam, lParam); }
 
+    // Logistics
     HWND GetSafeWnd() 
     { return (this != NULL) ? mWnd : NULL; }
 
+    // Various Win API helpers
     HMENU GetMenu() 
     { return ::GetMenu(mWnd); }
 
@@ -185,9 +193,11 @@ public:
     { DefaultWindowProc(WM_SETREDRAW, (WPARAM)bRedraw, 0); }
 
 protected:
+    // Attributes - Protected Members
     HWND mWnd;
     WNDPROC mSuperWndProc;
 
+    // Implementation
     BOOL HandleNcDestroy();
     virtual void PostNcDestroy();
 

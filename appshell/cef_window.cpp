@@ -21,10 +21,13 @@
  */
 #include "cef_window.h"
 
-extern HINSTANCE hInst;   // current instance
+// Externals
+extern HINSTANCE hInst;   
 
+// Constants
 static const wchar_t gCefClientWindowPropName[] = L"CefClientWindowPtr";
 
+// Global Hook Data
 struct HookData {
     HookData() 
     {
@@ -40,9 +43,7 @@ struct HookData {
     cef_window* mWindow;
 } gHookData;
 
-
-
-
+//cef_window -- 
 cef_window::cef_window(void) :
     mWnd(NULL),
     mSuperWndProc(NULL)
@@ -54,6 +55,9 @@ cef_window::~cef_window(void)
 {
 }
 
+// The CBT HookProc will catch a window being 
+//  created so that we can subclass it and 
+//  dispatch WM_NCCREATE messages to the window object
 static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code != HCBT_CREATEWND)
@@ -76,6 +80,7 @@ static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(nextHook, code, wParam, lParam);
 }
 
+// Enables Hooking
 static void _HookWindowCreate(cef_window* window)
 {
     // can only hook one creation at a time
@@ -86,12 +91,13 @@ static void _HookWindowCreate(cef_window* window)
     gHookData.mWindow = window;
 }
 
-
+// Disabled Hooking
 static void _UnHookWindowCreate()
 {
     gHookData.Reset();
 }
 
+// Window Proc which receives messages from subclassed windows
 static LRESULT CALLBACK _WindowProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   cef_window* window = (cef_window*)::GetProp(hWnd, ::gCefClientWindowPropName);
@@ -105,6 +111,7 @@ static LRESULT CALLBACK _WindowProc (HWND hWnd, UINT message, WPARAM wParam, LPA
   }
 }
 
+// Subclass 
 bool cef_window::SubclassWindow(HWND hWnd) 
 {
     if (::GetProp(hWnd, ::gCefClientWindowPropName) != NULL) 
@@ -115,6 +122,8 @@ bool cef_window::SubclassWindow(HWND hWnd)
     return true;
 }
 
+// CefCreateWindow -- used to wrap the window create process
+//  so that hooking and unhooking are done correctly
 static HWND _CefCreateWindow(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, HWND hWndParent, HMENU hMenu, cef_window* window)
 {
     _HookWindowCreate(window);
@@ -122,36 +131,43 @@ static HWND _CefCreateWindow(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD d
     HWND result = CreateWindow(szClassname, szWindowTitle, 
                                dwStyles, x, y, width, height, hWndParent, hMenu, hInst, (LPVOID)window);
 
-
     _UnHookWindowCreate();
     return result;
 }
 
+// Create -- Creates a window
 BOOL cef_window::Create(LPCTSTR szClassname, LPCTSTR szWindowTitle, DWORD dwStyles, int x, int y, int width, int height, cef_window* parent/*=NULL*/, cef_menu* menu/*=NULL*/)
 {
     HWND hWndParent = parent ? parent->mWnd : NULL;
     HMENU hMenu = NULL;
 
-    HWND hWndThis = _CefCreateWindow(szClassname, szWindowTitle, 
-                               dwStyles, x, y, width, height, hWndParent, hMenu, this);
-
+    HWND hWndThis = ::_CefCreateWindow(szClassname, szWindowTitle, 
+                                        dwStyles, x, y, width, height, hWndParent, hMenu, this);
 
     return hWndThis && hWndThis == mWnd;
 }
 
+// Calls the window procedure for a subclassed window
+//  or, if just wrapping an HWND,
+//      -- sends the message to the window's registered wndproc
 LRESULT cef_window::DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     if (mSuperWndProc)
     {
+        // If we were subclassed then we have a super window proc
         return ::CallWindowProc(mSuperWndProc, mWnd, message, wParam, lParam);
     } 
     else 
     {
+        // otherwise just let the system deal with it.  
         return ::DefWindowProc(mWnd, message, wParam, lParam);
     }
 
 }
 
+// WM_NCDESTROY handler
+//  cleansup the data and unsubclasses the window
+//  calls PostNcDestroy
 BOOL cef_window::HandleNcDestroy()
 {
     WNDPROC superWndProc = WNDPROC(GetWindowLongPtr(GWLP_WNDPROC));
@@ -170,11 +186,13 @@ BOOL cef_window::HandleNcDestroy()
     return TRUE;
 }
 
+// PostNcDestroy base implementaiton
 void cef_window::PostNcDestroy()
 {
     mWnd = NULL;
 }
 
+// Window Message Dispatching
 LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch(message)
@@ -195,6 +213,9 @@ LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     return lr;
 }
 
+// ScreenToNonClient or ScreenToWindow.  
+//  Converts screen coordinates into window coordinates 
+//  (0,0) is the top left corner of the window
 void cef_window::ScreenToNonClient(LPRECT r) const
 {
     if (r) {
@@ -233,6 +254,7 @@ void cef_window::ComputeLogicalClientRect(RECT& rectClient)
     rectClient.right = rectClient.left + width;
 }
 
+// Retrieves the window rect in logical coordinates
 void cef_window::ComputeLogicalWindowRect (RECT& rectWindow)
 {
     RECT wr;
@@ -244,7 +266,7 @@ void cef_window::ComputeLogicalWindowRect (RECT& rectWindow)
     rectWindow.right = ::RectWidth(wr);
 }
 
-
+// Converts NonClient (window) coordinates to screen coordinates
 void cef_window::NonClientToScreen(LPRECT r) const
 {
     if (r) {
@@ -258,6 +280,7 @@ void cef_window::NonClientToScreen(LPRECT r) const
     }
 }
 
+// Basic ScreenToClient implementation
 void cef_window::ScreenToClient(LPRECT lpRect) const
 {
     if (lpRect) {
@@ -268,6 +291,7 @@ void cef_window::ScreenToClient(LPRECT lpRect) const
     }
 }
 
+// Basic ClientToScreen implementation
 void cef_window::ClientToScreen(LPRECT lpRect) const
 {
     if (lpRect) {
