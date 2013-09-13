@@ -40,8 +40,8 @@ public:
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
-    void SaveWindowRect();
-    void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
+    void SaveWindowRestoreRect();
+    void LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd);
     void RestoreWindowPlacement(int showCmd);
 
     BOOL HandleEraseBackground();

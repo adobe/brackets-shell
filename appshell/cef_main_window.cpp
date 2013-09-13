@@ -42,7 +42,7 @@ static const wchar_t        kPrefHeight[] = L"Height";
 static const wchar_t        kPrefRestoreLeft[] = L"Restore Left";
 static const wchar_t        kPrefRestoreTop[] = L"Restore Top";
 static const wchar_t        kPrefRestoreRight[] = L"Restore Right";
-static const wchar_t        kPrefRestoreBottom[]    = L"Restore Bottom";
+static const wchar_t        kPrefRestoreBottom[]  = L"Restore Bottom";
 static const wchar_t        kPrefShowState[] = L"Show State";
 
 static const long           kMinWindowWidth = 390;
@@ -107,9 +107,10 @@ BOOL cef_main_window::Create()
     int height = CW_USEDEFAULT;
     int showCmd = SW_SHOW;
 
-    RestoreWindowRect(left, top, width, height, showCmd);
+    LoadWindowRestoreRect(left, top, width, height, showCmd);
 
-    DWORD styles =  WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_EX_COMPOSITED | WS_CAPTION | WS_SYSMENU  | WS_THICKFRAME  |WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
+
     if (showCmd == SW_MAXIMIZE)
       styles |= WS_MAXIMIZE;
 
@@ -211,7 +212,7 @@ BOOL cef_main_window::HandleDestroy()
 
 BOOL cef_main_window::HandleClose()
 {
-    SaveWindowRect();
+    SaveWindowRestoreRect();
 
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
     if (hwnd)
@@ -276,7 +277,7 @@ BOOL cef_main_window::HandleCommand(UINT commandId)
     }
 }
 
-void cef_main_window::SaveWindowRect()
+void cef_main_window::SaveWindowRestoreRect()
 {
     WINDOWPLACEMENT wp;
     ::ZeroMemory(&wp, sizeof(wp));
@@ -308,20 +309,19 @@ void cef_main_window::SaveWindowRect()
             }
 
             // Maximize is the only special case we handle
-            ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefShowState,
-                             (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
+            ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefShowState, (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
         }
     }
 }
 
 
-void cef_main_window::RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
+void cef_main_window::LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,                  NULL, left);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefTop,                   NULL, top);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefWidth,                 NULL, width);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefHeight,                NULL, height);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kWindowPostionFolder,    NULL, showCmd);
+    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,      NULL, left);
+    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefTop,       NULL, top);
+    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefWidth,     NULL, width);
+    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefHeight,    NULL, height);
+    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefShowState, NULL, showCmd);
 }
 
 void cef_main_window::RestoreWindowPlacement(int showCmd)
@@ -330,26 +330,27 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
     {
         WINDOWPLACEMENT wp;
         ::ZeroMemory(&wp, sizeof (wp));
+
         wp.length = sizeof(WINDOWPLACEMENT);
 
-        wp.flags    = 0;
-        wp.showCmd    = SW_MAXIMIZE;
-        wp.ptMinPosition.x    = -1;
-        wp.ptMinPosition.y    = -1;
-        wp.ptMaxPosition.x    = -1;
-        wp.ptMaxPosition.y    = -1;
+        wp.flags            = 0;
+        wp.showCmd          = SW_MAXIMIZE;
+        wp.ptMinPosition.x  = -1;
+        wp.ptMinPosition.y  = -1;
+        wp.ptMaxPosition.x  = -1;
+        wp.ptMaxPosition.y  = -1;
 
-        wp.rcNormalPosition.left    = CW_USEDEFAULT;
-        wp.rcNormalPosition.top        = CW_USEDEFAULT;
-        wp.rcNormalPosition.right    = CW_USEDEFAULT;
-        wp.rcNormalPosition.bottom    = CW_USEDEFAULT;
+        wp.rcNormalPosition.left   = CW_USEDEFAULT;
+        wp.rcNormalPosition.top    = CW_USEDEFAULT;
+        wp.rcNormalPosition.right  = CW_USEDEFAULT;
+        wp.rcNormalPosition.bottom = CW_USEDEFAULT;
 
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,        NULL, (int&)wp.rcNormalPosition.left);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,        NULL, (int&)wp.rcNormalPosition.top);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,        NULL, (int&)wp.rcNormalPosition.right);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom,    NULL, (int&)wp.rcNormalPosition.bottom);
+        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   NULL, (int&)wp.rcNormalPosition.left);
+        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    NULL, (int&)wp.rcNormalPosition.top);
+        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)wp.rcNormalPosition.right);
+        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)wp.rcNormalPosition.bottom);
 
-        // This returns FALSE on failure, but not sure what we could in that case
+        // This returns FALSE on failure but not sure what we could do in that case
         SetWindowPlacement(&wp);
     }
 
@@ -367,10 +368,10 @@ BOOL cef_main_window::HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData)
             wstrFilename = wstrFilename.substr(1, wstrFilename.length() - 2);
 
         g_handler->SendOpenFileCommand(g_handler->GetBrowser(), CefString(wstrFilename.c_str()));
-        return true;
+        return TRUE;
     }
 
-    return false;
+    return FALSE;
 }
 
 // EnumWindowsProc callback function
