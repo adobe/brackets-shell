@@ -36,7 +36,6 @@ static ULONG_PTR gdiplusToken = NULL;
 
 static const int kMenuItemSpacingCX = 4;
 static const int kMenuItemSpacingCY = 4;
-static const int kMenuFrameThreshholdCX = 12;
 
 static const int kWindowFrameZoomFactorCX = 12;
 static const int kWindowFrameZoomFactorCY = 12;
@@ -502,50 +501,30 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         mis.CtlType = ODT_MENU;
         mis.itemID = mmi.wID;
 
-        HandleMeasureItem(&mis);
-
         RECT itemRect;
+        ::SetRectEmpty(&itemRect);
+        if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
+            ScreenToNonClient(&itemRect);
+            // Draw the menu item
+            DRAWITEMSTRUCT dis = {0};
+            dis.CtlType = ODT_MENU;
+            dis.itemID = mmi.wID;
+            dis.hwndItem = (HWND)menu;
+            dis.itemAction = ODA_DRAWENTIRE;
+            dis.hDC = hdc;
+            ::CopyRect(&dis.rcItem, &itemRect);
 
-        // Compute the rect to draw the item in
-        itemRect.top = currentTop + 1;
-        itemRect.left = currentLeft + 1 + ::kMenuItemSpacingCX;
-        itemRect.right = itemRect.left + mis.itemWidth + ::kMenuItemSpacingCX;
-        itemRect.bottom = itemRect.top + mis.itemHeight;
+            if (mmi.fState & MFS_HILITE) {
+                dis.itemState |= ODS_SELECTED;
+            } 
+            if (mmi.fState & MFS_GRAYED) {
+                dis.itemState |= ODS_GRAYED;
+            } 
 
-        // check to see if if we need to wrap to a new line
-        if (rectBar.left < currentLeft) {
-            if (itemRect.right >= (rectBar.right - ::kMenuFrameThreshholdCX)) {
-                currentLeft = rectBar.left;
-                currentTop = itemRect.bottom - 1;
+            dis.itemState |= ODS_NOACCEL;
 
-                itemRect.top = currentTop + 1;
-                itemRect.left = currentLeft + 1 + ::kMenuItemSpacingCX;
-                itemRect.right = itemRect.left + mis.itemWidth + ::kMenuItemSpacingCX;
-                itemRect.bottom = itemRect.top + mis.itemHeight;
-            }
+            HandleDrawItem(&dis);
         }
-
-        currentLeft = itemRect.right + 1 + ::kMenuItemSpacingCX;
-
-        // Draw the menu item
-        DRAWITEMSTRUCT dis = {0};
-        dis.CtlType = ODT_MENU;
-        dis.itemID = mmi.wID;
-        dis.hwndItem = (HWND)menu;
-        dis.itemAction = ODA_DRAWENTIRE;
-        dis.hDC = hdc;
-        ::CopyRect(&dis.rcItem, &itemRect);
-
-        if (mmi.fState & MFS_HILITE) {
-            dis.itemState |= ODS_SELECTED;
-        } 
-        if (mmi.fState & MFS_GRAYED) {
-            dis.itemState |= ODS_GRAYED;
-        } 
-
-        dis.itemState |= ODS_NOACCEL;
-
-        HandleDrawItem(&dis);
     }
 }
 
