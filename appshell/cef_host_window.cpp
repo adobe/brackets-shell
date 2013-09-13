@@ -79,7 +79,11 @@ CefString cef_host_window::GetCommandString(UINT commandId)
 
 BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback/*=0*/)
 {
-    return DoCommand(GetCommandString(commandId), callback);
+    CefString commandString = GetCommandString(commandId);
+    if (callback == NULL) {
+        callback = new EditCommandCallback(GetBrowser(), commandString);
+    }
+    return DoCommand(commandString, callback);
 }
 
 LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)

@@ -73,7 +73,7 @@ BOOL cef_popup_window::HandleCommand(UINT commandId)
     case IDM_CLOSE:
         return HandleClose();
     default:
-        DoCommand(commandId, new EditCommandCallback(mBrowser, GetCommandString(commandId)));
+        DoCommand(commandId);
         return TRUE;
     }
 }
