@@ -940,6 +940,11 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETICON:
         mWindowIcon = 0;
         break;
+    case WM_SETTEXT:
+    case WM_ACTIVATE:
+    case WM_NCACTIVATE:
+        DefaultWindowProc (WM_SETREDRAW, FALSE, 0); 
+        break;
     }
 
     LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
@@ -956,9 +961,16 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
     case WM_SIZING:
     case WM_EXITSIZEMOVE:
-    case WM_NCACTIVATE:
-    case WM_ACTIVATE:
+        UpdateNonClientArea();
+        break;
+    }
+
+    switch (message) 
+    {
     case WM_SETTEXT:
+    case WM_ACTIVATE:
+    case WM_NCACTIVATE:
+        DefaultWindowProc (WM_SETREDRAW, TRUE, 0); 
         UpdateNonClientArea();
         break;
     }
