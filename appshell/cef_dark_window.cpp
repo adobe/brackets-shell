@@ -34,8 +34,8 @@ extern HINSTANCE hInst;
 
 static ULONG_PTR gdiplusToken = NULL;
 
-static const int kMenuItemSpacingCX = 4;
-static const int kMenuItemSpacingCY = 4;
+static const int kMenuItemSpacingCX = 0;
+static const int kMenuItemSpacingCY = 0;
 
 static const int kWindowFrameZoomFactorCX = 12;
 static const int kWindowFrameZoomFactorCY = 12;
@@ -725,8 +725,8 @@ BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
         // Calc the size of this menu item 
         ::DrawText(dc, szMenuString, ::wcslen(szMenuString), &rectTemp, DT_SINGLELINE|DT_CALCRECT);
 
-        lpMIS->itemHeight = ::RectHeight(rectTemp) + ::kMenuItemSpacingCY;
-        lpMIS->itemWidth = ::RectWidth(rectTemp) + ::kMenuItemSpacingCX;
+        lpMIS->itemHeight = ::RectHeight(rectTemp);
+        lpMIS->itemWidth = ::RectWidth(rectTemp);
 
         ::SelectObject(dc, fontOld);            
         ReleaseDC(dc);
