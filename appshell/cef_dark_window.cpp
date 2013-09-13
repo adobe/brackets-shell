@@ -943,7 +943,7 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETTEXT:
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
-        DefaultWindowProc (WM_SETREDRAW, FALSE, 0); 
+        SetRedraw(FALSE);
         break;
     }
 
@@ -970,7 +970,7 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETTEXT:
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
-        DefaultWindowProc (WM_SETREDRAW, TRUE, 0); 
+        SetRedraw(TRUE);
         UpdateNonClientArea();
         break;
     }

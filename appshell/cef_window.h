@@ -181,8 +181,8 @@ public:
     BOOL GetMenuBarInfo(LONG idObject, LONG idItem, LPMENUBARINFO pmbi) 
     { return ::GetMenuBarInfo(mWnd, idObject, idItem, pmbi); }
 
-    BOOL DrawMenuBar() 
-    { return ::DrawMenuBar(mWnd); }
+    void SetRedraw(BOOL bRedraw)
+    { DefaultWindowProc(WM_SETREDRAW, (WPARAM)bRedraw, 0); }
 
 protected:
     HWND mWnd;
