@@ -197,18 +197,20 @@ LRESULT cef_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 void cef_window::ScreenToNonClient(LPRECT r) const
 {
-    WINDOWINFO wi ;
-    ::ZeroMemory (&wi, sizeof (wi)) ;
-    wi.cbSize = sizeof (wi) ;
-    GetWindowInfo (&wi) ;
+    if (r) {
+        WINDOWINFO wi ;
+        ::ZeroMemory (&wi, sizeof (wi)) ;
+        wi.cbSize = sizeof (wi) ;
+        GetWindowInfo (&wi) ;
 
-    int height = ::RectHeight(*r);
-    int width = ::RectWidth(*r);
+        int height = ::RectHeight(*r);
+        int width = ::RectWidth(*r);
 
-    r->top = r->top - wi.rcWindow.top;
-    r->left = r->left - wi.rcWindow.left;
-    r->bottom = r->top + height;
-    r->right = r->left + width;
+        r->top = r->top - wi.rcWindow.top;
+        r->left = r->left - wi.rcWindow.left;
+        r->bottom = r->top + height;
+        r->right = r->left + width;
+    }
 }
 
 // Computes the client rect relative to the Window Rect
@@ -245,29 +247,35 @@ void cef_window::ComputeLogicalWindowRect (RECT& rectWindow)
 
 void cef_window::NonClientToScreen(LPRECT r) const
 {
-    RECT wr;
-    GetWindowRect (&wr);
+    if (r) {
+        RECT wr;
+        GetWindowRect (&wr);
 
-    r->top += wr.top;
-    r->left += wr.left;
-    r->bottom += wr.top;
-    r->right += wr.left;
+        r->top += wr.top;
+        r->left += wr.left;
+        r->bottom += wr.top;
+        r->right += wr.left;
+    }
 }
 
 void cef_window::ScreenToClient(LPRECT lpRect) const
 {
-    ::ScreenToClient(mWnd, (LPPOINT)lpRect);
-    ::ScreenToClient(mWnd, ((LPPOINT)lpRect)+1);
-    if (GetExStyle() & WS_EX_LAYOUTRTL)
-        ::RectSwapLeftRight(*lpRect);
+    if (lpRect) {
+        ::ScreenToClient(mWnd, (LPPOINT)lpRect);
+        ::ScreenToClient(mWnd, ((LPPOINT)lpRect)+1);
+        if (GetExStyle() & WS_EX_LAYOUTRTL)
+            ::RectSwapLeftRight(*lpRect);
+    }
 }
 
 void cef_window::ClientToScreen(LPRECT lpRect) const
 {
-    ::ClientToScreen(mWnd, (LPPOINT)lpRect);
-    ::ClientToScreen(mWnd, ((LPPOINT)lpRect)+1);
-    if (GetExStyle() & WS_EX_LAYOUTRTL)
-        ::RectSwapLeftRight(*lpRect);
+    if (lpRect) {
+        ::ClientToScreen(mWnd, (LPPOINT)lpRect);
+        ::ClientToScreen(mWnd, ((LPPOINT)lpRect)+1);
+        if (GetExStyle() & WS_EX_LAYOUTRTL)
+            ::RectSwapLeftRight(*lpRect);
+    }
 }
 
 // Turns mouse tracking on or off
