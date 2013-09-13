@@ -34,9 +34,6 @@ extern HINSTANCE hInst;
 
 static ULONG_PTR gdiplusToken = NULL;
 
-static const int kMenuItemSpacingCX = 0;
-static const int kMenuItemSpacingCY = 0;
-
 static const int kWindowFrameZoomFactorCX = 12;
 static const int kWindowFrameZoomFactorCY = 12;
 
@@ -228,12 +225,12 @@ BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
 
 void cef_dark_window::ComputeWindowIconRect(RECT& rect)
 {
-    int top = mNcMetrics.iBorderWidth;
-    int left = mNcMetrics.iBorderWidth;
+    int top = ::GetSystemMetrics (SM_CYFRAME);
+    int left = ::GetSystemMetrics (SM_CXFRAME);
 
     if (IsZoomed()) {
-        top = ::kWindowFrameZoomFactorCX;
-        left = ::kWindowFrameZoomFactorCY;
+        top = ::kWindowFrameZoomFactorCY;
+        left = ::kWindowFrameZoomFactorCX;
     }
 
     ::SetRectEmpty(&rect);
@@ -249,15 +246,13 @@ void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
     GetWindowRect(&wr);
 
     int top = mNcMetrics.iBorderWidth;
-    int left = mNcMetrics.iBorderWidth;
 
     if (IsZoomed()) {
-        top = 8;
-        left = 8;
+        top = ::kWindowFrameZoomFactorCY;
     }
 
     rect.top = top;
-    rect.bottom = rect.top + ::GetSystemMetrics (SM_CYCAPTION);
+    rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
 
     RECT ir;
     ComputeWindowIconRect(ir);
@@ -265,8 +260,8 @@ void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
     RECT mr;
     ComputeMinimizeButtonRect(mr);
 
-    rect.left = ir.right + 1;
-    rect.right = mr.left - 1;
+    rect.left = ir.right + ::GetSystemMetrics (SM_CXFRAME);
+    rect.right = mr.left - ::GetSystemMetrics (SM_CXFRAME);
 }
 
 void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect)
@@ -289,13 +284,12 @@ void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
 
 void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
 {
-    int top = 1;
+    int top = mNcMetrics.iBorderWidth;
     int right =  mNcMetrics.iBorderWidth;
 
-
     if (IsZoomed()) {
-        top =  8;
-        right = 8;
+        top =  ::GetSystemMetrics (SM_CYFRAME);
+        right = ::GetSystemMetrics (SM_CXFRAME);
     }
 
     RECT wr;
@@ -366,7 +360,7 @@ void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
     RECT rectIcon;
     ComputeWindowIconRect(rectIcon);
 
-    ::DrawIconEx(hdc, rectIcon.top, rectIcon.left, mWindowIcon, ::RectWidth(rectIcon), ::RectHeight(rectIcon), 0, NULL, DI_NORMAL);
+    ::DrawIconEx(hdc, rectIcon.left, rectIcon.top, mWindowIcon, ::RectWidth(rectIcon), ::RectHeight(rectIcon), 0, NULL, DI_NORMAL);
 }
 
 void cef_dark_window::DoDrawTitlebarText(HDC hdc)
@@ -383,13 +377,28 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     RECT textRect;
     ComputeWindowCaptionRect(textRect);
 
+    RECT windowRect;
+    GetWindowRect(&windowRect);
+    ScreenToNonClient(&windowRect);
+    windowRect.bottom = textRect.bottom;
+
     int textLength = GetWindowTextLength() + 1;
     LPWSTR szCaption = new wchar_t [textLength + 1];
     ::ZeroMemory(szCaption, textLength + 1);
     int cchCaption = GetWindowText(szCaption, textLength);
 
-    ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_END_ELLIPSIS|DT_NOPREFIX);
+    windowRect.top += textRect.top;
 
+    RECT rectTemp;
+    ::SetRectEmpty(&rectTemp);
+    ::DrawText(hdc, szCaption, ::wcslen(szCaption), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
+
+    if (((::RectWidth(windowRect) / 2) + (::RectWidth(rectTemp) / 2) + 1) < textRect.right) {
+        ::DrawText(hdc, szCaption, cchCaption, &windowRect, DT_CENTER|DT_TOP|DT_SINGLELINE|DT_NOPREFIX);
+    } else {
+        ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_TOP|DT_SINGLELINE|DT_END_ELLIPSIS|DT_NOPREFIX);
+    }
+ 
     delete []szCaption;
     ::SetTextColor(hdc, oldRGB);
     ::SetBkMode(hdc, oldBkMode);
