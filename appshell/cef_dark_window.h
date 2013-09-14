@@ -122,7 +122,6 @@ protected:
 
     // Menu Initializers 
     void InitMenuFont();
-    void EnforceOwnerDrawnMenus();
     void EnforceMenuBackground();
 
     // Images, Fonts and Brushes used for Drawing

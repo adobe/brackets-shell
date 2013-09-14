@@ -532,26 +532,6 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     grpx.DrawImage(MinimizeButton, rect);
 }
 
-// Since menus come and go, we need to make sure
-//  that any changes to add new menus have the owner draw flags
-void cef_dark_window::EnforceOwnerDrawnMenus()
-{
-    HMENU hm = GetMenu();
-    int items = ::GetMenuItemCount(hm);
-
-    for (int i = 0; i < items; i++) {
-        MENUITEMINFO mmi = {0};
-        mmi.cbSize = sizeof (mmi);
-        mmi.fMask = MIIM_FTYPE;
-
-        ::GetMenuItemInfo(hm, i, TRUE, &mmi);
-        if ((mmi.fType & MFT_OWNERDRAW) == 0) {
-            mmi.fType |= MFT_OWNERDRAW;
-            ::SetMenuItemInfo(hm, i, TRUE, &mmi);
-        }
-    }
-}
-
 // Enforce that the menu has our background color otherwise it 
 //  uses the system default color for the menu bar which looks funny
 void cef_dark_window::EnforceMenuBackground()
@@ -636,7 +616,6 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
 void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
-    EnforceOwnerDrawnMenus();
 
     HDC hdcOrig = hdc;
     RECT rectWindow;
