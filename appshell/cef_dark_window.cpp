@@ -488,22 +488,24 @@ void cef_dark_window::DoDrawSystemIcons(HDC hdc)
     Gdiplus::Image* MinimizeButton = mSysMinimizeButton;
     Gdiplus::Image* MaximizeButton = mSysMaximizeButton;
 
-    // If the mouse is over or down on a button then 
-    //  we need to pick the correct image for that button's state
-    switch (mNonClientData.mActiveButton)
-    {
-    case HTCLOSE:                
-        CloseButton = (mNonClientData.mButtonDown) ? mPressedSysCloseButton : mHoverSysCloseButton;
-        break;
+    if (mNonClientData.mButtonOver) {
+        // If the mouse is over or down on a button then 
+        //  we need to pick the correct image for that button's state
+        switch (mNonClientData.mActiveButton)
+        {
+        case HTCLOSE:                
+            CloseButton = (mNonClientData.mButtonDown) ? mPressedSysCloseButton : mHoverSysCloseButton;
+            break;
  
-    case HTMAXBUTTON:
-        RestoreButton = (mNonClientData.mButtonDown) ? mPressedSysRestoreButton : mHoverSysRestoreButton;
-        MaximizeButton = (mNonClientData.mButtonDown) ? mPressedSysMaximizeButton : mHoverSysMaximizeButton;
-        break;
+        case HTMAXBUTTON:
+            RestoreButton = (mNonClientData.mButtonDown) ? mPressedSysRestoreButton : mHoverSysRestoreButton;
+            MaximizeButton = (mNonClientData.mButtonDown) ? mPressedSysMaximizeButton : mHoverSysMaximizeButton;
+            break;
  
-    case HTMINBUTTON:
-        MinimizeButton = (mNonClientData.mButtonDown) ? mPressedSysMinimizeButton : mHoverSysMinimizeButton;
-        break ;
+        case HTMINBUTTON:
+            MinimizeButton = (mNonClientData.mButtonDown) ? mPressedSysMinimizeButton : mHoverSysMinimizeButton;
+            break ;
+        }
     }
 
     RECT rcButton;
@@ -895,63 +897,67 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
 // WM_NCMOUSELEAVE hander -- resets our non-client state data
 void cef_dark_window::HandleNcMouseLeave() 
 {
-    switch (mNonClientData.mActiveButton)
-    {
-    case HTCLOSE:
-    case HTMAXBUTTON:
-    case HTMINBUTTON:
-        mNonClientData.mActiveButton = HTNOWHERE;
-        mNonClientData.mButtonOver = false;
-        mNonClientData.mButtonDown = false;
-        UpdateNonClientButtons ();
-        break;
-    }
-
     mNonClientData.Reset();
+    UpdateNonClientButtons();
 }
 
 // WM_NCMOUSEMOVE hander 
 BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
 {
+    bool needUpdate = false;
+
     if (mNonClientData.mActiveButton != uHitTest) 
     {
-        mNonClientData.mActiveButton = uHitTest;
-
-        mNonClientData.mButtonOver = true;
-        mNonClientData.mButtonDown = false;
-             
-        UpdateNonClientButtons ();
-     
-        switch (uHitTest)
-        {
-        case HTCLOSE:
-        case HTMAXBUTTON:
-        case HTMINBUTTON:
-            TrackNonClientMouseEvents();
-            return TRUE;
+        needUpdate = true;
+        if (mNonClientData.mButtonDown) {
+            mNonClientData.mButtonOver = false;
+        } else {
+            switch (uHitTest)
+            {
+            case HTCLOSE:
+            case HTMAXBUTTON:
+            case HTMINBUTTON:
+                mNonClientData.mButtonOver = true;
+                mNonClientData.mActiveButton = uHitTest;
+                TrackNonClientMouseEvents();
+                break;
+            default:
+                mNonClientData.Reset();
+                UpdateNonClientButtons ();
+                return FALSE;
+            }
+        }
+    } else {
+        if (mNonClientData.mButtonDown && !mNonClientData.mButtonOver) {
+            mNonClientData.mButtonOver = true;
+            needUpdate = true;
         }
     }
 
-    return FALSE;
+    if (needUpdate) {
+        UpdateNonClientButtons ();
+    }
+    return TRUE;
 }
 
 // WM_NCLBUTTONDOWN hander 
 BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
 {
-    mNonClientData.mActiveButton = uHitTest;
-    mNonClientData.mButtonOver = true;
-    mNonClientData.mButtonDown = true;
-
-    UpdateNonClientButtons ();
 
     switch (uHitTest)
     {
     case HTCLOSE:
     case HTMAXBUTTON:
     case HTMINBUTTON:
+        mNonClientData.mActiveButton = uHitTest;
+        mNonClientData.mButtonOver = true;
+        mNonClientData.mButtonDown = true;
+        UpdateNonClientButtons ();
         TrackNonClientMouseEvents();
         return TRUE;
     default:
+        mNonClientData.Reset();
+        UpdateNonClientButtons ();
         return FALSE;
     }
 }
@@ -959,35 +965,37 @@ BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
 // WM_NCLBUTTONUP hander 
 BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 {
-    mNonClientData.mButtonOver = false;
-    mNonClientData.mButtonDown = false;
+    NonClientButtonStateData oldData(mNonClientData);
+
+    mNonClientData.Reset();
 
     UpdateNonClientButtons();
 
-    switch (mNonClientData.mActiveButton) 
+    switch (oldData.mActiveButton) 
     {
     case HTCLOSE:
-        SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
-        TrackNonClientMouseEvents(false);
-        mNonClientData.Reset();
+        if (oldData.mButtonOver) {
+            SendMessage (WM_SYSCOMMAND, SC_CLOSE, (LPARAM)POINTTOPOINTS(*point));
+            TrackNonClientMouseEvents(false);
+        }
         return TRUE;
     case HTMAXBUTTON:
-        if (IsZoomed()) 
-            SendMessage (WM_SYSCOMMAND, SC_RESTORE, (LPARAM)POINTTOPOINTS(*point));
-        else 
-            SendMessage (WM_SYSCOMMAND, SC_MAXIMIZE, (LPARAM)POINTTOPOINTS(*point));
-        TrackNonClientMouseEvents(false);
-        mNonClientData.Reset();
-        UpdateNonClientButtons();
+        if (oldData.mButtonOver) {
+            if (IsZoomed()) 
+                SendMessage (WM_SYSCOMMAND, SC_RESTORE, (LPARAM)POINTTOPOINTS(*point));
+            else 
+                SendMessage (WM_SYSCOMMAND, SC_MAXIMIZE, (LPARAM)POINTTOPOINTS(*point));
+            TrackNonClientMouseEvents(false);
+        }
         return TRUE;
     case HTMINBUTTON:
-        SendMessage (WM_SYSCOMMAND, SC_MINIMIZE, (LPARAM)POINTTOPOINTS(*point));
-        TrackNonClientMouseEvents(false);
-        mNonClientData.Reset();
+        if (oldData.mButtonOver) {
+            SendMessage (WM_SYSCOMMAND, SC_MINIMIZE, (LPARAM)POINTTOPOINTS(*point));
+            TrackNonClientMouseEvents(false);
+        }
         return TRUE;
     }
     
-    mNonClientData.Reset();
     return FALSE;
 }
 

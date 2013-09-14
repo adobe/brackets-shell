@@ -50,16 +50,24 @@ class cef_dark_window : public cef_window
             Reset() ;
         }
 
+        NonClientButtonStateData(const NonClientButtonStateData &other) :
+            mActiveButton(other.mActiveButton),
+            mButtonDown(other.mButtonDown),
+            mButtonOver(other.mButtonOver)
+        {
+        
+        }
+
         void Reset ( void ) 
         {
-            mActiveButton = 0 ;
-            mButtonDown = false ;
-            mButtonOver = false ;
+            mActiveButton = HTNOWHERE;
+            mButtonDown = false;
+            mButtonOver = false;
         }
 
         UINT mActiveButton;
-        bool mButtonDown ;
-        bool mButtonOver ;
+        bool mButtonDown;
+        bool mButtonOver;
     };
 
 public:
