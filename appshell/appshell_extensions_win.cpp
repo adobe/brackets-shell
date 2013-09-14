@@ -1159,7 +1159,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     menuInfo.cch = itemTitle.size();        
         
     if (positionIdx == kAppend) {
-        if (!InsertMenuItem(mainMenu, GetMenuItemCount(mainMenu), TRUE, &menuInfo)) {
+        if (!InsertMenuItem(mainMenu, -1, TRUE, &menuInfo)) {
             return ConvertErrnoCode(GetLastError());
         }
     }
