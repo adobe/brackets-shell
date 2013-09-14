@@ -34,7 +34,7 @@
 #include <Shobjidl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-
+#include "config.h"
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
@@ -1154,7 +1154,12 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     menuInfo.cbSize = sizeof(MENUITEMINFO);
     menuInfo.wID = (UINT)tag;
     menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;    
+
+#ifdef DARK_UI
     menuInfo.fType = MFT_OWNERDRAW;
+#else
+    menuInfo.fType = MFT_STRING;
+#endif
     menuInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
     menuInfo.cch = itemTitle.size();        
         
@@ -1603,8 +1608,12 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
 
             menuInfo.cbSize = sizeof(MENUITEMINFO);
             menuInfo.wID = (UINT)tag;
-            menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU;    
+            menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU;
+#ifdef DARK_UI
             menuInfo.fType = MFT_OWNERDRAW;
+#else
+            menuInfo.fType = MFT_STRING;
+#endif
             menuInfo.dwTypeData = (LPWSTR)newTitle.c_str();
             menuInfo.hSubMenu = itemInfo.hSubMenu;
             menuInfo.cch = newTitle.size();        

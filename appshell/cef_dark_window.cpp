@@ -27,6 +27,9 @@
 #include <Uxtheme.h>
 #include <Shlwapi.h>
 
+#define OS_WIN
+#include "config.h"
+
 // Libraries
 #pragma comment(lib, "gdiplus")
 #pragma comment(lib, "UxTheme")
@@ -51,10 +54,11 @@ static void RECT2Rect(Gdiplus::Rect& dest, const RECT& src) {
 
 namespace ResourceImage
 {
-    // Loads a GDI an Image from an app resource
-    //  and returns a GDI+ Image object or NULL if Failed
+    // Loads an Image from an application's resource section
+    //  and returns a GDI+ Image object or NULL on failure
     Gdiplus::Image* FromResource(LPCWSTR lpResourceName)
     {
+        // We're only loading PNG images at the present time
         HRSRC hResource = ::FindResource(::hInst, lpResourceName, L"PNG");
         if (!hResource) 
             return NULL;
@@ -124,10 +128,10 @@ void cef_dark_window::DoFinalCleanup()
  */
 void cef_dark_window::InitDrawingResources()
 {
+#ifdef DARK_UI
     // Make sure that the window theme is set
     //  to no theme so we get the right metrics
     ::SetWindowTheme(mWnd, L"", L"");
-
     // Fetch Non Client Metric Data
     mNcMetrics.cbSize = sizeof (mNcMetrics);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
@@ -156,6 +160,7 @@ void cef_dark_window::InitDrawingResources()
     if (mFrameOutlinePen == NULL) {
         mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
     }
+#endif
 }
 
 /*
@@ -214,7 +219,9 @@ void cef_dark_window::LoadSysButtonImages()
 // WM_NCCREATE handler
 BOOL cef_dark_window::HandleNcCreate()
 {
+#ifdef DARK_UI
     InitDrawingResources();
+#endif
     return FALSE;
 }
 
@@ -344,10 +351,10 @@ void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
 void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
 {
     int top = mNcMetrics.iBorderWidth;
-    int right =  mNcMetrics.iBorderWidth;
+    int right = mNcMetrics.iBorderWidth;
 
     if (IsZoomed()) {
-        top =  ::GetSystemMetrics (SM_CYFRAME);
+        top = ::GetSystemMetrics (SM_CYFRAME);
         right = ::GetSystemMetrics (SM_CXFRAME);
     }
 
@@ -383,17 +390,18 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     GetWindowRect(&rectWindow);
 
     RECT rectFrame;
-
     ::SetRectEmpty(&rectFrame);
 
     rectFrame.bottom = ::RectHeight(rectWindow);
     rectFrame.right = ::RectWidth(rectWindow);
 
+    // Paint the entire thing with the background brush
     ::FillRect(hdc, &rectFrame, mBackgroundBrush);
 
     HGDIOBJ oldPen = ::SelectObject(hdc, mFrameOutlinePen);
     HGDIOBJ oldbRush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
 
+    // Now draw a PX tuxedo border around the edge
     ::Rectangle(hdc, 0, 0, rectFrame.right, rectFrame.bottom);
 
     ::SelectObject(hdc, oldPen);
@@ -442,35 +450,36 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
         mCaptionFont = ::CreateFontIndirect(&mNcMetrics.lfCaptionFont);
     }
 
-
     RECT textRect;
     ComputeWindowCaptionRect(textRect);
 
     HGDIOBJ hPreviousFont = ::SelectObject(hdc, mCaptionFont);        
-
     int oldBkMode = ::SetBkMode(hdc, TRANSPARENT);
     COLORREF oldRGB = ::SetTextColor(hdc, CEF_COLOR_NORMALTEXT);
 
-
+    // Setup the rect to use to calculate the position
     RECT windowRect;
     GetWindowRect(&windowRect);
     ScreenToNonClient(&windowRect);
-    windowRect.bottom = textRect.bottom;
 
+    // Get the title and the length
     int textLength = GetWindowTextLength() + 1;
     LPWSTR szCaption = new wchar_t [textLength + 1];
     ::ZeroMemory(szCaption, textLength + 1);
     int cchCaption = GetWindowText(szCaption, textLength);
 
-    windowRect.top += textRect.top;
-
+    // Figure out how much space we need to draw the whole thing
     RECT rectTemp;
     ::SetRectEmpty(&rectTemp);
     ::DrawText(hdc, szCaption, ::wcslen(szCaption), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
 
+    // Can it be centered within the window?
     if (((::RectWidth(windowRect) / 2) + (::RectWidth(rectTemp) / 2) + 1) < textRect.right) {
+        windowRect.bottom = textRect.bottom;
+        windowRect.top += textRect.top;
         ::DrawText(hdc, szCaption, cchCaption, &windowRect, DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
     } else {
+        // Can't be centered so LEFT justify and add ellipsis when truncated
         ::DrawText(hdc, szCaption, cchCaption, &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS|DT_NOPREFIX);
     }
  
@@ -759,6 +768,8 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
 // Like UpdateNonClientArea, but sets up a clipping region to just update the system buttons
 void cef_dark_window::UpdateNonClientButtons () 
 {
+    // create a simple clipping region
+    //  that only includes the system buttons (min/max/restore/close)
     HDC hdc = GetWindowDC();
 
     RECT rectCloseButton ;
@@ -792,7 +803,7 @@ void cef_dark_window::UpdateNonClientButtons ()
 
 // WM_MEASUREITEM handler
 // Since we have owner drawn menus, we need to provide information about 
-//  the menus back to Windows so it can lay out the menubar appropriately.
+//  the menus back to Windows so it can layout the menubar appropriately.
 BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
 {
     static wchar_t szMenuString[256] = L"";
@@ -873,14 +884,37 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
     return FALSE;    
 }
 
-// WM_NCMOUSELEAVE hander -- resets our non-client state data
+/* 
+ * The mouse handlers below will track the state of 
+ *  the mouse and the system buttons so the drawing code
+ *  can show the correct state and fire the correct command.
+ * 
+ * NonClientData.mActiveButton  HitTest for the button the mouse is over/pushed
+ * NonClientData.mButtonDown    Indicates whether the mouse button is down or not
+ *                                  The button down state is only an indicator that the
+ *                                  action performed by the mouse *could* result in 
+ *                                  execution of the SysCommand. 
+ * NonClientData.mButtonOver    Indicates whether the mouse is over mActiveButton
+ *                                  Once the mouse button has been pressed -- mActiveButton
+ *                                  will not update on mouse moves until the mouse button
+ *                                  is released.  mButtonOver, however, will change during
+ *                                  mouse moves to indicate that the mouse is indeed over
+ *                                  the button that was pressed.  
+ *                              This prevents misfires when the button is pressed and 
+ *                                  held and moved to another button and released.
+ */
+
+// WM_NCMOUSELEAVE handler 
 void cef_dark_window::HandleNcMouseLeave() 
 {
+    // When the mouse leaves the non-client area
+    //  we just need to reset our button state and 
+    //  redraw the system buttons
     mNonClientData.Reset();
     UpdateNonClientButtons();
 }
 
-// WM_NCMOUSEMOVE hander 
+// WM_NCMOUSEMOVE handler 
 BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
 {
     bool needUpdate = false;
@@ -889,6 +923,8 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     {
         needUpdate = true;
         if (mNonClientData.mButtonDown) {
+            // If the mouse button was down, we just want 
+            //  to indicate that we're no longer over the system button
             mNonClientData.mButtonOver = false;
         } else {
             switch (uHitTest)
@@ -896,17 +932,25 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
             case HTCLOSE:
             case HTMAXBUTTON:
             case HTMINBUTTON:
+                // Otherwise, we're just mousing over stuff 
+                //  so we need to show the visual feedback
                 mNonClientData.mButtonOver = true;
                 mNonClientData.mActiveButton = uHitTest;
                 TrackNonClientMouseEvents();
                 break;
             default:
+                // User isn't hovering over anything that 
+                //  we care about so just reset and redraw
                 mNonClientData.Reset();
                 UpdateNonClientButtons ();
+                // let the DefaultWindowProc handle this 
                 return FALSE;
             }
         }
     } else {
+        // Check to see if the user moved the mouse back over
+        //  the button that they originally click and held and
+        //  redraw the button in the correct state if they did
         if (mNonClientData.mButtonDown && !mNonClientData.mButtonOver) {
             mNonClientData.mButtonOver = true;
             needUpdate = true;
@@ -919,29 +963,29 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     return TRUE;
 }
 
-// WM_NCLBUTTONDOWN hander 
+// WM_NCLBUTTONDOWN handler 
 BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
 {
-
     switch (uHitTest)
     {
     case HTCLOSE:
     case HTMAXBUTTON:
     case HTMINBUTTON:
+        // we only care about these guys
         mNonClientData.mActiveButton = uHitTest;
         mNonClientData.mButtonOver = true;
         mNonClientData.mButtonDown = true;
-        UpdateNonClientButtons ();
+        UpdateNonClientButtons();
         TrackNonClientMouseEvents();
         return TRUE;
     default:
         mNonClientData.Reset();
-        UpdateNonClientButtons ();
+        UpdateNonClientButtons();
         return FALSE;
     }
 }
 
-// WM_NCLBUTTONUP hander 
+// WM_NCLBUTTONUP handler 
 BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 {
     NonClientButtonStateData oldData(mNonClientData);
@@ -981,6 +1025,7 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 // WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
+#if defined(DARK_UI)
     switch (message) 
     {
     case WM_SETTINGCHANGE:
@@ -1046,14 +1091,15 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETTEXT:
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
-        // Turn off redraw when these messages
-        //  are handled by the base class to reduce flicker
+        // Turn off redraw because the 
+        //  DefaultWindowProc will paint over top of 
+        //  our frame and cause the title bar to flicker 
         SetRedraw(FALSE); 
         break;
     }
-
+#endif
     LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
-    
+#ifdef DARK_UI    
     // post default message processing
     switch (message)
     {
@@ -1079,6 +1125,6 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         UpdateNonClientArea();
         break;
     }
-
+#endif
     return lr;
 }
