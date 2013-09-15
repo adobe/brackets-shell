@@ -864,10 +864,15 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
 
         ::GetMenuString((HMENU)lpDIS->hwndItem, lpDIS->itemID, szMenuString, _countof(szMenuString), MF_BYCOMMAND);
         
+        // Add a little more room to the top fixes highlight issue
+        RECT rectBG;
+        ::CopyRect(&rectBG, &lpDIS->rcItem);
+        rectBG.top -= 2;
+
         if (lpDIS->itemState & ODS_SELECTED || lpDIS->itemState & ODS_HOTLIGHT) {
-            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mHoverBrush);
+            ::FillRect(lpDIS->hDC, &rectBG, mHoverBrush);
         } else {
-            ::FillRect(lpDIS->hDC, &lpDIS->rcItem, mBackgroundBrush);
+            ::FillRect(lpDIS->hDC, &rectBG, mBackgroundBrush);
         }
         
         if (lpDIS->itemState & ODS_GRAYED) {
