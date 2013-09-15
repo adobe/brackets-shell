@@ -101,6 +101,6 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    LRESULT lr = CEF_WINDOW_BASE::WindowProc(message, wParam, lParam);
+    LRESULT lr = cef_host_window_base::WindowProc(message, wParam, lParam);
     return lr;
 }

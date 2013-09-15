@@ -100,7 +100,8 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
 {
      if (cef_host_window::SubclassWindow(wnd)) {
         InitSystemIcon();
-        DragAcceptFiles(TRUE);
+        // TODO: This isn't necessary contact @raylim to confirm
+        DragAcceptFiles(TRUE); 
         GetBrowser()->GetHost()->SetFocus(true);
         return true;
     }

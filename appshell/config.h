@@ -36,8 +36,6 @@
 #define NODE_EXECUTABLE_PATH "Brackets-node.exe"
 #define NODE_CORE_PATH "node-core"
 #define FIRST_INSTANCE_MUTEX_NAME	(APP_NAME L".Shell.Instance")
-// Comment out this line to enable OS themed drawing
-#define DARK_UI 
 #endif
 #ifdef OS_MACOSX
 // Name of group (if any) that application prefs/settings/etc. are stored under
@@ -65,3 +63,5 @@
 
 #define REMOTE_DEBUGGING_PORT 9234
 
+// Comment out this line to enable OS themed drawing
+#define DARK_UI 

@@ -30,12 +30,12 @@
 //  Or use cef_main_window or cef_popup_window which implement GetBrowser()
 
 #ifdef DARK_UI
-#define CEF_WINDOW_BASE cef_dark_window
+typedef cef_dark_window cef_host_window_base;
 #else
-#define CEF_WINDOW_BASE cef_window
+#define cef_window cef_host_window_base;
 #endif
 
-class cef_host_window : public CEF_WINDOW_BASE
+class cef_host_window : public cef_host_window_base
 {
 public:
 	// Construction/Destruciton - Public Members
