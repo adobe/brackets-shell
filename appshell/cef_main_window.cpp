@@ -25,6 +25,7 @@
 #include "client_handler.h"
 #include "resource.h"
 #include "native_menu_model.h"
+#include "config.h"
 
 // external
 extern HINSTANCE                hInst;
@@ -50,6 +51,21 @@ static const long           kMinWindowHeight = 200;
 
 // Globals
 static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
+
+static bool IsRunningWindowsXP()
+{
+	static bool initialized = false;
+	static bool runningXP = false;
+	
+	if (!initialized) {
+		OSVERSIONINFO vi;
+		::ZeroMemory(&vi, sizeof(vi));
+		::GetVersionEx(&vi);
+		runningXP = (vi.dwMajorVersion < 6);
+	}
+
+	return runningXP;
+}
 
 // The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
@@ -133,9 +149,11 @@ void cef_main_window::PostNcDestroy()
     // We get this notification after the window 
     //  has been destroyed so we need to delete ourself
     delete this;
+#ifdef DARK_UI
     // After the main window is destroyed 
     //  do final cleanup...
     DoFinalCleanup();
+#endif
 }
 
 // Helper to get the location to place the browser
@@ -266,15 +284,27 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     // Minimizing the window to 0x0 which causes our layout to go all
     // screwy, so we just ignore it.
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-    if (hwnd && !bMinimize) 
-    {
-        RECT rect;
-        GetClientRect(&rect);
+	if (!hwnd) 
+		return FALSE;
 
+    RECT rect;
+    GetClientRect(&rect);
+
+    if (!bMinimize) 
+    {
         HDWP hdwp = ::BeginDeferWindowPos(1);
         hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
         ::EndDeferWindowPos(hdwp);
-    }
+	}
+#ifdef DARK_UI
+	// Windows XP seems to have trouble
+	if (::IsRunningWindowsXP()) {
+		if (GetProp(L"WasMinimized")) {
+			::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
+		}
+		SetProp(L"WasMinimized", (HANDLE)bMinimize);
+	}
+#endif
 
     return FALSE;
 }

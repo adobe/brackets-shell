@@ -123,17 +123,20 @@ void cef_dark_window::DoFinalCleanup()
     }
 }
 
+void cef_dark_window::InitializeWindowForDarkUI() 
+{
+    // Make sure that the window theme is set
+    //  to no theme so we get the right metrics
+    ::SetWindowTheme(mWnd, L"", L"");
+}
+
 /*
  * InitDrawingResources -- Loads Pens, Brushes and Images used for drawing
  */
 void cef_dark_window::InitDrawingResources()
 {
-#ifdef DARK_UI
-    // Make sure that the window theme is set
-    //  to no theme so we get the right metrics
-    ::SetWindowTheme(mWnd, L"", L"");
     // Fetch Non Client Metric Data
-    mNcMetrics.cbSize = sizeof (mNcMetrics);
+	mNcMetrics.cbSize = sizeof (mNcMetrics) - sizeof (mNcMetrics.iPaddedBorderWidth);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
 
     // Startup GDI+
@@ -141,10 +144,9 @@ void cef_dark_window::InitDrawingResources()
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
     }
-
     LoadSysButtonImages();
 
-    // Create Brushes and Pens 
+	// Create Brushes and Pens 
     if (mBackgroundBrush == NULL) {                            
         mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
     }
@@ -160,7 +162,6 @@ void cef_dark_window::InitDrawingResources()
     if (mFrameOutlinePen == NULL) {
         mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
     }
-#endif
 }
 
 /*
@@ -219,10 +220,19 @@ void cef_dark_window::LoadSysButtonImages()
 // WM_NCCREATE handler
 BOOL cef_dark_window::HandleNcCreate()
 {
-#ifdef DARK_UI
     InitDrawingResources();
-#endif
+	InitializeWindowForDarkUI();
     return FALSE;
+}
+
+bool cef_dark_window::SubclassWindow(HWND hWnd)
+{
+	InitDrawingResources();
+	if (cef_window::SubclassWindow(hWnd)) {
+ 	   InitializeWindowForDarkUI();
+	   return true;
+	}
+	return false;
 }
 
 // WM_NCCREATE handler
@@ -468,7 +478,7 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     ::ZeroMemory(szCaption, textLength + 1);
     int cchCaption = GetWindowText(szCaption, textLength);
 
-    // Figure out how much space we need to draw the whole thing
+    // Figure out how much space we need to draw ethe whole thing
     RECT rectTemp;
     ::SetRectEmpty(&rectTemp);
     ::DrawText(hdc, szCaption, ::wcslen(szCaption), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
@@ -1025,7 +1035,6 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
 // WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-#if defined(DARK_UI)
     switch (message) 
     {
     case WM_SETTINGCHANGE:
@@ -1097,9 +1106,7 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         SetRedraw(FALSE); 
         break;
     }
-#endif
     LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
-#ifdef DARK_UI    
     // post default message processing
     switch (message)
     {
@@ -1125,6 +1132,5 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         UpdateNonClientArea();
         break;
     }
-#endif
     return lr;
 }

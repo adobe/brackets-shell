@@ -99,8 +99,7 @@ void cef_popup_window::InitSystemIcon()
 // Subclasses the HWND and initializes the dark drawing code
 bool cef_popup_window::SubclassWindow(HWND wnd)
 {
-    if (cef_host_window::SubclassWindow(wnd)) {
-        InitDrawingResources();
+     if (cef_host_window::SubclassWindow(wnd)) {
         InitSystemIcon();
         DragAcceptFiles(TRUE);
         GetBrowser()->GetHost()->SetFocus(true);

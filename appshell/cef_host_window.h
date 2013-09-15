@@ -23,15 +23,22 @@
 #include "cef_dark_window.h"
 #include "include/cef_browser.h"
 #include "command_callbacks.h"
-
+#include "config.h"
 
 // This the base class for all windows which host a browser instance
 //  You must derive a from this class and implement GetBrowser()
 //  Or use cef_main_window or cef_popup_window which implement GetBrowser()
-class cef_host_window : public cef_dark_window
+
+#ifdef DARK_UI
+#define CEF_WINDOW_BASE cef_dark_window
+#else
+#define CEF_WINDOW_BASE cef_window
+#endif
+
+class cef_host_window : public CEF_WINDOW_BASE
 {
 public:
-    // Construction/Destruciton - Public Members
+	// Construction/Destruciton - Public Members
     cef_host_window(void);
     virtual ~cef_host_window(void);
 
