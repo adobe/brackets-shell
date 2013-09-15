@@ -52,21 +52,6 @@ static const long           kMinWindowHeight = 200;
 // Globals
 static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
 
-static bool IsRunningWindowsXP()
-{
-	static bool initialized = false;
-	static bool runningXP = false;
-	
-	if (!initialized) {
-		OSVERSIONINFO vi;
-		::ZeroMemory(&vi, sizeof(vi));
-		::GetVersionEx(&vi);
-		runningXP = (vi.dwMajorVersion < 6);
-	}
-
-	return runningXP;
-}
-
 // The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
 {
@@ -298,14 +283,16 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
         hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
         ::EndDeferWindowPos(hdwp);
 	}
+
 #ifdef DARK_UI
-	// Windows XP seems to have trouble
-	if (::IsRunningWindowsXP()) {
-		if (GetProp(L"WasMinimized")) {
-			::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
-		}
-		SetProp(L"WasMinimized", (HANDLE)bMinimize);
+	// We turn off redraw during activation to minimized flicker
+	//	which causes problems on some versions of Windows. If the app
+	//  was minimized and was re-activated, it will restore and the client area isn't 
+	//	drawn so redraw the client area now or it will be hollow in the middle...
+	if (GetProp(L"WasMinimized")) {
+		::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
 	}
+	SetProp(L"WasMinimized", (HANDLE)bMinimize);
 #endif
 
     return FALSE;
