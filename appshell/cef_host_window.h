@@ -32,7 +32,7 @@
 #ifdef DARK_UI
 typedef cef_dark_window cef_host_window_base;
 #else
-#define cef_window cef_host_window_base;
+typedef cef_window cef_host_window_base;
 #endif
 
 class cef_host_window : public cef_host_window_base

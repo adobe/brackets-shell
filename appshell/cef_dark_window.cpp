@@ -135,7 +135,9 @@ void cef_dark_window::InitializeWindowForDarkUI()
  */
 void cef_dark_window::InitDrawingResources()
 {
-    // Fetch Non Client Metric Data
+    // Fetch Non Client Metric Data 
+    //  NOTE: Windows XP chokes if the size include Windows Version 6 members so 
+    //          subtract off the size of the new data members
 	mNcMetrics.cbSize = sizeof (mNcMetrics) - sizeof (mNcMetrics.iPaddedBorderWidth);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
 
