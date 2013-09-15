@@ -1110,7 +1110,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         // Turn off redraw because the 
         //  DefaultWindowProc will paint over top of 
         //  our frame and cause the title bar to flicker 
-        SetRedraw(FALSE); 
+		if (!IsIconic()){
+			SetRedraw(FALSE); 
+		}
         break;
     }
     LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
@@ -1135,8 +1137,10 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SETTEXT:
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
-        SetRedraw(TRUE);
-        UpdateNonClientArea();
+        if (!IsIconic()){
+			SetRedraw(TRUE);
+	        UpdateNonClientArea();
+		}
         break;
     }
     return lr;
