@@ -31,7 +31,7 @@ public:
     cef_popup_window(CefRefPtr<CefBrowser> browser);
     virtual ~cef_popup_window(void);
 
-    bool SubclassWindow (HWND hWnd);
+    bool SubclassWindow(HWND hWnd);
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 

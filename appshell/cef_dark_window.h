@@ -128,7 +128,7 @@ protected:
 	void InitializeWindowForDarkUI();   
 
 	// Teardown
-	virtual void DoFinalCleanup();
+	void DoFinalCleanup();
 
     // Images, Fonts and Brushes used for Drawing
     Gdiplus::Image*              mSysCloseButton;

@@ -35,18 +35,17 @@ static wchar_t   gCefWindowClosingPropName[] = L"CLOSING";
 cef_popup_window::cef_popup_window(CefRefPtr<CefBrowser> browser) :
     mBrowser(browser)
 {
-
 }
 
 cef_popup_window::~cef_popup_window(void)
 {
-
 }
 
 // We create these on the heap so destroy them
 //  when it is safe to destroy
 void cef_popup_window::PostNcDestroy()
 {
+    cef_host_window::PostNcDestroy();
     delete this;
 }
 

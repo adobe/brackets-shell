@@ -229,7 +229,7 @@ bool cef_dark_window::SubclassWindow(HWND hWnd)
 {
 	InitDrawingResources();
 	if (cef_window::SubclassWindow(hWnd)) {
- 	   InitializeWindowForDarkUI();
+ 	   //InitializeWindowForDarkUI();
 	   return true;
 	}
 	return false;

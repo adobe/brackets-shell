@@ -146,6 +146,8 @@ BOOL cef_main_window::Create()
 // PostNcDestroy override 
 void cef_main_window::PostNcDestroy()
 {
+    cef_host_window::PostNcDestroy();
+
     // We get this notification after the window 
     //  has been destroyed so we need to delete ourself
     delete this;
