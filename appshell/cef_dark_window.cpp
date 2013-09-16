@@ -666,6 +666,13 @@ void cef_dark_window::DoPaintNonClientArea(HDC hdc)
     ::DeleteDC(dcMem);
 }
 
+// Special case for derived classes to implement
+//  in order to repaint the client area when we've
+//  turned off redraw and turn it back on.
+void cef_dark_window::DoRepaintClientArea()
+{
+}
+
 // Force Drawing the non-client area.
 //  Normally WM_NCPAINT is used but there are times when you
 //  need to force drawing the entire non-client area when
@@ -687,6 +694,7 @@ BOOL cef_dark_window::HandleNcPaint(HRGN hUpdateRegion)
 
     return TRUE;
 }
+
 
 // WM_NCHITTEST handler
 int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
@@ -980,6 +988,7 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     return TRUE;
 }
 
+
 // WM_NCLBUTTONDOWN handler 
 BOOL cef_dark_window::HandleNcLeftButtonDown(UINT uHitTest)
 {
@@ -1140,6 +1149,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (!IsIconic()){
             SetRedraw(TRUE);
             UpdateNonClientArea();
+            if (message != WM_SETTEXT) {
+                DoRepaintClientArea();
+            }
         }
         break;
     }

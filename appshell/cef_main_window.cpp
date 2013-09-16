@@ -290,13 +290,26 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     //  was minimized and was re-activated, it will restore and the client area isn't 
     //    drawn so redraw the client area now or it will be hollow in the middle...
     if (GetProp(L"WasMinimized")) {
-        ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
+        DoRepaintClientArea();
     }
     SetProp(L"WasMinimized", (HANDLE)bMinimize);
 #endif
 
     return FALSE;
 }
+
+void cef_main_window::DoRepaintClientArea()
+{
+    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
+    if (!hwnd) 
+        return;
+
+    RECT rect;
+    GetClientRect(&rect);
+    
+    ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
+}
+
 
 // WM_COMMAND handler
 BOOL cef_main_window::HandleCommand(UINT commandId)

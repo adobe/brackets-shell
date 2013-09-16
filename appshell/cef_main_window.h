@@ -66,6 +66,7 @@ protected:
     virtual void PostNcDestroy();
     virtual void GetCefBrowserRect(RECT& rect);
     virtual const CefRefPtr<CefBrowser> GetBrowser();
+    virtual void DoRepaintClientArea();
 
     // Find helper
     static BOOL CALLBACK FindSuitableBracketsInstanceHelper(HWND hwnd, LPARAM lParam);

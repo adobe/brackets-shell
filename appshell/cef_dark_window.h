@@ -108,6 +108,9 @@ protected:
     virtual void DoDrawSystemIcons(HDC hdc);
     virtual void DoDrawMenuBar(HDC hdc);
 
+    // Special Drawing Helpers
+    virtual void DoRepaintClientArea();
+
     // Rect Computers
     virtual void ComputeWindowIconRect(RECT& rect);
     virtual void ComputeWindowCaptionRect(RECT& rect);
@@ -116,6 +119,7 @@ protected:
     virtual void ComputeCloseButtonRect(RECT& rect);
     virtual void ComputeMenuBarRect(RECT& rect);
 
+    
     // Drawing Initializers
     void InitDrawingResources();
     void LoadSysButtonImages();
