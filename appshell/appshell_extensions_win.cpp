@@ -1180,7 +1180,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
             return ConvertErrnoCode(GetLastError());
         }
     }
-    return NO_ERROR;
+    return errCode;
 }
 
 // Return true if the unicode character is one of the symbols that can be used 
