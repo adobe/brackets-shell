@@ -271,8 +271,8 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     // Minimizing the window to 0x0 which causes our layout to go all
     // screwy, so we just ignore it.
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-	if (!hwnd) 
-		return FALSE;
+    if (!hwnd) 
+        return FALSE;
 
     RECT rect;
     GetClientRect(&rect);
@@ -282,17 +282,17 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
         HDWP hdwp = ::BeginDeferWindowPos(1);
         hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
         ::EndDeferWindowPos(hdwp);
-	}
+    }
 
 #ifdef DARK_UI
-	// We turn off redraw during activation to minimized flicker
-	//	which causes problems on some versions of Windows. If the app
-	//  was minimized and was re-activated, it will restore and the client area isn't 
-	//	drawn so redraw the client area now or it will be hollow in the middle...
-	if (GetProp(L"WasMinimized")) {
-		::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
-	}
-	SetProp(L"WasMinimized", (HANDLE)bMinimize);
+    // We turn off redraw during activation to minimized flicker
+    //    which causes problems on some versions of Windows. If the app
+    //  was minimized and was re-activated, it will restore and the client area isn't 
+    //    drawn so redraw the client area now or it will be hollow in the middle...
+    if (GetProp(L"WasMinimized")) {
+        ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
+    }
+    SetProp(L"WasMinimized", (HANDLE)bMinimize);
 #endif
 
     return FALSE;

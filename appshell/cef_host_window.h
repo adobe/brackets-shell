@@ -38,7 +38,7 @@ typedef cef_window cef_host_window_base;
 class cef_host_window : public cef_host_window_base
 {
 public:
-	// Construction/Destruciton - Public Members
+    // Construction/Destruciton - Public Members
     cef_host_window(void);
     virtual ~cef_host_window(void);
 
