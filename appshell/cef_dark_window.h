@@ -76,10 +76,10 @@ public:
     virtual ~cef_dark_window();
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
-	bool SubclassWindow(HWND hWnd);
+   bool SubclassWindow(HWND hWnd);
 
 protected:
- 	// Window Message Handlers
+    // Window Message Handlers
     BOOL HandleNcCreate();
     BOOL HandleNcDestroy();
     BOOL HandleNcPaint(HRGN hUpdateRegion);
@@ -124,11 +124,11 @@ protected:
     void InitMenuFont();
     void EnforceMenuBackground();
 
-	// Basic Initialization
-	void InitializeWindowForDarkUI();   
+    // Basic Initialization
+    void InitializeWindowForDarkUI();   
 
-	// Teardown
-	void DoFinalCleanup();
+    // Teardown
+    void DoFinalCleanup();
 
     // Images, Fonts and Brushes used for Drawing
     Gdiplus::Image*              mSysCloseButton;

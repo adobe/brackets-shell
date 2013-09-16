@@ -138,7 +138,7 @@ void cef_dark_window::InitDrawingResources()
     // Fetch Non Client Metric Data 
     //  NOTE: Windows XP chokes if the size include Windows Version 6 members so 
     //          subtract off the size of the new data members
-	mNcMetrics.cbSize = sizeof (mNcMetrics) - sizeof (mNcMetrics.iPaddedBorderWidth);
+    mNcMetrics.cbSize = sizeof (mNcMetrics) - sizeof (mNcMetrics.iPaddedBorderWidth);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
 
     // Startup GDI+
@@ -148,7 +148,7 @@ void cef_dark_window::InitDrawingResources()
     }
     LoadSysButtonImages();
 
-	// Create Brushes and Pens 
+    // Create Brushes and Pens 
     if (mBackgroundBrush == NULL) {                            
         mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
     }
@@ -223,18 +223,18 @@ void cef_dark_window::LoadSysButtonImages()
 BOOL cef_dark_window::HandleNcCreate()
 {
     InitDrawingResources();
-	InitializeWindowForDarkUI();
+    InitializeWindowForDarkUI();
     return FALSE;
 }
 
 bool cef_dark_window::SubclassWindow(HWND hWnd)
 {
-	InitDrawingResources();
-	if (cef_window::SubclassWindow(hWnd)) {
- 	   InitializeWindowForDarkUI();
-	   return true;
-	}
-	return false;
+    InitDrawingResources();
+    if (cef_window::SubclassWindow(hWnd)) {
+        InitializeWindowForDarkUI();
+        return true;
+    }
+    return false;
 }
 
 // WM_NCCREATE handler
@@ -1110,9 +1110,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         // Turn off redraw because the 
         //  DefaultWindowProc will paint over top of 
         //  our frame and cause the title bar to flicker 
-		if (!IsIconic()){
-			SetRedraw(FALSE); 
-		}
+        if (!IsIconic()){
+            SetRedraw(FALSE); 
+        }
         break;
     }
     LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
@@ -1138,9 +1138,9 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_ACTIVATE:
     case WM_NCACTIVATE:
         if (!IsIconic()){
-			SetRedraw(TRUE);
-	        UpdateNonClientArea();
-		}
+            SetRedraw(TRUE);
+            UpdateNonClientArea();
+        }
         break;
     }
     return lr;
