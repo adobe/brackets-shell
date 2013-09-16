@@ -1176,11 +1176,9 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     else
     {
         int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-        if (relativeTag >= 0 && positionIdx == kBefore) {
-            if (!InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo)) {
-                return ConvertErrnoCode(GetLastError());
-            }
-        } 
+        if (!InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo)) {
+            return ConvertErrnoCode(GetLastError());
+        }
     }
     return NO_ERROR;
 }
