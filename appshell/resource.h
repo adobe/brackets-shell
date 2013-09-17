@@ -6,8 +6,11 @@
 // Microsoft Visual C++ generated include file.
 // Used by cefclient.rc
 //
+
+#define IDC_STATIC                      -1
+
 #define BINARY                          256
-#define IDC_MYICON                      2
+
 #define IDD_CEFCLIENT_DIALOG            102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103
@@ -21,6 +24,29 @@
 #define IDC_NAV_FORWARD                 201
 #define IDC_NAV_RELOAD                  202
 #define IDC_NAV_STOP                    203
+
+#define IDB_CLOSE_BUTTON                300
+#define IDB_CLOSE_HOVER_BUTTON          301
+#define IDB_CLOSE_PRESSED_BUTTON        302
+#define IDB_MAX_BUTTON                  303
+#define IDB_MAX_HOVER_BUTTON            304
+#define IDB_MAX_PRESSED_BUTTON          305
+#define IDB_MIN_BUTTON                  306
+#define IDB_MIN_HOVER_BUTTON            307
+#define IDB_MIN_PRESSED_BUTTON          308
+#define IDB_RESTORE_BUTTON              309
+#define IDB_RESTORE_HOVER_BUTTON        310
+#define IDB_RESTORE_PRESSED_BUTTON      311
+
+#define IDS_BINDING                     1000
+#define IDS_DIALOGS                     1001
+#define IDS_LOGO                        1002
+#define IDS_LOGOBALL                    1003
+#define IDS_LOCALSTORAGE                1004
+#define IDS_XMLHTTPREQUEST              1005
+#define IDS_DOMACCESS                   1006
+#define IDS_APPSHELL_EXTENSIONS         1007
+
 #define ID_WARN_CONSOLEMESSAGE          32000
 #define ID_WARN_DOWNLOADCOMPLETE        32001
 #define ID_WARN_DOWNLOADERROR           32002
@@ -42,15 +68,6 @@
 #define ID_TESTS_PLUGIN_INFO            32775
 #define ID_TESTS_DOM_ACCESS             32776
 #define IDM_CLOSE                       32777
-#define IDC_STATIC                      -1
-#define IDS_BINDING                     1000
-#define IDS_DIALOGS                     1001
-#define IDS_LOGO                        1002
-#define IDS_LOGOBALL                    1003
-#define IDS_LOCALSTORAGE                1004
-#define IDS_XMLHTTPREQUEST              1005
-#define IDS_DOMACCESS                   1006
-#define IDS_APPSHELL_EXTENSIONS         1007
 
 // Avoid files associated with MacOS
 #define _X86_

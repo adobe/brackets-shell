@@ -34,7 +34,7 @@
 #include <Shobjidl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-
+#include "config.h"
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
@@ -1147,41 +1147,39 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     bool inserted = false;    
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, L"", position, relativeId, positionIdx);
-    if (positionIdx >= 0 || positionIdx == kBefore) 
-    {
-        MENUITEMINFO menuInfo;
-        memset(&menuInfo, 0, sizeof(MENUITEMINFO));
-        HMENU newMenu = CreateMenu();
-        menuInfo.cbSize = sizeof(MENUITEMINFO);
-        menuInfo.wID = (UINT)tag;
-        menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING;    
-        menuInfo.fType = MFT_STRING;
-        menuInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
-        menuInfo.cch = itemTitle.size();        
-        if (positionIdx >= 0) {
-            InsertMenuItem(mainMenu, positionIdx, TRUE, &menuInfo);
-            inserted = true;
-        }
-        else
-        {
-            int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
-            if (relativeTag >= 0 && positionIdx == kBefore) {
-                InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo);
-                inserted = true;
-            } else {
-                // menu is already there
-                return NO_ERROR;
-            }
-        }
-    }
-   
-    if (inserted == false)
-    {
-        if (!AppendMenu(mainMenu,MF_STRING, tag, itemTitle.c_str())) {
+
+    MENUITEMINFO menuInfo;
+    memset(&menuInfo, 0, sizeof(MENUITEMINFO));
+    HMENU newMenu = CreateMenu();
+    menuInfo.cbSize = sizeof(MENUITEMINFO);
+    menuInfo.wID = (UINT)tag;
+    menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE;    
+
+#ifdef DARK_UI
+    menuInfo.fType = MFT_OWNERDRAW;
+#else
+    menuInfo.fType = MFT_STRING;
+#endif
+    menuInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
+    menuInfo.cch = itemTitle.size();        
+        
+    if (positionIdx == kAppend) {
+        if (!InsertMenuItem(mainMenu, -1, TRUE, &menuInfo)) {
             return ConvertErrnoCode(GetLastError());
         }
     }
-
+    else if (positionIdx >= 0) {
+        if (!InsertMenuItem(mainMenu, positionIdx, TRUE, &menuInfo)) {
+            return ConvertErrnoCode(GetLastError());
+        }
+    }
+    else
+    {
+        int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+        if (!InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo)) {
+            return ConvertErrnoCode(GetLastError());
+        }
+    }
     return errCode;
 }
 
@@ -1541,6 +1539,20 @@ void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD
     redrawTimerId = NULL;
 }
 
+int GetMenuItemPosition(HMENU hMenu, UINT commandID)
+{
+    int count = GetMenuItemCount(hMenu);
+    for (int i = 0; i < count; i++) {
+        MENUITEMINFO mii;
+        ZeroMemory(&mii, sizeof(mii));
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID;
+        if (GetMenuItemInfo(hMenu, i, TRUE, &mii) && mii.wID == commandID)
+            return i;
+    }
+    return -1;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
     static WCHAR titleBuf[MAX_LOADSTRING];
 
@@ -1557,7 +1569,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     MENUITEMINFO itemInfo;
     memset(&itemInfo, 0, sizeof(MENUITEMINFO));
     itemInfo.cbSize = sizeof(MENUITEMINFO);
-    itemInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
+    itemInfo.fMask = MIIM_FTYPE | MIIM_ID | MIIM_DATA | MIIM_SUBMENU | MIIM_STRING;
     itemInfo.cch = MAX_LOADSTRING;
     itemInfo.dwTypeData = titleBuf;
     if (!GetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
@@ -1576,12 +1588,44 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     if (shortcut.length() > 0) {
         newTitle += shortcut;
     }
-    itemInfo.fType = MFT_STRING; // just to make sure
-    itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
-    itemInfo.cch = newTitle.size();
 
-    if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
-        return ConvertErrnoCode(GetLastError());        
+    HMENU mainMenu = GetMenu((HWND)getMenuParent(browser));
+    if (menu == mainMenu) 
+    {
+        // If we're changing the titles of top-level menu items
+        //  we must remove and reinsert the menu so that the item
+        //  can be remeasured otherwise the window doesn't get a 
+        //  WM_MEASUREITEM to relayout the menu bar
+        if (wcscmp(newTitle.c_str(), titleBuf) != 0) {
+            int position = GetMenuItemPosition(mainMenu, (UINT)tag);
+
+            RemoveMenu(mainMenu, tag, MF_BYCOMMAND);
+
+            MENUITEMINFO menuInfo;
+            memset(&menuInfo, 0, sizeof(MENUITEMINFO));
+
+            menuInfo.cbSize = sizeof(MENUITEMINFO);
+            menuInfo.wID = (UINT)tag;
+            menuInfo.fMask = MIIM_ID | MIIM_DATA | MIIM_STRING | MIIM_FTYPE | MIIM_SUBMENU;
+#ifdef DARK_UI
+            menuInfo.fType = MFT_OWNERDRAW;
+#else
+            menuInfo.fType = MFT_STRING;
+#endif
+            menuInfo.dwTypeData = (LPWSTR)newTitle.c_str();
+            menuInfo.hSubMenu = itemInfo.hSubMenu;
+            menuInfo.cch = newTitle.size();        
+        
+            InsertMenuItem(mainMenu, position, TRUE, &menuInfo);
+        }
+
+    } else { 
+        itemInfo.fType = MFT_STRING; // just to make sure
+        itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
+        itemInfo.cch = newTitle.size();
+        if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
+            return ConvertErrnoCode(GetLastError());        
+        }
     }
 
     // The menu bar needs to be redrawn, but we don't want to redraw with
