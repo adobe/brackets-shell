@@ -83,12 +83,51 @@ std::string ClientApp::GetExtensionJSSource()
     return result;
 }
 
+// check if this is a portable installation
+//   which is marked by the existence of a file named "makePortable" in the same folder as .app.
+bool ClientApp::CheckIfPortableInstall()
+{
+	//
+	std::string filename = ClientApp::AppGetAppDirectory();
+	filename += "/makePortable";
+	NSString * nsFilename = [NSString stringWithUTF8String:filename.c_str()];
+	return [[NSFileManager defaultManager] fileExistsAtPath:nsFilename];
+}
 
-CefString ClientApp::AppGetSupportDirectory() {
-  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-  NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
-  
-  return CefString([supportDirectory UTF8String]);
+// returns the directory to which the app has been installed
+CefString ClientApp::AppGetAppDirectory()
+{
+	// find the path-only of Brackets.app.  Need to iterate in case we're called from the helper.app.
+    NSString * applicationPath = [[NSBundle mainBundle] bundlePath];
+	NSString * appFilename = [applicationPath lastPathComponent];
+	while ([appFilename length] && ![appFilename isEqualToString:APP_NAME @".app"])
+	{
+		applicationPath = [applicationPath stringByDeletingLastPathComponent];
+		appFilename = [applicationPath lastPathComponent];
+	}
+	applicationPath = [applicationPath stringByDeletingLastPathComponent];
+    
+	return CefString([applicationPath UTF8String]);
+}
+
+CefString ClientApp::AppGetSupportDirectory()
+{
+	if (!CheckIfPortableInstall())
+	{
+		// for normal installations, use the Library folder
+		NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+		NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
+		return CefString([supportDirectory UTF8String]);
+	}
+	else
+	{
+		// for portable installations, use the app's installed folder
+		std::string strAppDir = ClientApp::AppGetAppDirectory();
+		strAppDir += "/";
+		NSString * appDir = [NSString stringWithUTF8String:strAppDir.c_str()];
+		appDir = [appDir stringByAppendingString:APP_NAME];
+		return CefString([appDir UTF8String]);
+	}
 }
 
 CefString ClientApp::AppGetDocumentsDirectory() {
