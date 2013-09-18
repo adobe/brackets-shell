@@ -19,8 +19,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  * 
- */ 
+ */
 
+#include "client_app.h"
+#include <glib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
@@ -59,36 +62,38 @@ int GErrorToErrorCode(GError *gerror) {
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-    const char *launch = "%s --allow-file-access-from-files %s %s";
-    gchar *remoteDebugging = "";
-    gchar *profilePath = "%s\\live-dev-profile";
+    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222";
+    gchar *remoteDebugging;
     gchar *cmdline;
-    int error = NO_ERROR;
+    int error = -1;
     GError *gerror = NULL;
     
     if (enableRemoteDebugging) {
-        profilePath = g_strdup_printf(remoteDebugging, ClientApp::AppGetSupportDirectory().c_str());
-        remoteDebugging = "--user-data-dir=%s --no-first-run --no-default-browser-check --remote-debugging-port=9222";
-        remoteDebugging = g_strdup_printf(remoteDebugging, profilePath);
+        // FIXME Should we mimic windows? user-data-dir=ClientApp::AppGetSupportDirectory()
+        remoteDebugging = g_strdup(remoteDebuggingFormat);
+    } else {
+        remoteDebugging = g_strdup("");
     }
 
     // check for supported browsers (in PATH directories)
     for (size_t i = 0; i < sizeof(browsers) / sizeof(browsers[0]); i++) {
-        cmdline = g_strdup_printf(launch, browsers[i].c_str(), argURL.c_str(), remoteDebugging);
+        cmdline = g_strdup_printf("%s %s %s", browsers[i].c_str(), argURL.c_str(), remoteDebugging);
 
         if (g_spawn_command_line_async(cmdline, &gerror)) {
             // browser is found in os; stop iterating
             error = NO_ERROR;
-            break;
         } else {
             error = ConvertGnomeErrorCode(gerror);
             g_error_free(gerror);
         }
 
         g_free(cmdline);
+        
+        if (error == NO_ERROR) {
+            break;
+        }
     }
     
-    g_free(profilePath);
     g_free(remoteDebugging);
 
     return error;
@@ -136,6 +141,7 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
 
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
+    return NO_ERROR;
 }
 
 int32 ShowOpenDialog(bool allowMultipleSelection,
@@ -248,25 +254,26 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 MakeDir(ExtensionString path, int mode)
 {
-    static int mkdirError = NO_ERROR;
-    mode = mode | 0777;     //#TODO make Brackets set mode != 0
+    mode = mode | 0777;
 
-    struct stat buf;
-    if((stat(path.substr(0, path.find_last_of('/')).c_str(), &buf) < 0) && errno==ENOENT)
-        MakeDir(path.substr(0, path.find_last_of('/')), mode);
+    if (g_mkdir(path.c_str(), mode) == -1) {
+        return ConvertLinuxErrorCode(errno);
+    }
 
-    if(mkdirError != 0)
-        return mkdirError;
-
-    if(mkdir(path.c_str(),mode)==-1)
-        mkdirError = ConvertLinuxErrorCode(errno);
     return NO_ERROR;
 }
 
 int Rename(ExtensionString oldName, ExtensionString newName)
 {
-    if (rename(oldName.c_str(), newName.c_str())==-1)
+    const char *newNameStr = newName.c_str();
+
+    if (g_file_test(newNameStr, G_FILE_TEST_EXISTS)) {
+        return ERR_FILE_EXISTS;
+    }
+
+    if (rename(oldName.c_str(), newNameStr) == -1) {
         return ConvertLinuxErrorCode(errno);
+    }
 }
 
 int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
@@ -284,7 +291,7 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != "utf8")
-        return NO_ERROR;    //#TODO ERR_UNSUPPORTED_ENCODING
+        return ERR_UNSUPPORTED_ENCODING;
 
     int error = NO_ERROR;
     GError *gerror = NULL;
@@ -293,11 +300,14 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     
     if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
         error = GErrorToErrorCode(gerror);
-    }
 
-    contents.assign(file_get_contents, len);
-    
-    g_free(file_get_contents);
+        if (error == ERR_NOT_FILE) {
+            error = ERR_CANT_READ;
+        }
+    } else {
+        contents.assign(file_get_contents, len);
+        g_free(file_get_contents);
+    }
 
     return error;
 }
@@ -325,20 +335,73 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 
 int SetPosixPermissions(ExtensionString filename, int32 mode)
 {
-    if(chmod(filename.c_str(),mode)==-1)
+    if (chmod(filename.c_str(),mode) == -1) {
         return ConvertLinuxErrorCode(errno);
+    }
 
     return NO_ERROR;
+}
+
+int _deleteFile(GFile *file)
+{
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+
+    if (!g_file_delete(file, NULL, &gerror)) {
+        error = GErrorToErrorCode(gerror);
+    }
+
+    return error;
+}
+
+int _doDeleteFileOrDirectory(GFile *file)
+{
+    GFileEnumerator *enumerator;
+    GFileInfo *fileinfo;
+    int error = NO_ERROR;
+    GFile *child;
+    
+    // deletes a file or an empty directory
+    error = _deleteFile(file);
+    if (error == ERR_NOT_FOUND || error == NO_ERROR) {
+        return error;
+    }
+    
+    enumerator = g_file_enumerate_children(file, "standard::*", G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, NULL, NULL);
+
+    if (enumerator == NULL) {
+        error = ERR_UNKNOWN;
+    } else {
+        // recursively delete directory contents
+        while ((fileinfo = g_file_enumerator_next_file(enumerator, NULL, NULL)) != NULL) {
+            child = g_file_get_child(file, g_file_info_get_name(fileinfo));
+            error = _doDeleteFileOrDirectory(child);
+            g_object_unref(child);
+
+            if (error != NO_ERROR) {
+                break;
+            }
+        }
+
+        // directory is now empty, delete it
+        if (error == NO_ERROR) {
+            error = _deleteFile(file);
+        }
+
+        g_object_unref(enumerator);
+    }
+
+    return error;
 }
 
 int DeleteFileOrDirectory(ExtensionString filename)
 {
-    if(unlink(filename.c_str())==-1)
-        return ConvertLinuxErrorCode(errno);
-    return NO_ERROR;
+    GFile *file = g_file_new_for_path(filename.c_str());
+    int error = _doDeleteFileOrDirectory(file);
+    g_object_unref(file);
+
+    return error;
 }
-
-
 
 void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
@@ -385,7 +448,7 @@ int ShowFolderInOSWindow(ExtensionString pathname)
     
     if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
         error = ConvertGnomeErrorCode(gerror);
-        g_warning(gerror->message);
+        g_warning("%s", gerror->message);
         g_error_free(gerror);
     }
     
