@@ -254,13 +254,23 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
 int32 MakeDir(ExtensionString path, int mode)
 {
-    mode = mode | 0777;
+    const char *pathStr = path.c_str();
+    GFile *file;
+    GError *gerror = NULL;
+    int32 error = NO_ERROR;
 
-    if (g_mkdir(path.c_str(), mode) == -1) {
-        return ConvertLinuxErrorCode(errno);
+    if (g_file_test(pathStr, G_FILE_TEST_EXISTS)) {
+        return ERR_FILE_EXISTS;
     }
 
-    return NO_ERROR;
+    file = g_file_new_for_path(pathStr);
+    mode = mode | 0777;
+
+    if (!g_file_make_directory(file, NULL, &gerror)) {
+        error = GErrorToErrorCode(gerror);
+    }
+
+    return error;
 }
 
 int Rename(ExtensionString oldName, ExtensionString newName)
@@ -290,8 +300,9 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
-    if (encoding != "utf8")
+    if (encoding != "utf8") {
         return ERR_UNSUPPORTED_ENCODING;
+    }
 
     int error = NO_ERROR;
     GError *gerror = NULL;
@@ -314,23 +325,21 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    if(encoding != "utf8")
-        return NO_ERROR;    //# TODO ERR_UNSUPPORTED_ENCODING;
+    const char *filenameStr = filename.c_str();    
+    int error = NO_ERROR;
+    GError *gerror = NULL;
 
-    const char* content = contents.c_str();
+    if (encoding != "utf8") {
+        return ERR_UNSUPPORTED_ENCODING;
+    } else if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
+        return ERR_CANT_WRITE;
+    }
+    
+    if (!g_file_set_contents(filenameStr, contents.c_str(), contents.length(), &gerror)) {
+        error = GErrorToErrorCode(gerror);
+    }
 
-    FILE* file = fopen(filename.c_str(),"w");
-    if(file == NULL)
-        return ConvertLinuxErrorCode(errno);
-
-    long int size = strlen(content);
-
-    fwrite(content,1,size,file);
-
-    if(fclose(file)==EOF)
-        return ConvertLinuxErrorCode(errno);
-
-    return NO_ERROR;
+    return error;
 }
 
 int SetPosixPermissions(ExtensionString filename, int32 mode)
