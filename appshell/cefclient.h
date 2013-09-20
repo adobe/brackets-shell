@@ -33,6 +33,9 @@ CefString AppGetCachePath();
 // Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
 CefString AppGetProductVersionString();
 
+// Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
+CefString AppGetChromiumVersionString();
+
 // Initialize the application command line.
 void AppInitCommandLine(int argc, const char* const* argv);
 

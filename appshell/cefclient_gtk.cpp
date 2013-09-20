@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include "cefclient.h"
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
@@ -259,6 +260,11 @@ int main(int argc, char* argv[]) {
 }
 
 CefString AppGetProductVersionString() {
+  // TODO
+  return CefString("");
+}
+
+CefString AppGetChromiumVersionString() {
   // TODO
   return CefString("");
 }
