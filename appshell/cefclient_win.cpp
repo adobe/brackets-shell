@@ -365,8 +365,9 @@ CefString AppGetProductVersionString() {
 }
 
 CefString AppGetChromiumVersionString() {
-  std::wostringstream versionStream(L"Chrome/");
-  versionStream << cef_version_info(2) << L"." << cef_version_info(3) << L"." << cef_version_info(4) << L"." << cef_version_info(5);
+  std::wostringstream versionStream(L"");
+  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
+                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
 
   return CefString(versionStream.str());
 }
