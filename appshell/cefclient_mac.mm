@@ -32,14 +32,6 @@ char szWorkingDir[512];   // The current working directory
 
 NSURL* startupUrl = nil;
 
-#ifdef SHOW_TOOLBAR_UI
-// Sizes for URL bar layout
-#define BUTTON_HEIGHT 22
-#define BUTTON_WIDTH 72
-#define BUTTON_MARGIN 8
-#define URLBAR_HEIGHT  32
-#endif // SHOW_TOOLBAR_UI
-
 // Content area size for newly created windows.
 const int kWindowWidth = 1000;
 const int kWindowHeight = 700;
@@ -131,13 +123,6 @@ extern NSMutableArray* pendingOpenFiles;
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem;
 - (IBAction)showAbout:(id)sender;
 - (IBAction)quit:(id)sender;
-#ifdef SHOW_TOOLBAR_UI
-- (IBAction)goBack:(id)sender;
-- (IBAction)goForward:(id)sender;
-- (IBAction)reload:(id)sender;
-- (IBAction)stopLoading:(id)sender;
-- (IBAction)takeURLStringValueFrom:(NSTextField *)sender;
-#endif // SHOW_TOOLBAR_UI
 - (void)alert:(NSString*)title withMessage:(NSString*)message;
 - (void)notifyConsoleMessage:(id)object;
 - (void)notifyDownloadComplete:(id)object;
@@ -193,43 +178,6 @@ extern NSMutableArray* pendingOpenFiles;
   g_handler->DispatchCloseToNextBrowser();
 }
 
-#ifdef SHOW_TOOLBAR_UI
-- (IBAction)goBack:(id)sender {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->GoBack();
-}
-
-- (IBAction)goForward:(id)sender {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->GoForward();
-}
-
-- (IBAction)reload:(id)sender {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->Reload();
-}
-
-- (IBAction)stopLoading:(id)sender {
-  if (g_handler.get() && g_handler->GetBrowserId())
-    g_handler->GetBrowser()->StopLoad();
-}
-
-- (IBAction)takeURLStringValueFrom:(NSTextField *)sender {
-  if (!g_handler.get() || !g_handler->GetBrowserId())
-    return;
-  
-  NSString *url = [sender stringValue];
-  
-  // if it doesn't already have a prefix, add http. If we can't parse it,
-  // just don't bother rather than making things worse.
-  NSURL* tempUrl = [NSURL URLWithString:url];
-  if (tempUrl && ![tempUrl scheme])
-    url = [@"http://" stringByAppendingString:url];
-  
-  std::string urlStr = [url UTF8String];
-  g_handler->GetBrowser()->GetMainFrame()->LoadURL(urlStr);
-}
-#endif // SHOW_TOOLBAR_UI
 
 - (void)alert:(NSString*)title withMessage:(NSString*)message {
   NSAlert *alert = [NSAlert alertWithMessageText:title
@@ -322,19 +270,6 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
-#ifdef SHOW_TOOLBAR_UI
-
-NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
-  NSButton* button = [[[NSButton alloc] initWithFrame:*rect] autorelease];
-  [button setTitle:title];
-  [button setBezelStyle:NSSmallSquareBezelStyle];
-  [button setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
-  [parent addSubview:button];
-  rect->origin.x += BUTTON_WIDTH;
-  return button;
-}
-#endif // SHOW_TOOLBAR_UI
-
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
 - (void)createApp:(id)object;
@@ -384,11 +319,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   NSRect content_rect = [NSWindow contentRectForFrameRect:screen_rect styleMask:styleMask];
   
   // Determine the maximum height
-  const int maxHeight = kWindowHeight
-  #ifdef SHOW_TOOLBAR_UI
-    + URLBAR_HEIGHT
-  #endif
-  ;
+  const int maxHeight = kWindowHeight;
   // Make the content rect fit into maxHeight and kWindowWidth
   if (content_rect.size.height > maxHeight) {
     // First move the window up as much as we reduce it's height so it opens in the top left corner
@@ -432,52 +363,10 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   [mainWnd setReleasedWhenClosed:NO];
 
   NSView* contentView = [mainWnd contentView];
-
-#ifdef SHOW_TOOLBAR_UI
-  // Create the buttons.
-  NSRect button_rect = [contentView bounds];
-  button_rect.origin.y = content_rect.size.height - URLBAR_HEIGHT +
-      (URLBAR_HEIGHT - BUTTON_HEIGHT) / 2;
-  button_rect.size.height = BUTTON_HEIGHT;
-  button_rect.origin.x += BUTTON_MARGIN;
-  button_rect.size.width = BUTTON_WIDTH;
-
-  NSButton* button = MakeButton(&button_rect, @"Back", contentView);
-  [button setTarget:delegate];
-  [button setAction:@selector(goBack:)];
-
-  button = MakeButton(&button_rect, @"Forward", contentView);
-  [button setTarget:delegate];
-  [button setAction:@selector(goForward:)];
-
-  button = MakeButton(&button_rect, @"Reload", contentView);
-  [button setTarget:delegate];
-  [button setAction:@selector(reload:)];
-
-  button = MakeButton(&button_rect, @"Stop", contentView);
-  [button setTarget:delegate];
-  [button setAction:@selector(stopLoading:)];
-
-  // Create the URL text field.
-  button_rect.origin.x += BUTTON_MARGIN;
-  button_rect.size.width = [contentView bounds].size.width -
-      button_rect.origin.x - BUTTON_MARGIN;
-  NSTextField* editWnd = [[NSTextField alloc] initWithFrame:button_rect];
-  [contentView addSubview:editWnd];
-  [editWnd setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
-  [editWnd setTarget:delegate];
-  [editWnd setAction:@selector(takeURLStringValueFrom:)];
-  [[editWnd cell] setWraps:NO];
-  [[editWnd cell] setScrollable:YES];
-#endif // SHOW_TOOLBAR_UI
 	
   // Create the handler.
   g_handler = new ClientHandler();
   g_handler->SetMainHwnd(contentView);
-	
-#ifdef SHOW_TOOLBAR_UI
-  g_handler->SetEditHwnd(editWnd);
-#endif // SHOW_TOOLBAR_UI
 	
   // Create the browser view.
   CefWindowInfo window_info;

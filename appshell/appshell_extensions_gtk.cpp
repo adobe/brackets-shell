@@ -36,86 +36,95 @@
 
 GtkWidget* _menuWidget;
 
+// Supported browsers (order matters):
+//   - google-chorme 
+//   - chromium-browser - chromium executable name (in ubuntu)
+//   - chromium - other chromium executable name (in arch linux)
+std::string browsers[3] = {"google-chrome", "chromium-browser", "chromium"};
+
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
 extern bool isReallyClosing;
 
+int GErrorToErrorCode(GError *gerror) {
+    int error = ConvertGnomeErrorCode(gerror);
+    
+    // uncomment to see errors printed to the console
+    //g_warning(gerror->message);
+    g_error_free(gerror);
+    
+    return error;
+}
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
-{    
-    // Supported browsers (order matters):
-    //   - google-chorme 
-    //   - chromium-browser - chromium executable name (in ubuntu)
-    //   - chromium - other chromium executable name (in arch linux)
-    std::string browsers[3] = {"google-chrome", "chromium-browser", "chromium"},
-                arg1("--allow-file-access-from-files"),
-                arg2(" ");
-
-    if(enableRemoteDebugging)
-        arg2.assign("--remote-debugging-port=9222");
-
-    short int error=0;
-    /* Using vfork() 'coz I need a shared variable for the error passing.
-     * Do not replace with fork() unless you have a better way. */
-    pid_t pid = vfork();
-    switch(pid)
-    {
-        case -1:    //# Something went wrong
-                return ConvertLinuxErrorCode(errno);
-        case 0:     //# I'm the child. When I successfully exec, parent is resumed. Or when I _exec()
-                // check for supported browsers (in PATH directories)
-                for (size_t i = 0; i < sizeof(browsers) / sizeof(browsers[0]); i++) {
-                    if (execlp(browsers[i].c_str(), browsers[i].c_str(), arg1.c_str(), argURL.c_str(), arg2.c_str(), NULL) != -1) {
-                        // browser is found in os; stop iterating
-                        break;
-                    }
-                }
-                error=errno;
-                _exit(0);
-
-        default:
-                if(error!=0)
-                {
-                    printf("Error!! %s\n", strerror(error));
-                    return ConvertLinuxErrorCode(error);
-                }
+{
+    const char *launch = "%s --allow-file-access-from-files %s %s";
+    gchar *remoteDebugging = "";
+    gchar *profilePath = "%s\\live-dev-profile";
+    gchar *cmdline;
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    
+    if (enableRemoteDebugging) {
+        profilePath = g_strdup_printf(remoteDebugging, ClientApp::AppGetSupportDirectory().c_str());
+        remoteDebugging = "--user-data-dir=%s --no-first-run --no-default-browser-check --remote-debugging-port=9222";
+        remoteDebugging = g_strdup_printf(remoteDebugging, profilePath);
     }
 
-    return NO_ERROR;
+    // check for supported browsers (in PATH directories)
+    for (size_t i = 0; i < sizeof(browsers) / sizeof(browsers[0]); i++) {
+        cmdline = g_strdup_printf(launch, browsers[i].c_str(), argURL.c_str(), remoteDebugging);
+
+        if (g_spawn_command_line_async(cmdline, &gerror)) {
+            // browser is found in os; stop iterating
+            error = NO_ERROR;
+            break;
+        } else {
+            error = ConvertGnomeErrorCode(gerror);
+            g_error_free(gerror);
+        }
+
+        g_free(cmdline);
+    }
+    
+    g_free(profilePath);
+    g_free(remoteDebugging);
+
+    return error;
 }
 
 void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
 {
-    system("killall -9 google-chrome &");
+    const char *killall = "killall -9 %s";
+    gchar *cmdline;
+    gint exitstatus;
+    GError *gerror = NULL;
+    int error = NO_ERROR;
+    CefRefPtr<CefListValue> responseArgs = response->GetArgumentList();
+
+    // check for supported browsers (in PATH directories)
+    for (size_t i = 0; i < sizeof(browsers) / sizeof(browsers[0]); i++) {
+        cmdline = g_strdup_printf(killall, browsers[i].c_str());
+
+        // FIXME (jasonsanjose): use async
+        if (!g_spawn_command_line_sync(cmdline, NULL, NULL, &exitstatus, &gerror)) {
+            error = ConvertGnomeErrorCode(gerror);
+            g_error_free(gerror);
+        }
+
+        g_free(cmdline);
+
+        // browser is found in os; stop iterating
+        if (exitstatus == 0) {
+            error = NO_ERROR;
+            break;
+        }
+    }
+
+    responseArgs->SetInt(1, error);
+    browser->SendProcessMessage(PID_RENDERER, response);
 }
-
-// void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage> response)
-// {
-//     LiveBrowserMgrLin* liveBrowserMgr = LiveBrowserMgrLin::GetInstance();
-    
-//     if (liveBrowserMgr->GetCloseCallback() != NULL) {
-//         // We can only handle a single async callback at a time. If there is already one that hasn't fired then
-//         // we kill it now and get ready for the next.
-//         liveBrowserMgr->CloseLiveBrowserFireCallback(ERR_UNKNOWN);
-//     }
-
-//     liveBrowserMgr->SetCloseCallback(response);
-//     liveBrowserMgr->SetBrowser(browser);
-
-//     EnumChromeWindowsCallbackData cbData = {0};
-
-//     cbData.numberOfFoundWindows = 0;
-//     cbData.closeWindow = true;
-//     ::EnumWindows(LiveBrowserMgrLin::EnumChromeWindowsCallback, (long)&cbData);
-
-//     if (cbData.numberOfFoundWindows == 0) {
-//         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
-//     } else if (liveBrowserMgr->GetCloseCallback()) {
-//         // set a timeout for up to 3 minutes to close the browser 
-//         liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 3 * 60 * 1000, LiveBrowserMgrLin::CloseLiveBrowserTimerCallback) );
-//     }
-// }
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
@@ -274,36 +283,23 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
-
-    if(encoding != "utf8")
+    if (encoding != "utf8")
         return NO_ERROR;    //#TODO ERR_UNSUPPORTED_ENCODING
 
-    struct stat buf;
-    if(stat(filename.c_str(),&buf)==-1)
-        return ConvertLinuxErrorCode(errno);
-
-    if(!S_ISREG(buf.st_mode))
-        return NO_ERROR;    //# TODO ERR_CANT_READ when cleaninp up errors
-
-    FILE* file = fopen(filename.c_str(),"r");
-    if(file == NULL)
-    {
-        return ConvertLinuxErrorCode(errno);
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    gchar *file_get_contents = NULL;
+    gsize len = 0;
+    
+    if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
+        error = GErrorToErrorCode(gerror);
     }
 
-    fseek(file, 0, SEEK_END);
-    long int size = ftell(file);
-    rewind(file);
+    contents.assign(file_get_contents, len);
+    
+    g_free(file_get_contents);
 
-    char* content = (char*)calloc(size + 1, 1);
-
-    fread(content,1,size,file);
-    if(fclose(file)==EOF)
-        return ConvertLinuxErrorCode(errno);
-
-    contents = content;
-
-    return NO_ERROR;
+    return error;
 }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
@@ -383,15 +379,19 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
-    GError *error;
-    gtk_show_uri(NULL, pathname.c_str(), GDK_CURRENT_TIME, &error);
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    gchar *uri = g_strdup_printf("file://%s", pathname.c_str());
     
-    if(error != NULL)
-        g_warning ("%s %s", "Error launching preview", error->message);
+    if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+        error = ConvertGnomeErrorCode(gerror);
+        g_warning(gerror->message);
+        g_error_free(gerror);
+    }
     
-    g_error_free(error);
+    g_free(uri);
 
-    return NO_ERROR;
+    return error;
 }
 
 

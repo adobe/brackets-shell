@@ -90,8 +90,6 @@ double ClientApp::GetElapsedMilliseconds()
     return (timeGetTime() - g_appStartupTime);
 }
 
-extern bool gPortableInstall;	// defined in cefclient_win.cpp
-
 // returns the directory to which the app has been installed
 CefString ClientApp::AppGetAppDirectory()
 {
@@ -119,7 +117,7 @@ CefString ClientApp::AppGetAppDirectory()
 CefString ClientApp::AppGetSupportDirectory() 
 {
     std::wstring appSupportPath;
-    if (!gPortableInstall)
+    if (!IsPortableInstall())
     {
         // for normal installations, use the user's APPDATA folder
         wchar_t dataPath[MAX_PATH];
@@ -151,4 +149,24 @@ CefString ClientApp::AppGetDocumentsDirectory()
     replace(appUserDocuments.begin(), appUserDocuments.end(), '\\', '/');
 
     return CefString(appUserDocuments);
+}
+
+
+// check if this is a portable installation
+//   to be a portable installation, the installer should write the empty file to the app folder
+bool ClientApp::IsPortableInstall()
+{
+    typedef enum { UNINITIALIZED = -1, ISNOTPORTABLE, ISPORTABLE } ePortableFlag;
+    static ePortableFlag isPortableInstall = UNINITIALIZED;
+
+    if (isPortableInstall == UNINITIALIZED)
+    {
+	    std::wstring filename = ClientApp::AppGetAppDirectory();
+	    filename += L"/makePortable";
+	    HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
+		    FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	    isPortableInstall = (INVALID_HANDLE_VALUE != hFile) ? ISPORTABLE : ISNOTPORTABLE;
+	    ::CloseHandle(hFile);
+    }
+	return (isPortableInstall == ISPORTABLE) ? true : false;
 }

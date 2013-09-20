@@ -91,7 +91,7 @@ class ClientApp : public CefApp,
   double GetElapsedMilliseconds();
   CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
-  static bool CheckIfPortableInstall();
+  static bool IsPortableInstall();
   static CefString AppGetAppDirectory();
   static CefString AppGetSupportDirectory();
   static CefString AppGetDocumentsDirectory();
