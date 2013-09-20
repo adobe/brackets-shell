@@ -85,7 +85,7 @@ std::string ClientApp::GetExtensionJSSource()
 
 // check if this is a portable installation
 //   which is marked by the existence of a file named "makePortable" in the same folder as .app.
-bool ClientApp::CheckIfPortableInstall()
+bool ClientApp::IsPortableInstall()
 {
     std::string filename = ClientApp::AppGetAppDirectory();
     filename += "/makePortable";
@@ -111,7 +111,7 @@ CefString ClientApp::AppGetAppDirectory()
 
 CefString ClientApp::AppGetSupportDirectory()
 {
-    if (!CheckIfPortableInstall())
+    if (!IsPortableInstall())
     {
         // for normal installations, use the Library folder
         NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
