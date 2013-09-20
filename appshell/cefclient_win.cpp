@@ -40,9 +40,6 @@ static char      szWorkingDir[MAX_PATH];    // The current working directory
 static wchar_t   szInitialUrl[MAX_PATH] = {0};
 
 
-static RECT grectWindow;		// persisted window position for next launch
-static RECT grectRestore;		// persisted restored window position if left maximized for next launch
-
 // Forward declarations of functions included in this code module:
 BOOL InitInstance(HINSTANCE, int);
 
@@ -277,7 +274,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   return result;
 }
-
 
 //
 //   FUNCTION: InitInstance(HINSTANCE, int)
