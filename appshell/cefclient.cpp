@@ -106,8 +106,8 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
     // the User Agent string.
     versionStr.append(L" ");
     versionStr.append(AppGetChromiumVersionString());
+      
+    // Set product version, which gets added to the User Agent string
+    CefString(&settings.product_version) = versionStr;
   }
-    
-  // Set product version, which gets added to the User Agent string
-  CefString(&settings.product_version) = versionStr;
 }
