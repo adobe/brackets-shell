@@ -203,7 +203,7 @@ module.exports = function (grunt) {
             "version"       : "3.1547.1419"
         },
         "node": {
-            "version"       : "0.8.20"
+            "version"       : "0.10.18"
         },
         "npm": {
             "version"       : "1.2.11"
