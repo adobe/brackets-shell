@@ -100,6 +100,11 @@ if (!appshell.app) {
     appshell.fs.ERR_FILE_EXISTS             = 10;
 
     /**
+     * @constant The required browser is not installed
+     */
+    appshell.fs.ERR_BROWSER_NOT_INSTALLED   = 11;
+
+    /**
      * @constant No error.
      */
     appshell.app.NO_ERROR                   = 0;

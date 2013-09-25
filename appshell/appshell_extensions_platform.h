@@ -43,6 +43,7 @@ static const int ERR_OUT_OF_SPACE           = 7;
 static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
 static const int ERR_FILE_EXISTS            = 10;
+static const int ERR_BROWSER_NOT_INSTALLED  = 11;
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
