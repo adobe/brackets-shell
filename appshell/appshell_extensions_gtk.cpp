@@ -65,7 +65,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222";
     gchar *remoteDebugging;
     gchar *cmdline;
-    int error = -1;
+    int error = ERR_BROWSER_NOT_INSTALLED;
     GError *gerror = NULL;
     
     if (enableRemoteDebugging) {
