@@ -360,7 +360,6 @@ public:
             
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
             OpenLiveBrowser(url, false);
-
         } else if (message_name == "GetNodeState") {
             // Parameters:
             //  0: int32 - callback id

@@ -83,7 +83,7 @@ CefString ClientApp::AppGetSupportDirectory()
 {
     // FIXME (jasonsanjose): hardcode "brackets"...why doesn't g_get_prgname() work here?
     gchar *supportDir = g_strdup_printf("%s/brackets", g_get_user_config_dir());
-    return std::string(supportDir);
+    return CefString(supportDir);
 }
 
 CefString ClientApp::AppGetDocumentsDirectory() 
@@ -92,7 +92,6 @@ CefString ClientApp::AppGetDocumentsDirectory()
     if (dir == NULL)  {
         return AppGetSupportDirectory();
     } else {
-        std::string documents_dir (dir);
-        return documents_dir;
+        return CefString(dir);
     }
 }
