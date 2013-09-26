@@ -193,6 +193,9 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
             parameters = [NSArray arrayWithObjects:
                            @"--remote-debugging-port=9222", 
                            @"--allow-file-access-from-files",
+                           @"--no-first-run",
+                           @"--temp-profile",
+                           @"--user-data-dir=/tmp/chrome-brackets",
                            nil];
         }
         else {
