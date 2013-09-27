@@ -62,7 +62,7 @@ int GErrorToErrorCode(GError *gerror) {
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222";
+    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --temp-profile --user-data-dir=/tmp/chrome-brackets --remote-debugging-port=9222";
     gchar *remoteDebugging;
     gchar *cmdline;
     int error = ERR_BROWSER_NOT_INSTALLED;
@@ -84,13 +84,15 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
             error = NO_ERROR;
         } else {
             error = ConvertGnomeErrorCode(gerror);
-            g_error_free(gerror);
         }
 
         g_free(cmdline);
         
         if (error == NO_ERROR) {
             break;
+        } else {
+            g_error_free(gerror);
+            gerror = NULL;
         }
     }
     
