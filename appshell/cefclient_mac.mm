@@ -328,10 +328,9 @@ void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
                    withColor:[NSApp isActive] ?
                 activeColor : inactiveColor];
     
-    
-    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
     [self addSubview:[TrafficLightsView getInstance]];
-        
+#endif
    
 }
 
@@ -426,7 +425,7 @@ Class GetShellWindowFrameClass() {
                        backing:NSBackingStoreBuffered
                        defer:NO];
 
-    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
   //hide buttons
   NSWindow* theWin = mainWnd;
   NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
@@ -435,6 +434,7 @@ Class GetShellWindowFrameClass() {
   [windowButton setHidden:YES];
   windowButton = [theWin standardWindowButton:NSWindowZoomButton];
   [windowButton setHidden:YES];
+#endif
     
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
   float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
@@ -497,13 +497,14 @@ Class GetShellWindowFrameClass() {
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
 
-    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
   [TrafficLightsView getInstance].frame = NSMakeRect(kTrafficLightsViewX,
                                                 content_rect.size.height - kTrafficLightsViewY + (kTrafficLightsViewHeight / 2),
                                                 kTrafficLightsViewWidth,
                                                 kTrafficLightsViewWidth);
 
-
+#endif 
+    
   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
