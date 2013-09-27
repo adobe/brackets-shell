@@ -62,15 +62,24 @@ int GErrorToErrorCode(GError *gerror) {
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --temp-profile --user-data-dir=/tmp/chrome-brackets --remote-debugging-port=9222";
+    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --allow-file-access-from-files --temp-profile --user-data-dir=%s --remote-debugging-port=9222";
     gchar *remoteDebugging;
     gchar *cmdline;
     int error = ERR_BROWSER_NOT_INSTALLED;
     GError *gerror = NULL;
     
     if (enableRemoteDebugging) {
-        // FIXME Should we mimic windows? user-data-dir=ClientApp::AppGetSupportDirectory()
-        remoteDebugging = g_strdup(remoteDebuggingFormat);
+        CefString appSupportDirectory = ClientApp::AppGetSupportDirectory();
+
+        // TODO: (INGO) to better understand to string conversion issue, I need a consultant
+        // here. Getting the char* from CefString I had to call ToString().c_str()
+        // Calling only c_str() didn't return anything.
+        gchar *userDataDir = g_strdup_printf("%s/live-dev-profile",
+                                        appSupportDirectory.ToString().c_str());  
+        g_message("USERDATADIR= %s", userDataDir);
+        remoteDebugging = g_strdup_printf(remoteDebuggingFormat, userDataDir);
+        
+        g_free(userDataDir);
     } else {
         remoteDebugging = g_strdup("");
     }
