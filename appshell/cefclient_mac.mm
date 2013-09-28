@@ -23,6 +23,8 @@
 #include "appshell_node_process.h"
 #include "TrafficLightsView.h"
 
+//#define CUSTOM_TRAFFIC_LIGHTS
+
 // Application startup time
 CFTimeInterval g_appStartupTime;
 
@@ -328,10 +330,16 @@ void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
                    withColor:[NSApp isActive] ?
                 activeColor : inactiveColor];
     
+    
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    [self addSubview:[TrafficLightsView getInstance]];
+    TrafficLightsView* trafficLightsView = [TrafficLightsView initWithFrame: NSMakeRect(kTrafficLightsViewX,
+                                                                                      kTrafficLightsViewY,
+                                                                                           kTrafficLightsViewWidth,
+                                                                                           kTrafficLightsViewWidth)];
+    [NSBundle loadNibNamed:@"TrafficLightsView" owner:self];
+    [self addSubview: trafficLightsView];
+    
 #endif
-   
 }
 
 /**
@@ -435,6 +443,7 @@ Class GetShellWindowFrameClass() {
   windowButton = [theWin standardWindowButton:NSWindowZoomButton];
   [windowButton setHidden:YES];
 #endif
+
     
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
   float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
@@ -473,6 +482,7 @@ Class GetShellWindowFrameClass() {
   // Register our custom title bar rendering hook.
   [self addCustomDrawHook:contentView];
 #endif
+
     
   // Create the handler.
   g_handler = new ClientHandler();
@@ -497,13 +507,6 @@ Class GetShellWindowFrameClass() {
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
 
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-  [TrafficLightsView getInstance].frame = NSMakeRect(kTrafficLightsViewX,
-                                                content_rect.size.height - kTrafficLightsViewY + (kTrafficLightsViewHeight / 2),
-                                                kTrafficLightsViewWidth,
-                                                kTrafficLightsViewWidth);
-
-#endif 
     
   // Show the window.
   [mainWnd display];
@@ -554,10 +557,12 @@ Class GetShellWindowFrameClass() {
     NSView* themeView = [contentView superview];
     
     object_setClass(themeView, GetShellWindowFrameClass());
-    
+
+#ifdef LIGHT_CAPTION_TEXT
     // Reset our frame view text cell background style
     NSTextFieldCell * cell = [themeView titleCell];
     [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {

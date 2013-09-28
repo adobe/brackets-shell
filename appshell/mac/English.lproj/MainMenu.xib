@@ -241,7 +241,7 @@
 			</object>
 			<object class="NSCustomView" id="170926462">
 				<reference key="NSNextResponder"/>
-				<int key="NSvFlags">268</int>
+				<int key="NSvFlags">12</int>
 				<object class="NSMutableArray" key="NSSubviews">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<object class="NSButton" id="280840565">
@@ -265,7 +265,7 @@
 							</object>
 							<string key="NSCellIdentifier">_NS:9</string>
 							<reference key="NSControlView" ref="280840565"/>
-							<int key="NSButtonFlags">147079168</int>
+							<int key="NSButtonFlags">138690560</int>
 							<int key="NSButtonFlags2">134</int>
 							<string key="NSAlternateContents"/>
 							<string key="NSKeyEquivalent"/>
@@ -291,7 +291,7 @@
 							<reference key="NSSupport" ref="999422814"/>
 							<string key="NSCellIdentifier">_NS:9</string>
 							<reference key="NSControlView" ref="706249563"/>
-							<int key="NSButtonFlags">147079168</int>
+							<int key="NSButtonFlags">138690560</int>
 							<int key="NSButtonFlags2">134</int>
 							<string key="NSAlternateContents"/>
 							<string key="NSKeyEquivalent"/>
@@ -317,7 +317,7 @@
 							<reference key="NSSupport" ref="999422814"/>
 							<string key="NSCellIdentifier">_NS:9</string>
 							<reference key="NSControlView" ref="206519106"/>
-							<int key="NSButtonFlags">147079168</int>
+							<int key="NSButtonFlags">138690560</int>
 							<int key="NSButtonFlags2">134</int>
 							<string key="NSAlternateContents"/>
 							<string key="NSKeyEquivalent"/>

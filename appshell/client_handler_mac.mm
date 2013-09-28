@@ -3,7 +3,7 @@
 // can be found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
-
+#import <objc/runtime.h>
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
@@ -11,6 +11,14 @@
 #include "native_menu_model.h"
 
 extern CefRefPtr<ClientHandler> g_handler;
+
+// Custom draw interface for NSThemeFrame
+@interface NSView (UndocumentedAPI)
+- (float)roundedCornerRadius;
+- (CGRect)_titlebarTitleRect;
+- (NSTextFieldCell*)titleCell;
+- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
+@end
 
 // ClientHandler::ClientLifeSpanHandler implementation
 
@@ -88,7 +96,84 @@ void ClientHandler::CloseMainWindow() {
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
+- (void)addCustomDrawHook:(NSView*)contentView;
 @end
+
+
+/**
+ * The patched implementation for drawRect that lets us tweak
+ * the title bar.
+ */
+void PopupWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
+    // Clear to 0 alpha
+    [[NSColor clearColor] set];
+    NSRectFill( rect );
+    //Obtain reference to our NSThemeFrame view
+    NSRect windowRect = [self frame];
+    windowRect.origin = NSMakePoint(0,0);
+    //This constant matches the radius for other macosx apps.
+    //For some reason if we use the default value it is double that of safari etc.
+    float cornerRadius = 4.0f;
+    
+    //Clip our title bar render
+    [[NSBezierPath bezierPathWithRoundedRect:windowRect
+                                     xRadius:cornerRadius
+                                     yRadius:cornerRadius] addClip];
+    [[NSBezierPath bezierPathWithRect:rect] addClip];
+    
+    
+    
+    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+    //title bar background
+    float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+    //title text color
+    float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
+    float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
+    // Background fill, solid for now.
+    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+    [fillColor set];
+    NSRectFill( rect );
+    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
+    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
+    // Render our title text
+    [self _drawTitleStringIn:[self _titlebarTitleRect]
+                   withColor:[NSApp isActive] ?
+                activeColor : inactiveColor];
+    
+    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+    TrafficLightsView* trafficLightsView = [TrafficLightsView initWithFrame: NSMakeRect(kTrafficLightsViewX,
+                                                                                        kTrafficLightsViewY,
+                                                                                        kTrafficLightsViewWidth,
+                                                                                        kTrafficLightsViewWidth)];
+    [NSBundle loadNibNamed:@"TrafficLightsView" owner:self];
+    [self addSubview: trafficLightsView];
+    
+#endif
+}
+
+
+/**
+ * Create a custom class based on NSThemeFrame called
+ * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
+ * as the implementation for the drawRect selector allowing us
+ * to draw the border/title bar the way we see fit.
+ */
+Class GetPopuplWindowFrameClass() {
+    // lazily change the class implementation if
+    // not done so already.
+    static Class k = NULL;
+    if (!k) {
+        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
+        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
+        k = objc_allocateClassPair(NSThemeFrame, "PopupWindowFrame", 0);
+        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
+        class_addMethod(k, @selector(drawRect:),
+                        (IMP)PopupWindowFrameDrawRect, method_getTypeEncoding(m0));
+        objc_registerClassPair(k);
+    }
+    return k;
+}
 
 @implementation PopupClientWindowDelegate
 
@@ -118,6 +203,20 @@ void ClientHandler::CloseMainWindow() {
   }
   */
   clientHandler->DispatchCloseToNextBrowser();
+}
+
+
+- (void)addCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, GetPopuplWindowFrameClass());
+    
+#ifdef LIGHT_CAPTION_TEXT
+    // Reset our frame view text cell background style
+    NSTextFieldCell * cell = [themeView titleCell];
+    [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
 }
 
 - (IBAction)handleMenuAction:(id)sender {
@@ -234,6 +333,8 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
     [delegate setClientHandler:this];
     [delegate setWindow:window];
     [window setDelegate:delegate];
+      NSView* contentView = [window contentView];
+      [delegate addCustomDrawHook: contentView];
   }
 }
 
