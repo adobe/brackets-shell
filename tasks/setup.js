@@ -307,9 +307,8 @@ module.exports = function (grunt) {
             promise,
             gypCommand;
         
-        // TODO why doesn't gyp (in the repository) work for linux?
         if (platform === "linux") {
-            gypCommand = "gyp --depth .";
+            gypCommand = "bash -c 'python2 gyp/gyp --depth=.'";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
         }
