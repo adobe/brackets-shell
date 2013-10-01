@@ -239,6 +239,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         if( ![ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error] ) {
             return ERR_UNKNOWN;
         }
+        return NO_ERROR;
     }
     
     // Tell the Browser to load the url
