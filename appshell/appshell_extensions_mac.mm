@@ -242,6 +242,9 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         return NO_ERROR;
     }
     
+    // Ensure LiveBrowser is running
+    if(liveBrowserMgr->GetLiveBrowserPid() == ERR_PID_NOT_FOUND) { return ERR_UNKNOWN; }
+    
     // Tell the Browser to load the url
     BOOL OK = [ws openURLs:[NSArray arrayWithObject:url] withAppBundleIdentifier:appId options:launchOptions additionalEventParamDescriptor:nil launchIdentifiers:nil];
     
