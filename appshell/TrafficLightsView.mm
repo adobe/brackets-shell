@@ -38,19 +38,29 @@ static TrafficLightsView* theView = nil;
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"StopLightButtonMouseEnter" object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"TrafficLightsMouseEnter" object:self];
 }
 - (void)mouseExited:(NSEvent *)theEvent {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"StopLightButtonMouseExit" object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"TrafficLightsMouseExit" object:self];
 }
 
 - (void)awakeFromNib {
     theView = self;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(closeButtonClicked)
+                                                 name:@"TrafficLightCloseClicked"
+                                               object:nil];
+    
 }
 
 + (TrafficLightsView *)getInstance
 {
     return theView;
+}
+
+-(void)closeButtonClicked {
+    int i = 0;
 }
 
 @end

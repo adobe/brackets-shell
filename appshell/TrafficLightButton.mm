@@ -21,6 +21,7 @@
  *
  */
 #import "TrafficLightbutton.h"
+#import "TrafficLightsView.h"
 
 //these are defined in MainMainu.xib file
 static const int CLOSE_BUTTON_TAG = 1000;
@@ -96,16 +97,16 @@ static const int ZOOM_BUTTON_TAG = 1002;
                                                  name:NSWindowDidResignMainNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(hoverIn)
-                                                 name:@"TrafficLightbuttonMouseEnter"
+                                                 name:@"TrafficLightsMouseEnter"
                                                object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(hoverOut)
-                                                 name:@"TrafficLightbuttonMouseExit"
+                                                 name:@"TrafficLightsMouseExit"
                                                object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(setDocumentEdited)
-                                                 name:@"TrafficLightbuttonDirty"
+                                                 name:@"TrafficLightsDirty"
                                                object:nil];
 }
 
@@ -114,7 +115,10 @@ static const int ZOOM_BUTTON_TAG = 1002;
     hoverState = NO;
     if (!activeState) {
         if (closeButton) {
-            [[self window] performClose:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"TrafficLightCloseClicked" object:[TrafficLightsView getInstance]];
+            
+//            [[[[[[self superview] superview] window] contentView] window] performClose:nil];
+//            [[self window] performClose:nil];
             return;
         }
         if ([self tag] == MINIMIZE_BUTTON_TAG) {
