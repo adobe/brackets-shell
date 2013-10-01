@@ -229,6 +229,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
                            @"--no-default-browser-check",
                            @"--temp-profile",
                            profilePath,
+                           urlString,
                            nil];
         }
 
