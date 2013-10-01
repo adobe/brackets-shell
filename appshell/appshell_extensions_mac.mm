@@ -1176,8 +1176,9 @@ int GetLiveBrowserProcessId(NSString *bundleId){
         int PID = [currApp processIdentifier];
         NSString* args = nil;
         
+        // Check for process arguments
         if(GetArgvFromProcessID(PID, &args) != NO_ERROR){
-            break;
+            continue;
         }
         
         // Check if Chrome startup arguments contains brackets profile
