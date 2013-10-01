@@ -206,13 +206,16 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         // Create the configuration dictionary for launching with custom parameters.
         NSArray *parameters = nil;
+        NSString *profilePath = [NSString stringWithFormat:@"%@%s%@", @"--user-data-dir=", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
+        
         if (enableRemoteDebugging) {
             parameters = [NSArray arrayWithObjects:
                            @"--remote-debugging-port=9222", 
                            @"--allow-file-access-from-files",
                            @"--no-first-run",
+                           @"--no-default-browser-check",
                            @"--temp-profile",
-                           @"--user-data-dir=/tmp/chrome-brackets",
+                           profilePath,
                            urlString,
                            nil];
         }
@@ -220,9 +223,9 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
             parameters = [NSArray arrayWithObjects:
                            @"--allow-file-access-from-files",
                            @"--no-first-run",
+                           @"--no-default-browser-check",
                            @"--temp-profile",
-                           @"--user-data-dir=/tmp/chrome-brackets",
-                           urlString,
+                           profilePath,
                            nil];
         }
 
@@ -1161,27 +1164,23 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
 
 int GetLiveBrowserProcessId(NSString *bundleId){
     
+    NSString* profilePath = [NSString stringWithFormat:@"%@%s%@", @"--user-data-dir=", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
+
     NSArray* appList = [NSRunningApplication runningApplicationsWithBundleIdentifier: bundleId];
     
     for (NSRunningApplication* currApp in appList) {
         
         int PID = [currApp processIdentifier];
-        
         NSString* args = nil;
+        
         if(GetArgvFromProcessID(PID, &args) != NO_ERROR){
             break;
         }
         
         // Check if Chrome startup arguments contains brackets profile
-        if ([args rangeOfString:@"--user-data-dir=/tmp/chrome-brackets"].location != NSNotFound) {
-            // NSLog(@"Found LiveBrowser with pid: %d, exec: %@ %@", PID, currApp.executableURL, args);
+        if ([ args rangeOfString:profilePath ].location != NSNotFound) {
             return PID;
         }
-        
-        //        // Check if Chrome startup arguments contains "--remote-debug-port"
-        //        if ([args rangeOfString:@"--remote-debugging-port"].location == NSNotFound) {
-        //            continue;   // FIX ME - should we check for "port=9222"?
-        //        }
     }
     
     return ERR_PID_NOT_FOUND;
