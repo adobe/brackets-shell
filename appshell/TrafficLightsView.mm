@@ -47,20 +47,12 @@ static TrafficLightsView* theView = nil;
 - (void)awakeFromNib {
     theView = self;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(closeButtonClicked)
-                                                 name:@"TrafficLightCloseClicked"
-                                               object:nil];
-    
 }
+
+
 
 + (TrafficLightsView *)getInstance
 {
     return theView;
 }
-
--(void)closeButtonClicked {
-    int i = 0;
-}
-
 @end
