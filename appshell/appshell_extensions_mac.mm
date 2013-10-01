@@ -38,6 +38,9 @@ NSMutableArray* pendingOpenFiles;
 // LiveBrowser helper functions
 int GetLiveBrowserProcessId(NSString* appId);
 int32 GetArgvFromProcessID(int pid, NSString **argv);
+NSString* GetUserProfilePath(){
+    return [NSString stringWithFormat:@"%s%@", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
+}
 
 // App ID for either Chrome or Chrome Canary (commented out)
 NSString *const appId = @"com.google.Chrome";
@@ -194,7 +197,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     
     // Find instances of the Browser
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-    NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation | NSWorkspaceLaunchNewInstance;
+    NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation;
 
     // Launch Browser (if not running)
     if(liveBrowserMgr->GetLiveBrowserPid() == ERR_PID_NOT_FOUND) {
@@ -206,7 +209,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         // Create the configuration dictionary for launching with custom parameters.
         NSArray *parameters = nil;
-        NSString *profilePath = [NSString stringWithFormat:@"%@%s%@", @"--user-data-dir=", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
+        NSString *profilePath = [NSString stringWithFormat:@"--user-data-dir=%@", GetUserProfilePath()];
         
         if (enableRemoteDebugging) {
             parameters = [NSArray arrayWithObjects:
@@ -232,7 +235,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSMutableDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
 
         NSError *error = nil;
-        if( ![ws launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:&error] ) {
+        if( ![ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error] ) {
             return ERR_UNKNOWN;
         }
     }
@@ -1164,7 +1167,7 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
 
 int GetLiveBrowserProcessId(NSString *bundleId){
     
-    NSString* profilePath = [NSString stringWithFormat:@"%@%s%@", @"--user-data-dir=", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
+    NSString *profilePath = GetUserProfilePath();
 
     NSArray* appList = [NSRunningApplication runningApplicationsWithBundleIdentifier: bundleId];
     
