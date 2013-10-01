@@ -275,12 +275,12 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         return;
     }
     
-    if (!LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()) {
+    if (!liveBrowserMgr->GetTerminateObserver()) {
         //register an observer to watch for the app terminations
-        LiveBrowserMgrMac::GetInstance()->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
+        liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
         
         [[[NSWorkspace sharedWorkspace] notificationCenter]
-                addObserver:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver() 
+                addObserver:liveBrowserMgr->GetTerminateObserver()
                 selector:@selector(appTerminated:) 
                 name:NSWorkspaceDidTerminateApplicationNotification 
                 object:nil
@@ -296,7 +296,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     //start a timeout timer
     liveBrowserMgr->SetCloseTimeoutTimer([[NSTimer
                                          scheduledTimerWithTimeInterval:(3 * 60)
-                                         target:LiveBrowserMgrMac::GetInstance()->GetTerminateObserver()
+                                         target:liveBrowserMgr->GetTerminateObserver()
                                          selector:@selector(timeoutTimer:)
                                          userInfo:nil repeats:NO] retain]
                                          );
