@@ -513,9 +513,14 @@ Class GetShellWindowFrameClass() {
                                  c.size.height - aV.size.height - 4,	// y position
                                  aV.size.width,	// width
                                  aV.size.height);	// height
-    [[TrafficLightsView getInstance] setFrame:newFrame];    
+    
+    NSView* tlView = nil;
+    [NSBundle loadNibNamed:@"TrafficLights" owner:tlView];
 
-    [themeFrame addSubview:[TrafficLightsView getInstance]];
+    [tlView setFrame:newFrame];
+   
+    
+    [themeFrame addSubview:tlView];
 
     // Show the window.
   [mainWnd display];
