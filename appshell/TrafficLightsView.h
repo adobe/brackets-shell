@@ -26,4 +26,5 @@
 
 + (TrafficLightsView *)getInstance;
 
+
 @end

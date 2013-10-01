@@ -23,7 +23,7 @@
 #include "appshell_node_process.h"
 #include "TrafficLightsView.h"
 
-//#define CUSTOM_TRAFFIC_LIGHTS
+#define CUSTOM_TRAFFIC_LIGHTS
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -331,15 +331,8 @@ void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
                 activeColor : inactiveColor];
     
     
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-    TrafficLightsView* trafficLightsView = [TrafficLightsView initWithFrame: NSMakeRect(kTrafficLightsViewX,
-                                                                                      kTrafficLightsViewY,
-                                                                                           kTrafficLightsViewWidth,
-                                                                                           kTrafficLightsViewWidth)];
-    [NSBundle loadNibNamed:@"TrafficLightsView" owner:self];
-    [self addSubview: trafficLightsView];
-    
-#endif
+
+
 }
 
 /**
@@ -503,12 +496,27 @@ Class GetShellWindowFrameClass() {
     
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
+
+    
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
 
     
-  // Show the window.
+    
+    NSView *themeFrame = [[mainWnd contentView] superview];
+    NSRect c = [themeFrame frame];
+    
+    NSRect aV = [[TrafficLightsView getInstance] frame];	// aV for "accessory view"
+    NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                 c.size.height - aV.size.height - 4,	// y position
+                                 aV.size.width,	// width
+                                 aV.size.height);	// height
+    [[TrafficLightsView getInstance] setFrame:newFrame];    
+
+    [themeFrame addSubview:[TrafficLightsView getInstance]];
+
+    // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
   [NSApp requestUserAttention:NSInformationalRequest];
