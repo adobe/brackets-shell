@@ -22,6 +22,7 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 #include "TrafficLightsView.h"
+#include "TrafficLightsViewController.h"
 
 #define CUSTOM_TRAFFIC_LIGHTS
 #define LIGHT_CAPTION_TEXT
@@ -505,22 +506,21 @@ Class GetShellWindowFrameClass() {
 
     
     
-    NSView *themeFrame = [[mainWnd contentView] superview];
-    NSRect c = [themeFrame frame];
+    NSView                          *themeView = [[mainWnd contentView] superview];
+    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
     
-    NSRect aV = [[TrafficLightsView getInstance] frame];	// aV for "accessory view"
+    controller = [[TrafficLightsViewController alloc] init];
+    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+    {
+        NSRect  parentFrame = [themeView frame];
+        NSRect  oldFrame = [controller.view frame];
     NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                 c.size.height - aV.size.height - 4,	// y position
-                                 aV.size.width,	// width
-                                 aV.size.height);	// height
-    
-    NSView* tlView = nil;
-    [NSBundle loadNibNamed:@"TrafficLights" owner:tlView];
-
-    [tlView setFrame:newFrame];
-   
-    
-    [themeFrame addSubview:tlView];
+                                      parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                      oldFrame.size.width,                                  // width
+                                      oldFrame.size.height);                                // height
+        [controller.view setFrame:newFrame];
+        [themeView addSubview:controller.view];
+    } 
 
     // Show the window.
   [mainWnd display];

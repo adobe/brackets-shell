@@ -24,7 +24,4 @@
 
 @interface TrafficLightsView : NSView
 
-+ (TrafficLightsView *)getInstance;
-
-
 @end
