@@ -118,7 +118,8 @@ protected:
     virtual void ComputeMaximizeButtonRect(RECT& rect);
     virtual void ComputeCloseButtonRect(RECT& rect);
     virtual void ComputeMenuBarRect(RECT& rect);
-
+    virtual void ComputeRequiredMenuRect(RECT& rect);
+  
     
     // Drawing Initializers
     void InitDrawingResources();
