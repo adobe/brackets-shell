@@ -12,9 +12,7 @@
 
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
-
-#define CUSTOM_TRAFFIC_LIGHTS
-#define LIGHT_CAPTION_TEXT
+#include "config.h"
 
 const int kTrafficLightsViewX = 7;
 const int kTrafficLightsViewY = 7;

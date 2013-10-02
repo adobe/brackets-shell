@@ -81,7 +81,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
         dirtyPress = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
     }
     
-    if ([self.window isMainWindow] && [[NSApplication sharedApplication] isActive]) {
+    if ([self.window isKeyWindow]) {
         [self setActiveState];
     } else {
         [self setInactiveState];
@@ -90,10 +90,10 @@ static const int ZOOM_BUTTON_TAG = 1002;
     //get notified of state
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(setActiveState)
-                                                 name:NSWindowDidBecomeMainNotification object:nil];
+                                                 name:NSWindowDidBecomeMainNotification object:self.window];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(setInactiveState)
-                                                 name:NSWindowDidResignMainNotification object:nil];
+                                                 name:NSWindowDidResignMainNotification object:self.window];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(hoverIn)
                                                  name:@"TrafficLightsMouseEnter"
@@ -139,50 +139,46 @@ static const int ZOOM_BUTTON_TAG = 1002;
 }
 
 - (void)setActiveState {
-    activeState = YES;
-    if (self == nil)
-        return;
-    if (hoverState) {
-        if (closeButton && dirtyState) {
-            [self setImage:dirtyHover];
-        } else {
-            [self setImage:hover];
-        }
-    } else {
-        if (closeButton && dirtyState) {
-            [self setImage:dirtyActive];
-        } else {
-            [self setImage:active];
-        }
-    }
+    activeState = [self.window isKeyWindow];
+    [self updateButtonStates];
 }
 
 - (void)setDocumentEdited {
     if (closeButton) {
         dirtyState = [[self window] isDocumentEdited];
-        if (dirtyState) {
-            if (activeState) {
-                [self setImage:dirtyActive];
+    }
+    [self updateButtonStates];
+}
+
+-(void)updateButtonStates{
+    if (self == nil)
+        return;
+    if (activeState) {
+        if (hoverState) {
+            if (closeButton && dirtyState) {
+                [self setImage:dirtyHover];
             } else {
-                [self setImage:dirtyInactive];
+                [self setImage:hover];
             }
         } else {
-            if (activeState) {
-                [self setImage:active];
+            if (closeButton && dirtyState) {
+                [self setImage:dirtyActive];
             } else {
-                [self setImage:inactive];
+                [self setImage:active];
             }
+        }
+    } else {
+        if (closeButton && dirtyState) {
+            [self setImage:dirtyInactive];
+        } else {
+            [self setImage:inactive];
         }
     }
 }
 
 - (void)setInactiveState {
-    activeState = NO;
-    if (closeButton && dirtyState) {
-        [self setImage:dirtyInactive];
-    } else {
-        [self setImage:inactive];
-    }
+    activeState = ![self.window isKeyWindow];
+    [self updateButtonStates];
 }
 
 - (void)hoverIn {

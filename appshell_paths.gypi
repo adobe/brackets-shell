@@ -164,6 +164,12 @@
       'appshell/resource_util_linux.cpp',
     ],
     'appshell_sources_mac_helper': [
+      'appshell/TrafficLightButton.h',
+      'appshell/TrafficLightButton.mm',
+      'appshell/TrafficLightsView.h',
+      'appshell/TrafficLightsView.mm',
+      'appshell/TrafficLightsViewController.h',
+      'appshell/TrafficLightsViewController.mm',
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
       'appshell/appshell_extensions_mac.mm',

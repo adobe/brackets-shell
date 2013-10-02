@@ -25,8 +25,7 @@
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
 
-#define CUSTOM_TRAFFIC_LIGHTS
-#define LIGHT_CAPTION_TEXT
+
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
