@@ -48,11 +48,4 @@ static TrafficLightsView* theView = nil;
     theView = self;
     
 }
-
-
-
-+ (TrafficLightsView *)getInstance
-{
-    return theView;
-}
 @end

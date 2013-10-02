@@ -28,7 +28,7 @@
 		<object class="NSMutableArray" key="IBDocument.RootObjects" id="1000">
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<object class="NSCustomObject" id="1001">
-				<string key="NSClassName">NSObject</string>
+				<string key="NSClassName">TrafficLightsViewController</string>
 			</object>
 			<object class="NSCustomObject" id="1003">
 				<string key="NSClassName">FirstResponder</string>
@@ -46,7 +46,6 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrameSize">{14, 16}</string>
 						<reference key="NSSuperview" ref="410946223"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="827364884"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<int key="NSTag">1000</int>
@@ -76,7 +75,6 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{40, 0}, {14, 16}}</string>
 						<reference key="NSSuperview" ref="410946223"/>
-						<reference key="NSWindow"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<int key="NSTag">1002</int>
 						<bool key="NSEnabled">YES</bool>
@@ -101,7 +99,6 @@
 						<int key="NSvFlags">268</int>
 						<string key="NSFrame">{{20, 0}, {14, 16}}</string>
 						<reference key="NSSuperview" ref="410946223"/>
-						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="318820531"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<int key="NSTag">1001</int>
@@ -125,7 +122,6 @@
 				</object>
 				<string key="NSFrameSize">{54, 16}</string>
 				<reference key="NSSuperview"/>
-				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="780546051"/>
 				<string key="NSClassName">TrafficLightsView</string>
 			</object>
@@ -133,6 +129,14 @@
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<object class="NSMutableArray" key="connectionRecords">
 				<bool key="EncodedWithXMLCoder">YES</bool>
+			<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">view</string>
+						<reference key="source" ref="1001"/>
+						<reference key="destination" ref="410946223"/>
+					</object>
+					<int key="connectionID">48</int>
+				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<object class="NSArray" key="orderedObjects">
@@ -265,29 +269,9 @@
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">47</int>
+			<int key="maxID">48</int>
 		</object>
-		<object class="IBClassDescriber" key="IBDocument.Classes">
-			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
-				<bool key="EncodedWithXMLCoder">YES</bool>
-				<object class="IBPartialClassDescription">
-					<string key="className">TrafficLightButton</string>
-					<string key="superclassName">NSButton</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/TrafficLightButton.h</string>
-					</object>
-				</object>
-				<object class="IBPartialClassDescription">
-					<string key="className">TrafficLightsView</string>
-					<string key="superclassName">NSView</string>
-					<object class="IBClassDescriptionSource" key="sourceIdentifier">
-						<string key="majorKey">IBProjectSource</string>
-						<string key="minorKey">./Classes/TrafficLightsView.h</string>
-					</object>
-				</object>
-			</object>
-		</object>
+		<object class="IBClassDescriber" key="IBDocument.Classes"/>
 		<int key="IBDocument.localizationMode">0</int>
 		<string key="IBDocument.TargetRuntimeIdentifier">IBCocoaFramework</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginDeclaredDependencies">
