@@ -14,11 +14,6 @@
 #include "TrafficLightsViewController.h"
 #include "config.h"
 
-const int kTrafficLightsViewX = 7;
-const int kTrafficLightsViewY = 7;
-const int kTrafficLightsViewHeight = 16;
-const int kTrafficLightsViewWidth = 54;
-
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Custom draw interface for NSThemeFrame

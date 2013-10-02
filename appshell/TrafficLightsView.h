@@ -24,4 +24,12 @@
 
 @interface TrafficLightsView : NSView
 
+
+
 @end
+
+
+const int kTrafficLightsViewX = 7;
+const int kTrafficLightsViewY = 7;
+const int kTrafficLightsViewHeight = 16;
+const int kTrafficLightsViewWidth = 54;

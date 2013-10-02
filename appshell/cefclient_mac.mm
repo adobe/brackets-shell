@@ -44,10 +44,6 @@ const int kWindowHeight = 700;
 const int kMinWindowWidth = 375;
 const int kMinWindowHeight = 200;
 
-const int kTrafficLightsViewX = 7;
-const int kTrafficLightsViewY = 7;
-const int kTrafficLightsViewHeight = 16;
-const int kTrafficLightsViewWidth = 54;
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
