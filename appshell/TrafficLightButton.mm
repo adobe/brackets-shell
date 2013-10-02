@@ -80,20 +80,24 @@ static const int ZOOM_BUTTON_TAG = 1002;
         dirtyHover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-hover",buttonName]];
         dirtyPress = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
     }
+   
+    // assume active
+    activeState = YES;
+    [self updateButtonStates];
     
-    if ([self.window isKeyWindow]) {
-        [self setActiveState];
-    } else {
-        [self setInactiveState];
-    }
-
     //get notified of state
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(setActiveState)
-                                                 name:NSWindowDidBecomeMainNotification object:self.window];
+                                             selector:@selector(updateActiveState)
+                                                 name:NSWindowDidBecomeMainNotification object:[self window]];
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(setInactiveState)
-                                                 name:NSWindowDidResignMainNotification object:self.window];
+                                             selector:@selector(updateActiveState)
+                                                 name:NSWindowDidResignMainNotification object:[self window]];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateActiveState)
+                                                 name:NSWindowDidBecomeKeyNotification object:[self window]];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateActiveState)
+                                                 name:NSWindowDidResignKeyNotification object:[self window]];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(hoverIn)
                                                  name:@"TrafficLightsMouseEnter"
@@ -138,7 +142,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
     [super mouseUp:theEvent];
 }
 
-- (void)setActiveState {
+- (void)updateActiveState {
     activeState = [self.window isKeyWindow];
     [self updateButtonStates];
 }
@@ -174,11 +178,6 @@ static const int ZOOM_BUTTON_TAG = 1002;
             [self setImage:inactive];
         }
     }
-}
-
-- (void)setInactiveState {
-    activeState = ![self.window isKeyWindow];
-    [self updateButtonStates];
 }
 
 - (void)hoverIn {
