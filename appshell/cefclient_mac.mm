@@ -21,6 +21,7 @@
 #include "client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
+
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
 
@@ -504,25 +505,24 @@ Class GetShellWindowFrameClass() {
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
 
-    
-    
-    NSView                          *themeView = [[mainWnd contentView] superview];
-    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
-    
-    controller = [[TrafficLightsViewController alloc] init];
-    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
-    {
-        NSRect  parentFrame = [themeView frame];
-        NSRect  oldFrame = [controller.view frame];
-    NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                      parentFrame.size.height - oldFrame.size.height - 4,   // y position
-                                      oldFrame.size.width,                                  // width
-                                      oldFrame.size.height);                                // height
-        [controller.view setFrame:newFrame];
-        [themeView addSubview:controller.view];
-    } 
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+  NSView                          *themeView = [[mainWnd contentView] superview];
+  TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+  if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+  {
+      NSRect  parentFrame = [themeView frame];
+      NSRect  oldFrame = [controller.view frame];
+      NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                   parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                   oldFrame.size.width,                                  // width
+                                   oldFrame.size.height);                                // height
+      [controller.view setFrame:newFrame];
+      [themeView addSubview:controller.view];
+  }
 
-    // Show the window.
+#endif 
+    
+   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
   [NSApp requestUserAttention:NSInformationalRequest];

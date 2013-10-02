@@ -146,6 +146,8 @@
       'appshell/TrafficLightButton.mm',
       'appshell/TrafficLightsView.h',
       'appshell/TrafficLightsView.mm',
+      'appshell/TrafficLightsViewController.h',
+      'appshell/TrafficLightsViewController.mm',
       'appshell/appshell_extensions_mac.mm',
       'appshell/appshell_node_process_mac.mm',
       'appshell/client_app_mac.mm',

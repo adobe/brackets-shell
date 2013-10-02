@@ -10,6 +10,17 @@
 #include "cefclient.h"
 #include "native_menu_model.h"
 
+#include "TrafficLightsView.h"
+#include "TrafficLightsViewController.h"
+
+#define CUSTOM_TRAFFIC_LIGHTS
+#define LIGHT_CAPTION_TEXT
+
+const int kTrafficLightsViewX = 7;
+const int kTrafficLightsViewY = 7;
+const int kTrafficLightsViewHeight = 16;
+const int kTrafficLightsViewWidth = 54;
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Custom draw interface for NSThemeFrame
@@ -140,16 +151,6 @@ void PopupWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
                    withColor:[NSApp isActive] ?
                 activeColor : inactiveColor];
     
-    
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-    TrafficLightsView* trafficLightsView = [TrafficLightsView initWithFrame: NSMakeRect(kTrafficLightsViewX,
-                                                                                        kTrafficLightsViewY,
-                                                                                        kTrafficLightsViewWidth,
-                                                                                        kTrafficLightsViewWidth)];
-    [NSBundle loadNibNamed:@"TrafficLightsView" owner:self];
-    [self addSubview: trafficLightsView];
-    
-#endif
 }
 
 
@@ -329,12 +330,43 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   }
 
   if (![window delegate]) {
-    PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
-    [delegate setClientHandler:this];
-    [delegate setWindow:window];
-    [window setDelegate:delegate];
+      PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
+      [delegate setClientHandler:this];
+      [delegate setWindow:window];
+      [window setDelegate:delegate];
+#ifdef DARK_UI
       NSView* contentView = [window contentView];
       [delegate addCustomDrawHook: contentView];
+#endif
+      
+      
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+      //hide buttons
+      NSWindow* theWin = window;
+      NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+      [windowButton setHidden:YES];
+      windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+      [windowButton setHidden:YES];
+      windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+      [windowButton setHidden:YES];
+      
+      NSView                          *themeView = [[window contentView] superview];
+      TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+      
+      if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+      {
+          NSRect  parentFrame = [themeView frame];
+          NSRect  oldFrame = [controller.view frame];
+          NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                       parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                       oldFrame.size.width,                                  // width
+                                       oldFrame.size.height);                                // height
+          [controller.view setFrame:newFrame];
+          [themeView addSubview:controller.view];
+      }
+#endif
+      
+      
   }
 }
 
