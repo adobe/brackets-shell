@@ -416,8 +416,6 @@ HWND cef_main_window::FindFirstTopLevelInstance()
 // WM_SIZE handler
 BOOL cef_main_window::HandleSize(BOOL bMinimize)
 {
-    // Minimizing the window to 0x0 which causes our layout to go all
-    // screwy, so we just ignore it.
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
     if (!hwnd) 
         return FALSE;
@@ -425,6 +423,8 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     RECT rect;
     GetClientRect(&rect);
 
+    // Minimizing the window to 0x0 which causes our layout to go all
+    // screwy, so we just ignore it.
     if (!bMinimize) 
     {
         HDWP hdwp = ::BeginDeferWindowPos(1);
