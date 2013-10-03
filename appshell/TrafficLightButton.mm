@@ -99,7 +99,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
                                              selector:@selector(updateActiveState)
                                                  name:NSWindowDidResignKeyNotification object:[self window]];
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(hoverIn)
+                                             selector:@selector(hoverIn:)
                                                  name:@"TrafficLightsMouseEnter"
                                                object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -180,12 +180,15 @@ static const int ZOOM_BUTTON_TAG = 1002;
     }
 }
 
-- (void)hoverIn {
-    hoverState = YES;
-    if (closeButton && dirtyState) {
-        [self setImage:dirtyHover];
-    } else {
-        [self setImage:hover];
+- (void)hoverIn:(NSNotification *) notification {
+    
+    if ([[notification object] isEqual:[self superview]]) {
+        hoverState = YES;
+        if (closeButton && dirtyState) {
+            [self setImage:dirtyHover];
+        } else {
+            [self setImage:hover];
+        }
     }
 }
 
