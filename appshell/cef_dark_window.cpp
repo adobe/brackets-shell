@@ -379,6 +379,27 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
     rect.bottom = rect.top + mSysCloseButton->GetHeight();
 }
 
+
+void cef_dark_window::ComputeRequiredMenuRect(RECT& rect)
+{
+    HMENU menu = GetMenu();
+    int items = ::GetMenuItemCount(menu);
+
+    ::SetRectEmpty(&rect);
+
+    for (int i = 0; i < items; i++) {
+        RECT itemRect;
+        ::SetRectEmpty(&itemRect);
+        if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
+            ScreenToNonClient(&itemRect);
+            RECT dest;
+            if (::UnionRect(&dest, &rect, &itemRect)) {
+                ::CopyRect(&rect, &dest);
+            }
+        }
+    }
+}
+
 // Computes the Rect where the menu bar is drawn in window coordinates
 void cef_dark_window::ComputeMenuBarRect(RECT& rect)
 {
@@ -782,7 +803,15 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
          return HTBOTTOM;
 
-    return HTMENU;
+    // If it's not in the menu, it's in the caption
+    RECT rectMenu;
+    ComputeRequiredMenuRect(rectMenu);
+    NonClientToScreen(&rectMenu);
+
+    if (::PtInRect(&rectMenu, *ptHit))
+        return HTMENU;
+
+    return HTCAPTION;
 }
 
 // Like UpdateNonClientArea, but sets up a clipping region to just update the system buttons
