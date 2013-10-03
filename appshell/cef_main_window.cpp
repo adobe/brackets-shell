@@ -265,52 +265,6 @@ BOOL cef_main_window::HandleExitCommand()
     return TRUE;
 }
 
-// WM_SIZE handler
-BOOL cef_main_window::HandleSize(BOOL bMinimize)
-{
-    // Minimizing the window to 0x0 which causes our layout to go all
-    // screwy, so we just ignore it.
-    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-    if (!hwnd) 
-        return FALSE;
-
-    RECT rect;
-    GetClientRect(&rect);
-
-    if (!bMinimize) 
-    {
-        HDWP hdwp = ::BeginDeferWindowPos(1);
-        hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
-        ::EndDeferWindowPos(hdwp);
-    }
-
-#ifdef DARK_UI
-    // We turn off redraw during activation to minimized flicker
-    //    which causes problems on some versions of Windows. If the app
-    //  was minimized and was re-activated, it will restore and the client area isn't 
-    //    drawn so redraw the client area now or it will be hollow in the middle...
-    if (GetProp(L"WasMinimized")) {
-        DoRepaintClientArea();
-    }
-    SetProp(L"WasMinimized", (HANDLE)bMinimize);
-#endif
-
-    return FALSE;
-}
-
-void cef_main_window::DoRepaintClientArea()
-{
-    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-    if (!hwnd) 
-        return;
-
-    RECT rect;
-    GetClientRect(&rect);
-    
-    ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
-}
-
-
 // WM_COMMAND handler
 BOOL cef_main_window::HandleCommand(UINT commandId)
 {
@@ -457,6 +411,28 @@ HWND cef_main_window::FindFirstTopLevelInstance()
     HWND hFirstInstanceWnd = NULL;
     ::EnumWindows(FindSuitableBracketsInstanceHelper, (LPARAM)&hFirstInstanceWnd);
     return hFirstInstanceWnd;
+}
+
+// WM_SIZE handler
+BOOL cef_main_window::HandleSize(BOOL bMinimize)
+{
+    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
+    if (!hwnd) 
+        return FALSE;
+
+    RECT rect;
+    GetClientRect(&rect);
+
+    // Minimizing the window to 0x0 which causes our layout to go all
+    // screwy, so we just ignore it.
+    if (!bMinimize) 
+    {
+        HDWP hdwp = ::BeginDeferWindowPos(1);
+        hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
+        ::EndDeferWindowPos(hdwp);
+    }
+
+    return FALSE;
 }
 
 // WindowProc -- Dispatches and routes window messages
