@@ -26,7 +26,6 @@
 #include "native_menu_model.h"
 
 #include <Cocoa/Cocoa.h>
-#include <sys/sysctl.h>
 
 NSMutableArray* pendingOpenFiles;
 
