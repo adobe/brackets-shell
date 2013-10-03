@@ -393,9 +393,9 @@ void cef_dark_window::ComputeRequiredMenuRect(RECT& rect)
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
             ScreenToNonClient(&itemRect);
             RECT dest;
-            ::CopyRect(&dest, &rect);
-            ::UnionRect(&dest, &rect, &itemRect);
-            ::CopyRect(&rect, &dest);
+            if (::UnionRect(&dest, &rect, &itemRect)) {
+                ::CopyRect(&rect, &dest);
+            }
         }
     }
 }
