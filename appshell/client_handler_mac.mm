@@ -248,11 +248,47 @@ Class GetPopuplWindowFrameClass() {
   isReallyClosing = true;
 }
 
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSView* contentView = [window contentView];
+    [self addCustomDrawHook: contentView];
+#endif
+    
+NSView                          *themeView = [[window contentView] superview];
+    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+    //hide buttons
+    NSWindow* theWin = window;
+    NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+    [windowButton setHidden:YES];
+    windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+    [windowButton setHidden:YES];
+    windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+    [windowButton setHidden:YES];
+    
+    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+    
+    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+    {
+        NSRect  parentFrame = [themeView frame];
+        NSRect  oldFrame = [controller.view frame];
+        NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                     parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                     oldFrame.size.width,                                  // width
+                                     oldFrame.size.height);                                // height
+        [controller.view setFrame:newFrame];
+        [themeView addSubview:controller.view];
+    }
+#endif
+    
+    [themeView setNeedsDisplay:YES];
+}
+
+
 // Called when the window is about to close. Perform the self-destruction
 // sequence by getting rid of the window. By returning YES, we allow the window
 // to be removed from the screen.
-
-- (BOOL)windowShouldClose:(id)aWindow {  
+- (BOOL)windowShouldClose:(id)aWindow {
   
   // This function can be called as many as THREE times for each window.
   // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
