@@ -63,7 +63,8 @@ public:
     ChromeWindowsTerminatedObserver* GetTerminateObserver() { return m_chromeTerminateObserver; }
     CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
     NSRunningApplication* GetLiveBrowser() { return [ NSRunningApplication runningApplicationWithProcessIdentifier: m_liveBrowserPid ]; }
-    
+    int GetLiveBrowserPid() { return m_liveBrowserPid; }
+        
     void SetCloseTimeoutTimer(NSTimer* closeLiveBrowserTimeoutTimer)
             { m_closeLiveBrowserTimeoutTimer = closeLiveBrowserTimeoutTimer; }
     void SetTerminateObserver(ChromeWindowsTerminatedObserver* chromeTerminateObserver)
@@ -160,6 +161,7 @@ void LiveBrowserMgrMac::CheckForChromeRunning()
         return;
     
     NSLog(@"LiveBrowser has terminated");
+    // LiveBrowser has terminated (as per notification center)
     SetLiveBrowserPid(ERR_PID_NOT_FOUND);
     
     // Fire callback to browser
@@ -694,7 +696,18 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 - (void) appTerminated:(NSNotification *)note
 {
-    LiveBrowserMgrMac::GetInstance()->CheckForChromeRunning();
+    // Not Chrome? Not interested.
+    if ( ![[[note userInfo] objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:appId] ) {
+        return;
+    }
+
+    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
+    // Not LiveBrowser instance? Not interested.
+    if ( ![[[note userInfo] objectForKey:@"NSApplicationProcessIdentifier"] isEqualToNumber:[NSNumber numberWithInt:liveBrowserMgr->GetLiveBrowserPid()]] ) {
+        return;
+    }
+
+    liveBrowserMgr->CheckForChromeRunning();
 }
 
 - (void) timeoutTimer:(NSTimer*)timer
