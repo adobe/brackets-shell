@@ -159,7 +159,6 @@ void LiveBrowserMgrMac::CheckForChromeRunning()
     if (IsChromeRunning())
         return;
     
-    NSLog(@"LiveBrowser has terminated");
     // LiveBrowser has terminated (as per notification center)
     SetLiveBrowserPid(ERR_PID_NOT_FOUND);
     
@@ -171,8 +170,6 @@ void LiveBrowserMgrMac::CheckForChromeRunningTimeout()
 {
     int retVal = (IsChromeRunning() ? ERR_UNKNOWN : NO_ERROR);
     
-    NSLog(@"LiveBrowser has timedout");
-
     //notify back to the app
     CloseLiveBrowserFireCallback(retVal);
 }
