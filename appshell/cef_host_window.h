@@ -51,10 +51,14 @@ protected:
 
     // Message Handlers 
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
+    BOOL HandleSize(BOOL bMinimize);
 
     // Command Implementation
     BOOL DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback = 0);
     BOOL DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback = 0);
+
+    // Implementation
+    virtual void DoRepaintClientArea();
 
     // Helper to get a command string from command id
     CefString GetCommandString(UINT commandId);
