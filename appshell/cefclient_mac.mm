@@ -508,7 +508,7 @@ Class GetShellWindowFrameClass() {
       NSRect  parentFrame = [themeView frame];
       NSRect  oldFrame = [controller.view frame];
       NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                   parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                   parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
                                    oldFrame.size.width,                                  // width
                                    oldFrame.size.height);                                // height
       [controller.view setFrame:newFrame];
