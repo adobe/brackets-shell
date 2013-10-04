@@ -93,6 +93,7 @@ void ClientHandler::CloseMainWindow() {
   CefRefPtr<ClientHandler> clientHandler;
   NSWindow* window;
   BOOL isReallyClosing;
+  NSString* savedTitle;
 }
 - (IBAction)quit:(id)sender;
 - (IBAction)handleMenuAction:(id)sender;
@@ -174,6 +175,7 @@ Class GetPopuplWindowFrameClass() {
 - (id) init {
   [super init];
   isReallyClosing = false;
+  savedTitle = nil;
   return self;
 }
 
@@ -248,10 +250,19 @@ Class GetPopuplWindowFrameClass() {
   isReallyClosing = true;
 }
 
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    savedTitle = [[window title] copy];
+#endif
+}
+
+
 - (void)windowDidExitFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
     NSView* contentView = [window contentView];
     [self addCustomDrawHook: contentView];
+    [window setTitle:savedTitle];
+    [savedTitle release];
 #endif
     
 NSView                          *themeView = [[window contentView] superview];

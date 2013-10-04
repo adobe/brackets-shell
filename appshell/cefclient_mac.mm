@@ -122,10 +122,92 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+
+
+// Custom draw interface for NSThemeFrame
+@interface NSView (UndocumentedAPI)
+- (float)roundedCornerRadius;
+- (CGRect)_titlebarTitleRect;
+- (NSTextFieldCell*)titleCell;
+- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
+@end
+
+/**
+ * The patched implementation for drawRect that lets us tweak
+ * the title bar.
+ */
+void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
+    // Clear to 0 alpha
+    [[NSColor clearColor] set];
+    NSRectFill( rect );
+    //Obtain reference to our NSThemeFrame view
+    NSRect windowRect = [self frame];
+    windowRect.origin = NSMakePoint(0,0);
+    //This constant matches the radius for other macosx apps.
+    //For some reason if we use the default value it is double that of safari etc.
+    float cornerRadius = 4.0f;
+    
+    //Clip our title bar render
+    [[NSBezierPath bezierPathWithRoundedRect:windowRect
+                                     xRadius:cornerRadius
+                                     yRadius:cornerRadius] addClip];
+    [[NSBezierPath bezierPathWithRect:rect] addClip];
+    
+    
+    
+    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+    //title bar background
+    float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+    //title text color
+    float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
+    float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
+    // Background fill, solid for now.
+    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+    [fillColor set];
+    NSRectFill( rect );
+    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
+    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
+    // Render our title text
+    [self _drawTitleStringIn:[self _titlebarTitleRect]
+                   withColor:[NSApp isActive] ?
+                activeColor : inactiveColor];
+    
+    
+    
+    
+}
+
+
+
+
+/**
+ * Create a custom class based on NSThemeFrame called
+ * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
+ * as the implementation for the drawRect selector allowing us
+ * to draw the border/title bar the way we see fit.
+ */
+Class GetShellWindowFrameClass() {
+    // lazily change the class implementation if
+    // not done so already.
+    static Class k = NULL;
+    if (!k) {
+        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
+        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
+        k = objc_allocateClassPair(NSThemeFrame, "ShellWindowFrame", 0);
+        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
+        class_addMethod(k, @selector(drawRect:),
+                        (IMP)ShellWindowFrameDrawRect, method_getTypeEncoding(m0));
+        objc_registerClassPair(k);
+    }
+    return k;
+}
+
+
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
   BOOL isReallyClosing;
+  NSString* savedTitle;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
@@ -136,12 +218,13 @@ extern NSMutableArray* pendingOpenFiles;
 - (void)notifyConsoleMessage:(id)object;
 - (void)notifyDownloadComplete:(id)object;
 - (void)notifyDownloadError:(id)object;
+- (void)addCustomDrawHook:(NSView*)contentView;
 @end
 
 @implementation ClientWindowDelegate
-
 - (id) init {
   [super init];
+  savedTitle = nil;
   isReallyClosing = false;
   return self;
 }
@@ -185,6 +268,46 @@ extern NSMutableArray* pendingOpenFiles;
   }
   */
   g_handler->DispatchCloseToNextBrowser();
+}
+
+
+- (void)addCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, GetShellWindowFrameClass());
+    
+#ifdef LIGHT_CAPTION_TEXT
+    // Reset our frame view text cell background style
+    NSTextFieldCell * cell = [themeView titleCell];
+    [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
+}
+
+- (void)removeCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, NULL);
+}
+
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSWindow* window = [notification object];
+    savedTitle = [[window title] copy];
+#endif
+}
+
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSWindow* window = [notification object];
+    NSView* contentView = [window contentView];
+    [self addCustomDrawHook: contentView];
+    [window setTitle:savedTitle];
+    [savedTitle release];
+#endif
 }
 
 
@@ -278,82 +401,6 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 @end
-
-
-// Custom draw interface for NSThemeFrame
-@interface NSView (UndocumentedAPI)
-- (float)roundedCornerRadius;
-- (CGRect)_titlebarTitleRect;
-- (NSTextFieldCell*)titleCell;
-- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
-@end
-
-/**
- * The patched implementation for drawRect that lets us tweak
- * the title bar.
- */
-void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
-    // Clear to 0 alpha
-    [[NSColor clearColor] set];
-    NSRectFill( rect );
-    //Obtain reference to our NSThemeFrame view
-    NSRect windowRect = [self frame];
-    windowRect.origin = NSMakePoint(0,0);
-    //This constant matches the radius for other macosx apps.
-    //For some reason if we use the default value it is double that of safari etc.
-    float cornerRadius = 4.0f;
-    
-    //Clip our title bar render
-    [[NSBezierPath bezierPathWithRoundedRect:windowRect
-                                     xRadius:cornerRadius
-                                     yRadius:cornerRadius] addClip];
-    [[NSBezierPath bezierPathWithRect:rect] addClip];
-    
-    
-    
-    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-    //title bar background
-    float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
-    //title text color
-    float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
-    float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
-    // Background fill, solid for now.
-    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
-    [fillColor set];
-    NSRectFill( rect );
-    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
-    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
-    // Render our title text
-    [self _drawTitleStringIn:[self _titlebarTitleRect]
-                   withColor:[NSApp isActive] ?
-                activeColor : inactiveColor];
-    
-    
-
-
-}
-
-/**
- * Create a custom class based on NSThemeFrame called
- * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
- * as the implementation for the drawRect selector allowing us
- * to draw the border/title bar the way we see fit.
- */
-Class GetShellWindowFrameClass() {
-    // lazily change the class implementation if
-    // not done so already.
-    static Class k = NULL;
-    if (!k) {
-        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
-        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
-        k = objc_allocateClassPair(NSThemeFrame, "ShellWindowFrame", 0);
-        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
-        class_addMethod(k, @selector(drawRect:),
-                        (IMP)ShellWindowFrameDrawRect, method_getTypeEncoding(m0));
-        objc_registerClassPair(k);
-    }
-    return k;
-}
 
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
@@ -522,6 +569,8 @@ Class GetShellWindowFrameClass() {
   [mainWnd makeKeyAndOrderFront: nil];
   [NSApp requestUserAttention:NSInformationalRequest];
 }
+
+
 
 // Handle the Openfile apple event. This is a custom apple event similar to the regular
 // Open event, but can handle file paths in the form "path[:lineNumber[:columnNumber]]".
