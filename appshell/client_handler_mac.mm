@@ -50,6 +50,9 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   std::string titleStr(title);
   NSString* str = [NSString stringWithUTF8String:titleStr.c_str()];
   [window setTitle:str];
+    
+  NSObject* delegate = [window delegate];
+  [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
 
 void ClientHandler::SendNotification(NotificationType type) {
@@ -248,6 +251,12 @@ Class GetPopuplWindowFrameClass() {
 
 - (void)setIsReallyClosing {
   isReallyClosing = true;
+}
+
+-(void)windowTitleDidChange:(NSString*)title {
+#ifdef DARK_UI
+    savedTitle = [title copy];
+#endif
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
