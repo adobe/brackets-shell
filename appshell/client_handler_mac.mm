@@ -274,7 +274,7 @@ Class GetPopuplWindowFrameClass() {
     [savedTitle release];
 #endif
     
-NSView                          *themeView = [[window contentView] superview];
+NSView * themeView = [[window contentView] superview];
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
     //hide buttons
@@ -387,11 +387,12 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
       NSView* contentView = [window contentView];
       [delegate addCustomDrawHook: contentView];
 #endif
-      
+
+      NSWindow* theWin = window;
+      NSView*   themeView = [[window contentView] superview];
       
 #ifdef CUSTOM_TRAFFIC_LIGHTS
       //hide buttons
-      NSWindow* theWin = window;
       NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
       [windowButton setHidden:YES];
       windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
@@ -399,7 +400,6 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
       windowButton = [theWin standardWindowButton:NSWindowZoomButton];
       [windowButton setHidden:YES];
       
-      NSView                          *themeView = [[window contentView] superview];
       TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
       
       if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
@@ -414,8 +414,8 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
           [themeView addSubview:controller.view];
       }
 #endif
-      
-      
+
+      [themeView setNeedsDisplay:YES];
   }
 }
 
