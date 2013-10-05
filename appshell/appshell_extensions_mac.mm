@@ -432,7 +432,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
@@ -447,7 +447,8 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     NSDictionary* fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&error];
     NSDate *modDate = [fileAttribs valueForKey:NSFileModificationDate];
     modtime = [modDate timeIntervalSince1970];
-    
+    NSNumber *filesize = [fileAttribs valueForKey:NSFileSize];
+    size = [filesize unsignedIntValue];
     return ConvertNSErrorCode(error, true);
 }
 

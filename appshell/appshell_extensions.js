@@ -269,7 +269,7 @@ if (!appshell.app) {
      */
     native function GetFileModificationTime();
     appshell.fs.stat = function (path, callback) {
-        GetFileModificationTime(function (err, modtime, isDir) {
+        GetFileModificationTime(function (err, modtime, isDir, size) {
             callback(err, {
                 isFile: function () {
                     return !isDir;
@@ -277,7 +277,8 @@ if (!appshell.app) {
                 isDirectory: function () {
                     return isDir;
                 },
-                mtime: new Date(modtime * 1000) // modtime is seconds since 1970, convert to ms
+                mtime: new Date(modtime * 1000), // modtime is seconds since 1970, convert to ms
+                size: new Number(size)
             });
         }, path);
     };
