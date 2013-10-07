@@ -237,7 +237,7 @@ public:
                 error = Rename(oldName, newName);
             }
           // No additional response args for this function
-        } else if (message_name == "GetFileModificationTime") {
+        } else if (message_name == "GetFileAttributes") {
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
@@ -252,7 +252,7 @@ public:
                 uint32 size;
                 bool isDir;
                 
-                error = GetFileModificationTime(filename, modtime, isDir, size);
+                error = GetFileAttributes(filename, modtime, isDir, size);
                 
                 // Set response args for this function
                 responseArgs->SetInt(2, modtime);
