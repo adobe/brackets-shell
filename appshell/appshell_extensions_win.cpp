@@ -671,10 +671,10 @@ int32 GetFileAttributes(ExtensionString filename, uint32& modtime, bool& isDir, 
 
     modtime = FiletimeToTime(fad.ftLastWriteTime);
 
-	LARGE_INTEGER size_tmp;
+    LARGE_INTEGER size_tmp;
     size_tmp.HighPart = fad.nFileSizeHigh;
     size_tmp.LowPart = fad.nFileSizeLow;
-	size = size_tmp.QuadPart;
+    size = size_tmp.QuadPart;
 
     return NO_ERROR;
 }
