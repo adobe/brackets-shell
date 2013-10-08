@@ -301,6 +301,7 @@ Class GetShellWindowFrameClass() {
 #ifdef DARK_UI
     NSWindow* window = [notification object];
     savedTitle = [[window title] copy];
+    [window setTitle:@""];
 #endif
 }
 

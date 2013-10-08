@@ -262,6 +262,7 @@ Class GetPopuplWindowFrameClass() {
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
     savedTitle = [[window title] copy];
+    [window setTitle:@""];
 #endif
 }
 
