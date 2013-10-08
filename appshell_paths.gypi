@@ -142,6 +142,7 @@
       'appshell/res/restore-pressed.png',
     ],
     'appshell_sources_mac': [
+      'appshell/client_colors_mac.h',
       'appshell/TrafficLightButton.h',
       'appshell/TrafficLightButton.mm',
       'appshell/TrafficLightsView.h',

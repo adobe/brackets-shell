@@ -24,7 +24,7 @@
 
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
-
+#include "client_colors_mac.h"
 
 
 // Application startup time
@@ -156,12 +156,6 @@ void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
     
     
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-    //title bar background
-    float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
-    //title text color
-    float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
-    float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
-    // Background fill, solid for now.
     NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
     [fillColor set];
     NSRectFill( rect );

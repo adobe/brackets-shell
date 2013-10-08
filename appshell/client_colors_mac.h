@@ -20,16 +20,9 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-#import <Cocoa/Cocoa.h>
 
-@interface TrafficLightsView : NSView
-
-
-
-@end
-
-
-static const int kTrafficLightsViewX = 7;
-static const int kTrafficLightsViewY = 3;
-static const int kTrafficLightsViewHeight = 16;
-static const int kTrafficLightsViewWidth = 54;
+//title bar background
+static const float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+//title text color
+static const float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
+static const float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
