@@ -432,7 +432,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 GetFileAttributes(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;

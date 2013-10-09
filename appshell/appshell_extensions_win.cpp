@@ -654,7 +654,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
-int32 GetFileAttributes(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
