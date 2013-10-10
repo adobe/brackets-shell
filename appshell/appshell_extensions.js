@@ -267,9 +267,9 @@ if (!appshell.app) {
      *                 
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
-    native function GetFileModificationTime();
+    native function GetFileInfo();
     appshell.fs.stat = function (path, callback) {
-        GetFileModificationTime(function (err, modtime, isDir) {
+        GetFileInfo(function (err, modtime, isDir, size) {
             callback(err, {
                 isFile: function () {
                     return !isDir;
@@ -277,7 +277,8 @@ if (!appshell.app) {
                 isDirectory: function () {
                     return isDir;
                 },
-                mtime: new Date(modtime * 1000) // modtime is seconds since 1970, convert to ms
+                mtime: new Date(modtime * 1000), // modtime is seconds since 1970, convert to ms
+                size: new Number(size)
             });
         }, path);
     };
