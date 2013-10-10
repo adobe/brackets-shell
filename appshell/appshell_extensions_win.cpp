@@ -656,18 +656,14 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
 
 int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-
-    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-        return ConvertWinErrorCode(GetLastError()); 
-    }
-
-    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     WIN32_FILE_ATTRIBUTE_DATA   fad;
     if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
         return ConvertWinErrorCode(GetLastError());
     }
+
+	DWORD dwAttr = fad.dwFileAttributes;
+    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     modtime = FiletimeToTime(fad.ftLastWriteTime);
 
