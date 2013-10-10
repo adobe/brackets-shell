@@ -286,7 +286,7 @@ int Rename(ExtensionString oldName, ExtensionString newName)
     }
 }
 
-int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir)
+int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
     struct stat buf;
     if(stat(filename.c_str(),&buf)==-1)
@@ -294,6 +294,7 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir)
 
     modtime = buf.st_mtime;
     isDir = S_ISDIR(buf.st_mode);
+    size = (double)buf.st_size;
 
     return NO_ERROR;
 }

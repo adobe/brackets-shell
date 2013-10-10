@@ -432,7 +432,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
@@ -448,7 +448,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, uint32
     NSDate *modDate = [fileAttribs valueForKey:NSFileModificationDate];
     modtime = [modDate timeIntervalSince1970];
     NSNumber *filesize = [fileAttribs valueForKey:NSFileSize];
-    size = [filesize unsignedIntValue];
+    size = [filesize doubleValue];
     return ConvertNSErrorCode(error, true);
 }
 

@@ -249,7 +249,7 @@ public:
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
                 uint32 modtime;
-                uint32 size;
+                double size;
                 bool isDir;
                 
                 error = GetFileInfo(filename, modtime, isDir, size);
