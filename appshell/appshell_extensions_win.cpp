@@ -662,7 +662,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
         return ConvertWinErrorCode(GetLastError());
     }
 
-	DWORD dwAttr = fad.dwFileAttributes;
+    DWORD dwAttr = fad.dwFileAttributes;
     isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     modtime = FiletimeToTime(fad.ftLastWriteTime);
