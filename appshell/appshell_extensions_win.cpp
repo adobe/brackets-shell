@@ -654,7 +654,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, uint32& size)
 {
     DWORD dwAttr = GetFileAttributes(filename.c_str());
 
@@ -670,6 +670,11 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     }
 
     modtime = FiletimeToTime(fad.ftLastWriteTime);
+
+    LARGE_INTEGER size_tmp;
+    size_tmp.HighPart = fad.nFileSizeHigh;
+    size_tmp.LowPart = fad.nFileSizeLow;
+    size = size_tmp.QuadPart;
 
     return NO_ERROR;
 }

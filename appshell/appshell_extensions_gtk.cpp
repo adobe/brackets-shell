@@ -286,7 +286,7 @@ int Rename(ExtensionString oldName, ExtensionString newName)
     }
 }
 
-int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir)
 {
     struct stat buf;
     if(stat(filename.c_str(),&buf)==-1)
