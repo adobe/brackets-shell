@@ -3,14 +3,27 @@
 // can be found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
-
+#import <objc/runtime.h>
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "cefclient.h"
 #include "native_menu_model.h"
 
+#include "TrafficLightsView.h"
+#include "TrafficLightsViewController.h"
+#include "config.h"
+#include "client_colors_mac.h"
+
 extern CefRefPtr<ClientHandler> g_handler;
+
+// Custom draw interface for NSThemeFrame
+@interface NSView (UndocumentedAPI)
+- (float)roundedCornerRadius;
+- (CGRect)_titlebarTitleRect;
+- (NSTextFieldCell*)titleCell;
+- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
+@end
 
 // ClientHandler::ClientLifeSpanHandler implementation
 
@@ -38,6 +51,9 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   std::string titleStr(title);
   NSString* str = [NSString stringWithUTF8String:titleStr.c_str()];
   [window setTitle:str];
+    
+  NSObject* delegate = [window delegate];
+  [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
 
 void ClientHandler::SendNotification(NotificationType type) {
@@ -81,6 +97,7 @@ void ClientHandler::CloseMainWindow() {
   CefRefPtr<ClientHandler> clientHandler;
   NSWindow* window;
   BOOL isReallyClosing;
+  NSString* savedTitle;
 }
 - (IBAction)quit:(id)sender;
 - (IBAction)handleMenuAction:(id)sender;
@@ -88,13 +105,76 @@ void ClientHandler::CloseMainWindow() {
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
+- (void)addCustomDrawHook:(NSView*)contentView;
 @end
+
+
+/**
+ * The patched implementation for drawRect that lets us tweak
+ * the title bar.
+ */
+void PopupWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
+    // Clear to 0 alpha
+    [[NSColor clearColor] set];
+    NSRectFill( rect );
+    //Obtain reference to our NSThemeFrame view
+    NSRect windowRect = [self frame];
+    windowRect.origin = NSMakePoint(0,0);
+    //This constant matches the radius for other macosx apps.
+    //For some reason if we use the default value it is double that of safari etc.
+    float cornerRadius = 4.0f;
+    
+    //Clip our title bar render
+    [[NSBezierPath bezierPathWithRoundedRect:windowRect
+                                     xRadius:cornerRadius
+                                     yRadius:cornerRadius] addClip];
+    [[NSBezierPath bezierPathWithRect:rect] addClip];
+    
+    
+    
+    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+    // Background fill, solid for now.
+    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+    [fillColor set];
+    NSRectFill( rect );
+    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
+    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
+    // Render our title text
+    [self _drawTitleStringIn:[self _titlebarTitleRect]
+                   withColor:[NSApp isActive] ?
+                activeColor : inactiveColor];
+    
+}
+
+
+/**
+ * Create a custom class based on NSThemeFrame called
+ * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
+ * as the implementation for the drawRect selector allowing us
+ * to draw the border/title bar the way we see fit.
+ */
+Class GetPopuplWindowFrameClass() {
+    // lazily change the class implementation if
+    // not done so already.
+    static Class k = NULL;
+    if (!k) {
+        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
+        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
+        k = objc_allocateClassPair(NSThemeFrame, "PopupWindowFrame", 0);
+        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
+        class_addMethod(k, @selector(drawRect:),
+                        (IMP)PopupWindowFrameDrawRect, method_getTypeEncoding(m0));
+        objc_registerClassPair(k);
+    }
+    return k;
+}
 
 @implementation PopupClientWindowDelegate
 
 - (id) init {
   [super init];
   isReallyClosing = false;
+  savedTitle = nil;
   return self;
 }
 
@@ -118,6 +198,20 @@ void ClientHandler::CloseMainWindow() {
   }
   */
   clientHandler->DispatchCloseToNextBrowser();
+}
+
+
+- (void)addCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, GetPopuplWindowFrameClass());
+    
+#ifdef LIGHT_CAPTION_TEXT
+    // Reset our frame view text cell background style
+    NSTextFieldCell * cell = [themeView titleCell];
+    [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
 }
 
 - (IBAction)handleMenuAction:(id)sender {
@@ -155,11 +249,63 @@ void ClientHandler::CloseMainWindow() {
   isReallyClosing = true;
 }
 
+-(void)windowTitleDidChange:(NSString*)title {
+#ifdef DARK_UI
+    savedTitle = [title copy];
+#endif
+}
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    savedTitle = [[window title] copy];
+    [window setTitle:@""];
+#endif
+}
+
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSView* contentView = [window contentView];
+    [self addCustomDrawHook: contentView];
+    [window setTitle:savedTitle];
+    [savedTitle release];
+#endif
+    
+NSView * themeView = [[window contentView] superview];
+    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+    //hide buttons
+    NSWindow* theWin = window;
+    NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+    [windowButton setHidden:YES];
+    windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+    [windowButton setHidden:YES];
+    windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+    [windowButton setHidden:YES];
+    
+    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+    
+    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+    {
+        NSRect  parentFrame = [themeView frame];
+        NSRect  oldFrame = [controller.view frame];
+        NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                     parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                     oldFrame.size.width,                                  // width
+                                     oldFrame.size.height);                                // height
+        [controller.view setFrame:newFrame];
+        [themeView addSubview:controller.view];
+    }
+#endif
+    
+    [themeView setNeedsDisplay:YES];
+}
+
+
 // Called when the window is about to close. Perform the self-destruction
 // sequence by getting rid of the window. By returning YES, we allow the window
 // to be removed from the screen.
-
-- (BOOL)windowShouldClose:(id)aWindow {  
+- (BOOL)windowShouldClose:(id)aWindow {
   
   // This function can be called as many as THREE times for each window.
   // The first time will dispatch a FILE_CLOSE_WINDOW command and return NO. 
@@ -230,10 +376,43 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   }
 
   if (![window delegate]) {
-    PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
-    [delegate setClientHandler:this];
-    [delegate setWindow:window];
-    [window setDelegate:delegate];
+      PopupClientWindowDelegate* delegate = [[PopupClientWindowDelegate alloc] init];
+      [delegate setClientHandler:this];
+      [delegate setWindow:window];
+      [window setDelegate:delegate];
+#ifdef DARK_UI
+      NSView* contentView = [window contentView];
+      [delegate addCustomDrawHook: contentView];
+#endif
+
+      NSWindow* theWin = window;
+      NSView*   themeView = [[window contentView] superview];
+      
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+      //hide buttons
+      NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+      [windowButton setHidden:YES];
+      windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+      [windowButton setHidden:YES];
+      windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+      [windowButton setHidden:YES];
+      
+      TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+      
+      if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+      {
+          NSRect  parentFrame = [themeView frame];
+          NSRect  oldFrame = [controller.view frame];
+          NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                       parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                       oldFrame.size.width,                                  // width
+                                       oldFrame.size.height);                                // height
+          [controller.view setFrame:newFrame];
+          [themeView addSubview:controller.view];
+      }
+#endif
+
+      [themeView setNeedsDisplay:YES];
   }
 }
 
