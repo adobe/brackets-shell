@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
@@ -361,4 +362,12 @@ CefString AppGetProductVersionString() {
   s.append(L"/");
   s.append(version);
   return CefString(s);
+}
+
+CefString AppGetChromiumVersionString() {
+  std::wostringstream versionStream(L"");
+  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
+                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
+
+  return CefString(versionStream.str());
 }

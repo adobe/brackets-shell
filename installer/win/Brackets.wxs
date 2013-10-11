@@ -32,7 +32,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     </DirectoryRef>
 
     <DirectoryRef Id="ProgramMenuFolder">
-      <Component Id="StartMenuShortcut" Guid="{38fa7196-af6e-64d2-b00c-ce865ef3b80f}" Win64="no" >
+      <Component Id="StartMenuShortcut" Guid="{6854c7b8-17fd-d8f1-74b1-26df372162e7}" Win64="no" >
         <Shortcut Id="AppShortcut" Name="!(loc.ProductName) $(var.ProductVersionName)"
                  Description="!(loc.ShortcutDescription)"
                  Target="[INSTALLDIR]\$(var.ExeName).exe" />
@@ -62,7 +62,8 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
         <!-- create ProgId entry -->
         <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\shell\open\command" Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\$(var.ExeName).exe\shell\open" Name="FriendlyAppName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\DefaultIcon" Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\shell\open" Name="FriendlyAppName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
 
     </Component>
     <!-- Start Menu Shortcuts-->

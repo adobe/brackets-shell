@@ -55,8 +55,6 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   if (!g_command_line.get())
     return;
 
-  CefString str;
-
 #if defined(OS_WIN)
   settings.multi_threaded_message_loop =
       g_command_line->HasSwitch(cefclient::kMultiThreadedMessageLoop);
@@ -100,7 +98,16 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   // Enable dev tools
   settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
   
-  // Set product version, which gets added to the User Agent string
-  CefString(&settings.product_version) = AppGetProductVersionString();
-
+  std::wstring versionStr = AppGetProductVersionString();
+    
+  if (!versionStr.empty()) {
+    // Explicitly append the Chromium version to our own product version string
+    // since assigning product version always replaces the Chromium version in
+    // the User Agent string.
+    versionStr.append(L" ");
+    versionStr.append(AppGetChromiumVersionString());
+      
+    // Set product version, which gets added to the User Agent string
+    CefString(&settings.product_version) = versionStr;
+  }
 }

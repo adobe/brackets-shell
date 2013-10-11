@@ -90,11 +90,45 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
     return DoCommand(commandString, callback);
 }
 
+// WM_SIZE handler
+BOOL cef_host_window::HandleSize(BOOL bMinimize)
+{
+#ifdef DARK_UI
+    // We turn off redraw during activation to minimized flicker
+    //    which causes problems on some versions of Windows. If the app
+    //  was minimized and was re-activated, it will restore and the client area isn't 
+    //    drawn so redraw the client area now or it will be hollow in the middle...
+    if (GetProp(L"WasMinimized")) {
+        DoRepaintClientArea();
+    }
+    SetProp(L"WasMinimized", (HANDLE)bMinimize);
+#endif
+
+    return FALSE;
+}
+
+void cef_host_window::DoRepaintClientArea()
+{
+    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
+    if (!hwnd) 
+        return;
+
+    RECT rect;
+    GetClientRect(&rect);
+    
+    ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
+}
+
+
 // Window Proc dispatches window messages
 LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 
     {
+    case WM_SIZE:
+        if (HandleSize(wParam == SIZE_MINIMIZED))
+            return 0L;
+        break;
     case WM_INITMENUPOPUP:
         if (HandleInitMenuPopup((HMENU)wParam))
             return 0L;

@@ -654,22 +654,23 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-
-    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-        return ConvertWinErrorCode(GetLastError()); 
-    }
-
-    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     WIN32_FILE_ATTRIBUTE_DATA   fad;
     if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
         return ConvertWinErrorCode(GetLastError());
     }
 
+    DWORD dwAttr = fad.dwFileAttributes;
+    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
+
     modtime = FiletimeToTime(fad.ftLastWriteTime);
+
+    LARGE_INTEGER size_tmp;
+    size_tmp.HighPart = fad.nFileSizeHigh;
+    size_tmp.LowPart = fad.nFileSizeLow;
+    size = size_tmp.QuadPart;
 
     return NO_ERROR;
 }

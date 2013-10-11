@@ -379,6 +379,27 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
     rect.bottom = rect.top + mSysCloseButton->GetHeight();
 }
 
+
+void cef_dark_window::ComputeRequiredMenuRect(RECT& rect)
+{
+    HMENU menu = GetMenu();
+    int items = ::GetMenuItemCount(menu);
+
+    ::SetRectEmpty(&rect);
+
+    for (int i = 0; i < items; i++) {
+        RECT itemRect;
+        ::SetRectEmpty(&itemRect);
+        if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
+            ScreenToNonClient(&itemRect);
+            RECT dest;
+            if (::UnionRect(&dest, &rect, &itemRect)) {
+                ::CopyRect(&rect, &dest);
+            }
+        }
+    }
+}
+
 // Computes the Rect where the menu bar is drawn in window coordinates
 void cef_dark_window::ComputeMenuBarRect(RECT& rect)
 {
@@ -747,42 +768,53 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     if (::PtInRect(&rectSysIcon, *ptHit)) 
         return HTSYSMENU;
 
-    // Left Border
-    if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
-    {
-        // it's important that we know if the mouse is on a corner so that
-        //    the right mouse cursor is displayed
-        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
-             return HTTOPLEFT;
- 
-        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
-             return HTBOTTOMLEFT;
- 
-        return HTLEFT;
-    }
+    if (!IsZoomed()) {
 
-    // Right Border
-    if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
-    {
-        // it's important that we know if the mouse is on a corner so that
-        //    the right mouse cursor is displayed
-        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
-            return HTTOPRIGHT;
+        // Left Border
+        if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
+        {
+            // it's important that we know if the mouse is on a corner so that
+            //    the right mouse cursor is displayed
+            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+                 return HTTOPLEFT;
  
-        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
-            return HTBOTTOMRIGHT;
+            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+                 return HTBOTTOMLEFT;
  
-        return HTRIGHT;
-    }
+            return HTLEFT;
+        }
 
-    // Top and Bottom Borders
-    if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
-         return HTTOP;
+        // Right Border
+        if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
+        {
+            // it's important that we know if the mouse is on a corner so that
+            //    the right mouse cursor is displayed
+            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+                return HTTOPRIGHT;
+ 
+            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+                return HTBOTTOMRIGHT;
+ 
+            return HTRIGHT;
+        }
+
+        // Top and Bottom Borders
+        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
+             return HTTOP;
              
-    if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
-         return HTBOTTOM;
+        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+             return HTBOTTOM;
+    }
 
-    return HTMENU;
+    // If it's not in the menu, it's in the caption
+    RECT rectMenu;
+    ComputeRequiredMenuRect(rectMenu);
+    NonClientToScreen(&rectMenu);
+
+    if (::PtInRect(&rectMenu, *ptHit))
+        return HTMENU;
+
+    return HTCAPTION;
 }
 
 // Like UpdateNonClientArea, but sets up a clipping region to just update the system buttons

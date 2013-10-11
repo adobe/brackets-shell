@@ -43,6 +43,7 @@ static const int ERR_OUT_OF_SPACE           = 7;
 static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
 static const int ERR_FILE_EXISTS            = 10;
+static const int ERR_BROWSER_NOT_INSTALLED  = 11;
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
@@ -94,7 +95,7 @@ int32 MakeDir(ExtensionString path, int32 mode);
 
 int32 Rename(ExtensionString oldName, ExtensionString newName);
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir);
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size);
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
 
