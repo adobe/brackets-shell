@@ -29,6 +29,16 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>fold</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleTypeName</key>
+			<string>Folder</string>
+		</dict>
+		<dict>
 			<key>CFBundleTypeName</key>
 			<string>Text files</string>
 			<key>CFBundleTypeRole</key>
