@@ -204,6 +204,8 @@
           'link_settings': {
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
+              '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+              '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(CONFIGURATION)/libcef.dylib',
             ],
           },
@@ -359,6 +361,8 @@
           'link_settings': {
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
+              '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+              '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(CONFIGURATION)/libcef.dylib',
             ],
           },
