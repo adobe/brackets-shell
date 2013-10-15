@@ -4,9 +4,11 @@
 // found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
+#import <objc/runtime.h>
 #include <sstream>
 #include "cefclient.h"
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
@@ -20,6 +22,11 @@
 #include "client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
+
+#include "TrafficLightsView.h"
+#include "TrafficLightsViewController.h"
+#include "client_colors_mac.h"
+
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -35,6 +42,9 @@ NSURL* startupUrl = nil;
 // Content area size for newly created windows.
 const int kWindowWidth = 1000;
 const int kWindowHeight = 700;
+const int kMinWindowWidth = 375;
+const int kMinWindowHeight = 200;
+
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
@@ -113,10 +123,86 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+
+
+// Custom draw interface for NSThemeFrame
+@interface NSView (UndocumentedAPI)
+- (float)roundedCornerRadius;
+- (CGRect)_titlebarTitleRect;
+- (NSTextFieldCell*)titleCell;
+- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
+@end
+
+/**
+ * The patched implementation for drawRect that lets us tweak
+ * the title bar.
+ */
+void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
+    // Clear to 0 alpha
+    [[NSColor clearColor] set];
+    NSRectFill( rect );
+    //Obtain reference to our NSThemeFrame view
+    NSRect windowRect = [self frame];
+    windowRect.origin = NSMakePoint(0,0);
+    //This constant matches the radius for other macosx apps.
+    //For some reason if we use the default value it is double that of safari etc.
+    float cornerRadius = 4.0f;
+    
+    //Clip our title bar render
+    [[NSBezierPath bezierPathWithRoundedRect:windowRect
+                                     xRadius:cornerRadius
+                                     yRadius:cornerRadius] addClip];
+    [[NSBezierPath bezierPathWithRect:rect] addClip];
+    
+    
+    
+    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+    [fillColor set];
+    NSRectFill( rect );
+    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
+    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
+    // Render our title text
+    [self _drawTitleStringIn:[self _titlebarTitleRect]
+                   withColor:[NSApp isActive] ?
+                activeColor : inactiveColor];
+    
+    
+    
+    
+}
+
+
+
+
+/**
+ * Create a custom class based on NSThemeFrame called
+ * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
+ * as the implementation for the drawRect selector allowing us
+ * to draw the border/title bar the way we see fit.
+ */
+Class GetShellWindowFrameClass() {
+    // lazily change the class implementation if
+    // not done so already.
+    static Class k = NULL;
+    if (!k) {
+        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
+        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
+        k = objc_allocateClassPair(NSThemeFrame, "ShellWindowFrame", 0);
+        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
+        class_addMethod(k, @selector(drawRect:),
+                        (IMP)ShellWindowFrameDrawRect, method_getTypeEncoding(m0));
+        objc_registerClassPair(k);
+    }
+    return k;
+}
+
+
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
   BOOL isReallyClosing;
+  NSString* savedTitle;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
@@ -127,12 +213,13 @@ extern NSMutableArray* pendingOpenFiles;
 - (void)notifyConsoleMessage:(id)object;
 - (void)notifyDownloadComplete:(id)object;
 - (void)notifyDownloadError:(id)object;
+- (void)addCustomDrawHook:(NSView*)contentView;
 @end
 
 @implementation ClientWindowDelegate
-
 - (id) init {
   [super init];
+  savedTitle = nil;
   isReallyClosing = false;
   return self;
 }
@@ -176,6 +263,54 @@ extern NSMutableArray* pendingOpenFiles;
   }
   */
   g_handler->DispatchCloseToNextBrowser();
+}
+
+
+- (void)addCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, GetShellWindowFrameClass());
+    
+#ifdef LIGHT_CAPTION_TEXT
+    // Reset our frame view text cell background style
+    NSTextFieldCell * cell = [themeView titleCell];
+    [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
+}
+
+- (void)removeCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, NULL);
+}
+
+-(void)windowTitleDidChange:(NSString*)title {
+#ifdef DARK_UI
+    savedTitle = [title copy];
+#endif
+}
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSWindow* window = [notification object];
+    savedTitle = [[window title] copy];
+    [window setTitle:@""];
+#endif
+}
+
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    NSWindow* window = [notification object];
+    NSView* contentView = [window contentView];
+    NSView* themeView = [[window contentView] superview];
+    [self addCustomDrawHook: contentView];
+    [window setTitle:savedTitle];
+    [savedTitle release];
+    [themeView setNeedsDisplay:YES];    
+#endif
 }
 
 
@@ -273,6 +408,7 @@ extern NSMutableArray* pendingOpenFiles;
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
 - (void)createApp:(id)object;
+- (void)addCustomDrawHook:(NSView*)contentView;
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
 @end
@@ -311,7 +447,8 @@ extern NSMutableArray* pendingOpenFiles;
   NSUInteger styleMask = (NSTitledWindowMask |
                           NSClosableWindowMask |
                           NSMiniaturizableWindowMask |
-                          NSResizableWindowMask );
+                          NSResizableWindowMask |
+                          NSTexturedBackgroundWindowMask );
 
   // Get the available screen space
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
@@ -337,7 +474,26 @@ extern NSMutableArray* pendingOpenFiles;
                        backing:NSBackingStoreBuffered
                        defer:NO];
 
-  // "Preclude the window controller from changing a window’s position from the
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+  //hide buttons
+  NSWindow* theWin = mainWnd;
+  NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+  [windowButton setHidden:YES];
+  windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+  [windowButton setHidden:YES];
+  windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+  [windowButton setHidden:YES];
+#endif
+
+    
+  NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+  float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+  // Background fill, solid for now.
+  NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+  [mainWnd setMinSize:NSMakeSize(kMinWindowWidth, kMinWindowHeight)];
+  [mainWnd setBackgroundColor:fillColor];
+    
+   // "Preclude the window controller from changing a window’s position from the
   // one saved in the defaults system" (NSWindow Class Reference)
   [[mainWnd windowController] setShouldCascadeWindows: NO];
   
@@ -363,7 +519,12 @@ extern NSMutableArray* pendingOpenFiles;
   [mainWnd setReleasedWhenClosed:NO];
 
   NSView* contentView = [mainWnd contentView];
-	
+#ifdef DARK_UI
+  // Register our custom title bar rendering hook.
+  [self addCustomDrawHook:contentView];
+#endif
+
+    
   // Create the handler.
   g_handler = new ClientHandler();
   g_handler->SetMainHwnd(contentView);
@@ -374,16 +535,45 @@ extern NSMutableArray* pendingOpenFiles;
 
   settings.web_security = STATE_DISABLED;
 
+    
+  // Avoid white flash at startup or refresh by making this the default
+  // CSS.
+  // 'aHRtbCxib2R5e2JhY2tncm91bmQ6cmdiYSgxMDksIDExMSwgMTEyLCAxKTt9' stands for 'html,body{background:rgba(109, 111, 112, 1);}'.
+  const char* strCss = "data:text/css;charset=utf-8;base64,aHRtbCxib2R5e2JhY2tncm91bmQ6cmdiYSgxMDksIDExMSwgMTEyLCAxKTt9";
+  CefString(&settings.user_style_sheet_location).FromASCII(strCss);
+    
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
+
+    
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
- 
-  // Show the window.
+
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+  NSView                          *themeView = [[mainWnd contentView] superview];
+  TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
+  if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
+  {
+      NSRect  parentFrame = [themeView frame];
+      NSRect  oldFrame = [controller.view frame];
+      NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                   parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                   oldFrame.size.width,                                  // width
+                                   oldFrame.size.height);                                // height
+      [controller.view setFrame:newFrame];
+      [themeView addSubview:controller.view];
+  }
+
+#endif 
+    
+   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
+  [NSApp requestUserAttention:NSInformationalRequest];
 }
+
+
 
 // Handle the Openfile apple event. This is a custom apple event similar to the regular
 // Open event, but can handle file paths in the form "path[:lineNumber[:columnNumber]]".
@@ -420,6 +610,20 @@ extern NSMutableArray* pendingOpenFiles;
     }
     g_isTerminating = true;
     return NSTerminateNow;
+}
+
+
+- (void)addCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    
+    object_setClass(themeView, GetShellWindowFrameClass());
+
+#ifdef LIGHT_CAPTION_TEXT
+    // Reset our frame view text cell background style
+    NSTextFieldCell * cell = [themeView titleCell];
+    [cell setBackgroundStyle:NSBackgroundStyleLight];
+#endif
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
@@ -595,6 +799,14 @@ CefString AppGetProductVersionString() {
   [s appendString:@"/"];
   [s appendString:(NSString*)[[NSBundle mainBundle]
                               objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
+  CefString result = CefString([s UTF8String]);
+  return result;
+}
+
+CefString AppGetChromiumVersionString() {
+  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
+                           cef_version_info(2), cef_version_info(3),
+                           cef_version_info(4), cef_version_info(5)];
   CefString result = CefString([s UTF8String]);
   return result;
 }

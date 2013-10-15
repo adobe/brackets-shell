@@ -470,17 +470,17 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
         return ERR_INVALID_PARAMS;
     }
 
-    // No need to detect network drive if the path does not exist.
-    if (![[NSFileManager defaultManager] fileExistsAtPath:pathStr]) {
-        return ERR_NOT_FOUND;
-    }
-    
     // Detect remote drive
     NSString *testPath = [pathStr copy];
+    NSNumber *isVolumeKey;
+    NSError *error = nil;
+
     while (![testPath isEqualToString:@"/"]) {
         NSURL *testUrl = [NSURL fileURLWithPath:testPath];
-        NSNumber *isVolumeKey;
-        [testUrl getResourceValue:&isVolumeKey forKey:NSURLIsVolumeKey error:nil];
+
+        if (![testUrl getResourceValue:&isVolumeKey forKey:NSURLIsVolumeKey error:&error]) {
+            return ERR_NOT_FOUND;
+        }
         if ([isVolumeKey boolValue]) {
             isRemote = true;
             break;
@@ -540,7 +540,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
@@ -555,7 +555,8 @@ int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& i
     NSDictionary* fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&error];
     NSDate *modDate = [fileAttribs valueForKey:NSFileModificationDate];
     modtime = [modDate timeIntervalSince1970];
-    
+    NSNumber *filesize = [fileAttribs valueForKey:NSFileSize];
+    size = [filesize doubleValue];
     return ConvertNSErrorCode(error, true);
 }
 

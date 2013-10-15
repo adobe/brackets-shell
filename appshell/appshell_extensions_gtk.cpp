@@ -269,6 +269,7 @@ int32 MakeDir(ExtensionString path, int mode)
     if (!g_file_make_directory(file, NULL, &gerror)) {
         error = GErrorToErrorCode(gerror);
     }
+    g_object_unref(file);
 
     return error;
 }
@@ -286,7 +287,7 @@ int Rename(ExtensionString oldName, ExtensionString newName)
     }
 }
 
-int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
 {
     struct stat buf;
     if(stat(filename.c_str(),&buf)==-1)
@@ -294,6 +295,7 @@ int GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isD
 
     modtime = buf.st_mtime;
     isDir = S_ISDIR(buf.st_mode);
+    size = (double)buf.st_size;
 
     return NO_ERROR;
 }
