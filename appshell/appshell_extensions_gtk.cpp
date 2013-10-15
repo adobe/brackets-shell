@@ -269,6 +269,7 @@ int32 MakeDir(ExtensionString path, int mode)
     if (!g_file_make_directory(file, NULL, &gerror)) {
         error = GErrorToErrorCode(gerror);
     }
+    g_object_unref(file);
 
     return error;
 }
