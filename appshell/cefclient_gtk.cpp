@@ -143,6 +143,7 @@ int main(int argc, char* argv[]) {
 
   g_appStartupTime = time(NULL);
 
+  gtk_init(&argc, &argv);
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
@@ -155,8 +156,6 @@ int main(int argc, char* argv[]) {
     return -1;
 
   GtkWidget* window;
-
-  gtk_init(&argc, &argv);
 
   // Parse command line arguments.
   AppInitCommandLine(argc, argv);
