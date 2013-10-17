@@ -138,12 +138,64 @@ gboolean GetSourceActivated(GtkWidget* widget) {
   return FALSE;
 }
 
+// Check if the given envVar value is not empty. The function checks if there
+// are any whitespace or control characters in the envVar value. If there is
+// a whitespace of a control character found somewhere in the front of the
+// envVar value, then it's not considered a valid value.
+gboolean IsValid(const gchar* envVarValue) {
+    gboolean isValid = false;
+
+    if (envVarValue) {
+        for (int i = 0; i <= strlen(envVarValue); i++) {
+            if (!(g_ascii_isspace(envVarValue[i])
+               || g_ascii_iscntrl(envVarValue[i]))) {
+                isValid = true;
+                break;
+            }
+        }
+    }
+
+    return isValid;
+}
+
+// This is a fix for https://github.com/adobe/brackets/issues/5513
+// Some versions of Linux don't have TMPDIR. TMP or TEMP defined.
+// Installing an extension relies on the existence of a temp folder location.
+// Since we are using node-temp (https://github.com/bruce/node-temp) to
+// determine a temp dir location, the node module will resolve to ~/tmp if
+// none of the environment variables exists.
+void configureTempDirectory() {
+    const gchar* tmpdir = g_getenv("TMPDIR");
+    const gchar* temp = g_getenv("TEMP");
+    const gchar* tmp = g_getenv("TMP");
+
+    //TMPDIR', 'TMP', 'TEMP
+    gboolean hasValues = (IsValid(tmpdir) || IsValid(temp) || IsValid(tmp));
+
+    if (!hasValues) {
+        g_message("No tempdir location defined. Define tempdir for process");
+
+        const gchar* tmpDir = g_get_tmp_dir();
+
+        g_message("New tempdir is %s", tmpDir);
+
+        // configure the TMPDIR, TMP and TEMP environment variables, if
+        // they haven't been specified
+        g_setenv("TMPDIR", tmpDir, false);
+        g_setenv("TEMP", tmpDir, false);
+        g_setenv("TMP", tmpDir, false);
+    }
+}
+
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
 
   g_appStartupTime = time(NULL);
 
   gtk_init(&argc, &argv);
+
+  configureTempDirectory();
+
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
