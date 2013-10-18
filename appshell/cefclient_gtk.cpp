@@ -138,17 +138,18 @@ gboolean GetSourceActivated(GtkWidget* widget) {
   return FALSE;
 }
 
-// Check if the given envVar value is not empty. The function checks if there
-// are any whitespace or control characters in the envVar value. If there is
-// a whitespace of a control character found somewhere in the front of the
-// envVar value, then it's not considered a valid value.
+// Check if the given envVar value doesn't contain any whitespace or
+// control characters. The function checks every character from the beginning
+// of the string and will return true once a character is found that
+// is neither a whitespace or a control character.
+// False will be returned in all other cases.
 gboolean IsValid(const gchar* envVarValue) {
     gboolean isValid = false;
 
     if (envVarValue) {
         for (int i = 0; i <= strlen(envVarValue); i++) {
-            if (!(g_ascii_isspace(envVarValue[i])
-               || g_ascii_iscntrl(envVarValue[i]))) {
+            if ((!g_ascii_isspace(envVarValue[i])
+             && (!g_ascii_iscntrl(envVarValue[i])))) {
                 isValid = true;
                 break;
             }
@@ -159,11 +160,12 @@ gboolean IsValid(const gchar* envVarValue) {
 }
 
 // This is a fix for https://github.com/adobe/brackets/issues/5513
-// Some versions of Linux don't have TMPDIR. TMP or TEMP defined.
+// Some versions of Linux don't have TMPDIR, TMP or TEMP defined.
 // Installing an extension relies on the existence of a temp folder location.
 // Since we are using node-temp (https://github.com/bruce/node-temp) to
 // determine a temp dir location, the node module will resolve to ~/tmp if
-// none of the environment variables exists.
+// none of the environment variables exists. This doesn't work, if ~/tmp
+// doesn't exist prior to the installation.
 void configureTempDirectory() {
     const gchar* tmpdir = g_getenv("TMPDIR");
     const gchar* temp = g_getenv("TEMP");
