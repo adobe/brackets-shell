@@ -236,7 +236,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
     NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation;
     
-    NSLog(@"OpenLiveBrowser.current_pid: %d", liveBrowserMgr->GetLiveBrowserPid());
     // Launch Browser (if not running)
     if (!liveBrowserMgr->IsChromeRunning()) {
         
@@ -281,7 +280,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         // Cache LiveBrowser process id for fast lookups
         liveBrowserMgr->SetLiveBrowserPid([liveBrowser processIdentifier]);
         liveBrowserMgr->SetLiveBrowserWindow([[[SBApplication applicationWithProcessIdentifier:liveBrowserMgr->GetLiveBrowserPid()] windows] objectAtIndex:0]);
-        NSLog(@"OpenLiveBrowser.new_pid: %d. Details: %@", liveBrowserMgr->GetLiveBrowserPid(), liveBrowser);
 
         return NO_ERROR;
     }
@@ -308,6 +306,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     }
 
     GoogleChromeWindow* chromeWindow = [[chromeApp windows] objectAtIndex:0];
+    
     if(!chromeWindow){
         // Create new LiveBrowser Window
         GoogleChromeWindow* chromeWindow = [[[chromeApp classForScriptingClass:@"window"] alloc] init];
@@ -315,16 +314,13 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         chromeWindow.activeTab.URL = urlString;
     } else {
         // Create new Tab in LiveBrowser window
-        GoogleChromeTab* chromeTab = [[[chromeApp classForScriptingClass:@"tab"] alloc] init];
+        GoogleChromeTab* chromeTab = [[[chromeApp classForScriptingClass:@"tab"] alloc] initWithProperties:@{ @"URL": urlString}];
         [[chromeWindow tabs] addObject:chromeTab];
-        chromeTab.URL = urlString;
         [chromeTab release];
     }
     
     // Cache LiveBrowser window for later use
     liveBrowserMgr->SetLiveBrowserWindow(chromeWindow);
-    
-    NSLog(@"OpenLiveBrowser.isChromeRunning: %d, last_pid: %d", liveBrowserMgr->IsChromeRunning(), liveBrowserMgr->GetLiveBrowserPid());
     return NO_ERROR;
 }
 
@@ -370,7 +366,6 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
         return;
     }
-    NSLog(@"CloseLiveBrowser.current_app: %@ has %d windows open", chromeApp, [[chromeApp windows] count]);
     
     // Technically at this point we would locate the LiveBrowser window and
     // close all tabs; however, the LiveDocument tab already closed by Inspector!
@@ -397,7 +392,6 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         return;
     }
     
-    NSLog(@"CloseLiveBrowser.quitting.chrome");
     // No more open windows found, so quit Chrome
     [chromeApp quit];
 
