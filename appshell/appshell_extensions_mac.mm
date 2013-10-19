@@ -26,8 +26,8 @@
 #include "native_menu_model.h"
 #include "google_chrome_mac.h"
 
-#include <Foundation/NSLock.h>
 #include <Cocoa/Cocoa.h>
+#include <sys/sysctl.h>
 
 NSMutableArray* pendingOpenFiles;
 
@@ -37,6 +37,7 @@ NSMutableArray* pendingOpenFiles;
 @end
 
 // LiveBrowser helper functions
+NSRunningApplication* GetLiveBrowserApp(NSString *bundleId, int debugPort);
 NSString* GetUserProfilePath(){
     return [NSString stringWithFormat:@"%s%@", ClientApp::AppGetSupportDirectory().ToString().c_str(), @"/live-dev-profile"];
 }
@@ -44,6 +45,9 @@ NSString* GetUserProfilePath(){
 // App ID for either Chrome or Chrome Canary (commented out)
 NSString *const appId = @"com.google.Chrome";
 //NSString *const appId = @"com.google.Chrome.canary";
+
+// Live Development debug port
+int const debugPort = 9222;
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac
@@ -61,11 +65,10 @@ public:
     void CloseLiveBrowserKillTimers();
     void CloseLiveBrowserFireCallback(int valToSend);
 
-    NSLock* Lock();
     ChromeWindowsTerminatedObserver* GetTerminateObserver() { return m_chromeTerminateObserver; }
     CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
-    NSRunningApplication* GetLiveBrowser() { return [ NSRunningApplication runningApplicationWithProcessIdentifier: m_liveBrowserPid ]; }
-    int GetLiveBrowserPid() { return m_liveBrowserPid; }
+    NSRunningApplication* GetLiveBrowser() { return GetLiveBrowserApp(appId, debugPort); }
+    int GetLiveBrowserPid() { return [GetLiveBrowser() processIdentifier] ?: ERR_PID_NOT_FOUND; }
     
     void SetCloseTimeoutTimer(NSTimer* closeLiveBrowserTimeoutTimer)
             { m_closeLiveBrowserTimeoutTimer = closeLiveBrowserTimeoutTimer; }
@@ -75,32 +78,24 @@ public:
             { m_closeLiveBrowserCallback = response; }
     void SetBrowser(CefRefPtr<CefBrowser> browser)
             { m_browser = browser; }
-    void SetLiveBrowserPid(int liveBrowserPid)
-            { m_liveBrowserPid = liveBrowserPid; }
 
 private:
     // private so this class cannot be instantiated externally
     LiveBrowserMgrMac();
     virtual ~LiveBrowserMgrMac();
 
-    NSLock*                             m_lock;
     NSTimer*                            m_closeLiveBrowserTimeoutTimer;
     CefRefPtr<CefProcessMessage>        m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>               m_browser;
     ChromeWindowsTerminatedObserver*    m_chromeTerminateObserver;
-    
-    int                                 m_liveBrowserPid;
-    GoogleChromeWindow*                 m_liveBrowserWindow;
     
     static LiveBrowserMgrMac*           s_instance;
 };
 
 
 LiveBrowserMgrMac::LiveBrowserMgrMac()
-    : m_lock([[NSLock alloc] init])
-    , m_closeLiveBrowserTimeoutTimer(nil)
+    : m_closeLiveBrowserTimeoutTimer(nil)
     , m_chromeTerminateObserver(nil)
-    , m_liveBrowserPid(ERR_PID_NOT_FOUND)
 {
 }
 
@@ -109,11 +104,11 @@ LiveBrowserMgrMac::~LiveBrowserMgrMac()
     if (s_instance)
         s_instance->CloseLiveBrowserKillTimers();
     
-    if (m_lock)
-        [m_lock release];
-    
-    if (m_liveBrowserWindow)
-        [m_liveBrowserWindow release];
+    if (m_chromeTerminateObserver) {
+        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
+        [m_chromeTerminateObserver release];
+        m_chromeTerminateObserver = nil;
+    }
 }
 
 LiveBrowserMgrMac* LiveBrowserMgrMac::GetInstance()
@@ -124,11 +119,6 @@ LiveBrowserMgrMac* LiveBrowserMgrMac::GetInstance()
     return s_instance;
 }
 
-NSLock* LiveBrowserMgrMac::Lock()
-{
-    return m_lock;
-}
-
 void LiveBrowserMgrMac::Shutdown()
 {
     delete s_instance;
@@ -137,13 +127,7 @@ void LiveBrowserMgrMac::Shutdown()
 
 bool LiveBrowserMgrMac::IsChromeRunning()
 {
-    NSRunningApplication* chromeApp = GetLiveBrowser();
-    if (chromeApp && [[chromeApp bundleIdentifier] isEqualToString:appId]) {
-        return YES;
-    }
-    // Unset member properties
-    SetLiveBrowserPid(ERR_PID_NOT_FOUND);
-    return NO;
+    return GetLiveBrowser() ? YES : NO;
 }
 
 void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
@@ -152,12 +136,6 @@ void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
         [m_closeLiveBrowserTimeoutTimer invalidate];
         [m_closeLiveBrowserTimeoutTimer release];
         m_closeLiveBrowserTimeoutTimer = nil;
-    }
-    
-    if (m_chromeTerminateObserver) {
-        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
-        [m_chromeTerminateObserver release];
-        m_chromeTerminateObserver = nil;
     }
 }
 
@@ -177,7 +155,6 @@ void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
     // Clear state
     m_closeLiveBrowserCallback = NULL;
     m_browser = NULL;
-    m_liveBrowserWindow = nil;
 }
 
 void LiveBrowserMgrMac::CheckForChromeRunning()
@@ -202,17 +179,14 @@ LiveBrowserMgrMac* LiveBrowserMgrMac::s_instance = NULL;
 // Forward declarations for functions defined later in this file
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list);
 int32 ConvertNSErrorCode(NSError* error, bool isReading);
-void OpenLiveDocument(GoogleChromeWindow *chromeWindow, NSString *urlString);
 GoogleChromeApplication* GetGoogleChromeApplicationWithPid(int PID){
     @try {
-        LiveBrowserMgrMac::GetInstance()->IsChromeRunning();
         return [SBApplication applicationWithProcessIdentifier:PID];
     }
     @catch (NSException *exception) {
         return nil;
     }
 }
-
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
@@ -239,7 +213,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         
         if (enableRemoteDebugging) {
             parameters = [NSArray arrayWithObjects:
-                            @"--remote-debugging-port=9222",
+                            [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort],
                             @"--allow-file-access-from-files",
                             @"--no-first-run",
                             @"--no-default-browser-check",
@@ -263,12 +237,20 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         NSError *error = nil;
         NSRunningApplication* liveBrowser = [ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error];
-        if (!liveBrowser) {
-            return ERR_UNKNOWN;
+
+        // Set up workspace notifications for asynchronous Browser shutdowns
+        if (liveBrowser && !liveBrowserMgr->GetTerminateObserver()) {
+            //register an observer to watch for the app terminations
+            liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
+            
+            [[[NSWorkspace sharedWorkspace] notificationCenter]
+             addObserver:liveBrowserMgr->GetTerminateObserver()
+             selector:@selector(appTerminated:)
+             name:NSWorkspaceDidTerminateApplicationNotification
+             object:nil
+             ];
         }
-        // Cache LiveBrowser process id for fast lookups
-        liveBrowserMgr->SetLiveBrowserPid([liveBrowser processIdentifier]);
-        return NO_ERROR;
+        return liveBrowser ? NO_ERROR : ERR_UNKNOWN;
     }
     
     // At this time an instance of the LiveBrowser should exist
@@ -291,12 +273,12 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     }
 
     GoogleChromeWindow* chromeWindow = [[chromeApp windows] objectAtIndex:0];
-    
     if(!chromeWindow){
         // Create new LiveBrowser Window
         GoogleChromeWindow* chromeWindow = [[[chromeApp classForScriptingClass:@"window"] alloc] init];
         [[chromeApp windows] addObject:chromeWindow];
         chromeWindow.activeTab.URL = urlString;
+        [chromeWindow release];
     } else {
         // Create new Tab in LiveBrowser window
         GoogleChromeTab* chromeTab = [[[chromeApp classForScriptingClass:@"tab"] alloc] initWithProperties:@{ @"URL": urlString}];
@@ -320,20 +302,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     // Set up new Brackets CloseLiveBrowser callbacks
     liveBrowserMgr->SetBrowser(browser);
     liveBrowserMgr->SetCloseCallback(response);
-
-    // Set up CloseLiveBrowser workspace notifications
-    if (!liveBrowserMgr->GetTerminateObserver()) {
-        //register an observer to watch for the app terminations
-        liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
-        
-        [[[NSWorkspace sharedWorkspace] notificationCenter]
-                addObserver:liveBrowserMgr->GetTerminateObserver()
-                selector:@selector(appTerminated:)
-                name:NSWorkspaceDidTerminateApplicationNotification
-                object:nil
-            ];
-    }
     
+    // Check chrome
     if (!liveBrowserMgr->IsChromeRunning()) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
         return;
@@ -341,10 +311,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     
     // Get the currently active LiveBrowser session
     GoogleChromeApplication* chromeApp = GetGoogleChromeApplicationWithPid(liveBrowserMgr->GetLiveBrowserPid());
-  
     if (!chromeApp) {
-        // SBApplication will return nil if it cannot find an running app with a specific pid
-        liveBrowserMgr->SetLiveBrowserPid(ERR_PID_NOT_FOUND);
+        // No active LiveBrowser found
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
         return;
     }
@@ -364,10 +332,11 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
 
     // Set timeout timer
     liveBrowserMgr->SetCloseTimeoutTimer([[NSTimer
-                                           scheduledTimerWithTimeInterval:(3 * 60)
-                                           target:liveBrowserMgr->GetTerminateObserver()
-                                           selector:@selector(timeoutTimer:)
-                                           userInfo:nil repeats:NO] retain]);
+                                         scheduledTimerWithTimeInterval:(3 * 60)
+                                         target:liveBrowserMgr->GetTerminateObserver()
+                                         selector:@selector(timeoutTimer:)
+                                         userInfo:nil repeats:NO] retain]
+                                         );
 }
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
@@ -768,31 +737,17 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 
 - (void) appTerminated:(NSNotification *)note
 {
-    NSLog(@"%@", note);
     // Not Chrome? Not interested.
     if ( ![[[note userInfo] objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:appId] ) {
         return;
     }
 
-    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
-    // Not LiveBrowser instance? Not interested.
-    if ( ![[[note userInfo] objectForKey:@"NSApplicationProcessIdentifier"] isEqualToNumber:[NSNumber numberWithInt:liveBrowserMgr->GetLiveBrowserPid()]] ) {
-        return;
-    }
-
-    [liveBrowserMgr->Lock() lock];
-    liveBrowserMgr->CheckForChromeRunning();
-    [liveBrowserMgr->Lock() unlock];
-
+    LiveBrowserMgrMac::GetInstance()->CheckForChromeRunning();
 }
 
 - (void) timeoutTimer:(NSTimer*)timer
 {
-    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
-
-    [liveBrowserMgr->Lock() lock];
     LiveBrowserMgrMac::GetInstance()->CheckForChromeRunningTimeout();
-    [liveBrowserMgr->Lock() unlock];
 }
 
 @end
@@ -1256,4 +1211,183 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
         [win setFrameOrigin:offset];
         [win displayIfNeeded];
     }
+}
+
+int32 GetArgvFromProcessID(int pid, NSString **argv);
+NSRunningApplication* GetLiveBrowserApp(NSString *bundleId, int debugPort){
+    
+    NSArray* appList = [NSRunningApplication runningApplicationsWithBundleIdentifier: bundleId];
+    
+    // Search list of running apps with bundleId + debug port
+    for (NSRunningApplication* currApp in appList) {
+        
+        int PID = [currApp processIdentifier];
+        NSString* args = nil;
+        
+        // Check for process arguments
+        if (GetArgvFromProcessID(PID, &args) != NO_ERROR) {
+            continue;
+        }
+        
+        // Check debug port (e.g. --remote-debug-port=9222)
+        if ([args rangeOfString:[NSString stringWithFormat:@"%d", debugPort]].location != NSNotFound) {
+            return currApp;
+        }
+    }
+    return nil;
+}
+
+// Extracted & Modified from https://gist.github.com/nonowarn/770696
+int32 GetArgvFromProcessID(int pid, NSString **argv) {
+    int    mib[3], argmax, nargs, c = 0;
+    size_t    size;
+    char    *procargs, *sp, *np, *cp;
+    int show_args = 1;
+    
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_ARGMAX;
+    
+    size = sizeof(argmax);
+    if (sysctl(mib, 2, &argmax, &size, NULL, 0) == -1) {
+        goto ERROR_A;
+    }
+    
+    /* Allocate space for the arguments. */
+    procargs = (char *)malloc(argmax);
+    if (procargs == NULL) {
+        goto ERROR_A;
+    }
+    
+    
+    /*
+     * Make a sysctl() call to get the raw argument space of the process.
+     * The layout is documented in start.s, which is part of the Csu
+     * project.  In summary, it looks like:
+     *
+     * /---------------\ 0x00000000
+     * :               :
+     * :               :
+     * |---------------|
+     * | argc          |
+     * |---------------|
+     * | arg[0]        |
+     * |---------------|
+     * :               :
+     * :               :
+     * |---------------|
+     * | arg[argc - 1] |
+     * |---------------|
+     * | 0             |
+     * |---------------|
+     * | env[0]        |
+     * |---------------|
+     * :               :
+     * :               :
+     * |---------------|
+     * | env[n]        |
+     * |---------------|
+     * | 0             |
+     * |---------------| <-- Beginning of data returned by sysctl() is here.
+     * | argc          |
+     * |---------------|
+     * | exec_path     |
+     * |:::::::::::::::|
+     * |               |
+     * | String area.  |
+     * |               |
+     * |---------------| <-- Top of stack.
+     * :               :
+     * :               :
+     * \---------------/ 0xffffffff
+     */
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROCARGS2;
+    mib[2] = pid;
+    
+    size = (size_t)argmax;
+    if (sysctl(mib, 3, procargs, &size, NULL, 0) == -1) {
+        goto ERROR_B;
+    }
+    
+    memcpy(&nargs, procargs, sizeof(nargs));
+    cp = procargs + sizeof(nargs);
+    
+    /* Skip the saved exec_path. */
+    for (; cp < &procargs[size]; cp++) {
+        if (*cp == '\0') {
+            /* End of exec_path reached. */
+            break;
+        }
+    }
+    if (cp == &procargs[size]) {
+        goto ERROR_B;
+    }
+    
+    /* Skip trailing '\0' characters. */
+    for (; cp < &procargs[size]; cp++) {
+        if (*cp != '\0') {
+            /* Beginning of first argument reached. */
+            break;
+        }
+    }
+    if (cp == &procargs[size]) {
+        goto ERROR_B;
+    }
+    /* Save where the argv[0] string starts. */
+    sp = cp;
+    
+    /*
+     * Iterate through the '\0'-terminated strings and convert '\0' to ' '
+     * until a string is found that has a '=' character in it (or there are
+     * no more strings in procargs).  There is no way to deterministically
+     * know where the command arguments end and the environment strings
+     * start, which is why the '=' character is searched for as a heuristic.
+     */
+    for (np = NULL; c < nargs && cp < &procargs[size]; cp++) {
+        if (*cp == '\0') {
+            c++;
+            if (np != NULL) {
+                /* Convert previous '\0'. */
+                *np = ' ';
+            } else {
+                /* *argv0len = cp - sp; */
+            }
+            /* Note location of current '\0'. */
+            np = cp;
+            
+            if (!show_args) {
+                /*
+                 * Don't convert '\0' characters to ' '.
+                 * However, we needed to know that the
+                 * command name was terminated, which we
+                 * now know.
+                 */
+                break;
+            }
+        }
+    }
+    
+    /*
+     * sp points to the beginning of the arguments/environment string, and
+     * np should point to the '\0' terminator for the string.
+     */
+    if (np == NULL || np == sp) {
+        /* Empty or unterminated string. */
+        goto ERROR_B;
+    }
+    
+    /* Make a copy of the string. */
+    //printf("From function: %s\n", sp);
+    
+    /* Clean up. */
+    free(procargs);
+    
+    *argv = [NSString stringWithCString:sp encoding:NSUTF8StringEncoding];
+    return NO_ERROR;
+    
+ERROR_B:
+    free(procargs);
+ERROR_A:
+    //fprintf(stderr, "Sorry, failed\n");
+    return ERR_UNKNOWN;
 }
