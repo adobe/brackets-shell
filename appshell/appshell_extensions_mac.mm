@@ -66,7 +66,6 @@ public:
     CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
     NSRunningApplication* GetLiveBrowser() { return [ NSRunningApplication runningApplicationWithProcessIdentifier: m_liveBrowserPid ]; }
     int GetLiveBrowserPid() { return m_liveBrowserPid; }
-    GoogleChromeWindow* GetLiveBrowserWindow() { return m_liveBrowserWindow; }
     
     void SetCloseTimeoutTimer(NSTimer* closeLiveBrowserTimeoutTimer)
             { m_closeLiveBrowserTimeoutTimer = closeLiveBrowserTimeoutTimer; }
@@ -78,14 +77,6 @@ public:
             { m_browser = browser; }
     void SetLiveBrowserPid(int liveBrowserPid)
             { m_liveBrowserPid = liveBrowserPid; }
-    void SetLiveBrowserWindow(GoogleChromeWindow* liveBrowserWindow)
-            {
-                if(m_liveBrowserWindow) {
-                    [m_liveBrowserWindow release];
-                    m_liveBrowserWindow = liveBrowserWindow;
-                    [m_liveBrowserWindow retain];
-                }
-            }
 
 private:
     // private so this class cannot be instantiated externally
@@ -110,7 +101,6 @@ LiveBrowserMgrMac::LiveBrowserMgrMac()
     , m_closeLiveBrowserTimeoutTimer(nil)
     , m_chromeTerminateObserver(nil)
     , m_liveBrowserPid(ERR_PID_NOT_FOUND)
-    , m_liveBrowserWindow(nil)
 {
 }
 
@@ -153,7 +143,6 @@ bool LiveBrowserMgrMac::IsChromeRunning()
     }
     // Unset member properties
     SetLiveBrowserPid(ERR_PID_NOT_FOUND);
-    SetLiveBrowserWindow(nil);
     return NO;
 }
 
@@ -279,8 +268,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         }
         // Cache LiveBrowser process id for fast lookups
         liveBrowserMgr->SetLiveBrowserPid([liveBrowser processIdentifier]);
-        liveBrowserMgr->SetLiveBrowserWindow([[[SBApplication applicationWithProcessIdentifier:liveBrowserMgr->GetLiveBrowserPid()] windows] objectAtIndex:0]);
-
         return NO_ERROR;
     }
     
@@ -298,8 +285,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         for (GoogleChromeTab* tab in [chromeWindow tabs]) {
             if ([tab.URL isEqualToString:urlString]) {
                 // Found and open tab with interstitial page loaded
-                // Let's Cache LiveBrowser window
-                liveBrowserMgr->SetLiveBrowserWindow(chromeWindow);
                 return NO_ERROR;
             }
         }
@@ -318,9 +303,6 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         [[chromeWindow tabs] addObject:chromeTab];
         [chromeTab release];
     }
-    
-    // Cache LiveBrowser window for later use
-    liveBrowserMgr->SetLiveBrowserWindow(chromeWindow);
     return NO_ERROR;
 }
 
@@ -371,23 +353,8 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     // close all tabs; however, the LiveDocument tab already closed by Inspector!
     // and there is no way to find which window to close.
     
-    // Check the window cache
-    GoogleChromeWindow* liveBrowserWindow = liveBrowserMgr->GetLiveBrowserWindow();
-    if (liveBrowserWindow) {
-        // Close window & clear cache
-        @try {
-            [liveBrowserWindow close];
-        }
-        @catch (NSException *exception) {
-            // Safely ignore
-        }
-        @finally {
-            liveBrowserMgr->SetLiveBrowserWindow(nil);
-        }
-    }
-    
     // Do not close other windows
-    if ([[chromeApp windows] count] > 0 || [[[[chromeApp windows] objectAtIndex:0] tabs] count] > 1) {
+    if ([[chromeApp windows] count] > 0 || [[[[chromeApp windows] objectAtIndex:0] tabs] count] > 0) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
         return;
     }
@@ -395,7 +362,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     // No more open windows found, so quit Chrome
     [chromeApp quit];
 
-   // Set timeout timer
+    // Set timeout timer
     liveBrowserMgr->SetCloseTimeoutTimer([[NSTimer
                                            scheduledTimerWithTimeInterval:(3 * 60)
                                            target:liveBrowserMgr->GetTerminateObserver()
