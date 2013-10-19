@@ -387,7 +387,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     }
     
     // Do not close other windows
-    if ([[chromeApp windows] count] > 0) {
+    if ([[chromeApp windows] count] > 0 || [[[[chromeApp windows] objectAtIndex:0] tabs] count] > 1) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
         return;
     }
