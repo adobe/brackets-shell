@@ -647,8 +647,17 @@ Class GetShellWindowFrameClass() {
     NSWindow* targetWindow = [clientApp findTargetWindow];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
-      for (NSUInteger i = 0; i < [filenames count]; i++) {
-        g_handler->SendOpenFileCommand(browser, CefString([[filenames objectAtIndex:i] UTF8String]));
+      NSUInteger count = [filenames count];
+      if (count) {
+        std::string files = "[";
+        for (NSUInteger i = 0; i < count; i++) {
+          if (i > 0) {
+            files += ", ";
+          }
+          files += ("\"" + std::string([[filenames objectAtIndex:i] UTF8String]) + "\"");
+        }
+        files += "]";
+        g_handler->SendOpenFileCommand(browser, CefString(files));
       }
     }
   } else {
