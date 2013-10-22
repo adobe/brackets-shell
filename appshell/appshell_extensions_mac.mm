@@ -68,7 +68,7 @@ public:
     ChromeWindowsTerminatedObserver* GetTerminateObserver() { return m_chromeTerminateObserver; }
     CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
     NSRunningApplication* GetLiveBrowser() { return GetLiveBrowserApp(appId, debugPort); }
-    int GetLiveBrowserPid() { return [GetLiveBrowser() processIdentifier] ?: ERR_PID_NOT_FOUND; }
+    int GetLiveBrowserPid() { return m_liveBrowserPid; }
     
     void SetCloseTimeoutTimer(NSTimer* closeLiveBrowserTimeoutTimer)
             { m_closeLiveBrowserTimeoutTimer = closeLiveBrowserTimeoutTimer; }
@@ -78,6 +78,8 @@ public:
             { m_closeLiveBrowserCallback = response; }
     void SetBrowser(CefRefPtr<CefBrowser> browser)
             { m_browser = browser; }
+    void SetLiveBrowserPid(int pid)
+            { m_liveBrowserPid = pid; }
 
 private:
     // private so this class cannot be instantiated externally
@@ -88,6 +90,7 @@ private:
     CefRefPtr<CefProcessMessage>        m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>               m_browser;
     ChromeWindowsTerminatedObserver*    m_chromeTerminateObserver;
+    int                                 m_liveBrowserPid;
     
     static LiveBrowserMgrMac*           s_instance;
 };
@@ -96,6 +99,7 @@ private:
 LiveBrowserMgrMac::LiveBrowserMgrMac()
     : m_closeLiveBrowserTimeoutTimer(nil)
     , m_chromeTerminateObserver(nil)
+    , m_liveBrowserPid(ERR_PID_NOT_FOUND)
 {
 }
 
@@ -103,7 +107,7 @@ LiveBrowserMgrMac::~LiveBrowserMgrMac()
 {
     if (s_instance)
         s_instance->CloseLiveBrowserKillTimers();
-    
+
     if (m_chromeTerminateObserver) {
         [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
         [m_chromeTerminateObserver release];
@@ -162,6 +166,9 @@ void LiveBrowserMgrMac::CheckForChromeRunning()
     if (IsChromeRunning())
         return;
     
+    // Unset the LiveBrowser pid
+    m_liveBrowserPid = ERR_PID_NOT_FOUND;
+    
     // Fire callback to browser
     CloseLiveBrowserFireCallback(NO_ERROR);
 }
@@ -188,6 +195,26 @@ GoogleChromeApplication* GetGoogleChromeApplicationWithPid(int PID){
     }
 }
 
+void SetupWorkspaceNotificationsFor(int PID){
+    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
+    
+    // Set up workspace notifications for asynchronous Browser shutdowns
+    if (!liveBrowserMgr->GetTerminateObserver()) {
+        //register an observer to watch for the app terminations
+        liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
+        
+        [[[NSWorkspace sharedWorkspace] notificationCenter]
+         addObserver:liveBrowserMgr->GetTerminateObserver()
+         selector:@selector(appTerminated:)
+         name:NSWorkspaceDidTerminateApplicationNotification
+         object:nil
+         ];
+    }
+    
+    // Cache liveBrowser pid for fast lookups + matching during termination
+    liveBrowserMgr->SetLiveBrowserPid(PID);
+}
+
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
     LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
@@ -198,9 +225,10 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     // Find instances of the Browser
     NSWorkspace * ws = [NSWorkspace sharedWorkspace];
     NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation;
-    
+    NSRunningApplication* liveBrowser = liveBrowserMgr->GetLiveBrowser();
+
     // Launch Browser (if not running)
-    if (!liveBrowserMgr->IsChromeRunning()) {
+    if (!liveBrowser) {
         
         NSURL *appURL = [ws URLForApplicationWithBundleIdentifier:appId];
         if( !appURL ) {
@@ -236,31 +264,25 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSMutableDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
 
         NSError *error = nil;
-        NSRunningApplication* liveBrowser = [ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error];
+        liveBrowser = [ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error];
 
         // Set up workspace notifications for asynchronous Browser shutdowns
-        if (liveBrowser && !liveBrowserMgr->GetTerminateObserver()) {
-            //register an observer to watch for the app terminations
-            liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
-            
-            [[[NSWorkspace sharedWorkspace] notificationCenter]
-             addObserver:liveBrowserMgr->GetTerminateObserver()
-             selector:@selector(appTerminated:)
-             name:NSWorkspaceDidTerminateApplicationNotification
-             object:nil
-             ];
-        }
+        SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+        
         return liveBrowser ? NO_ERROR : ERR_UNKNOWN;
     }
     
     // At this time an instance of the LiveBrowser should exist
-    GoogleChromeApplication *chromeApp = GetGoogleChromeApplicationWithPid(liveBrowserMgr->GetLiveBrowserPid());
+    GoogleChromeApplication *chromeApp = GetGoogleChromeApplicationWithPid([liveBrowser processIdentifier]);
     
     // Sanity check
     if (!chromeApp) {
         // No LiveBrowser found with current PID.  Let's try again...
        return OpenLiveBrowser(argURL, enableRemoteDebugging);
     }
+    
+    // Set up workspace notifications for asynchronous Browser shutdowns
+    SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
     
     // Check for existing tab (with interstitial page) in all open Chrome windows
     for (GoogleChromeWindow* chromeWindow in [chromeApp windows]){
@@ -281,7 +303,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         [chromeWindow release];
     } else {
         // Create new Tab in LiveBrowser window
-        GoogleChromeTab* chromeTab = [[[chromeApp classForScriptingClass:@"tab"] alloc] initWithProperties:@{ @"URL": urlString}];
+        GoogleChromeTab* chromeTab = [[[chromeApp classForScriptingClass:@"tab"] alloc] initWithProperties:@{@"URL": urlString}];
         [[chromeWindow tabs] addObject:chromeTab];
         [chromeTab release];
     }
@@ -302,7 +324,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     // Set up new Brackets CloseLiveBrowser callbacks
     liveBrowserMgr->SetBrowser(browser);
     liveBrowserMgr->SetCloseCallback(response);
-    
+
     // Check chrome
     if (!liveBrowserMgr->IsChromeRunning()) {
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
@@ -741,7 +763,12 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     if ( ![[[note userInfo] objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:appId] ) {
         return;
     }
-
+    
+    // Not LiveBrowser instance? Not interested.
+    if ( ![[[note userInfo] objectForKey:@"NSApplicationProcessIdentifier"] isEqualToNumber:[NSNumber numberWithInt:LiveBrowserMgrMac::GetInstance()->GetLiveBrowserPid()]] ) {
+        return;
+    }
+    
     LiveBrowserMgrMac::GetInstance()->CheckForChromeRunning();
 }
 
