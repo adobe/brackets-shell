@@ -349,10 +349,10 @@ bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString
   return browser->SendProcessMessage(PID_RENDERER, message);
 }
 
-void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &filename) {
-  std::string filenameStr(filename);
+void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const CefString &fileArray) {
+  std::string fileArrayStr(fileArray);
   // FIXME: Use SendJSCommand once it supports parameters
-  std::string cmd = "require('command/CommandManager').execute('file.addToWorkingSet',{fullPath:'" + filenameStr + "'})";
+  std::string cmd = "require('command/CommandManager').execute('file.openDroppedFiles'," + fileArrayStr + ")";
   browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
                                 browser->GetMainFrame()->GetURL(), 0);
 }
