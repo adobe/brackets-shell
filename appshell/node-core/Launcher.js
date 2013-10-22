@@ -29,7 +29,8 @@ maxerr: 50, node: true */
     "use strict";
     
     var Logger = require("./Logger"),
-        Server = require("./Server");
+        Server = require("./Server"),
+        os     = require("os");
     
     /** @define {boolean} Whether debugger should be enabled at launch
      *
@@ -122,6 +123,11 @@ maxerr: 50, node: true */
             });
         };
         process._debugProcess(process.pid);
+    }
+
+    // Set environment variable to use built-in Node.js API for temp directory
+    if (!process.env["TMPDIR"] && !process.env["TMP"] && !process.env["TEMP"]) {
+        process.env["TMPDIR"] = process.env["TMP"] = process.env["TEMP"] = os.tmpdir();
     }
     
     exports.launch = launch;
