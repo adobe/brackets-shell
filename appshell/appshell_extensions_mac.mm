@@ -338,6 +338,9 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     // Set up new Brackets CloseLiveBrowser callbacks
     liveBrowserMgr->SetBrowser(browser);
     liveBrowserMgr->SetCloseCallback(response);
+    
+    // Set up worskpace shutdown notifications
+    liveBrowserMgr->SetupWorkspaceNotificationsFor(liveBrowserMgr->GetLiveBrowserPid());
 
     // Check chrome
     if (!liveBrowserMgr->IsChromeRunning()) {
