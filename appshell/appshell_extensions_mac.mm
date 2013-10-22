@@ -62,6 +62,9 @@ public:
     void CheckForChromeRunning();
     void CheckForChromeRunningTimeout();
     
+    void SetupWorkspaceNotificationsFor(int pid);
+    void RemoveWorkspaceNotifications();
+
     void CloseLiveBrowserKillTimers();
     void CloseLiveBrowserFireCallback(int valToSend);
 
@@ -150,6 +153,9 @@ void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
     // kill the timers
     CloseLiveBrowserKillTimers();
     
+    // Stop listening for ws shutdown notifications
+    RemoveWorkspaceNotifications();
+
     // Set common response args (callbackId and error)
     responseArgs->SetInt(1, valToSend);
     
@@ -181,6 +187,34 @@ void LiveBrowserMgrMac::CheckForChromeRunningTimeout()
     CloseLiveBrowserFireCallback(retVal);
 }
 
+void LiveBrowserMgrMac::SetupWorkspaceNotificationsFor(int PID){
+    
+    // Set up workspace notifications for asynchronous Browser shutdowns
+    if (!GetTerminateObserver()) {
+        //register an observer to watch for the app terminations
+        SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
+        
+        [[[NSWorkspace sharedWorkspace] notificationCenter]
+         addObserver:GetTerminateObserver()
+         selector:@selector(appTerminated:)
+         name:NSWorkspaceDidTerminateApplicationNotification
+         object:nil
+         ];
+    }
+    
+    // Cache liveBrowser pid for fast lookups + matching during termination
+    SetLiveBrowserPid(PID);
+}
+
+void LiveBrowserMgrMac::RemoveWorkspaceNotifications()
+{
+    if (m_chromeTerminateObserver) {
+        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
+        [m_chromeTerminateObserver release];
+        m_chromeTerminateObserver = nil;
+    }
+}
+
 LiveBrowserMgrMac* LiveBrowserMgrMac::s_instance = NULL;
 
 // Forward declarations for functions defined later in this file
@@ -193,26 +227,6 @@ GoogleChromeApplication* GetGoogleChromeApplicationWithPid(int PID){
     @catch (NSException *exception) {
         return nil;
     }
-}
-
-void SetupWorkspaceNotificationsFor(int PID){
-    LiveBrowserMgrMac* liveBrowserMgr = LiveBrowserMgrMac::GetInstance();
-    
-    // Set up workspace notifications for asynchronous Browser shutdowns
-    if (!liveBrowserMgr->GetTerminateObserver()) {
-        //register an observer to watch for the app terminations
-        liveBrowserMgr->SetTerminateObserver([[ChromeWindowsTerminatedObserver alloc] init]);
-        
-        [[[NSWorkspace sharedWorkspace] notificationCenter]
-         addObserver:liveBrowserMgr->GetTerminateObserver()
-         selector:@selector(appTerminated:)
-         name:NSWorkspaceDidTerminateApplicationNotification
-         object:nil
-         ];
-    }
-    
-    // Cache liveBrowser pid for fast lookups + matching during termination
-    liveBrowserMgr->SetLiveBrowserPid(PID);
 }
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
@@ -267,7 +281,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         liveBrowser = [ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error];
 
         // Set up workspace notifications for asynchronous Browser shutdowns
-        SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+        liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
         
         return liveBrowser ? NO_ERROR : ERR_UNKNOWN;
     }
@@ -282,7 +296,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     }
     
     // Set up workspace notifications for asynchronous Browser shutdowns
-    SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+    liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
     
     // Check for existing tab (with interstitial page) in all open Chrome windows
     for (GoogleChromeWindow* chromeWindow in [chromeApp windows]){
