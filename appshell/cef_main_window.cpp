@@ -386,7 +386,7 @@ BOOL cef_main_window::HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData)
             std::size_t nextQuoteIndex  = wstrFilename.find(L"\"");
  
             while ((nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) || 
-                   (nextQuoteIndex > 0 && curFilePathEnd1 != std::wstring::npos)) {
+                   (nextQuoteIndex != 0 && curFilePathEnd1 != std::wstring::npos)) {
 
                 if (nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) {
                     // Appending a file path that is already wrapped in double-quotes.
