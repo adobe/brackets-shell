@@ -21,7 +21,7 @@
  *
  */
 #import "FullScreenbutton.h"
-#define FS_HOT_TO_COLD
+//#define FS_HOT_TO_COLD
 
 //these are defined in MainMainu.xib file
 static const int FULLSCREEN_BUTTON_TAG = 1004;
