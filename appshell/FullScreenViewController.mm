@@ -20,23 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-#import <Cocoa/Cocoa.h>
+#import "FullScreenViewController.h"
 
-@interface TrafficLightButton : NSButton {
-    
-    NSImage *inactive;
-    NSImage *active;
-    NSImage *hover;
-    NSImage *pressed;
-    NSImage *dirtyInactive;
-    NSImage *dirtyActive;
-    NSImage *dirtyHover;
-    NSImage *dirtyPressed;
-    
-    BOOL activeState;
-    BOOL hoverState;
-    BOOL pressedState;
-    BOOL dirtyState;
-    BOOL closeButton;
-}
+@implementation FullScreenViewController
+
 @end

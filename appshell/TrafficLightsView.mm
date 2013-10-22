@@ -22,8 +22,6 @@
  */
 #import "TrafficLightsView.h"
 
-static TrafficLightsView* theView = nil;
-
 @implementation TrafficLightsView
 
 - (id)initWithFrame:(NSRect)frame {
@@ -44,8 +42,4 @@ static TrafficLightsView* theView = nil;
     [[NSNotificationCenter defaultCenter] postNotificationName:@"TrafficLightsMouseExit" object:self];
 }
 
-- (void)awakeFromNib {
-    theView = self;
-    
-}
 @end

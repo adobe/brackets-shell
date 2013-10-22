@@ -31,11 +31,11 @@ static const int ZOOM_BUTTON_TAG = 1002;
     NSImage *inactive;
     NSImage *active;
     NSImage *hover;
-    NSImage *press;
+    NSImage *pressed;
     NSImage *dirtyInactive;
     NSImage *dirtyActive;
     NSImage *dirtyHover;
-    NSImage *dirtyPress;
+    NSImage *dirtyPressed;
     BOOL activeState;
     BOOL hoverState;
     BOOL pressedState;
@@ -73,12 +73,12 @@ static const int ZOOM_BUTTON_TAG = 1002;
     active = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-active",buttonName]];
     inactive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-inactive",buttonName]];
     hover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-hover",buttonName]];
-    press = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-pressed",buttonName]];
+    pressed = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-pressed",buttonName]];
     if (closeButton) {
         dirtyActive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-active",buttonName]];
         dirtyInactive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-inactive",buttonName]];
         dirtyHover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-hover",buttonName]];
-        dirtyPress = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
+        dirtyPressed = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
     }
    
     // assume active
@@ -121,6 +121,14 @@ static const int ZOOM_BUTTON_TAG = 1002;
         [self.window makeKeyAndOrderFront:self];
         [self.window setOrderedIndex:0];
     }
+
+    [self updateButtonStates];
+}
+
+- (void)mouseUp:(NSEvent *)theEvent {
+    pressedState = NO;
+    hoverState = YES;
+
     if (closeButton) {
         [[self window] performClose:nil];
         return;
@@ -133,12 +141,8 @@ static const int ZOOM_BUTTON_TAG = 1002;
         [[self window] performZoom:nil];
         return;
     }
-    [super mouseDown:theEvent];
-}
-
-- (void)mouseUp:(NSEvent *)theEvent {
-    pressedState = NO;
-    hoverState = YES;
+    
+    [self updateButtonStates];
     [super mouseUp:theEvent];
 }
 
@@ -157,7 +161,13 @@ static const int ZOOM_BUTTON_TAG = 1002;
 -(void)updateButtonStates{
     if (self == nil)
         return;
-    if (activeState) {
+    if (pressedState) {
+        if (closeButton && dirtyState) {
+            [self setImage:dirtyPressed];
+        } else {
+            [self setImage:pressed];
+        }
+    } else if (activeState) {
         if (hoverState) {
             if (closeButton && dirtyState) {
                 [self setImage:dirtyHover];
