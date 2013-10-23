@@ -3,7 +3,7 @@
 default="build.mul">
   
   <!-- Key locations on disk -->
-  <property name="wix.base" value="C:\Program Files (x86)\Windows Installer XML v3.5"/>
+  <property name="wix.base" value="C:\Program Files (x86)\WiX Toolset v3.7"/>
   
   <property name="brackets.staging" value=".\staging"/>
   
@@ -23,7 +23,7 @@ default="build.mul">
   <property name="heat.cmd" value="${wix.base}/bin/heat.exe"/>
   <property name="candle.cmd" value="${wix.base}/bin/candle.exe"/>
   <property name="light.cmd" value="${wix.base}/bin/light.exe"/>
-  <property name="msitran.cmd" value="${wix.base}/bin/MsiTran.exe"/>
+  <property name="torch.cmd" value="${wix.base}/bin/torch.exe"/>
   <property name="wisubstg.cmd" value="${wix.base}/bin/WiSubStg.vbs"/>
   
   
@@ -140,8 +140,8 @@ default="build.mul">
 
   <!-- to build a single msi for english and french -->
   <target name="build.mul" depends="build.english, build.french" description="Build the final multi-locale MSI">
-    <exec  executable='"${msitran.cmd}"' failonerror='true'>
-      <arg line="-g '${product.fullname} ${product.version.name}.msi' brackets_fr-fr.msi fr-fr.mst"/>
+    <exec  executable='"${torch.cmd}"' failonerror='true'>
+      <arg line="-p -t language '${product.fullname} ${product.version.name}.msi' brackets_fr-fr.msi -out fr-fr.mst"/>
     </exec>
 
     <exec  executable="cscript" failonerror='true'>
