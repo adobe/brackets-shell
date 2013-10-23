@@ -189,6 +189,9 @@ void LiveBrowserMgrMac::CheckForChromeRunningTimeout()
 
 void LiveBrowserMgrMac::SetupWorkspaceNotificationsFor(int PID){
     
+    // Cache the LiveBrowser pid for fast lookups + matching during termination
+    SetLiveBrowserPid(PID);
+    
     // Set up workspace notifications for asynchronous Browser shutdowns
     if (!GetTerminateObserver()) {
         //register an observer to watch for the app terminations
@@ -201,9 +204,6 @@ void LiveBrowserMgrMac::SetupWorkspaceNotificationsFor(int PID){
          object:nil
          ];
     }
-    
-    // Cache liveBrowser pid for fast lookups + matching during termination
-    SetLiveBrowserPid(PID);
 }
 
 void LiveBrowserMgrMac::RemoveWorkspaceNotifications()
@@ -221,10 +221,10 @@ LiveBrowserMgrMac* LiveBrowserMgrMac::s_instance = NULL;
 void NSArrayToCefList(NSArray* array, CefRefPtr<CefListValue>& list);
 int32 ConvertNSErrorCode(NSError* error, bool isReading);
 GoogleChromeApplication* GetGoogleChromeApplicationWithPid(int PID){
-    @try {
+    try {
         return [SBApplication applicationWithProcessIdentifier:PID];
     }
-    @catch (NSException *exception) {
+    catch (...) {
         return nil;
     }
 }
