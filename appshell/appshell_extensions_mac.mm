@@ -48,6 +48,7 @@ NSString *const appId = @"com.google.Chrome";
 
 // Live Development debug port
 int const debugPort = 9222;
+NSString* debugPortCommandlineArguments = [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort];
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac
@@ -254,7 +255,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         
         if (enableRemoteDebugging) {
             parameters = [NSArray arrayWithObjects:
-                            [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort],
+                            debugPortCommandlineArguments,
                             @"--allow-file-access-from-files",
                             @"--no-first-run",
                             @"--no-default-browser-check",
@@ -1275,8 +1276,8 @@ NSRunningApplication* GetLiveBrowserApp(NSString *bundleId, int debugPort){
             continue;
         }
         
-        // Check debug port (e.g. --remote-debug-port=9222)
-        if ([args rangeOfString:[NSString stringWithFormat:@"%d", debugPort]].location != NSNotFound) {
+        // Check debug port (e.g. --remote-debugging-port=9222)
+        if ([args rangeOfString:debugPortCommandlineArguments].location != NSNotFound) {
             return currApp;
         }
     }
