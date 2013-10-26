@@ -237,13 +237,12 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     NSString *urlString = [NSString stringWithUTF8String:argURL.c_str()];
     
     // Find instances of the Browser
-    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-    NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation;
     NSRunningApplication* liveBrowser = liveBrowserMgr->GetLiveBrowser();
 
     // Launch Browser (if not running)
     if (!liveBrowser) {
         
+        NSWorkspace * ws = [NSWorkspace sharedWorkspace];
         NSURL *appURL = [ws URLForApplicationWithBundleIdentifier:appId];
         if( !appURL ) {
             return ERR_NOT_FOUND; //Chrome not installed
@@ -278,10 +277,13 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSMutableDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
 
         NSError *error = nil;
-        liveBrowser = [ws launchApplicationAtURL:appURL options:(launchOptions | NSWorkspaceLaunchNewInstance) configuration:appConfig error:&error];
+        NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation | NSWorkspaceLaunchNewInstance;
+        liveBrowser = [ws launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:&error];
 
         // Set up workspace notifications for asynchronous Browser shutdowns
-        liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+        if (liveBrowser) {
+            liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+        }
         
         return liveBrowser ? NO_ERROR : ERR_UNKNOWN;
     }
