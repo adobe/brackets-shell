@@ -574,14 +574,14 @@ Class GetShellWindowFrameClass() {
   [windowButton setHidden:YES];
 #endif
 
-    
-    
+#ifdef DARK_UI
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
   float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
   // Background fill, solid for now.
   NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
   [mainWnd setMinSize:NSMakeSize(kMinWindowWidth, kMinWindowHeight)];
   [mainWnd setBackgroundColor:fillColor];
+#endif
     
   // "Preclude the window controller from changing a window’s position from the
   // one saved in the defaults system" (NSWindow Class Reference)
