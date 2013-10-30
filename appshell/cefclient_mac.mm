@@ -291,8 +291,9 @@ Class GetShellWindowFrameClass() {
 - (void)removeCustomDrawHook:(NSView*)contentView
 {
     NSView* themeView = [contentView superview];
+    Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
     
-    object_setClass(themeView, NULL);
+    object_setClass(themeView, NSThemeFrame);
 }
 
 -(void)windowTitleDidChange:(NSString*)title {
@@ -304,6 +305,8 @@ Class GetShellWindowFrameClass() {
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
     NSWindow* window = [notification object];
+    NSView* contentView = [window contentView];
+    [self removeCustomDrawHook: contentView];
     savedTitle = [[window title] copy];
     [window setTitle:@""];
 #endif
