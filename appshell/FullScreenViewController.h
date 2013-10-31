@@ -22,21 +22,6 @@
  */
 #import <Cocoa/Cocoa.h>
 
-@interface TrafficLightButton : NSButton {
-    
-    NSImage *inactive;
-    NSImage *active;
-    NSImage *hover;
-    NSImage *pressed;
-    NSImage *dirtyInactive;
-    NSImage *dirtyActive;
-    NSImage *dirtyHover;
-    NSImage *dirtyPressed;
-    
-    BOOL activeState;
-    BOOL hoverState;
-    BOOL pressedState;
-    BOOL dirtyState;
-    BOOL closeButton;
-}
+@interface FullScreenViewController : NSViewController
+
 @end

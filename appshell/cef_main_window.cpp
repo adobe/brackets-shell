@@ -366,14 +366,57 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
 BOOL cef_main_window::HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData) 
 {
     if ((lpCopyData) && (lpCopyData->dwData == ID_WM_COPYDATA_SENDOPENFILECOMMAND) && (lpCopyData->cbData > 0)) {
-        // another Brackets instance requests that we open the given filename
+        // another Brackets instance requests that we open the given files/folders
         std::wstring wstrFilename = (LPCWSTR)lpCopyData->lpData;
+        std::wstring wstrFileArray = L"[";
+        bool hasMultipleFiles = false;
+        
+        if (wstrFilename.find('"') != std::wstring::npos) {
+            if (wstrFilename.find(L"\" ") != std::wstring::npos ||
+               (wstrFilename.front() != '"' || wstrFilename.back() != '"')) {
+                hasMultipleFiles = true;
+            }
+        } else {
+            hasMultipleFiles = (wstrFilename.find(L" ") != std::wstring::npos);
+        }
 
-        // Windows Explorer might enclose the filename in double-quotes.  We need to strip these off.
-        if ((wstrFilename.front() == '\"') && wstrFilename.back() == '\"')
-            wstrFilename = wstrFilename.substr(1, wstrFilename.length() - 2);
+        if (hasMultipleFiles) {
+            std::size_t curFilePathEnd1 = wstrFilename.find(L" ");
+            std::size_t curFilePathEnd2 = wstrFilename.find(L"\" ");
+            std::size_t nextQuoteIndex  = wstrFilename.find(L"\"");
+ 
+            while ((nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) || 
+                   (nextQuoteIndex != 0 && curFilePathEnd1 != std::wstring::npos)) {
 
-        g_handler->SendOpenFileCommand(g_handler->GetBrowser(), CefString(wstrFilename.c_str()));
+                if (nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) {
+                    // Appending a file path that is already wrapped in double-quotes.
+                    wstrFileArray += (wstrFilename.substr(0, curFilePathEnd2 + 1) + L",");
+
+                    // Strip the current file path and move index to next file path.
+                    wstrFilename = wstrFilename.substr(curFilePathEnd2 + 2);
+                } else {
+                    // Explicitly wrap a file path in double-quotes and append it to the file array.
+                    wstrFileArray += (L"\"" + wstrFilename.substr(0, curFilePathEnd1) + L"\",");
+
+                    // Strip the current file path and move index to next file path.
+                    wstrFilename = wstrFilename.substr(curFilePathEnd1 + 1);
+                }
+
+                curFilePathEnd1 = wstrFilename.find(L" ");
+                curFilePathEnd2 = wstrFilename.find(L"\" ");
+                nextQuoteIndex = wstrFilename.find(L"\"");
+            }
+        }
+
+        // Add the last file or the only file into the file array.
+        if (wstrFilename.front() == '"' && wstrFilename.back() == '"') {
+            wstrFileArray += wstrFilename;
+        } else if (wstrFilename.length()) {
+            wstrFileArray += (L"\"" + wstrFilename + L"\"");
+        }
+        wstrFileArray += L"]";
+
+        g_handler->SendOpenFileCommand(g_handler->GetBrowser(), CefString(wstrFileArray.c_str()));
         return TRUE;
     }
 

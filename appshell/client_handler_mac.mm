@@ -12,8 +12,14 @@
 
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
+
+#include "FullScreenView.h"
+#include "FullScreenViewController.h"
+
 #include "config.h"
 #include "client_colors_mac.h"
+
+
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -96,6 +102,7 @@ void ClientHandler::CloseMainWindow() {
 @interface PopupClientWindowDelegate : NSObject <NSWindowDelegate> {
   CefRefPtr<ClientHandler> clientHandler;
   NSWindow* window;
+  NSView* fullScreenButtonView;
   BOOL isReallyClosing;
   NSString* savedTitle;
 }
@@ -105,7 +112,9 @@ void ClientHandler::CloseMainWindow() {
 - (BOOL)windowShouldClose:(id)window;
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
+- (void)setFullScreenButtonView:(NSView*)view;
 - (void)addCustomDrawHook:(NSView*)contentView;
+- (BOOL)isFullScreenSupported;
 @end
 
 
@@ -175,6 +184,7 @@ Class GetPopuplWindowFrameClass() {
   [super init];
   isReallyClosing = false;
   savedTitle = nil;
+  fullScreenButtonView = nil;
   return self;
 }
 
@@ -199,7 +209,6 @@ Class GetPopuplWindowFrameClass() {
   */
   clientHandler->DispatchCloseToNextBrowser();
 }
-
 
 - (void)addCustomDrawHook:(NSView*)contentView
 {
@@ -249,6 +258,16 @@ Class GetPopuplWindowFrameClass() {
   isReallyClosing = true;
 }
 
+- (BOOL)isFullScreenSupported {
+  SInt32 version;
+  Gestalt(gestaltSystemVersion, &version);
+  return (version >= 0x1070);
+}
+
+- (void)setFullScreenButtonView:(NSView *)view {
+  fullScreenButtonView = view;
+}
+
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
     savedTitle = [title copy];
@@ -263,6 +282,26 @@ Class GetPopuplWindowFrameClass() {
 }
 
 
+-(void)windowDidResize:(NSNotification *)notification
+{
+#ifdef DARK_UI
+    if ([self isFullScreenSupported]) {
+        NSView* themeView = [[window contentView] superview];
+        NSRect  parentFrame = [themeView frame];
+        
+        NSRect oldFrame = [fullScreenButtonView frame];
+        NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
+                                     parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                     oldFrame.size.width,                                  // width
+                                     oldFrame.size.height);
+        
+        
+        [fullScreenButtonView setFrame:newFrame];
+        [themeView setNeedsDisplay:YES];
+    }
+#endif
+}
+
 - (void)windowDidExitFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
     NSView* contentView = [window contentView];
@@ -271,12 +310,14 @@ Class GetPopuplWindowFrameClass() {
     [savedTitle release];
 #endif
     
-NSView * themeView = [[window contentView] superview];
+    NSView * themeView = [[window contentView] superview];
+    NSRect  parentFrame = [themeView frame];
+    NSWindow* theWin = window;
+    NSButton *windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
     //hide buttons
-    NSWindow* theWin = window;
-    NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+    windowButton = [theWin standardWindowButton:NSWindowCloseButton];
     [windowButton setHidden:YES];
     windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
     [windowButton setHidden:YES];
@@ -287,7 +328,6 @@ NSView * themeView = [[window contentView] superview];
     
     if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
     {
-        NSRect  parentFrame = [themeView frame];
         NSRect  oldFrame = [controller.view frame];
         NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
                                      parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
@@ -295,6 +335,26 @@ NSView * themeView = [[window contentView] superview];
                                      oldFrame.size.height);                                // height
         [controller.view setFrame:newFrame];
         [themeView addSubview:controller.view];
+    }
+#endif
+    
+#ifdef DARK_UI
+    if ([self isFullScreenSupported]) {
+        windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
+        [windowButton setHidden:YES];
+    
+        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
+        if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
+        {
+            NSRect oldFrame = [fsController.view frame];
+            NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [fsController.view setFrame:newFrame];
+            [themeView addSubview:fsController.view];
+            [self setFullScreenButtonView:fsController.view];
+        }
     }
 #endif
     
@@ -387,10 +447,11 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
 
       NSWindow* theWin = window;
       NSView*   themeView = [[window contentView] superview];
+      NSRect    parentFrame = [themeView frame];
+      NSButton* windowButton = nil;
       
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-      //hide buttons
-      NSButton *windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+      windowButton = [theWin standardWindowButton:NSWindowCloseButton];
       [windowButton setHidden:YES];
       windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
       [windowButton setHidden:YES];
@@ -401,7 +462,6 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
       
       if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
       {
-          NSRect  parentFrame = [themeView frame];
           NSRect  oldFrame = [controller.view frame];
           NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
                                        parentFrame.size.height - oldFrame.size.height - 4,   // y position
@@ -409,6 +469,26 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
                                        oldFrame.size.height);                                // height
           [controller.view setFrame:newFrame];
           [themeView addSubview:controller.view];
+      }
+#endif
+      
+#ifdef DARK_UI
+      if ([delegate isFullScreenSupported]) {
+          windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
+          [windowButton setHidden:YES];
+      
+          FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
+          if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
+          {
+              NSRect oldFrame = [fsController.view frame];
+              NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
+                                           parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                           oldFrame.size.width,                                  // width
+                                           oldFrame.size.height);                                // height
+              [fsController.view setFrame:newFrame];
+              [themeView addSubview:fsController.view];
+              [delegate setFullScreenButtonView:fsController.view];
+          }
       }
 #endif
 

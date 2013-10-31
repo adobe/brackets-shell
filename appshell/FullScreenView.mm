@@ -20,23 +20,20 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-#import <Cocoa/Cocoa.h>
+#import "FullScreenView.h"
 
-@interface TrafficLightButton : NSButton {
-    
-    NSImage *inactive;
-    NSImage *active;
-    NSImage *hover;
-    NSImage *pressed;
-    NSImage *dirtyInactive;
-    NSImage *dirtyActive;
-    NSImage *dirtyHover;
-    NSImage *dirtyPressed;
-    
-    BOOL activeState;
-    BOOL hoverState;
-    BOOL pressedState;
-    BOOL dirtyState;
-    BOOL closeButton;
+
+@implementation FullScreenView
+
+- (id)initWithFrame:(NSRect)frame {
+    return [super initWithFrame:frame];
 }
+
+- (void)viewDidMoveToWindow {
+    [self addTrackingRect:[self bounds]
+                    owner:self
+                 userData:nil
+             assumeInside:NO];
+}
+
 @end
