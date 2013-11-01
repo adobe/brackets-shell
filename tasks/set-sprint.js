@@ -42,6 +42,7 @@ module.exports = function (grunt) {
         var packageJsonPath             = "package.json",
             packageJSON                 = grunt.file.readJSON(packageJsonPath),
             winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
+            buildInstallerScriptPath    = "installer/mac/buildInstaller.sh",
             wxsPath                     = "installer/win/Brackets.wxs",
             versionRcPath               = "appshell/version.rc",
             infoPlistPath               = "appshell/mac/Info.plist",
@@ -73,7 +74,16 @@ module.exports = function (grunt) {
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
         
-        // 3. Open appshell/version.rc and change `FILEVERSION` and `"FileVersion"`
+        // 3. Open installer/mac/buildInstaller.sh and change `releaseName`
+        text = grunt.file.read(buildInstallerScriptPath);
+        text = safeReplace(
+            text,
+            /(Brackets Sprint )([0-9]+)/,
+            "$1" + sprint
+        );
+        grunt.file.write(buildInstallerScriptPath, text);
+        
+        // 4. Open appshell/version.rc and change `FILEVERSION` and `"FileVersion"`
         text = grunt.file.read(versionRcPath);
         text = safeReplace(
             text,
@@ -87,7 +97,7 @@ module.exports = function (grunt) {
         );
         grunt.file.write(versionRcPath, text);
         
-        // 4. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`text = grunt.file.read(wxsPath);
+        // 5. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`text = grunt.file.read(wxsPath);
         text = grunt.file.read(infoPlistPath);
         text = safeReplace(
             text,
