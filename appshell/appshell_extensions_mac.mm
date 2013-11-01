@@ -253,27 +253,16 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSArray *parameters = nil;
         NSString *profilePath = [NSString stringWithFormat:@"--user-data-dir=%@", GetUserProfilePath()];
         
-        if (enableRemoteDebugging) {
-            parameters = [NSArray arrayWithObjects:
-                            debugPortCommandlineArguments,
-                            @"--allow-file-access-from-files",
-                            @"--no-first-run",
-                            @"--no-default-browser-check",
-                            @"--temp-profile",
-                            profilePath,
-                            urlString,
-                            nil];
-        }
-        else {
-            parameters = [NSArray arrayWithObjects:
-                            @"--allow-file-access-from-files",
-                            @"--no-first-run",
-                            @"--no-default-browser-check",
-                            @"--temp-profile",
-                            profilePath,
-                            urlString,
-                            nil];
-        }
+        parameters = [NSArray arrayWithObjects:
+                      debugPortCommandlineArguments,
+                      @"--allow-file-access-from-files",
+                      @"--no-first-run",
+                      @"--no-default-browser-check",
+                      @"--temp-profile",
+                      profilePath,
+                      urlString,
+                      nil];
+
 
         NSMutableDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
 
