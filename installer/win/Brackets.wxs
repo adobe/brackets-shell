@@ -21,6 +21,31 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
              Languages="1033,1036"/>
     
     <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
+  
+    <Upgrade Id="3B75C4E6-41C6-43E0-B0B2-92C7C7614AF1">
+        <!-- specifies to uninstall any previous product versioned lower than this version. -->
+        <UpgradeVersion
+            OnlyDetect="no"
+            Maximum="$(var.ProductVersionNumber)"
+            IncludeMaximum="no"
+            Property="PREVIOUSVERSIONINSTALLED"
+        />
+        <UpgradeVersion
+            OnlyDetect="no"
+            Minimum="$(var.ProductVersionNumber)"
+            IncludeMinimum="no"
+            Property="NEWERVERSIONDETECTED"
+        />
+    </Upgrade>
+
+    <InstallExecuteSequence>
+        <!--
+            schedules the removal of any pre-existing product install (ie. same UpgradeCode)
+            to occur after this install is finalizes.  Doing so means we don't have to do
+            a full uninstall of the old product first.
+        -->
+        <RemoveExistingProducts After="InstallInitialize"/>
+    </InstallExecuteSequence>
  
     <Property Id="ARPPRODUCTICON" Value="appicon.ico"/>
     <Icon Id="appicon.ico" SourceFile="appicon.ico"/>
@@ -104,6 +129,8 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
       <ComponentRef  Id='FileAssociations' />
     </Feature>                  
+
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
   </Product>
 </Wix>
 
