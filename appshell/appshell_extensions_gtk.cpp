@@ -350,13 +350,17 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     }
     
     FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
+        if (size != contents.length()) {
+            error = ERR_CANT_WRITE;
+        }
 
-    size_t size = fwrite(contents.c_str(), 1, contents.length(), file);
-    if (size != contents.length()) {
-        error = ERR_CANT_WRITE;
+        fclose(file);
+    } else {
+        error = errno;
     }
 
-    fclose(file);
     return error;
 }
 
