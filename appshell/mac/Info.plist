@@ -29,14 +29,22 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>fold</string>
-			</array>
+			<key>CFBundleTypeName</key>
+			<string>Document</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
-			<key>CFBundleTypeName</key>
-			<string>Folder</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>****</string>
+			</array>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>gif</string>
+				<string>jpe</string>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
