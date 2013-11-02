@@ -23,7 +23,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
     <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
   
     <Upgrade Id="3B75C4E6-41C6-43E0-B0B2-92C7C7614AF1">
-        <!-- specifies to uninstall any previous product versioned lower than this version. -->
+        <!-- uninstall any previous product install detected -->
         <UpgradeVersion
             OnlyDetect="no"
             Maximum="$(var.ProductVersionNumber)"
@@ -31,6 +31,7 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
             Property="PREVIOUSVERSIONINSTALLED"
             RemoveFeatures="all"
         />
+        <!-- notify and fail if any newer product install detected -->
         <UpgradeVersion
             OnlyDetect="yes"
             Minimum="$(var.ProductVersionNumber)"
@@ -38,7 +39,8 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
             Property="NEWERVERSIONINSTALLED"
         />
     </Upgrade>
-      
+
+    <!-- define error message displayed if a newer version of the product is already installed -->
     <CustomAction Id="PreventDowngrading" Error="A newer version of !(loc.ProductName) is already installed.  To downgrade this product, you must first manually uninstall the newer version." />
 
     <InstallExecuteSequence>
