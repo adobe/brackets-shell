@@ -252,12 +252,13 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
             resultDirs.push_back(ExtensionString(files->d_name));
         else if(files->d_type==DT_REG)
             resultFiles.push_back(ExtensionString(files->d_name));
-        else if (files->d_type==DT_UNKNOWN)
+        else
         {
-            // Some Linux file systems do not support d_type.
-            // So we get DT_UNKNOWN on these file systems and
-            // we need to use stat call for each file entry to 
-            // distinguish between files and directories.
+            // Some file systems do not support d_type we use
+            // for faster type detection. So on these file systems
+            // we may get DT_UNKNOWN for all file entries, but just  
+            // to be safe we will use slower stat call for all 
+            // file entries that are not DT_DIR or DT_REG.
             curFile = path + files->d_name;
             if(stat(curFile.c_str(), &statbuf) == -1)
                 continue;
