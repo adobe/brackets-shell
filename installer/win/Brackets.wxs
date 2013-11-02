@@ -29,14 +29,17 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
             Maximum="$(var.ProductVersionNumber)"
             IncludeMaximum="no"
             Property="PREVIOUSVERSIONINSTALLED"
+            RemoveFeatures="all"
         />
         <UpgradeVersion
-            OnlyDetect="no"
+            OnlyDetect="yes"
             Minimum="$(var.ProductVersionNumber)"
             IncludeMinimum="no"
-            Property="NEWERVERSIONDETECTED"
+            Property="NEWERVERSIONINSTALLED"
         />
     </Upgrade>
+      
+    <CustomAction Id="PreventDowngrading" Error="A newer version of !(loc.ProductName) is already installed.  To downgrade this product, you must first manually uninstall the newer version." />
 
     <InstallExecuteSequence>
         <!--
@@ -45,6 +48,11 @@ xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
             a full uninstall of the old product first.
         -->
         <RemoveExistingProducts After="InstallInitialize"/>
+        <!--
+            if we find an earlier version already installed, fail this installation and
+            prompt the user to manually uninstall first.
+        -->
+        <Custom Action="PreventDowngrading" After="FindRelatedProducts">NEWERVERSIONINSTALLED&lt;&gt;""</Custom>
     </InstallExecuteSequence>
  
     <Property Id="ARPPRODUCTICON" Value="appicon.ico"/>
