@@ -63,11 +63,14 @@ public:
     void CheckForChromeRunning();
     void CheckForChromeRunningTimeout();
     
-    void SetupWorkspaceNotificationsFor(int pid);
+    void SetWorkspaceNotifications(int pid);
     void RemoveWorkspaceNotifications();
 
     void CloseLiveBrowserKillTimers();
     void CloseLiveBrowserFireCallback(int valToSend);
+
+    int IncrementOpenRetryCount() { return m_openLiveBrowserRetryCount++; }
+    void ResetOpenRetryCount() { m_openLiveBrowserRetryCount = 0; }
 
     ChromeWindowsTerminatedObserver* GetTerminateObserver() { return m_chromeTerminateObserver; }
     CefRefPtr<CefProcessMessage> GetCloseCallback() { return m_closeLiveBrowserCallback; }
@@ -90,6 +93,7 @@ private:
     LiveBrowserMgrMac();
     virtual ~LiveBrowserMgrMac();
 
+    int                                 m_openLiveBrowserRetryCount;
     NSTimer*                            m_closeLiveBrowserTimeoutTimer;
     CefRefPtr<CefProcessMessage>        m_closeLiveBrowserCallback;
     CefRefPtr<CefBrowser>               m_browser;
@@ -112,11 +116,7 @@ LiveBrowserMgrMac::~LiveBrowserMgrMac()
     if (s_instance)
         s_instance->CloseLiveBrowserKillTimers();
 
-    if (m_chromeTerminateObserver) {
-        [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:m_chromeTerminateObserver];
-        [m_chromeTerminateObserver release];
-        m_chromeTerminateObserver = nil;
-    }
+    RemoveWorkspaceNotifications();
 }
 
 LiveBrowserMgrMac* LiveBrowserMgrMac::GetInstance()
@@ -135,7 +135,7 @@ void LiveBrowserMgrMac::Shutdown()
 
 bool LiveBrowserMgrMac::IsChromeRunning()
 {
-    return GetLiveBrowser() ? YES : NO;
+    return GetLiveBrowser() ? true : false;
 }
 
 void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
@@ -188,7 +188,7 @@ void LiveBrowserMgrMac::CheckForChromeRunningTimeout()
     CloseLiveBrowserFireCallback(retVal);
 }
 
-void LiveBrowserMgrMac::SetupWorkspaceNotificationsFor(int PID){
+void LiveBrowserMgrMac::SetWorkspaceNotifications(int PID){
     
     // Cache the LiveBrowser pid for fast lookups + matching during termination
     SetLiveBrowserPid(PID);
@@ -272,23 +272,33 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         // Set up workspace notifications for asynchronous Browser shutdowns
         if (liveBrowser) {
-            liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+            liveBrowserMgr->SetWorkspaceNotifications([liveBrowser processIdentifier]);
         }
         
         return liveBrowser ? NO_ERROR : ERR_UNKNOWN;
     }
     
-    // At this time an instance of the LiveBrowser should exist
+    // A running instance of LiveBrowser was found.  Let's get the corresponding GoogleChromeApplication object
     GoogleChromeApplication *chromeApp = GetGoogleChromeApplicationWithPid([liveBrowser processIdentifier]);
     
     // Sanity check
     if (!chromeApp) {
-        // No LiveBrowser found with current PID.  Let's try again...
-       return OpenLiveBrowser(argURL, enableRemoteDebugging);
+        // Failed to retrieve the LiveBrowser's instance as a GoogleChromeApplication object.
+        // It's very likely that Chrome has been shutdown asynchronously.
+
+        // So let's try to open a new instance recursively, first making sure we limit the
+        // number of retries in order to prevent infinite looping...
+        if (liveBrowserMgr->IncrementOpenRetryCount() > 3) {
+            return ERR_UNKNOWN;
+        }
+
+        return OpenLiveBrowser(argURL, enableRemoteDebugging);
     }
     
+    liveBrowserMgr->ResetOpenRetryCount();
+
     // Set up workspace notifications for asynchronous Browser shutdowns
-    liveBrowserMgr->SetupWorkspaceNotificationsFor([liveBrowser processIdentifier]);
+    liveBrowserMgr->SetWorkspaceNotifications([liveBrowser processIdentifier]);
     
     // Check for existing tab (with interstitial page) in all open Chrome windows
     for (GoogleChromeWindow* chromeWindow in [chromeApp windows]){
@@ -331,8 +341,9 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
     liveBrowserMgr->SetBrowser(browser);
     liveBrowserMgr->SetCloseCallback(response);
     
-    // Set up worskpace shutdown notifications
-    liveBrowserMgr->SetupWorkspaceNotificationsFor(liveBrowserMgr->GetLiveBrowserPid());
+    // Set up workspace shutdown notifications (in case they are not currently setup
+    // or have been since disabled by a previous browser shutdown notification)
+    liveBrowserMgr->SetWorkspaceNotifications(liveBrowserMgr->GetLiveBrowserPid());
 
     // Check chrome
     if (!liveBrowserMgr->IsChromeRunning()) {
