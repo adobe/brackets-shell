@@ -105,7 +105,8 @@ private:
 
 
 LiveBrowserMgrMac::LiveBrowserMgrMac()
-    : m_closeLiveBrowserTimeoutTimer(nil)
+    : m_openLiveBrowserRetryCount(0)
+    , m_closeLiveBrowserTimeoutTimer(nil)
     , m_chromeTerminateObserver(nil)
     , m_liveBrowserPid(ERR_PID_NOT_FOUND)
 {
@@ -289,6 +290,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         // So let's try to open a new instance recursively, first making sure we limit the
         // number of retries in order to prevent infinite looping...
         if (liveBrowserMgr->IncrementOpenRetryCount() > 3) {
+            liveBrowserMgr->ResetOpenRetryCount();
             return ERR_UNKNOWN;
         }
 
