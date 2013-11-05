@@ -24,7 +24,8 @@
 #include "appshell_extensions_platform.h"
 #include "appshell_extensions.h"
 #include "native_menu_model.h"
-#include "google_chrome_mac.h"
+
+#include "GoogleChrome.h"
 
 #include <Cocoa/Cocoa.h>
 #include <sys/sysctl.h>
