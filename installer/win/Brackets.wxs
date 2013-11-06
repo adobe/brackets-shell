@@ -10,6 +10,8 @@
             [*] are references to other elements within this file
     -->
 
+    <!-- note: products with matching `UpgradeCode` guid will be upgraded in-place.  Consequently,
+                do not change this guid unless you are starting a new major version of the product. -->
     <Product Id='*' UpgradeCode='3B75C4E6-41C6-43E0-B0B2-92C7C7614AF1' Name='!(loc.ProductName)' Language='1033'
              Version='$(var.ProductVersionNumber)' Manufacturer='$(var.ProductManufacturer)'  >
   
