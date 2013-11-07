@@ -28,6 +28,7 @@ module.exports = function (grunt) {
     var common          = require("./common")(grunt),
         fs              = require("fs"),
         child_process   = require("child_process"),
+        path            = require("path"),
         q               = require("q"),
         /* win only (lib), mac only (Resources, tools) */
         CEF_MAPPING     = {
@@ -70,8 +71,8 @@ module.exports = function (grunt) {
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config      = "cef-" + platform + common.arch(),
             zipSrc      = grunt.config("curl-dir." + config + ".src"),
-            zipName     = zipSrc.substr(zipSrc.lastIndexOf("/") + 1),
-            zipDest     = grunt.config("curl-dir." + config + ".dest") + zipName,
+            zipName     = path.basename(zipSrc),
+            zipDest     = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
             txtName;
         
         // extract zip file name and set config property
@@ -140,22 +141,29 @@ module.exports = function (grunt) {
         unzipPromise = unzip(zipDest, "deps");
         
         // remove .zip ext
-        zipName = zipName.substr(0, zipName.lastIndexOf("."));
+        zipName = path.basename(zipName, ".zip");
         
         unzipPromise.then(function () {
             // rename version stamped name to cef
             return rename("deps/" + zipName, "deps/cef");
         }).then(function () {
+            var memo = path.resolve(process.cwd(), "deps/cef/" + zipName + ".txt"),
+                permissionsPromise,
+                defer = q.defer();
+            
             if (platform === "mac") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
-                return exec("chmod u+x deps/cef/tools/*");
+                permissionsPromise = exec("chmod u+x deps/cef/tools/*");
+            } else {
+                permissionsPromise = q.resolve();
             }
             
-            // write empty file with zip file 
-            grunt.file.write("deps/cef/" + zipName + ".txt", "");
-            
-            // return a resolved promise
-            return q.resolve();
+            return permissionsPromise.then(function () {
+                // write empty file with zip file 
+                grunt.file.write(memo, "");
+                
+                return q.resolve();
+            });
         }).then(function () {
             done();
         }, function (err) {
@@ -208,7 +216,7 @@ module.exports = function (grunt) {
         // curl-dir:node-win32 defines multiple downloads, account for this array
         nodeSrc.forEach(function (value, index) {
             nodeSrc[index] = value.substr(value.lastIndexOf("/") + 1);
-            nodeDest[index] = dest + nodeSrc[index];
+            nodeDest[index] = path.join(dest, nodeSrc[index]);
 
             missingDest = missingDest || !grunt.file.exists(nodeDest[index]);
         });
