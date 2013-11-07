@@ -2,7 +2,7 @@
 
 # config
 releaseName="Brackets"
-dmgName="Brackets Sprint 34"
+dmgName="${releaseName} Sprint 38"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"
@@ -33,9 +33,6 @@ fi
 # create disk layout
 rm -rf $tempLayoutDir
 cp -r ./dropDmgConfig/layouts/bracketsLayout/ "$tmpLayout"
-
-# Replace APPLICATION_NAME in Info.plist with $releaseName.app
-grep -rl APPLICATION_NAME "${tmpLayout}/Info.plist" | xargs sed -i -e "s/APPLICATION_NAME/${releaseName}.app/g"
 
 # build the DMG
 echo "building DMG..."
