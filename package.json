@@ -26,6 +26,6 @@
     "scripts": {
         "preinstall": "bash -c 'mv appshell.gyp .appshell.gyp'",
         "install": "",
-        "postinstall": "bash -c 'mv .appshell.gyp appshell.gyp; grunt'"
+        "postinstall": "bash -c 'mv .appshell.gyp appshell.gyp;'"
     }
 }
