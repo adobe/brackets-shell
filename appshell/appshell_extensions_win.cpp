@@ -1474,7 +1474,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
-    DrawMenuBar((HWND)getMenuParent(browser));
 
     if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
         title = title.substr(0, title.find('\t'));
