@@ -243,7 +243,14 @@ Class GetPopuplWindowFrameClass() {
         menuState = NSOnState;
     }
     [menuItem setState:menuState];
-    return menus.isMenuItemEnabled(tag);
+    
+    BOOL enabled = menus.isMenuItemEnabled(tag);
+    
+    if (browser->GetMainFrame()->GetURL().ToString().find("/devtools/devtools.html") != std::string::npos) {
+        // This is a dev tools window, disable all commands except Quit
+        enabled = [menuItem action] == @selector(quit:);
+    }
+    return enabled;
 }
 
 - (void)setClientHandler:(CefRefPtr<ClientHandler>) handler {
