@@ -1,111 +1,121 @@
 <?xml version='1.0' encoding="UTF-8"?>
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'
-xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
-  <!--
-    Variable references:
-      $(var.*) are passed in on the command line from the Ant script (see -d arguments to candle)
-      !(loc.*) are defined in Brackets_<locale>.wxl
-      [*] are references to other elements within this file
-  -->
+    <!--
+        Variable references:
+            $(var.*) are passed in on the command line from the Ant script (see -d arguments to candle)
+            !(loc.*) are defined in Brackets_<locale>.wxl
+            [*] are references to other elements within this file
+    -->
 
-  <Product Id='*' UpgradeCode='330ed78b-1b84-4a2d-87a6-34970c9baab7' Name='!(loc.ProductName) $(var.ProductVersionName)' Language='1033'
-            Version='$(var.ProductVersionNumber)' Manufacturer='$(var.ProductManufacturer)'  >
+    <!-- note: products with matching `UpgradeCode` guid will be upgraded in-place.  Consequently,
+                do not change this guid unless you are starting a new major version of the product. -->
+    <Product Id='*' UpgradeCode='3B75C4E6-41C6-43E0-B0B2-92C7C7614AF1' Name='!(loc.ProductName)' Language='1033'
+             Version='$(var.ProductVersionNumber)' Manufacturer='$(var.ProductManufacturer)'  >
   
-  <Package Description='!(loc.ProductName)'
-             Comments='Installer for !(loc.ProductName)'
-             Manufacturer='$(var.ProductManufacturer)'
-             InstallerVersion='300'
-             Compressed='yes'
-             Languages="1033,1036"/>
+        <Package Description='!(loc.ProductName)' Comments='Installer for !(loc.ProductName)'
+                 Manufacturer='$(var.ProductManufacturer)' InstallerVersion='300' Compressed='yes'
+                 Languages="1033,1036"/>
     
-    <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
-  
- 
-    <Property Id="ARPPRODUCTICON" Value="appicon.ico"/>
-    <Icon Id="appicon.ico" SourceFile="appicon.ico"/>
-    <Property Id="ALLUSERS" Value="1" />
-  
-    
-    <DirectoryRef Id="INSTALLDIR">
-    </DirectoryRef>
-
-    <DirectoryRef Id="ProgramMenuFolder">
-      <Component Id="StartMenuShortcut" Guid="{10388ae8-cbfe-2a27-2c85-73ec1aff7357}" Win64="no" >
-        <Shortcut Id="AppShortcut" Name="!(loc.ProductName) $(var.ProductVersionName)"
-                 Description="!(loc.ShortcutDescription)"
-                 Target="[INSTALLDIR]\$(var.ExeName).exe" />
-        <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)"
-                      Name="installed" Type="integer"
-                      Value="1" KeyPath="yes"/>
-      </Component>
-    </DirectoryRef>
-    
-    <Component Id="FileAssociations" Guid="{D0195E8D-0881-42B6-9B4F-DA84D9396506}" Directory="INSTALLDIR" KeyPath="yes">
-        <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
-        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationIcon" Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="!(loc.ProductName) $(var.ProductVersionName)" Value="SOFTWARE\$(var.RegistryRoot)\Capabilities" Type="string" />
-
-        <!-- File associations -->
-        <?define SupportedFiletypes=txt;groovy;ini;properties;css;scss;html;htm;shtm;shtml;xhtml;cfm;cfm1;cfc;dhtml;xht;tpl;twig;hbs;handlebars;kit;jsp;aspx;ejs;js;jsx;json;svg;xml;wxs;wxl;wsdl;rss;atom;rdf;xslt;xul;xbl;mathml;config;php;php3;php4;php5;phtm;phtml;ctp;c;h;i;cc;cp;cpp;c++;cxx;hh;hpp;hxx;h++;ii;cs;cshtml;asax;ashx;java;scala;sbt;coffee;cson;cf;clj;pl;pm;rb;ru;gemspec;rake;py;pyw;wsgi;sass;less;lua;sql;diff;patch;md;markdown;yaml;yml;hx;sh?>
-
-        <?foreach filetype in $(var.SupportedFiletypes)?>
-        <!-- associate program with file type -->
-        <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities\FileAssociations" Value="!(loc.ProductName) $(var.ProductVersionName) FileExt" Name=".$(var.filetype)" Type="string" />
-
-        <!-- associate each supported filetype with application -->
-        <RegistryValue Root="HKCR" Key=".$(var.filetype)" Value="text" Name="PerceivedType" Type="string" />
-        <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value="" Name="!(loc.ProductName) $(var.ProductVersionName) FileExt" Type="string" />
-        <?endforeach?>
-
-        <!-- create ProgId entry -->
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\shell\open\command" Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\DefaultIcon" Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) $(var.ProductVersionName) FileExt\shell\open" Name="FriendlyAppName" Value="!(loc.ProductName) $(var.ProductVersionName)" Type="string" />
-
-    </Component>
-    <!-- Start Menu Shortcuts-->
-    <UIRef Id="WixUI_MyInstallDir" />
-    <UIRef Id="WixUI_ErrorProgressText" />
-
-
-    <!-- Launch app after install -->
-<!--
-    <Property Id="LAUNCHAPPONEXIT" Value="1" />
-    <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
-    <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand="" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
--->
-    <UI>
-      <Publish Dialog="MyExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
-      <!--<Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction" Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>-->
-
-    </UI>
-
-    <!-- Add image assets -->
-    <WixVariable Id="WixUIBannerBmp" Value="win_install_banner.jpg" />
-    
-    <!--Setup Folder Structure -->
-    <Directory Id='TARGETDIR' Name='SourceDir'>
-      <Directory Id='ProgramFilesFolder'>
-        <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName) $(var.ProductVersionName)'/>
-      </Directory>
-      <Directory Id="ProgramMenuFolder"/>
-    </Directory>
-    
-    <!-- Set default install location -->    
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-    <!-- Install Files -->
-    <Feature Id="MainApplication" Title="Main Application" Level="1">
-      <!-- From devmanager.wxs -->
-      <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
+        <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
         
-      <ComponentRef  Id='StartMenuShortcut' />
+        <!-- defines upgrade experience for all releases related by the same UpgradeCode (above) -->
+        <MajorUpgrade Schedule="afterInstallInitialize"
+                      DowngradeErrorMessage="A later version of !(loc.ProductName) is already installed.  Setup will now exit." />
+ 
+        <Property Id="ARPPRODUCTICON" Value="appicon.ico"/>
+        <Icon Id="appicon.ico" SourceFile="appicon.ico"/>
+        <Property Id="ALLUSERS" Value="1" />
+      
+        <DirectoryRef Id="INSTALLDIR" />
 
-      <ComponentRef  Id='FileAssociations' />
-    </Feature>                  
-  </Product>
+        <DirectoryRef Id="ProgramMenuFolder">
+            <Component Id="StartMenuShortcut" Guid="{3A2708C1-AD29-42B7-9906-C6C6736F0CCC}" Win64="no" >
+                <Shortcut Id="AppShortcut" Name="!(loc.ProductName)" Description="!(loc.ShortcutDescription)"
+                          Target="[INSTALLDIR]\$(var.ExeName).exe" />
+                <RegistryValue Root="HKCU" Key="Software\$(var.RegistryRoot)" Name="installed" Type="integer"
+                               Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+    
+        <Component Id="FileAssociations" Guid="{D0195E8D-0881-42B6-9B4F-DA84D9396506}" Directory="INSTALLDIR" KeyPath="yes">
+            <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
+            <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationIcon"
+                           Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
+            <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationName"
+                           Value="!(loc.ProductName)" Type="string" />
+            <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="!(loc.ProductName)"
+                           Value="SOFTWARE\$(var.RegistryRoot)\Capabilities" Type="string" />
+
+            <!-- File associations -->
+            <?define SupportedFiletypes=txt;groovy;ini;properties;css;scss;html;htm;shtm;shtml;xhtml;cfm;cfm1;cfc;dhtml;xht;tpl;twig;hbs;handlebars;kit;jsp;aspx;ejs;js;jsx;json;svg;xml;wxs;wxl;wsdl;rss;atom;rdf;xslt;xul;xbl;mathml;config;php;php3;php4;php5;phtm;phtml;ctp;c;h;i;cc;cp;cpp;c++;cxx;hh;hpp;hxx;h++;ii;cs;cshtml;asax;ashx;java;scala;sbt;coffee;cson;cf;clj;pl;pm;rb;ru;gemspec;rake;py;pyw;wsgi;sass;less;lua;sql;diff;patch;md;markdown;yaml;yml;hx;sh?>
+
+            <?foreach filetype in $(var.SupportedFiletypes)?>
+                <!-- associate program with file type -->
+                <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities\FileAssociations"
+                               Value="!(loc.ProductName) FileExt" Name=".$(var.filetype)" Type="string" />
+
+                <!-- associate each supported filetype with application -->
+                <RegistryValue Root="HKCR" Key=".$(var.filetype)" Value="text" Name="PerceivedType" Type="string" />
+                <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value=""
+                               Name="!(loc.ProductName) FileExt" Type="string" />
+            <?endforeach?>
+
+            <!-- create ProgId entry -->
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open\command"
+                           Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\DefaultIcon"
+                           Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open"
+                           Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
+        </Component>
+        
+        <!-- Start Menu Shortcuts-->
+        <UIRef Id="WixUI_MyInstallDir" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+
+        <!-- Launch app after install -->
+<!--
+        <Property Id="LAUNCHAPPONEXIT" Value="1" />
+        <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
+        <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand=""
+                      Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+-->
+        <UI>
+            <Publish Dialog="MyExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
+<!--
+            <Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction"
+                     Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>
+-->
+        </UI>
+
+        <!-- Add image assets -->
+        <WixVariable Id="WixUIBannerBmp" Value="win_install_banner.jpg" />
+    
+        <!--Setup Folder Structure -->
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='ProgramFilesFolder'>
+                <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'/>
+            </Directory>
+            <Directory Id="ProgramMenuFolder"/>
+        </Directory>
+    
+        <!-- Set default install location -->    
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <!-- Install Files -->
+        <Feature Id="MainApplication" Title="Main Application" Level="1">
+            <!-- From devmanager.wxs -->
+            <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
+        
+            <ComponentRef  Id='StartMenuShortcut' />
+
+            <ComponentRef  Id='FileAssociations' />
+        </Feature>                  
+
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
+    </Product>
 </Wix>
 
 <!-- filD0C88F09CF264F61C7551B69762FB244 -->
