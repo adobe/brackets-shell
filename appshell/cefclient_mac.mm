@@ -789,9 +789,8 @@ int main(int argc, char* argv[]) {
   }
   
   // Create the application delegate and window.
-  [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
-                          waitUntilDone:NO];
-
+  [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil waitUntilDone:YES];
+    
   // Run the application message loop.
   CefRunMessageLoop();
     
