@@ -244,6 +244,17 @@ extern NSMutableArray* pendingOpenFiles;
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
     [NSApp activateIgnoringOtherApps:YES];
     [NSApp unhide:nil];
+    NSWindow* window = [notification object];
+    NSView* contentView = [window contentView];
+
+    [contentView setNeedsDisplay:YES];
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+    NSWindow* window = [notification object];
+    NSView* contentView = [window contentView];
+    
+    [contentView setNeedsDisplay:YES];
 }
 
 
@@ -742,14 +753,14 @@ int main(int argc, char* argv[]) {
       if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
         startupUrl = [NSURL fileURLWithPath:devFile];
       }
-/*
+
       if (startupUrl == nil) {
         // If the dev file wasn't found, look for /Contents/www/index.html
         NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
         if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
           startupUrl = [NSURL fileURLWithPath:indexFile];
         }
-      } */
+      }
     }
   }
   
