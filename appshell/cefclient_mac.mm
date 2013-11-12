@@ -152,9 +152,10 @@ extern NSMutableArray* pendingOpenFiles;
 @implementation ClientWindowDelegate
 - (id) init {
     [super init];
-    isReallyClosing = false;
+    isReallyClosing = NO;
     isReentering = NO;
-    
+    customTitlebar = nil;
+    fullScreenButtonView = nil;
     return self;
 }
 
@@ -243,44 +244,19 @@ extern NSMutableArray* pendingOpenFiles;
 // BOBNOTE: Consider moving this into the customTitlebarView class in which case you won't need to
 // repeat this work every time you exit full screen mode.
 - (void)windowDidExitFullScreen:(NSNotification *)notification {
+    // TODO: Clean this up...
     NSWindow* window = [notification object];
     NSView* contentView = [window contentView];
     NSView* themeView = [contentView superview];
-
-#ifdef DARK_UI
-    [themeView setNeedsDisplay:YES];
-#endif
-    
-    
     NSWindow* theWin = window;
     NSRect  parentFrame = [themeView frame];
     NSButton *windowButton = nil;
-    
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-    //hide buttons
-    windowButton = [theWin standardWindowButton:NSWindowCloseButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowZoomButton];
-    [windowButton setHidden:YES];
-    
-    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
-    
-    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
-    {
-        NSRect  oldFrame = [controller.view frame];
-        NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                     parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                     oldFrame.size.width,                                  // width
-                                     oldFrame.size.height);                                // height
-        [controller.view setFrame:newFrame];
-        [themeView addSubview:controller.view];
-    }
-#endif
-    
-#ifdef DARK_UI
 
+    if (fullScreenButtonView) {
+        [fullScreenButtonView removeFromSuperview];
+        fullScreenButtonView = nil;
+    }
+#ifdef DARK_UI
     if ([self isFullScreenSupported]) {
         windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
@@ -300,7 +276,6 @@ extern NSMutableArray* pendingOpenFiles;
     }
 #endif
     
-    [themeView setNeedsDisplay:YES];
 }
 
 
@@ -349,8 +324,7 @@ extern NSMutableArray* pendingOpenFiles;
 
         customTitlebar = [[CustomTitlebarView alloc] initWithFrame:bounds];
         
-        // BOBNOTE: should get the initial title from a resource or app name as opposed to hard-coding
-        [customTitlebar setTitleString:@"Brackets"];
+        [customTitlebar setTitleString: [thisWindow title]];
 
         [customTitlebar setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
         [[contentView superview] addSubview:customTitlebar positioned:NSWindowBelow relativeTo:[[[contentView superview] subviews] objectAtIndex:0]];
@@ -504,7 +478,6 @@ extern NSMutableArray* pendingOpenFiles;
 
 #ifdef DARK_UI
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-  float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
   // Background fill, solid for now.
   NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
   [mainWnd setMinSize:NSMakeSize(kMinWindowWidth, kMinWindowHeight)];
@@ -762,14 +735,14 @@ int main(int argc, char* argv[]) {
       if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
         startupUrl = [NSURL fileURLWithPath:devFile];
       }
-      
+/*
       if (startupUrl == nil) {
         // If the dev file wasn't found, look for /Contents/www/index.html
         NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
         if ([[NSFileManager defaultManager] fileExistsAtPath:indexFile]) {
           startupUrl = [NSURL fileURLWithPath:indexFile];
         }
-      }
+      } */
     }
   }
   
@@ -790,7 +763,7 @@ int main(int argc, char* argv[]) {
   
   // Create the application delegate and window.
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
-                          waitUntilDone:NO];
+                          waitUntilDone:YES];
 
   // Run the application message loop.
   CefRunMessageLoop();

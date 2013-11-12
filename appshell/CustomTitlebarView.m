@@ -9,7 +9,7 @@
 #import "CustomTitlebarView.h"
 #import "client_colors_mac.h"
 
-#define titleTextHeight    16
+#define titleTextHeight    14
 
 @implementation CustomTitlebarView
 
@@ -18,6 +18,7 @@
 - (void)drawRect:(NSRect)dirtyRect
 {
     NSColorSpace    *sRGB = [NSColorSpace sRGBColorSpace];
+    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
 	NSRect windowFrame   = [NSWindow frameRectForContentRect:[[[self window] contentView] bounds] styleMask:[[self window] styleMask]];
 	NSRect contentBounds = [[[self window] contentView] bounds];
     
@@ -26,29 +27,35 @@
     
     [[NSColor clearColor] set];
     NSRectFill( titlebarRect );
+
+    [fillColor set];
     
+    [NSGraphicsContext saveGraphicsState];
     //This constant matches the radius for other macosx apps.
     //For some reason if we use the default value it is double that of safari etc.
     float cornerRadius = 4.0f;
-
-    [[NSBezierPath bezierPathWithRoundedRect:titlebarRect
-                                     xRadius:cornerRadius
-                                     yRadius:cornerRadius] addClip];
-    [[NSBezierPath bezierPathWithRect:titlebarRect] addClip];
     
-    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
-    [fillColor set];
+    NSBezierPath* clipPath = [NSBezierPath bezierPath];
+    [clipPath appendBezierPathWithRoundedRect:titlebarRect xRadius:cornerRadius yRadius:cornerRadius];
+    [clipPath moveToPoint: NSMakePoint(titlebarRect.origin.x, titlebarRect.origin.y)];
+    [clipPath appendBezierPathWithRect: NSMakeRect(titlebarRect.origin.x, titlebarRect.origin.y, titlebarRect.size.width, titlebarRect.size.height / 2)];
+    [clipPath addClip];
+
     NSRectFill(titlebarRect);
     
-    NSFont          *titleFont = [NSFont fontWithName:@"HelveticaNeue-Bold" size:titleTextHeight];
+    
+    NSFont          *titleFont = [NSFont titleBarFontOfSize:titleTextHeight];
     CGFloat         stringWidth = [self widthOfString:titleString withFont:titleFont];
     NSColor         *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
     NSColor         *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
+
+    NSLayoutManager *lm = [[NSLayoutManager alloc] init];
+    int             height = [lm defaultLineHeightForFont:titleFont];
     
     if (stringWidth)
     {
         NSRect          textRect = NSMakeRect(titlebarRect.origin.x + ((titlebarRect.size.width / 2) - (stringWidth / 2)),
-                                              titlebarRect.origin.y + ((titlebarRect.size.height / 2) - (titleTextHeight / 2)),
+                                              titlebarRect.origin.y + ((titlebarRect.size.height / 2) - (height / 2)) - 4,
                                               titlebarRect.size.width,
                                               titlebarRect.size.height);
 
@@ -58,6 +65,10 @@
                                                          NSForegroundColorAttributeName,
                                                          nil]];
     }
+
+    [NSGraphicsContext restoreGraphicsState];
+
+
 }
 
 - (CGFloat)widthOfString:(NSString *)string withFont:(NSFont *)font
