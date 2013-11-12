@@ -1,6 +1,6 @@
 {
     "name": "Brackets-Shell",
-    "version": "0.33.0-0",
+    "version": "0.34.0-0",
     "homepage": "http://brackets.io",
     "issues": {
         "url": "http://github.com/adobe/brackets-shell/issues"
@@ -26,6 +26,6 @@
     "scripts": {
         "preinstall": "bash -c 'mv appshell.gyp .appshell.gyp'",
         "install": "",
-        "postinstall": "bash -c 'mv .appshell.gyp appshell.gyp; grunt'"
+        "postinstall": "bash -c 'mv .appshell.gyp appshell.gyp;'"
     }
 }

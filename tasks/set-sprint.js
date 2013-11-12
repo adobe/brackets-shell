@@ -25,8 +25,7 @@
 module.exports = function (grunt) {
     "use strict";
     
-    var guid = require("guid"),
-        common = require("./common")(grunt);
+    var common = require("./common")(grunt);
 
     function safeReplace(content, regexp, replacement) {
         var newContent = content.replace(regexp, replacement);
@@ -84,16 +83,7 @@ module.exports = function (grunt) {
         );
         grunt.file.write(buildInstallerScriptPath, text);
         
-        // 4. Open installer/win/Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
-        text = grunt.file.read(wxsPath);
-        text = safeReplace(
-            text,
-            /<Component Id="StartMenuShortcut" Guid="\{[0-9A-Fa-f\-]+\}" Win64="no" >/,
-            '<Component Id="StartMenuShortcut" Guid="{' + guid.raw() + '}" Win64="no" >'
-        );
-        grunt.file.write(wxsPath, text);
-        
-        // 5. Open appshell/version.rc and change `FILEVERSION` and `"FileVersion"`
+        // 4. Open appshell/version.rc and change `FILEVERSION` and `"FileVersion"`
         text = grunt.file.read(versionRcPath);
         text = safeReplace(
             text,
@@ -107,7 +97,7 @@ module.exports = function (grunt) {
         );
         grunt.file.write(versionRcPath, text);
         
-        // 6. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`text = grunt.file.read(wxsPath);
+        // 5. Open appshell/mac/Info.plist and change `CFBundleShortVersionString` and `CFBundleVersion`text = grunt.file.read(wxsPath);
         text = grunt.file.read(infoPlistPath);
         text = safeReplace(
             text,

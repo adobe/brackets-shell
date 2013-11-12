@@ -41,40 +41,41 @@ module.exports = function (grunt) {
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
         "config-json":      staging + "/www/config.json",
+        "downloads":        grunt.option("downloads") || "downloads",
         "curl-dir": {
             /* linux */
             "cef-linux32": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
             "cef-linux64": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64_release.zip"
             },
             "node-linux32": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x86.tar.gz"
             },
             "node-linux64": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
             },
             /* mac */
             "cef-mac": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_macosx.zip"
             },
             "node-mac": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
             },
             /* win */
             "cef-win": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_windows.zip"
             },
             "node-win": {
-                "dest"      : "downloads/",
+                "dest"      : "<%= downloads %>",
                 "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
                                "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
             }

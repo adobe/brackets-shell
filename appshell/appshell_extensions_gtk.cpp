@@ -227,6 +227,8 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
     DIR *dp;
     struct dirent *files;
+    struct stat statbuf;
+    ExtensionString curFile;
     
     /*struct dirent
     {
@@ -245,10 +247,27 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     {
         if(!strcmp(files->d_name,".") || !strcmp(files->d_name,".."))
             continue;
+        
         if(files->d_type==DT_DIR)
             resultDirs.push_back(ExtensionString(files->d_name));
         else if(files->d_type==DT_REG)
             resultFiles.push_back(ExtensionString(files->d_name));
+        else
+        {
+            // Some file systems do not support d_type we use
+            // for faster type detection. So on these file systems
+            // we may get DT_UNKNOWN for all file entries, but just  
+            // to be safe we will use slower stat call for all 
+            // file entries that are not DT_DIR or DT_REG.
+            curFile = path + files->d_name;
+            if(stat(curFile.c_str(), &statbuf) == -1)
+                continue;
+        
+            if(S_ISDIR(statbuf.st_mode))
+                resultDirs.push_back(ExtensionString(files->d_name));
+            else if(S_ISREG(statbuf.st_mode))
+                resultFiles.push_back(ExtensionString(files->d_name));
+        }
     }
 
     closedir(dp);
