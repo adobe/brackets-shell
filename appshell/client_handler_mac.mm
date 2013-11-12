@@ -198,11 +198,6 @@ void ClientHandler::CloseMainWindow() {
 #endif
 }
 
-- (void)windowWillEnterFullScreen:(NSNotification *)notification {
-#ifdef DARK_UI
-#endif
-}
-
 -(void)makeDark {
     if (!isReentering)
     {
@@ -300,6 +295,10 @@ void ClientHandler::CloseMainWindow() {
 }
 
 
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+    [NSApp activateIgnoringOtherApps:YES];
+    [NSApp unhide:nil];
+}
 
 
 // Called when the window is about to close. Perform the self-destruction

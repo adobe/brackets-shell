@@ -241,6 +241,12 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+    [NSApp activateIgnoringOtherApps:YES];
+    [NSApp unhide:nil];
+}
+
+
 // BOBNOTE: Consider moving this into the customTitlebarView class in which case you won't need to
 // repeat this work every time you exit full screen mode.
 - (void)windowDidExitFullScreen:(NSNotification *)notification {
@@ -578,6 +584,7 @@ extern NSMutableArray* pendingOpenFiles;
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
   [NSApp requestUserAttention:NSInformationalRequest];
+  [NSApp unhide:nil];
 }
 
 

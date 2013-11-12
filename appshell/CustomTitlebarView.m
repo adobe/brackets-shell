@@ -35,12 +35,14 @@
     //For some reason if we use the default value it is double that of safari etc.
     float cornerRadius = 4.0f;
     
+    // make a clip mask that is rounded on top and square on the bottom...
     NSBezierPath* clipPath = [NSBezierPath bezierPath];
     [clipPath appendBezierPathWithRoundedRect:titlebarRect xRadius:cornerRadius yRadius:cornerRadius];
     [clipPath moveToPoint: NSMakePoint(titlebarRect.origin.x, titlebarRect.origin.y)];
     [clipPath appendBezierPathWithRect: NSMakeRect(titlebarRect.origin.x, titlebarRect.origin.y, titlebarRect.size.width, titlebarRect.size.height / 2)];
     [clipPath addClip];
 
+    // Fill in with the Dark UI  color
     NSRectFill(titlebarRect);
     
     
@@ -52,6 +54,7 @@
     NSLayoutManager *lm = [[NSLayoutManager alloc] init];
     int             height = [lm defaultLineHeightForFont:titleFont];
     
+    // Draw the title text
     if (stringWidth)
     {
         NSRect          textRect = NSMakeRect(titlebarRect.origin.x + ((titlebarRect.size.width / 2) - (stringWidth / 2)),
@@ -67,8 +70,6 @@
     }
 
     [NSGraphicsContext restoreGraphicsState];
-
-
 }
 
 - (CGFloat)widthOfString:(NSString *)string withFont:(NSFont *)font
