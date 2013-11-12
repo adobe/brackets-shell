@@ -20,58 +20,45 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "cef_host_window.h"
+#include "cef_dark_window.h"
 
-// Private Message
-#define ID_WM_COPYDATA_SENDOPENFILECOMMAND    (WM_USER+1001)
+#define CDW_UPDATEMENU WM_USER+1004
 
-// This the main window implementation of the host window
-class cef_main_window : public cef_host_window
+// Dark window themed window Wrapper
+//  Instantiate this class and subclass any HWND to give the window a dark look
+class cef_dark_aero_window : public cef_dark_window
 {
 public:
     // Construction/Destruction - Public Members
-    cef_main_window(void);
-    virtual ~cef_main_window(void);
-
-    static HWND FindFirstTopLevelInstance();
-
-    BOOL Create();
-    
-    void ShowHelp();
-    void ShowAbout();
+    cef_dark_aero_window();
+    virtual ~cef_dark_aero_window();
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
+    virtual BOOL GetBrowserRect(RECT& r) const;
+
 protected:
-    // Initalization - Protected Members
-    void SaveWindowRestoreRect();
-    void LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd);
-    void RestoreWindowPlacement(int showCmd);
-
-    // Message Handlers
-    BOOL HandleEraseBackground();
+    // Window Message Handlers
+    BOOL HandleActivate();
     BOOL HandleCreate();
-    BOOL HandleSetFocus(HWND hLosingFocus);
-    BOOL HandleDestroy();
-    BOOL HandleClose();
-    BOOL HandleInitMenuPopup(HMENU hMenuPopup);
-    BOOL HandleCommand(UINT commandId);
-    BOOL HandleExitCommand();
     BOOL HandlePaint();
-    BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
-    BOOL HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData);
-    BOOL HandleSize(BOOL bMinimize);
+    BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
 
-    // Implementation
-    virtual void PostNcDestroy();
-    virtual const CefRefPtr<CefBrowser> GetBrowser();
+    int HandleNcHitTest(LPPOINT ptHit);
 
-    // Find helper
-    static BOOL CALLBACK FindSuitableBracketsInstanceHelper(HWND hwnd, LPARAM lParam);
-    static LPCWSTR GetBracketsWindowTitleText();
+    void PaintCustomFrame(HDC hdc);
+
+    void UpdateMenuBar();
+
+    void ComputeMenuBarRect(RECT& rect);
+
+
+    // Teardown
+    void DoFinalCleanup();
+
+    LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
+
 
 private:
-    // Initialization - Private Members
-    static ATOM RegisterWndClass();
+    bool mReady;
 };
-

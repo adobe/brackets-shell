@@ -1080,9 +1080,23 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     return FALSE;
 }
 
+BOOL cef_dark_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr)
+{
+    if (IsZoomed()) {
+        *lr = 0;
+        return TRUE;
+    }
+
+    return FALSE;
+
+}
+
+
 // WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
+    LRESULT lr = 0;
+
     switch (message) 
     {
     case WM_SETTINGCHANGE:
@@ -1114,6 +1128,10 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
             if (HandleNcLeftButtonUp((UINT)wParam, &pt))
                 return 0L;
         }
+        break;
+    case WM_NCCALCSIZE:
+        if (HandleNcCalcSize((BOOL)wParam, (NCCALCSIZE_PARAMS*)lParam, &lr))
+            return lr;
         break;
     case WM_NCCREATE:
         if (HandleNcCreate())
@@ -1156,7 +1174,7 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
-    LRESULT lr = cef_window::WindowProc(message, wParam, lParam);
+    lr = cef_window::WindowProc(message, wParam, lParam);
     // post default message processing
     switch (message)
     {

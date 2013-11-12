@@ -76,7 +76,7 @@ public:
     virtual ~cef_dark_window();
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
-   bool SubclassWindow(HWND hWnd);
+    bool SubclassWindow(HWND hWnd);
 
 protected:
     // Window Message Handlers
@@ -89,6 +89,8 @@ protected:
     BOOL HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS);
     BOOL HandleDrawItem(LPDRAWITEMSTRUCT lpDIS);
     BOOL HandleSettingChange(UINT uFlags, LPCWSTR lpszSection);
+    BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
+
 
     int HandleNcHitTest(LPPOINT ptHit);
     void HandleNcMouseLeave();

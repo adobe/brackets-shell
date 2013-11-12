@@ -37,7 +37,7 @@ cef_host_window::~cef_host_window(void)
 
 HWND cef_host_window::SafeGetCefBrowserHwnd()
 {
-    if (GetBrowser().get() && GetBrowser()->GetHost().get())
+    if (g_handler.get() && GetBrowser().get() && GetBrowser()->GetHost().get())
         return GetBrowser()->GetHost()->GetWindowHandle();
     return NULL;
 }

@@ -20,7 +20,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "cef_dark_window.h"
+#include "cef_dark_aero_window.h"
 #include "include/cef_browser.h"
 #include "command_callbacks.h"
 #include "config.h"
@@ -30,7 +30,7 @@
 //  Or use cef_main_window or cef_popup_window which implement GetBrowser()
 
 #ifdef DARK_UI
-typedef cef_dark_window cef_host_window_base;
+typedef cef_dark_aero_window cef_host_window_base;
 #else
 typedef cef_window cef_host_window_base;
 #endif

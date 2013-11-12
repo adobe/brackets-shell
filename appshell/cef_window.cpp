@@ -186,6 +186,11 @@ BOOL cef_window::HandleNcDestroy()
     return TRUE;
 }
 
+BOOL cef_window::HandleCreate()
+{
+    return FALSE;
+}
+
 // PostNcDestroy base implementaiton
 void cef_window::PostNcDestroy()
 {

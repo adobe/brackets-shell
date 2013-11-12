@@ -143,12 +143,6 @@ void cef_main_window::PostNcDestroy()
 #endif
 }
 
-// Helper to get the location to place the browser
-void cef_main_window::GetCefBrowserRect(RECT& rect)
-{
-    GetClientRect(&rect);
-}
-
 // Helper to get the browser 
 const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 {
@@ -158,13 +152,15 @@ const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 // WM_CREATE handler
 BOOL cef_main_window::HandleCreate() 
 {
+    cef_host_window::HandleCreate();
+
     // Create the single static handler class instance
     g_handler = new ClientHandler();
     g_handler->SetMainHwnd(mWnd);
 
     RECT rect;
 
-    GetCefBrowserRect(rect);
+    GetBrowserRect(rect);
 
     CefWindowInfo info;
     CefBrowserSettings settings;
@@ -464,7 +460,7 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
         return FALSE;
 
     RECT rect;
-    GetClientRect(&rect);
+    GetBrowserRect(rect);
 
     // Minimizing the window to 0x0 which causes our layout to go all
     // screwy, so we just ignore it.
@@ -495,10 +491,10 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandleSetFocus((HWND)wParam))
             return 0L;
         break;
-    case WM_PAINT:
+/*    case WM_PAINT:
         if (HandlePaint())
             return 0L;
-        break;
+        break;*/
     case WM_GETMINMAXINFO:
         if (HandleGetMinMaxInfo((LPMINMAXINFO) lParam))
             return 0L;
