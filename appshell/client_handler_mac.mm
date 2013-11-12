@@ -223,6 +223,14 @@ Class GetPopuplWindowFrameClass() {
 #endif
 }
 
+- (void)removeCustomDrawHook:(NSView*)contentView
+{
+    NSView* themeView = [contentView superview];
+    Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
+    
+    object_setClass(themeView, NSThemeFrame);
+}
+
 - (IBAction)handleMenuAction:(id)sender {
     if (clientHandler.get() && clientHandler->GetBrowserId()) {
         CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(window);
@@ -276,6 +284,8 @@ Class GetPopuplWindowFrameClass() {
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
+    NSView* contentView = [window contentView];
+    [self removeCustomDrawHook: contentView];
     savedTitle = [[window title] copy];
     [window setTitle:@""];
 #endif
