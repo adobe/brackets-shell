@@ -217,6 +217,12 @@ extern NSMutableArray* pendingOpenFiles;
     return (version >= 0x1070);
 }
 
+-(BOOL)needsFullScreenActivateHack {
+    SInt32 version;
+    Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1090);
+}
+
 -(void)windowDidResize:(NSNotification *)notification
 {
 
@@ -241,20 +247,29 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
-- (void)windowWillEnterFullScreen:(NSNotification *)notification {
-    [NSApp activateIgnoringOtherApps:YES];
-    [NSApp unhide:nil];
-    NSWindow* window = [notification object];
-    NSView* contentView = [window contentView];
 
-    [contentView setNeedsDisplay:YES];
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        [NSApp activateIgnoringOtherApps:YES];
+        [NSApp unhide:nil];
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
 }
 
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
-    NSWindow* window = [notification object];
-    NSView* contentView = [window contentView];
-    
-    [contentView setNeedsDisplay:YES];
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+        
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
 }
 
 

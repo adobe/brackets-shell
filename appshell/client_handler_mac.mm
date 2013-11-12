@@ -188,6 +188,13 @@ void ClientHandler::CloseMainWindow() {
   return (version >= 0x1070);
 }
 
+
+-(BOOL)needsFullScreenActivateHack {
+    SInt32 version;
+    Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1090);
+}
+
 - (void)setFullScreenButtonView:(NSView *)view {
   fullScreenButtonView = view;
 }
@@ -296,14 +303,22 @@ void ClientHandler::CloseMainWindow() {
 
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
-    [NSApp activateIgnoringOtherApps:YES];
-    [NSApp unhide:nil];
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        [NSApp activateIgnoringOtherApps:YES];
+        [NSApp unhide:nil];
+    }
+#endif
 }
 
 
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
-    NSView* contentView = [window contentView];
-    [contentView setNeedsDisplay:YES];
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        NSView* contentView = [window contentView];
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
 }
 
 // Called when the window is about to close. Perform the self-destruction
