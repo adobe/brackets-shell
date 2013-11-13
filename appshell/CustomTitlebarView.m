@@ -24,6 +24,7 @@
 #import "client_colors_mac.h"
 
 #define titleTextHeight    13
+#define fudge               4
 
 @implementation CustomTitlebarView
 
@@ -72,7 +73,7 @@
     if (stringWidth)
     {
         NSRect          textRect = NSMakeRect(titlebarRect.origin.x + ((titlebarRect.size.width / 2) - (stringWidth / 2)),
-                                              titlebarRect.origin.y + ((titlebarRect.size.height / 2) - (height / 2)) - 4,
+                                              titlebarRect.origin.y + ((titlebarRect.size.height / 2) - (height / 2)) - fudge,
                                               titlebarRect.size.width,
                                               titlebarRect.size.height);
 
