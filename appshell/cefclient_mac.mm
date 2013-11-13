@@ -547,11 +547,6 @@ extern NSMutableArray* pendingOpenFiles;
                        backing:NSBackingStoreBuffered
                        defer:NO];
 
-  NSWindow* theWin = mainWnd;
-  NSButton *windowButton;
-    
-
-
 #ifdef DARK_UI
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
   // Background fill, solid for now.
