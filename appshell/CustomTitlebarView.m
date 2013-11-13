@@ -9,7 +9,7 @@
 #import "CustomTitlebarView.h"
 #import "client_colors_mac.h"
 
-#define titleTextHeight    14
+#define titleTextHeight    13
 
 @implementation CustomTitlebarView
 
