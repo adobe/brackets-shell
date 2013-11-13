@@ -96,8 +96,8 @@ void ClientHandler::CloseMainWindow() {
   CefRefPtr<ClientHandler> clientHandler;
   NSWindow* window;
   NSView* fullScreenButtonView;
+  NSView* trafficLightsView;
   BOOL isReallyClosing;
-  BOOL  isReentering;
   CustomTitlebarView  *customTitlebar;
 }
 - (IBAction)quit:(id)sender;
@@ -107,6 +107,7 @@ void ClientHandler::CloseMainWindow() {
 - (void)setClientHandler:(CefRefPtr<ClientHandler>)handler;
 - (void)setWindow:(NSWindow*)window;
 - (void)setFullScreenButtonView:(NSView*)view;
+- (void)setTrafficLightsView:(NSView*)view;
 - (BOOL)isFullScreenSupported;
 - (void)makeDark;
 - (void)initUI;
@@ -120,30 +121,12 @@ void ClientHandler::CloseMainWindow() {
   [super init];
   isReallyClosing = NO;
   fullScreenButtonView = nil;
-  isReentering = NO;
   customTitlebar = nil;
+  trafficLightsView = nil;
   return self;
 }
 
 - (IBAction)quit:(id)sender {
-  /*
-  CefRefPtr<CefBrowser> browser;
-  
-  // If the main browser exists, send the command to that browser
-  if (clientHandler->GetBrowserId())
-    browser = clientHandler->GetBrowser();
-  
-  if (!browser)
-    browser = ClientHandler::GetBrowserForNativeWindow(window);
-  
-  // TODO: we should have a "get frontmost brackets window" command for this
-  
-  if (clientHandler && browser) {
-    clientHandler->SendJSCommand(browser, FILE_QUIT);
-  } else {
-    [NSApp terminate:nil];
-  }
-  */
   clientHandler->DispatchCloseToNextBrowser();
 }
 
@@ -195,18 +178,24 @@ void ClientHandler::CloseMainWindow() {
     return (version >= 0x1090);
 }
 
-- (void)setFullScreenButtonView:(NSView *)view {
+-(void)setFullScreenButtonView:(NSView *)view {
   fullScreenButtonView = view;
+}
+
+-(void)setTrafficLightsView:(NSView *)view {
+  trafficLightsView = view;
 }
 
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
-  [customTitlebar setTitleString:title];
+  if (customTitlebar) {
+      [customTitlebar setTitleString:title];
+  }
 #endif
 }
 
 -(void)makeDark {
-    if (!isReentering)
+    if (!customTitlebar)
     {
         NSView*     contentView = [window contentView];
         NSRect      bounds = [[contentView superview] bounds];
@@ -217,10 +206,6 @@ void ClientHandler::CloseMainWindow() {
         
         [customTitlebar setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
         [[contentView superview] addSubview:customTitlebar positioned:NSWindowBelow relativeTo:[[[contentView superview] subviews] objectAtIndex:0]];
-        
-        NSButton    *windowButton = [window standardWindowButton:NSWindowFullScreenButton];
-        [windowButton setHidden:YES];
-        isReentering = YES;
     }
 }
 
@@ -228,7 +213,7 @@ void ClientHandler::CloseMainWindow() {
 -(void)windowDidResize:(NSNotification *)notification
 {
 #ifdef DARK_UI
-    if ([self isFullScreenSupported]) {
+    if ([self isFullScreenSupported] && fullScreenButtonView) {
         NSView* themeView = [[window contentView] superview];
         NSRect  parentFrame = [themeView frame];
         
@@ -252,29 +237,32 @@ void ClientHandler::CloseMainWindow() {
     NSButton* windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    windowButton = [theWin standardWindowButton:NSWindowCloseButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowZoomButton];
-    [windowButton setHidden:YES];
-    
-    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
-    
-    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
-    {
-        NSRect  oldFrame = [controller.view frame];
-        NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                     parentFrame.size.height - oldFrame.size.height - 4,   // y position
-                                     oldFrame.size.width,                                  // width
-                                     oldFrame.size.height);                                // height
-        [controller.view setFrame:newFrame];
-        [themeView addSubview:controller.view];
+    if (!trafficLightsView) {
+        windowButton = [theWin standardWindowButton:NSWindowCloseButton];
+        [windowButton setHidden:YES];
+        windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
+        [windowButton setHidden:YES];
+        windowButton = [theWin standardWindowButton:NSWindowZoomButton];
+        [windowButton setHidden:YES];
+        
+        TrafficLightsViewController     *tlController = [[TrafficLightsViewController alloc] init];
+        
+        if ([NSBundle loadNibNamed: @"TrafficLights" owner: tlController])
+        {
+            NSRect  oldFrame = [tlController.view frame];
+            NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - 4,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [tlController.view setFrame:newFrame];
+            [themeView addSubview:tlController.view];
+            [self setTrafficLightsView:tlController.view];
+        }
     }
 #endif
     
 #ifdef DARK_UI
-    if ([self isFullScreenSupported]) {
+    if ([self isFullScreenSupported] && !fullScreenButtonView) {
         windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
@@ -297,20 +285,48 @@ void ClientHandler::CloseMainWindow() {
     
 }
 
-- (void)windowDidExitFullScreen:(NSNotification *)notification {
+-(void)windowWillExitFullScreen:(NSNotification *)notification {
+    // unhide these so they appear as the window
+    //  transforms from full screen back to normal
+    if (customTitlebar) {
+        [customTitlebar setHidden:NO];
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:NO];
+    }
+}
+
+
+-(void)windowDidExitFullScreen:(NSNotification *)notification {
+    // This effectively recreates the fs button
+    //  but we have to wait until after the animation
+    //  is complete to create the button.  it will display
+    //  in the wrong state if we do it sooner
     [self initUI];
 }
 
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
+    // hide all of the elements so the os can make our
+    //  window's content view can take up the entire display surface
     if (fullScreenButtonView) {
         [fullScreenButtonView removeFromSuperview];
         fullScreenButtonView = nil;
     }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:YES];
+    }
+    if (customTitlebar) {
+        [customTitlebar setHidden:YES];
+    }
     if ([self needsFullScreenActivateHack]) {
+        // HACK  to make sure that window is activate
+        //  when going into full screen mode
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp unhide:nil];
+        NSView* contentView = [window contentView];
+        [contentView setNeedsDisplay:YES];
     }
 #endif
 }
@@ -319,6 +335,8 @@ void ClientHandler::CloseMainWindow() {
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
     if ([self needsFullScreenActivateHack]) {
+        // HACK  to make sure that window is activate
+        //  when going into full screen mode
         NSView* contentView = [window contentView];
         [contentView setNeedsDisplay:YES];
     }

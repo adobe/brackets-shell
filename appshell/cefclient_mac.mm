@@ -134,6 +134,7 @@ extern NSMutableArray* pendingOpenFiles;
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
     BOOL isReallyClosing;
     NSView* fullScreenButtonView;
+    NSView* trafficLightsView;
     BOOL  isReentering;
     CustomTitlebarView  *customTitlebar;
 }
@@ -147,6 +148,7 @@ extern NSMutableArray* pendingOpenFiles;
 - (void)notifyDownloadComplete:(id)object;
 - (void)notifyDownloadError:(id)object;
 - (void)setFullScreenButtonView:(NSView*)view;
+- (void)setTrafficLightsView:(NSView*)view;
 @end
 
 @implementation ClientWindowDelegate
@@ -156,6 +158,7 @@ extern NSMutableArray* pendingOpenFiles;
     isReentering = NO;
     customTitlebar = nil;
     fullScreenButtonView = nil;
+    trafficLightsView = nil;
     return self;
 }
 
@@ -201,13 +204,20 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 
-- (void)setFullScreenButtonView:(NSView *)view {
+-(void)setFullScreenButtonView:(NSView *)view {
     fullScreenButtonView = view;
+}
+
+
+-(void)setTrafficLightsView:(NSView *)view {
+    trafficLightsView = view;
 }
 
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
-    [customTitlebar setTitleString:title];
+    if (customTitlebar) {
+        [customTitlebar setTitleString:title];
+    }
 #endif
 }
 
@@ -250,12 +260,22 @@ extern NSMutableArray* pendingOpenFiles;
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
+    if (fullScreenButtonView) {
+        [fullScreenButtonView removeFromSuperview];
+        fullScreenButtonView = nil;
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:YES];
+    }
+    if (customTitlebar) {
+        [customTitlebar setHidden:YES];
+    }
+    
     if ([self needsFullScreenActivateHack]) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp unhide:nil];
         NSWindow* window = [notification object];
         NSView* contentView = [window contentView];
-
         [contentView setNeedsDisplay:YES];
     }
 #endif
@@ -272,25 +292,39 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
-
-// BOBNOTE: Consider moving this into the customTitlebarView class in which case you won't need to
-// repeat this work every time you exit full screen mode.
-- (void)windowDidExitFullScreen:(NSNotification *)notification {
-    // TODO: Clean this up...
-    NSWindow* window = [notification object];
-    NSView* contentView = [window contentView];
+-(void)initUI:(NSWindow*)mainWindow {
+    NSView* contentView = [mainWindow contentView];
     NSView* themeView = [contentView superview];
-    NSWindow* theWin = window;
     NSRect  parentFrame = [themeView frame];
     NSButton *windowButton = nil;
-
-    if (fullScreenButtonView) {
-        [fullScreenButtonView removeFromSuperview];
-        fullScreenButtonView = nil;
+    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+    if (!trafficLightsView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowCloseButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowMiniaturizeButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowZoomButton];
+        [windowButton setHidden:YES];
+        
+        TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
+        if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
+        {
+            NSRect oldFrame = [tvController.view frame];
+            NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [tvController.view setFrame:newFrame];
+            [themeView addSubview:tvController.view];
+            [self setTrafficLightsView:tvController.view];
+        }
     }
+    
+#endif
 #ifdef DARK_UI
-    if ([self isFullScreenSupported]) {
-        windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
+    if ([self isFullScreenSupported] && !fullScreenButtonView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
         FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
@@ -308,9 +342,28 @@ extern NSMutableArray* pendingOpenFiles;
     }
 #endif
     
+
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+    // This effectively recreates the full screen button in it's default \
+    // state.  Don't do this until after animation has completed or it will
+    // be in the wrong state and look funny...
+    NSWindow* window = [notification object];
+    [self initUI:window];
 }
 
 
+-(void)windowWillExitFullScreen:(NSNotification *)notification {
+    // show the buttons and title bar so they appear during the
+    //  transition from fullscreen back to normal
+    if (customTitlebar) {
+        [customTitlebar setHidden:NO];
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:NO];
+    }
+}
 
 - (void)alert:(NSString*)title withMessage:(NSString*)message {
   NSAlert *alert = [NSAlert alertWithMessageText:title
@@ -497,16 +550,7 @@ extern NSMutableArray* pendingOpenFiles;
   NSWindow* theWin = mainWnd;
   NSButton *windowButton;
     
-// BOBNOTE: Consider moving this into the customTitlebarView class
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-  //hide buttons
-  windowButton = [theWin standardWindowButton:NSWindowCloseButton];
-  [windowButton setHidden:YES];
-  windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
-  [windowButton setHidden:YES];
-  windowButton = [theWin standardWindowButton:NSWindowZoomButton];
-  [windowButton setHidden:YES];
-#endif
+
 
 #ifdef DARK_UI
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
@@ -569,42 +613,7 @@ extern NSMutableArray* pendingOpenFiles;
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
  
-    NSView  *themeView = [[mainWnd contentView] superview];
-    NSRect  parentFrame = [themeView frame];
-
-    // BOBNOTE: Consider moving this into the customTitlebarView class
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-  TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
-  if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
-  {
-      NSRect oldFrame = [tvController.view frame];
-      NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                   parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                   oldFrame.size.width,                                  // width
-                                   oldFrame.size.height);                                // height
-      [tvController.view setFrame:newFrame];
-      [themeView addSubview:tvController.view];
-  }
-
-#endif 
-
-#ifdef DARK_UI
-    if ([delegate isFullScreenSupported]) {
-        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
-        if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
-        {
-            NSRect oldFrame = [fsController.view frame];
-            NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
-                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                         oldFrame.size.width,                                  // width
-                                         oldFrame.size.height);                                // height
-            [fsController.view setFrame:newFrame];
-            [themeView addSubview:fsController.view];
-            [delegate setFullScreenButtonView:fsController.view];
-        }
-    }
-#endif
-    
+  [delegate initUI:mainWnd];
     
   // Show the window.
   [mainWnd display];

@@ -33,22 +33,22 @@
 {
     NSColorSpace    *sRGB = [NSColorSpace sRGBColorSpace];
     NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
-	NSRect windowFrame   = [NSWindow frameRectForContentRect:[[[self window] contentView] bounds] styleMask:[[self window] styleMask]];
-	NSRect contentBounds = [[[self window] contentView] bounds];
-    
-	NSRect titlebarRect = NSMakeRect(0, 0, self.bounds.size.width, windowFrame.size.height - contentBounds.size.height);
-	titlebarRect.origin.y = self.bounds.size.height - titlebarRect.size.height;
-    
+    NSRect windowFrame   = [NSWindow frameRectForContentRect:[[[self window] contentView] bounds] styleMask:[[self window] styleMask]];
+    NSRect contentBounds = [[[self window] contentView] bounds];
+
+    NSRect titlebarRect = NSMakeRect(0, 0, self.bounds.size.width, windowFrame.size.height - contentBounds.size.height);
+    titlebarRect.origin.y = self.bounds.size.height - titlebarRect.size.height;
+
     [[NSColor clearColor] set];
     NSRectFill( titlebarRect );
 
     [fillColor set];
-    
+
     [NSGraphicsContext saveGraphicsState];
     //This constant matches the radius for other macosx apps.
     //For some reason if we use the default value it is double that of safari etc.
     float cornerRadius = 4.0f;
-    
+
     // make a clip mask that is rounded on top and square on the bottom...
     NSBezierPath* clipPath = [NSBezierPath bezierPath];
     [clipPath appendBezierPathWithRoundedRect:titlebarRect xRadius:cornerRadius yRadius:cornerRadius];
@@ -58,8 +58,8 @@
 
     // Fill in with the Dark UI  color
     NSRectFill(titlebarRect);
-    
-    
+
+
     NSFont          *titleFont = [NSFont titleBarFontOfSize:titleTextHeight];
     CGFloat         stringWidth = [self widthOfString:titleString withFont:titleFont];
     NSColor         *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
@@ -67,7 +67,7 @@
 
     NSLayoutManager *lm = [[NSLayoutManager alloc] init];
     int             height = [lm defaultLineHeightForFont:titleFont];
-    
+
     // Draw the title text
     if (stringWidth)
     {
