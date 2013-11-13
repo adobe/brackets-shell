@@ -304,6 +304,10 @@ void ClientHandler::CloseMainWindow() {
 
 - (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
+    if (fullScreenButtonView) {
+        [fullScreenButtonView removeFromSuperview];
+        fullScreenButtonView = nil;
+    }
     if ([self needsFullScreenActivateHack]) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp unhide:nil];
