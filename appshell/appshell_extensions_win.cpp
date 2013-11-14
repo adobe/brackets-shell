@@ -654,7 +654,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
-int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
 
     WIN32_FILE_ATTRIBUTE_DATA   fad;
@@ -671,6 +671,11 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     size_tmp.HighPart = fad.nFileSizeHigh;
     size_tmp.LowPart = fad.nFileSizeLow;
     size = size_tmp.QuadPart;
+
+    realPath = L"";
+    if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
+        // TODO: Add realPath support. Open the file/directory and call GetFinalPathNameByHandle().
+    }
 
     return NO_ERROR;
 }
