@@ -30,6 +30,7 @@
 #include "FullScreenView.h"
 #include "FullScreenViewController.h"
 
+#import "CustomTitlebarView.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -107,6 +108,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+// BOBNOTE: Consider moving the delegate interface into its own .h file
 @interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
 }
 - (void)menuWillOpen:(NSMenu *)menu;
@@ -126,87 +128,15 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
-
-
-// Custom draw interface for NSThemeFrame
-@interface NSView (UndocumentedAPI)
-- (float)roundedCornerRadius;
-- (CGRect)_titlebarTitleRect;
-- (NSTextFieldCell*)titleCell;
-- (void)_drawTitleStringIn:(struct CGRect)arg1 withColor:(id)color;
-@end
-
-/**
- * The patched implementation for drawRect that lets us tweak
- * the title bar.
- */
-void ShellWindowFrameDrawRect(id self, SEL _cmd, NSRect rect) {
-    // Clear to 0 alpha
-    [[NSColor clearColor] set];
-    NSRectFill( rect );
-    //Obtain reference to our NSThemeFrame view
-    NSRect windowRect = [self frame];
-    windowRect.origin = NSMakePoint(0,0);
-    //This constant matches the radius for other macosx apps.
-    //For some reason if we use the default value it is double that of safari etc.
-    float cornerRadius = 4.0f;
-    
-    //Clip our title bar render
-    [[NSBezierPath bezierPathWithRoundedRect:windowRect
-                                     xRadius:cornerRadius
-                                     yRadius:cornerRadius] addClip];
-    [[NSBezierPath bezierPathWithRect:rect] addClip];
-    
-    
-    
-    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-    NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
-    [fillColor set];
-    NSRectFill( rect );
-    NSColor *activeColor = [NSColor colorWithColorSpace:sRGB components:activeComp count:4];
-    NSColor *inactiveColor = [NSColor colorWithColorSpace:sRGB components:inactiveComp count:4];
-    // Render our title text
-    [self _drawTitleStringIn:[self _titlebarTitleRect]
-                   withColor:[NSApp isActive] ?
-                activeColor : inactiveColor];
-    
-    
-    
-    
-}
-
-
-
-
-/**
- * Create a custom class based on NSThemeFrame called
- * ShellWindowFrame. ShellWindowFrame uses ShellWindowFrameDrawRect()
- * as the implementation for the drawRect selector allowing us
- * to draw the border/title bar the way we see fit.
- */
-Class GetShellWindowFrameClass() {
-    // lazily change the class implementation if
-    // not done so already.
-    static Class k = NULL;
-    if (!k) {
-        // See http://cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html
-        Class NSThemeFrame = NSClassFromString(@"NSThemeFrame");
-        k = objc_allocateClassPair(NSThemeFrame, "ShellWindowFrame", 0);
-        Method m0 = class_getInstanceMethod(NSThemeFrame, @selector(drawRect:));
-        class_addMethod(k, @selector(drawRect:),
-                        (IMP)ShellWindowFrameDrawRect, method_getTypeEncoding(m0));
-        objc_registerClassPair(k);
-    }
-    return k;
-}
-
-
+// BOBNOTE: Consider moving the delegate interface into its own .h file
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
-  BOOL isReallyClosing;
-  NSString* savedTitle;
-  NSView* fullScreenButtonView;
+    BOOL isReallyClosing;
+    NSView* fullScreenButtonView;
+    NSView* trafficLightsView;
+    BOOL  isReentering;
+    CustomTitlebarView  *customTitlebar;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
@@ -218,15 +148,18 @@ Class GetShellWindowFrameClass() {
 - (void)notifyDownloadComplete:(id)object;
 - (void)notifyDownloadError:(id)object;
 - (void)setFullScreenButtonView:(NSView*)view;
-- (void)addCustomDrawHook:(NSView*)contentView;
+- (void)setTrafficLightsView:(NSView*)view;
 @end
 
 @implementation ClientWindowDelegate
 - (id) init {
-  [super init];
-  savedTitle = nil;
-  isReallyClosing = false;
-  return self;
+    [super init];
+    isReallyClosing = NO;
+    isReentering = NO;
+    customTitlebar = nil;
+    fullScreenButtonView = nil;
+    trafficLightsView = nil;
+    return self;
 }
 
 - (void)setIsReallyClosing {
@@ -271,41 +204,20 @@ Class GetShellWindowFrameClass() {
 }
 
 
-- (void)setFullScreenButtonView:(NSView *)view {
+-(void)setFullScreenButtonView:(NSView *)view {
     fullScreenButtonView = view;
 }
 
-- (void)addCustomDrawHook:(NSView*)contentView
-{
-    NSView* themeView = [contentView superview];
-    
-    object_setClass(themeView, GetShellWindowFrameClass());
-    
-#ifdef LIGHT_CAPTION_TEXT
-    // Reset our frame view text cell background style
-    NSTextFieldCell * cell = [themeView titleCell];
-    [cell setBackgroundStyle:NSBackgroundStyleLight];
-#endif
-}
 
-- (void)removeCustomDrawHook:(NSView*)contentView
-{
-    NSView* themeView = [contentView superview];
-    
-    object_setClass(themeView, NULL);
+-(void)setTrafficLightsView:(NSView *)view {
+    trafficLightsView = view;
 }
 
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
-    savedTitle = [title copy];
-#endif
-}
-
-- (void)windowWillEnterFullScreen:(NSNotification *)notification {
-#ifdef DARK_UI
-    NSWindow* window = [notification object];
-    savedTitle = [[window title] copy];
-    [window setTitle:@""];
+    if (customTitlebar) {
+        [customTitlebar setTitleString:title];
+    }
 #endif
 }
 
@@ -315,12 +227,21 @@ Class GetShellWindowFrameClass() {
     return (version >= 0x1070);
 }
 
+-(BOOL)needsFullScreenActivateHack {
+    SInt32 version;
+    Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1090);
+}
 
 -(void)windowDidResize:(NSNotification *)notification
 {
+
+// BOBNOTE: this should be moved into the CustomTitlebarView class
 #ifdef DARK_UI
+    NSWindow* window = [notification object];
+
     if ([self isFullScreenSupported]) {
-        NSWindow* window = [notification object];
+        
         NSView* themeView = [[window contentView] superview];
         NSRect  parentFrame = [themeView frame];
         
@@ -330,55 +251,80 @@ Class GetShellWindowFrameClass() {
                                      oldFrame.size.width,                                  // width
                                      oldFrame.size.height);
         
-        
         [fullScreenButtonView setFrame:newFrame];
         [themeView setNeedsDisplay:YES];
     }
 #endif
 }
 
-- (void)windowDidExitFullScreen:(NSNotification *)notification {
-    NSWindow* window = [notification object];
-    NSView* contentView = [window contentView];
-    NSView* themeView = [[window contentView] superview];
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
 #ifdef DARK_UI
-    [self addCustomDrawHook: contentView];
-    [window setTitle:savedTitle];
-    [savedTitle release];
-    [themeView setNeedsDisplay:YES];
+    if (fullScreenButtonView) {
+        [fullScreenButtonView removeFromSuperview];
+        fullScreenButtonView = nil;
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:YES];
+    }
+    if (customTitlebar) {
+        [customTitlebar setHidden:YES];
+    }
+    
+    if ([self needsFullScreenActivateHack]) {
+        [NSApp activateIgnoringOtherApps:YES];
+        [NSApp unhide:nil];
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+        [contentView setNeedsDisplay:YES];
+    }
 #endif
-    
-    
-    NSWindow* theWin = window;
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+        
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
+}
+
+-(void)initUI:(NSWindow*)mainWindow {
+    NSView* contentView = [mainWindow contentView];
+    NSView* themeView = [contentView superview];
     NSRect  parentFrame = [themeView frame];
     NSButton *windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    //hide buttons
-    windowButton = [theWin standardWindowButton:NSWindowCloseButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
-    [windowButton setHidden:YES];
-    windowButton = [theWin standardWindowButton:NSWindowZoomButton];
-    [windowButton setHidden:YES];
-    
-    TrafficLightsViewController     *controller = [[TrafficLightsViewController alloc] init];
-    
-    if ([NSBundle loadNibNamed: @"TrafficLights" owner: controller])
-    {
-        NSRect  oldFrame = [controller.view frame];
-        NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                     parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                     oldFrame.size.width,                                  // width
-                                     oldFrame.size.height);                                // height
-        [controller.view setFrame:newFrame];
-        [themeView addSubview:controller.view];
+    if (!trafficLightsView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowCloseButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowMiniaturizeButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowZoomButton];
+        [windowButton setHidden:YES];
+        
+        TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
+        if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
+        {
+            NSRect oldFrame = [tvController.view frame];
+            NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [tvController.view setFrame:newFrame];
+            [themeView addSubview:tvController.view];
+            [self setTrafficLightsView:tvController.view];
+        }
     }
-#endif
     
+#endif
 #ifdef DARK_UI
-    if ([self isFullScreenSupported]) {
-        windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
+    if ([self isFullScreenSupported] && !fullScreenButtonView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
         FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
@@ -396,10 +342,28 @@ Class GetShellWindowFrameClass() {
     }
 #endif
     
-    [themeView setNeedsDisplay:YES];
+
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+    // This effectively recreates the full screen button in it's default \
+    // state.  Don't do this until after animation has completed or it will
+    // be in the wrong state and look funny...
+    NSWindow* window = [notification object];
+    [self initUI:window];
 }
 
 
+-(void)windowWillExitFullScreen:(NSNotification *)notification {
+    // show the buttons and title bar so they appear during the
+    //  transition from fullscreen back to normal
+    if (customTitlebar) {
+        [customTitlebar setHidden:NO];
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:NO];
+    }
+}
 
 - (void)alert:(NSString*)title withMessage:(NSString*)message {
   NSAlert *alert = [NSAlert alertWithMessageText:title
@@ -436,6 +400,26 @@ Class GetShellWindowFrameClass() {
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
+#ifdef DARK_UI
+    if (!isReentering)
+    {
+        NSWindow    *thisWindow = [notification object];
+        NSView*     contentView = [thisWindow contentView];
+        NSRect      bounds = [[contentView superview] bounds];
+
+        customTitlebar = [[CustomTitlebarView alloc] initWithFrame:bounds];
+        
+        [customTitlebar setTitleString: [thisWindow title]];
+
+        [customTitlebar setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+        [[contentView superview] addSubview:customTitlebar positioned:NSWindowBelow relativeTo:[[[contentView superview] subviews] objectAtIndex:0]];
+        
+        NSButton    *windowButton = [thisWindow standardWindowButton:NSWindowFullScreenButton];
+        [windowButton setHidden:YES];
+        isReentering = YES;
+    }
+#endif
+    
   if (g_handler.get() && g_handler->GetBrowserId()) {
     // Give focus to the browser window.
     g_handler->GetBrowser()->GetHost()->SetFocus(true);
@@ -492,14 +476,16 @@ Class GetShellWindowFrameClass() {
 
 @end
 
+// BOBNOTE: Consider moving the AppDelegate interface into its own .h file
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
 - (void)createApp:(id)object;
-- (void)addCustomDrawHook:(NSView*)contentView;
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
 @end
 
+
+// BOBNOTE: Consider moving the AppDelegate implementation into its own .m file
 @implementation ClientAppDelegate
 
 - (id) init {
@@ -561,22 +547,8 @@ Class GetShellWindowFrameClass() {
                        backing:NSBackingStoreBuffered
                        defer:NO];
 
-  NSWindow* theWin = mainWnd;
-  NSButton *windowButton;
-    
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-  //hide buttons
-  windowButton = [theWin standardWindowButton:NSWindowCloseButton];
-  [windowButton setHidden:YES];
-  windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
-  [windowButton setHidden:YES];
-  windowButton = [theWin standardWindowButton:NSWindowZoomButton];
-  [windowButton setHidden:YES];
-#endif
-
 #ifdef DARK_UI
   NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-  float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
   // Background fill, solid for now.
   NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
   [mainWnd setMinSize:NSMakeSize(kMinWindowWidth, kMinWindowHeight)];
@@ -609,13 +581,6 @@ Class GetShellWindowFrameClass() {
   [mainWnd setReleasedWhenClosed:NO];
 
   NSView* contentView = [mainWnd contentView];
-#ifdef DARK_UI
-  // Register our custom title bar rendering hook.
-  [self addCustomDrawHook:contentView];
-  windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
-  [windowButton setHidden:YES];
-#endif
-
 	
   // Create the handler.
   g_handler = new ClientHandler();
@@ -643,46 +608,13 @@ Class GetShellWindowFrameClass() {
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
  
-    NSView  *themeView = [[mainWnd contentView] superview];
-    NSRect  parentFrame = [themeView frame];
-
-#ifdef CUSTOM_TRAFFIC_LIGHTS
-  TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
-  if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
-  {
-      NSRect oldFrame = [tvController.view frame];
-      NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
-                                   parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                   oldFrame.size.width,                                  // width
-                                   oldFrame.size.height);                                // height
-      [tvController.view setFrame:newFrame];
-      [themeView addSubview:tvController.view];
-  }
-
-#endif 
-
-#ifdef DARK_UI
-    if ([delegate isFullScreenSupported]) {
-        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
-        if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
-        {
-            NSRect oldFrame = [fsController.view frame];
-            NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
-                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
-                                         oldFrame.size.width,                                  // width
-                                         oldFrame.size.height);                                // height
-            [fsController.view setFrame:newFrame];
-            [themeView addSubview:fsController.view];
-            [delegate setFullScreenButtonView:fsController.view];
-        }
-    }
-#endif
-    
+  [delegate initUI:mainWnd];
     
   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
   [NSApp requestUserAttention:NSInformationalRequest];
+  [NSApp unhide:nil];
 }
 
 
@@ -722,20 +654,6 @@ Class GetShellWindowFrameClass() {
     }
     g_isTerminating = true;
     return NSTerminateNow;
-}
-
-
-- (void)addCustomDrawHook:(NSView*)contentView
-{
-    NSView* themeView = [contentView superview];
-    
-    object_setClass(themeView, GetShellWindowFrameClass());
-
-#ifdef LIGHT_CAPTION_TEXT
-    // Reset our frame view text cell background style
-    NSTextFieldCell * cell = [themeView titleCell];
-    [cell setBackgroundStyle:NSBackgroundStyleLight];
-#endif
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
@@ -854,7 +772,7 @@ int main(int argc, char* argv[]) {
       if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
         startupUrl = [NSURL fileURLWithPath:devFile];
       }
-      
+
       if (startupUrl == nil) {
         // If the dev file wasn't found, look for /Contents/www/index.html
         NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
@@ -882,7 +800,7 @@ int main(int argc, char* argv[]) {
   
   // Create the application delegate and window.
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
-                          waitUntilDone:NO];
+                          waitUntilDone:YES];
 
   // Run the application message loop.
   CefRunMessageLoop();
