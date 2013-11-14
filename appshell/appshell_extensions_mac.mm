@@ -319,7 +319,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     }
 
     GoogleChromeWindow* chromeWindow = [[chromeApp windows] objectAtIndex:0];
-    if (!chromeWindow || [[chromeWindow tabs] count] == 0) {
+    if(!chromeWindow){
         // Create new LiveBrowser Window
         GoogleChromeWindow* chromeWindow = [[[chromeApp classForScriptingClass:@"window"] alloc] init];
         [[chromeApp windows] addObject:chromeWindow];
