@@ -151,23 +151,19 @@ void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
 
 void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
 {
+    CefRefPtr<CefListValue> responseArgs = m_closeLiveBrowserCallback->GetArgumentList();
+    
     // kill the timers
     CloseLiveBrowserKillTimers();
 
     // Stop listening for ws shutdown notifications
     RemoveWorkspaceNotifications();
 
-    // Prepare response
-    if (m_closeLiveBrowserCallback) {
-
-        CefRefPtr<CefListValue> responseArgs = m_closeLiveBrowserCallback->GetArgumentList();
-
-        // Set common response args (callbackId and error)
-        responseArgs->SetInt(1, valToSend);
-
-        // Send response
-        m_browser->SendProcessMessage(PID_RENDERER, m_closeLiveBrowserCallback);
-    }
+    // Set common response args (callbackId and error)
+    responseArgs->SetInt(1, valToSend);
+    
+    // Send response
+    m_browser->SendProcessMessage(PID_RENDERER, m_closeLiveBrowserCallback);
     
     // Clear state
     m_closeLiveBrowserCallback = NULL;
