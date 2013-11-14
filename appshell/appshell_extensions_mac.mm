@@ -552,11 +552,15 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return ConvertNSErrorCode(error, false);
 }
 
-int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     BOOL isDirectory;
     
+    // Strip trailing "/"
+    if ([path hasSuffix:@"/"]) {
+        path = [path substringToIndex:[path length] - 1];
+    }
     if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
         isDir = isDirectory;
     } else {
@@ -565,6 +569,20 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     
     NSError* error = nil;
     NSDictionary* fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:&error];
+    
+    // If path is a symlink, resolve it here and get the attributes at the
+    // resolved path
+    realPath = "";
+    if ([[fileAttribs fileType] isEqualToString:NSFileTypeSymbolicLink]) {
+        NSString* realPathStr = [path stringByResolvingSymlinksInPath];
+        NSLog(@"%@", realPathStr);
+        realPath = [realPathStr UTF8String];
+        if (isDir) {
+            realPath += "/";
+        }
+        fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:realPathStr error:&error];
+    }
+    
     NSDate *modDate = [fileAttribs valueForKey:NSFileModificationDate];
     modtime = [modDate timeIntervalSince1970];
     NSNumber *filesize = [fileAttribs valueForKey:NSFileSize];
