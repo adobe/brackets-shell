@@ -575,11 +575,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     realPath = "";
     if ([[fileAttribs fileType] isEqualToString:NSFileTypeSymbolicLink]) {
         NSString* realPathStr = [path stringByResolvingSymlinksInPath];
-        NSLog(@"%@", realPathStr);
         realPath = [realPathStr UTF8String];
-        if (isDir) {
-            realPath += "/";
-        }
         fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:realPathStr error:&error];
     }
     
