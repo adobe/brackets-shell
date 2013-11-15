@@ -438,7 +438,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     BOOL isDirectory;
     
     // Strip trailing "/"
-    if ([path hasSuffix:@"/"]) {
+    if ([path hasSuffix:@"/"] && [path length] > 1) {
         path = [path substringToIndex:[path length] - 1];
     }
     if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory]) {
