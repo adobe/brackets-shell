@@ -691,7 +691,7 @@ public:
             }
 
             if (error == NO_ERROR) {
-                g_minWindowWidth = argList->GetInt(1);
+                SetMinWidthMainWindow(argList->GetInt(1));
             }
         }
         else {

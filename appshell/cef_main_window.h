@@ -36,9 +36,8 @@ public:
     static HWND FindFirstTopLevelInstance();
 
     BOOL Create();
-    
-    void ShowHelp();
-    void ShowAbout();
+
+    void SetMinWidth(int32 minWidth) { m_minWindowWidth = minWidth; }
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -74,5 +73,6 @@ protected:
 private:
     // Initialization - Private Members
     static ATOM RegisterWndClass();
-};
 
+    long m_minWindowWidth;
+};

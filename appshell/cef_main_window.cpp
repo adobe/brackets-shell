@@ -46,13 +46,11 @@ static const wchar_t        kPrefRestoreRight[] = L"Restore Right";
 static const wchar_t        kPrefRestoreBottom[]  = L"Restore Bottom";
 static const wchar_t        kPrefShowState[] = L"Show State";
 
+static const long           kMinWindowWidth = 390;
 static const long           kMinWindowHeight = 200;
 
 // Globals
 static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
-
-long    g_minWindowWidth = 390;
-
 
 // The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
@@ -80,7 +78,8 @@ ATOM cef_main_window::RegisterWndClass()
     return classAtom;
 }
 
-cef_main_window::cef_main_window() 
+cef_main_window::cef_main_window() :
+m_minWindowWidth(kMinWindowWidth)
 {
 }
 
@@ -216,7 +215,7 @@ BOOL cef_main_window::HandlePaint()
 // WM_GETMINMAXINFO handler
 BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
-    mmi->ptMinTrackSize.x = g_minWindowWidth;
+    mmi->ptMinTrackSize.x = m_minWindowWidth;
     mmi->ptMinTrackSize.y = ::kMinWindowHeight;
     return TRUE;
 }

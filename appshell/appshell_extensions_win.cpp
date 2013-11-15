@@ -1765,6 +1765,3 @@ void DragWindow(CefRefPtr<CefBrowser> browser) {
     HWND browserHwnd = (HWND)getMenuParent(browser);
     SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 }
-    
-
-

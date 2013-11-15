@@ -371,3 +371,10 @@ CefString AppGetChromiumVersionString() {
 
   return CefString(versionStream.str());
 }
+
+void SetMinWidthMainWindow(int32 minWidth)
+{
+    if (gMainWnd != NULL) {
+        gMainWnd->SetMinWidth(minWidth);
+    }
+}
