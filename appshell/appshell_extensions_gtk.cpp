@@ -327,7 +327,8 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     isDir = S_ISDIR(buf.st_mode);
     size = (double)buf.st_size;
     
-    // TODO: Implement realPath
+    // TODO: Implement realPath. If "filename" is a symlink, realPath should be the actual path
+    // to the linked object.
     realPath = "";
     
     return NO_ERROR;
