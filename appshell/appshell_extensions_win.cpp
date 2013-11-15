@@ -674,7 +674,16 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
     realPath = L"";
     if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
-        // TODO: Add realPath support. Open the file/directory and call GetFinalPathNameByHandle().
+        HANDLE      hFile;
+
+        hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            wchar_t pathBuffer[MAX_PATH];
+
+            ::GetFinalPathNameByHandleW(hFile, pathBuffer, MAX_PATH, 0);
+            ::CloseHandle(hFile);
+            realPath = &pathBuffer[4];  // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
+        }
     }
 
     return NO_ERROR;
