@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
   CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://"+szInitialUrl, browserSettings);
+      "file://"+szInitialUrl, browserSettings, NULL);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
