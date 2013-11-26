@@ -31,6 +31,12 @@
 #include <Cocoa/Cocoa.h>
 #include <sys/sysctl.h>
 
+#if TARGET_RT_BIG_ENDIAN
+#define WCHAR_T_ENCODING NSUTF32BigEndianStringEncoding
+#else
+#define WCHAR_T_ENCODING NSUTF32LittleEndianStringEncoding
+#endif
+
 
 NSMutableArray* pendingOpenFiles;
 
@@ -568,64 +574,33 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     return ConvertNSErrorCode(error, true);
 }
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
+int32 WriteFile(ExtensionString filename, std::wstring contents, ExtensionString encoding)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
-    NSStringEncoding enc;
     NSError* error = nil;
-    NSData* encodedContents = NULL;
-    
-  if (encoding == "utf8") {
-        enc = NSUTF8StringEncoding;
-        encodedContents = [contentsStr dataUsingEncoding:enc];
-  } else if(encoding == "png") {
-        // 1.
-        //NSData* imageData = [NSData dataWithBytes:contents.c_str() length:contents.size()];
-    
-        //NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:imageData];
-        //encodedContents = [imageRep representationUsingType: NSPNGFileType properties: nil];
-    
-        //encodedContents = [contentsStr NSBitmapImageRep];
-    
-        // 2.
-        //FILE * pngFile = std::fopen (filename.c_str(),"wb");
-    
-        //char buffer[contents.length()];
-        //memcpy(buffer, contents.data(), contents.length());
-        //fwrite (buffer , sizeof(char), sizeof(buffer), pngFile);
-    
-        //fwrite(contents.c_str(),contents.size(),1,pngFile);
-        // fclose(pngFile);
-        // 3.
-        //const char * buf = contents.c_str();
-        //std::fstream binary_file(filename.c_str());
-        //binary_file.write(reinterpret_cast<const char*>(&buf),sizeof(std::string));
-        //binary_file.close();
-    
-        // 4.
-        //char buffer[contents.length()];
-        //memcpy(buffer, contents.data(), contents.length());
-    
-        //std::ofstream file(filename.c_str());
-        //file.write(buffer,sizeof(buffer));
-        //file.close();
-    
-        return ConvertNSErrorCode(error, false);
-  } else
-        return ERR_UNSUPPORTED_ENCODING;
-    
-    NSUInteger len = [encodedContents length];
-    NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
-    
-    [oStream open];
-    NSInteger res = [oStream write:(const uint8_t*)[encodedContents bytes] maxLength:len];
-    [oStream close];
-    
-    if (res == -1) {
-        error = [oStream streamError];
-    }  
-    
+    NSString* contentsStr = [[NSString alloc] initWithBytes:(void*)contents.data()
+                                                   length:contents.length() * 4
+                                                 encoding:WCHAR_T_ENCODING];
+  
+    if (encoding == "utf8") {
+        NSStringEncoding enc = NSUTF8StringEncoding;
+        NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
+        [encodedContents writeToFile:path options:NSDataWritingAtomic error:&error];
+        [contentsStr release];
+    } else if (encoding == "binary") {
+        NSData* binaryContent = [contentsStr dataUsingEncoding:NSUTF16LittleEndianStringEncoding];
+        NSMutableData* newBinary = [NSMutableData alloc];
+        NSUInteger binaryLen = [binaryContent length];
+        unsigned char *byteData = (unsigned char *)[binaryContent bytes];
+        for (uint i = 0; i < binaryLen; i+=2) {
+            [newBinary appendBytes:(byteData + i) length:1];
+        }
+        [newBinary writeToFile:path options:NSDataWritingAtomic error:&error];
+        [newBinary release];
+    } else
+      return ERR_UNSUPPORTED_ENCODING;
+  
+  
     return ConvertNSErrorCode(error, false);
 }
 

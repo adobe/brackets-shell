@@ -295,9 +295,13 @@ public:
             
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
-                std::string contents = argList->GetString(2);
+                CefString contentRaw = argList->GetString(2);
+                // Make sure we get the wide version here.
+                // else string encoding messes with our pure
+                // binariness. (See CefBaseString - ToString)
+                std::wstring contents = contentRaw;
                 ExtensionString encoding = argList->GetString(3);
-                
+              
                 error = WriteFile(filename, contents, encoding);
                 // No additional response args for this function
             }
