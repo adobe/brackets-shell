@@ -26,9 +26,11 @@
 #include "native_menu_model.h"
 
 #include "GoogleChrome.h"
-
+#include <fstream>
+#include <sstream>
 #include <Cocoa/Cocoa.h>
 #include <sys/sysctl.h>
+
 
 NSMutableArray* pendingOpenFiles;
 
@@ -572,13 +574,47 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
     NSStringEncoding enc;
     NSError* error = nil;
+    NSData* encodedContents = NULL;
     
-    if (encoding == "utf8")
+  if (encoding == "utf8") {
         enc = NSUTF8StringEncoding;
-    else
+        encodedContents = [contentsStr dataUsingEncoding:enc];
+  } else if(encoding == "png") {
+        // 1.
+        //NSData* imageData = [NSData dataWithBytes:contents.c_str() length:contents.size()];
+    
+        //NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:imageData];
+        //encodedContents = [imageRep representationUsingType: NSPNGFileType properties: nil];
+    
+        //encodedContents = [contentsStr NSBitmapImageRep];
+    
+        // 2.
+        //FILE * pngFile = std::fopen (filename.c_str(),"wb");
+    
+        //char buffer[contents.length()];
+        //memcpy(buffer, contents.data(), contents.length());
+        //fwrite (buffer , sizeof(char), sizeof(buffer), pngFile);
+    
+        //fwrite(contents.c_str(),contents.size(),1,pngFile);
+        // fclose(pngFile);
+        // 3.
+        //const char * buf = contents.c_str();
+        //std::fstream binary_file(filename.c_str());
+        //binary_file.write(reinterpret_cast<const char*>(&buf),sizeof(std::string));
+        //binary_file.close();
+    
+        // 4.
+        //char buffer[contents.length()];
+        //memcpy(buffer, contents.data(), contents.length());
+    
+        //std::ofstream file(filename.c_str());
+        //file.write(buffer,sizeof(buffer));
+        //file.close();
+    
+        return ConvertNSErrorCode(error, false);
+  } else
         return ERR_UNSUPPORTED_ENCODING;
     
-    const NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
     NSUInteger len = [encodedContents length];
     NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
     
