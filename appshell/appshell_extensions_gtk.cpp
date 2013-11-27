@@ -33,6 +33,7 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <linux/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
@@ -355,6 +356,7 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     return error;
 }
 
+
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
     const char *filenameStr = filename.c_str();    
@@ -367,8 +369,16 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_CANT_WRITE;
     }
     
-    if (!g_file_set_contents(filenameStr, contents.c_str(), contents.length(), &gerror)) {
-        error = GErrorToErrorCode(gerror);
+    FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
+        if (size != contents.length()) {
+            error = ERR_CANT_WRITE;
+        }
+
+        fclose(file);
+    } else {
+        return ConvertLinuxErrorCode(errno);
     }
 
     return error;
