@@ -337,6 +337,7 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     return error;
 }
 
+
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
     const char *filenameStr = filename.c_str();    
@@ -358,7 +359,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 
         fclose(file);
     } else {
-        error = errno;
+        return ConvertLinuxErrorCode(errno);
     }
 
     return error;
