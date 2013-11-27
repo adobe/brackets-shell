@@ -40,6 +40,10 @@
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
 
+// Arbitrarily large size for path name buffers. Paths *could* contain
+// up to 32768 characters, but this buffer should be large enough to handle
+// any reasonable path.
+#define PATH_BUFFER_SIZE 4096
 
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
@@ -676,14 +680,28 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
         HANDLE      hFile;
 
-        hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
-            wchar_t pathBuffer[MAX_PATH];
+            wchar_t pathBuffer[PATH_BUFFER_SIZE + 1];
+            DWORD nChars;
 
-            ::GetFinalPathNameByHandleW(hFile, pathBuffer, MAX_PATH, 0);
+            nChars = ::GetFinalPathNameByHandleW(hFile, pathBuffer, PATH_BUFFER_SIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+            if (nChars && nChars <= PATH_BUFFER_SIZE) {
+                // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
+                realPath = &pathBuffer[4];  
+
+                // UNC paths start with UNC. Update here, if needed.
+                if (realPath.find(L"UNC") == 0) {
+                    realPath = L"\\" + ExtensionString(&pathBuffer[7]);
+                }
+
+                ConvertToUnixPath(realPath);
+            }
             ::CloseHandle(hFile);
-            realPath = &pathBuffer[4];  // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
         }
+
+        // Note: all realPath errors are ignored. If the realPath can't be determined, it should not make the
+        // stat fail.
     }
 
     return NO_ERROR;

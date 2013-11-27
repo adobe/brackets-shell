@@ -543,11 +543,12 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     
     // If path is a symlink, resolve it here and get the attributes at the
     // resolved path
-    realPath = "";
     if ([[fileAttribs fileType] isEqualToString:NSFileTypeSymbolicLink]) {
         NSString* realPathStr = [path stringByResolvingSymlinksInPath];
         realPath = [realPathStr UTF8String];
         fileAttribs = [[NSFileManager defaultManager] attributesOfItemAtPath:realPathStr error:&error];
+    } else {
+        realPath = "";
     }
     
     NSDate *modDate = [fileAttribs valueForKey:NSFileModificationDate];
