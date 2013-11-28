@@ -49,8 +49,25 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   NSWindow* window = [view window];
   std::string titleStr(title);
   NSString* str = [NSString stringWithUTF8String:titleStr.c_str()];
-  [window setTitle:str];
-    
+
+  NSString* path;
+  BOOL isDirty;
+  if ([str hasPrefix:@"\u2022 "]) {
+    isDirty = YES;
+    path = [str substringFromIndex:2];
+  } else {
+    isDirty = NO;
+    path = str;
+  }
+
+  if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:NO]) {
+    [window setTitleWithRepresentedFilename:path];
+    [window setDocumentEdited:isDirty];
+  } else {
+    [window setTitle:str];
+    [window setRepresentedFilename:@""];
+    [window setDocumentEdited:NO];
+  }
   NSObject* delegate = [window delegate];
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
