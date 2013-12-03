@@ -43,6 +43,8 @@ void cef_dark_aero_window::DoFinalCleanup()
 
 BOOL cef_dark_aero_window::HandleCreate()
 {
+//    AddStyle(0x0000C000);
+
     RECT rcClient;
     GetWindowRect(&rcClient);
 
@@ -164,6 +166,19 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
 
     return HTNOWHERE;
 }
+
+BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
+{
+    if ((command & 0xFFF0) != SC_MAXIMIZE)
+        return FALSE;
+
+    SetRedraw(FALSE);
+    SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW|SWP_NOACTIVATE);
+    DefaultWindowProc(WM_SYSCOMMAND, command, 0L);
+    SetRedraw(TRUE);
+    return TRUE;
+}
+
 
 
 BOOL cef_dark_aero_window::HandlePaint()
@@ -307,6 +322,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message) 
     {
+
     case WM_MEASUREITEM:
         if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))
             return 0L;
@@ -327,15 +343,15 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     LRESULT lr = DwpCustomFrameProc(message, wParam, lParam, &callDefWindowProc);
 
     switch(message) {
+    case WM_SYSCOMMAND:
+        if (HandleSysCommand((UINT)wParam)) 
+            return 0L;
+        break;
     case WM_ACTIVATE:
         if (mReady) {
             UpdateMenuBar();
         }
-    }
-
-
-    switch (message) 
-    {
+        break;
     case WM_MEASUREITEM:
         if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))
             return 0L;

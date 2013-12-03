@@ -43,6 +43,7 @@ protected:
     BOOL HandleCreate();
     BOOL HandlePaint();
     BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
+    BOOL HandleSysCommand(UINT command);
 
     int HandleNcHitTest(LPPOINT ptHit);
 
