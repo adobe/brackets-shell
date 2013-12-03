@@ -172,10 +172,25 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
     if ((command & 0xFFF0) != SC_MAXIMIZE)
         return FALSE;
 
+    WINDOWPLACEMENT wp;
+    ::ZeroMemory(&wp, sizeof (wp));
+
+    wp.length = sizeof(WINDOWPLACEMENT);
+    GetWindowPlacement(&wp);
+
     SetRedraw(FALSE);
     SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOZORDER|SWP_NOREDRAW|SWP_NOACTIVATE);
     DefaultWindowProc(WM_SYSCOMMAND, command, 0L);
     SetRedraw(TRUE);
+
+    wp.flags            = 0;
+    wp.showCmd          = SW_MAXIMIZE;
+    wp.ptMinPosition.x  = -1;
+    wp.ptMinPosition.y  = -1;
+    wp.ptMaxPosition.x  = -1;
+    wp.ptMaxPosition.y  = -1;
+
+    SetWindowPlacement(&wp);
     return TRUE;
 }
 
