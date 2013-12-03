@@ -1080,15 +1080,9 @@ BOOL cef_dark_window::HandleNcLeftButtonUp(UINT uHitTest, LPPOINT point)
     return FALSE;
 }
 
-BOOL cef_dark_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr)
+void cef_dark_window::DoPaintClientArea(HDC hdc)
 {
-    if (IsZoomed()) {
-        *lr = 0;
-        return TRUE;
-    }
-
-    return FALSE;
-
+    
 }
 
 
@@ -1129,10 +1123,10 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
                 return 0L;
         }
         break;
-    case WM_NCCALCSIZE:
-        if (HandleNcCalcSize((BOOL)wParam, (NCCALCSIZE_PARAMS*)lParam, &lr))
-            return lr;
-        break;
+//    case WM_NCCALCSIZE:
+//        if (HandleNcCalcSize((BOOL)wParam, (NCCALCSIZE_PARAMS*)lParam, &lr))
+//            return lr;
+//        break;
     case WM_NCCREATE:
         if (HandleNcCreate())
             return 0L;

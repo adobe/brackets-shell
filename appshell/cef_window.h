@@ -90,9 +90,6 @@ public:
     BOOL GetClientRect(LPRECT r) const
     { return ::GetClientRect(mWnd, r); }
     
-    virtual BOOL GetBrowserRect(RECT& r) const
-    { return GetClientRect(&r); }
-
     void NonClientToScreen(LPRECT r) const;
     void ScreenToNonClient(LPRECT r) const;
 

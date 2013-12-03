@@ -35,7 +35,8 @@ public:
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
-    virtual BOOL GetBrowserRect(RECT& r) const;
+    virtual BOOL GetRealClientRect(LPRECT r) const;
+
 
 protected:
     // Window Message Handlers
@@ -53,6 +54,7 @@ protected:
 
     void ComputeMenuBarRect(RECT& rect);
 
+    virtual void DoPaintClientArea(HDC hdc);
 
     // Teardown
     void DoFinalCleanup();

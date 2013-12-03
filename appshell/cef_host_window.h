@@ -28,11 +28,14 @@
 // This the base class for all windows which host a browser instance
 //  You must derive a from this class and implement GetBrowser()
 //  Or use cef_main_window or cef_popup_window which implement GetBrowser()
-
 #ifdef DARK_UI
-typedef cef_dark_aero_window cef_host_window_base;
+    #ifdef DARK_AERO_GLASS
+        typedef cef_dark_aero_window cef_host_window_base;
+    #else
+        typedef cef_dark_window cef_host_window_base;
+    #endif
 #else
-typedef cef_window cef_host_window_base;
+    typedef cef_window cef_host_window_base;
 #endif
 
 class cef_host_window : public cef_host_window_base
@@ -44,6 +47,10 @@ public:
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
     HWND SafeGetCefBrowserHwnd();
+
+    static BOOL CanUseAreoGlass();
+
+    BOOL GetBrowserRect(RECT& r) const;
 
 protected:
     // Must be impelemented in derived class

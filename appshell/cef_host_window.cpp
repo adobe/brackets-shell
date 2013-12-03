@@ -22,6 +22,7 @@
 #include "client_handler.h"
 #include "cef_host_window.h"
 #include "native_menu_model.h"
+#include <dwmapi.h>
 
 
 // externals
@@ -34,6 +35,44 @@ cef_host_window::cef_host_window(void)
 cef_host_window::~cef_host_window(void)
 {
 }
+
+BOOL cef_host_window::CanUseAreoGlass()
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    #if defined(DARK_AERO_GLASS)
+        static BOOL bCalled = FALSE;
+        static BOOL fDwmEnabled = FALSE;
+
+        if (!bCalled) {
+            bCalled = SUCCEEDED(DwmIsCompositionEnabled(&fDwmEnabled));
+        }
+
+        return fDwmEnabled;
+    #else
+        return FALSE;
+    #endif
+#else
+    return FALSE;
+#endif
+}
+
+BOOL cef_host_window::GetBrowserRect(RECT& r) const
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    // for aero glass we have to use
+    //  the computed real client rect for the browser
+    if (CanUseAreoGlass()) {
+        return cef_dark_aero_window::GetRealClientRect(&r); 
+    } 
+    else {
+        // all other modes just use the client area
+        return GetClientRect(&r); 
+    }
+#else
+    return GetClientRect(&r); 
+#endif
+}
+
 
 HWND cef_host_window::SafeGetCefBrowserHwnd()
 {
@@ -135,6 +174,23 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    LRESULT lr = cef_host_window_base::WindowProc(message, wParam, lParam);
+
+
+    LRESULT lr = 0;
+    
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    if (CanUseAreoGlass()) {
+        lr = cef_dark_aero_window::WindowProc(message, wParam, lParam);
+    }
+    else 
+#endif
+    {
+#if defined(DARK_UI)
+        lr = cef_dark_window::WindowProc(message, wParam, lParam);
+#else
+        lr = cef_window::WindowProc(message, wParam, lParam);
+#endif
+    }
+
     return lr;
 }

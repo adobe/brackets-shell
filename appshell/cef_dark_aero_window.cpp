@@ -36,6 +36,8 @@ cef_dark_aero_window::~cef_dark_aero_window()
 {
 }
 
+
+
 void cef_dark_aero_window::DoFinalCleanup()
 {
     cef_dark_window::DoFinalCleanup();
@@ -205,13 +207,8 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
     return TRUE;
 }
 
-
-
-BOOL cef_dark_aero_window::HandlePaint()
+void cef_dark_aero_window::DoPaintClientArea(HDC hdc)
 {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(&ps);
-
     EnforceMenuBackground();
 
     DoDrawFrame(hdc);
@@ -219,6 +216,15 @@ BOOL cef_dark_aero_window::HandlePaint()
     DoDrawTitlebarText(hdc);
     DoDrawSystemIcons(hdc);
     DoDrawMenuBar(hdc);
+}
+
+
+BOOL cef_dark_aero_window::HandlePaint()
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(&ps);
+
+    DoPaintClientArea(hdc);
 
     EndPaint(&ps);
     return TRUE;
@@ -231,7 +237,7 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
     RECT rectCaption;
 
     ComputeWindowCaptionRect(rectCaption);
-    GetBrowserRect(rectClient);
+    GetRealClientRect(&rectClient);
 
     rect.top = rectCaption.bottom;
     rect.bottom = rectClient.top + 1;
@@ -266,14 +272,14 @@ void cef_dark_aero_window::UpdateMenuBar()
 }
 
 
-BOOL cef_dark_aero_window::GetBrowserRect(RECT& rect) const
+BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
-    cef_dark_window::GetBrowserRect(rect);
+    GetClientRect(rect);
 
-    rect.top += 48;
-    rect.bottom -= 8;
-    rect.left += 8;
-    rect.right -= 8;
+    rect->top += 48;
+    rect->bottom -= 8;
+    rect->left += 8;
+    rect->right -= 8;
 
     return TRUE;
 }

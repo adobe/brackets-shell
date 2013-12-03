@@ -200,9 +200,13 @@ BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
 // WM_PAINT handler
 BOOL cef_main_window::HandlePaint()
 {
-    // avoid painting
     PAINTSTRUCT ps;
-    BeginPaint(&ps);
+    HDC hdc = BeginPaint(&ps);
+
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    DoPaintClientArea(hdc);
+#endif
+
     EndPaint(&ps);
     return TRUE;
 }
@@ -491,10 +495,10 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandleSetFocus((HWND)wParam))
             return 0L;
         break;
-/*    case WM_PAINT:
+    case WM_PAINT:
         if (HandlePaint())
             return 0L;
-        break;*/
+        break;
     case WM_GETMINMAXINFO:
         if (HandleGetMinMaxInfo((LPMINMAXINFO) lParam))
             return 0L;

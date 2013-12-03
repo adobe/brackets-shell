@@ -89,8 +89,6 @@ protected:
     BOOL HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS);
     BOOL HandleDrawItem(LPDRAWITEMSTRUCT lpDIS);
     BOOL HandleSettingChange(UINT uFlags, LPCWSTR lpszSection);
-    BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
-
 
     int HandleNcHitTest(LPPOINT ptHit);
     void HandleNcMouseLeave();
@@ -103,6 +101,7 @@ protected:
     virtual void InitDeviceContext(HDC hdc);
 
     // Drawing Methods
+    virtual void DoPaintClientArea(HDC hdc);
     virtual void DoPaintNonClientArea(HDC hdc);
     virtual void DoDrawFrame(HDC hdc);
     virtual void DoDrawSystemMenuIcon(HDC hdc);
