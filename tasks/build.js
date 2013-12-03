@@ -45,12 +45,25 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["create-project", "build", "stage", "package"]);
+    grunt.registerTask("full-build", ["git", "create-project", "build-www", "build", "stage", "package"]);
     grunt.registerTask("installer", ["full-build", "build-installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
         grunt.task.run("build-" + platform);
+    });
+
+    // task: build-www
+    grunt.registerTask("build-www", "Build brackets www repository", function () {
+        var done = this.async(),
+            repo = resolve(grunt.config("git.www.repo"));
+        
+        spawn(["grunt build"], { cwd: repo }).then(function (result) {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
     });
     
     // task: build-mac
