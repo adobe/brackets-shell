@@ -1403,10 +1403,11 @@ int32 GetArgvFromProcessID(int pid, NSString **argv)
         goto ERROR_B;
     }
 
+    *argv = [NSString stringWithCString:sp encoding:NSUTF8StringEncoding];
+
     /* Clean up. */
     free(procargs);
 
-    *argv = [NSString stringWithCString:sp encoding:NSUTF8StringEncoding];
     return NO_ERROR;
 
 ERROR_B:
