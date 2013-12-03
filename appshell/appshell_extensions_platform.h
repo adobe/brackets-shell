@@ -96,7 +96,7 @@ int32 MakeDir(ExtensionString path, int32 mode);
 
 int32 Rename(ExtensionString oldName, ExtensionString newName);
 
-int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size);
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath);
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
 
