@@ -43,8 +43,6 @@ void cef_dark_aero_window::DoFinalCleanup()
 
 BOOL cef_dark_aero_window::HandleCreate()
 {
-//    AddStyle(0x0000C000);
-
     RECT rcClient;
     GetWindowRect(&rcClient);
 
@@ -172,6 +170,17 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
     if ((command & 0xFFF0) != SC_MAXIMIZE)
         return FALSE;
 
+    // Aero windows still get a border when maximized
+    //  The border, however, is the size of the unmaximized 
+    //  window. To obviate that border we turn off drawing and 
+    //  set the size of the window to zero then maximize the window
+    //  and redraw the window.  
+    //
+    // This creates a new problem: the restored window size is now
+    //  0 which, when actually restored, is the size returned from 
+    //  the WM_GETMINMAXINFO handler. To obviate that problem we get
+    //  the window's restore size before maximizing it and reset it after.
+
     WINDOWPLACEMENT wp;
     ::ZeroMemory(&wp, sizeof (wp));
 
@@ -185,11 +194,13 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
 
     wp.flags            = 0;
     wp.showCmd          = SW_MAXIMIZE;
+
     wp.ptMinPosition.x  = -1;
     wp.ptMinPosition.y  = -1;
     wp.ptMaxPosition.x  = -1;
     wp.ptMaxPosition.y  = -1;
 
+    // reset the restore size
     SetWindowPlacement(&wp);
     return TRUE;
 }
