@@ -441,6 +441,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message)
     {
+    case WM_SETTEXT:
     case WM_WINDOWPOSCHANGING:
     case WM_WINDOWPOSCHANGED:
     case WM_MOVE:
