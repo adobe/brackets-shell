@@ -1123,10 +1123,6 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
                 return 0L;
         }
         break;
-//    case WM_NCCALCSIZE:
-//        if (HandleNcCalcSize((BOOL)wParam, (NCCALCSIZE_PARAMS*)lParam, &lr))
-//            return lr;
-//        break;
     case WM_NCCREATE:
         if (HandleNcCreate())
             return 0L;

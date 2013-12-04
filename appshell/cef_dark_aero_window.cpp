@@ -37,12 +37,6 @@ cef_dark_aero_window::~cef_dark_aero_window()
 }
 
 
-
-void cef_dark_aero_window::DoFinalCleanup()
-{
-    cef_dark_window::DoFinalCleanup();
-}
-
 BOOL cef_dark_aero_window::HandleCreate()
 {
     RECT rcClient;
@@ -207,15 +201,49 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
     return TRUE;
 }
 
-void cef_dark_aero_window::DoPaintClientArea(HDC hdc)
+// Setup the device context for drawing
+void cef_dark_aero_window::InitDeviceContext(HDC hdc)
+{
+    RECT rectClipClient;
+    SetRectEmpty(&rectClipClient);
+    GetRealClientRect(&rectClipClient);
+
+    // exclude the client area to reduce flicker
+    ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
+}
+
+void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
+
+    HDC hdcOrig = hdc;
+    RECT rectWindow;
+    GetWindowRect(&rectWindow);
+
+    int Width = ::RectWidth(rectWindow);
+    int Height = ::RectHeight(rectWindow);
+
+    HDC dcMem = ::CreateCompatibleDC(hdc);
+    HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
+    HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
+
+    hdc = dcMem;
+
+    InitDeviceContext(hdc);
+    InitDeviceContext(hdcOrig);
 
     DoDrawFrame(hdc);
     DoDrawSystemMenuIcon(hdc);
     DoDrawTitlebarText(hdc);
     DoDrawSystemIcons(hdc);
     DoDrawMenuBar(hdc);
+
+    ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
+
+    ::SelectObject(dcMem, bmOld);
+    ::DeleteObject(bm);
+    ::DeleteDC(dcMem);
+
 }
 
 
@@ -224,7 +252,7 @@ BOOL cef_dark_aero_window::HandlePaint()
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
 
-    DoPaintClientArea(hdc);
+    DoPaintNonClientArea(hdc);
 
     EndPaint(&ps);
     return TRUE;
@@ -406,5 +434,22 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     }
 
 
-    return cef_window::WindowProc(message, wParam, lParam);;
+    lr = cef_window::WindowProc(message, wParam, lParam);
+
+    if (!mReady)
+        return lr;
+
+    switch (message)
+    {
+    case WM_WINDOWPOSCHANGING:
+    case WM_WINDOWPOSCHANGED:
+    case WM_MOVE:
+    case WM_SIZE:
+    case WM_SIZING:
+    case WM_EXITSIZEMOVE:
+        UpdateNonClientArea();
+        break;
+    }
+
+    return lr;
 }

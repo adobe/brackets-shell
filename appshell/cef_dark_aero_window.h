@@ -48,19 +48,14 @@ protected:
 
     int HandleNcHitTest(LPPOINT ptHit);
 
-    void PaintCustomFrame(HDC hdc);
 
     void UpdateMenuBar();
-
     void ComputeMenuBarRect(RECT& rect);
 
-    virtual void DoPaintClientArea(HDC hdc);
-
-    // Teardown
-    void DoFinalCleanup();
+    virtual void InitDeviceContext(HDC hdc);
+    virtual void DoPaintNonClientArea(HDC hdc);
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
-
 
 private:
     bool mReady;
