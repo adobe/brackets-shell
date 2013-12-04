@@ -52,6 +52,9 @@ protected:
     void UpdateMenuBar();
     void ComputeMenuBarRect(RECT& rect);
 
+    virtual void UpdateNonClientArea();
+    virtual void UpdateNonClientButtons();
+
     virtual void InitDeviceContext(HDC hdc);
     virtual void DoPaintNonClientArea(HDC hdc);
 

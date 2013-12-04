@@ -94,8 +94,8 @@ protected:
     void HandleNcMouseLeave();
 
     // Drawing Helpers
-    void UpdateNonClientArea();
-    void UpdateNonClientButtons();
+    virtual void UpdateNonClientArea();
+    virtual void UpdateNonClientButtons();
 
     // Drawing Initializer
     virtual void InitDeviceContext(HDC hdc);

@@ -246,6 +246,51 @@ void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
 
 }
 
+// Force Drawing the non-client area.
+//  Normally WM_NCPAINT is used but there are times when you
+//  need to force drawing the entire non-client area when
+//  legacy windows message handlers start drawing non-client
+//  artifacts over top of us
+void cef_dark_aero_window::UpdateNonClientArea()
+{
+    HDC hdc = GetDC();
+    DoPaintNonClientArea(hdc);
+    ReleaseDC(hdc);
+}
+void cef_dark_aero_window::UpdateNonClientButtons () 
+{
+    // create a simple clipping region
+    //  that only includes the system buttons (min/max/restore/close)
+    HDC hdc = GetDC();
+
+    RECT rectCloseButton ;
+    ComputeCloseButtonRect (rectCloseButton) ;
+ 
+    RECT rectMaximizeButton ;
+    ComputeMaximizeButtonRect (rectMaximizeButton) ;
+ 
+    RECT rectMinimizeButton ;
+    ComputeMinimizeButtonRect (rectMinimizeButton) ;
+
+    RECT rectWindow ;
+    ComputeLogicalWindowRect (rectWindow) ;
+    ::ExcludeClipRect (hdc, rectWindow.left, rectWindow.top, rectWindow.right, rectWindow.bottom);
+
+    RECT rectButtons;
+    rectButtons.top = rectCloseButton.top;
+    rectButtons.right = rectCloseButton.right;
+    rectButtons.bottom = rectCloseButton.bottom;
+    rectButtons.left = rectMinimizeButton.left;
+
+    HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectButtons);
+
+    if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
+        DoPaintNonClientArea(hdc);
+    }
+
+    ::DeleteObject(hrgnUpdate);
+    ReleaseDC(hdc);
+}
 
 BOOL cef_dark_aero_window::HandlePaint()
 {
@@ -412,21 +457,18 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
             UpdateMenuBar();
         }
         break;
-    case WM_MEASUREITEM:
-        if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))
+
+    case WM_NCMOUSELEAVE:
+        // NOTE: We want anyone else interested in this message
+        //          to be notified. Otherwise the default implementation 
+        //          may be in the wrong state
+        HandleNcMouseLeave();
+        break;
+    case WM_NCMOUSEMOVE:
+        if (HandleNcMouseMove((UINT)wParam))
             return 0L;
         break;
-    case WM_DRAWITEM:
-        if (HandleDrawItem((LPDRAWITEMSTRUCT)lParam))
-            return 0L;
-        break;
-    case CDW_UPDATEMENU:
-        EnforceMenuBackground();
-        UpdateMenuBar();
-        return 0L;
-    case WM_SETICON:
-        mWindowIcon = 0;
-        break;
+
     }
 
     if (!callDefWindowProc) {
