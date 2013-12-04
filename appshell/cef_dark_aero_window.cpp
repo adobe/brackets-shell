@@ -468,7 +468,18 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         if (HandleNcMouseMove((UINT)wParam))
             return 0L;
         break;
-
+    case WM_NCLBUTTONDOWN:
+        if (HandleNcLeftButtonDown((UINT)wParam))
+            return 0L;
+        break;
+    case WM_NCLBUTTONUP:
+        {
+            POINT pt;
+            POINTSTOPOINT(pt, lParam);
+            if (HandleNcLeftButtonUp((UINT)wParam, &pt))
+                return 0L;
+        }
+        break;
     }
 
     if (!callDefWindowProc) {
