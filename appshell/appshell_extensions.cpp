@@ -249,16 +249,18 @@ public:
             
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
+                ExtensionString realPath;
                 uint32 modtime;
                 double size;
                 bool isDir;
                 
-                error = GetFileInfo(filename, modtime, isDir, size);
+                error = GetFileInfo(filename, modtime, isDir, size, realPath);
                 
                 // Set response args for this function
                 responseArgs->SetInt(2, modtime);
                 responseArgs->SetBool(3, isDir);
                 responseArgs->SetInt(4, size);
+                responseArgs->SetString(5, realPath);
             }
         } else if (message_name == "ReadFile") {
             // Parameters:

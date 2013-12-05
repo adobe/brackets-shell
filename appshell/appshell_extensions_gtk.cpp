@@ -317,7 +317,7 @@ int Rename(ExtensionString oldName, ExtensionString newName)
     }
 }
 
-int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
+int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
     struct stat buf;
     if(stat(filename.c_str(),&buf)==-1)
@@ -326,7 +326,11 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     modtime = buf.st_mtime;
     isDir = S_ISDIR(buf.st_mode);
     size = (double)buf.st_size;
-
+    
+    // TODO: Implement realPath. If "filename" is a symlink, realPath should be the actual path
+    // to the linked object.
+    realPath = "";
+    
     return NO_ERROR;
 }
 
@@ -355,6 +359,7 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     return error;
 }
 
+
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
     const char *filenameStr = filename.c_str();    
@@ -367,8 +372,16 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_CANT_WRITE;
     }
     
-    if (!g_file_set_contents(filenameStr, contents.c_str(), contents.length(), &gerror)) {
-        error = GErrorToErrorCode(gerror);
+    FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
+        if (size != contents.length()) {
+            error = ERR_CANT_WRITE;
+        }
+
+        fclose(file);
+    } else {
+        return ConvertLinuxErrorCode(errno);
     }
 
     return error;
