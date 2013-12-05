@@ -28,7 +28,9 @@
 
 
 cef_dark_aero_window::cef_dark_aero_window() :
-    mReady(false)
+    mReady(false),
+    mMenuHiliteIndex(-1),
+    mMenuActiveIndex(-1)
 {
 }
 
@@ -210,6 +212,7 @@ void cef_dark_aero_window::InitDeviceContext(HDC hdc)
 
     // exclude the client area to reduce flicker
     ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
+
 }
 
 void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
@@ -257,6 +260,7 @@ void cef_dark_aero_window::UpdateNonClientArea()
     DoPaintNonClientArea(hdc);
     ReleaseDC(hdc);
 }
+
 void cef_dark_aero_window::UpdateNonClientButtons () 
 {
     // create a simple clipping region
@@ -285,7 +289,7 @@ void cef_dark_aero_window::UpdateNonClientButtons ()
     HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectButtons);
 
     if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
-        DoPaintNonClientArea(hdc);
+        DoDrawSystemIcons(hdc);
     }
 
     ::DeleteObject(hrgnUpdate);
@@ -344,6 +348,113 @@ void cef_dark_aero_window::UpdateMenuBar()
     ReleaseDC(hdc);
 }
 
+void cef_dark_aero_window::HiliteMenuItemAt(LPPOINT pt)
+{
+    HDC hdc = GetDC();
+    HMENU menu = GetMenu();
+    int items = ::GetMenuItemCount(menu);
+    int oldMenuHilite = mMenuHiliteIndex;
+    
+    // reset this in case we don't get a hit below
+    mMenuHiliteIndex = -1;
+
+    for (int i = 0; i < items; i++) {
+        // Determine the menu item state and ID
+        MENUITEMINFO mmi = {0};
+        mmi.cbSize = sizeof (mmi);
+        mmi.fMask = MIIM_STATE|MIIM_ID;
+        ::GetMenuItemInfo (menu, i, TRUE, &mmi);
+        
+        // Drawitem only works on ID
+        MEASUREITEMSTRUCT mis = {0};
+        mis.CtlType = ODT_MENU;
+        mis.itemID = mmi.wID;
+
+        RECT itemRect;
+        ::SetRectEmpty(&itemRect);
+        if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
+            bool needsUpdate = false;
+
+            if ((pt) && (::PtInRect(&itemRect, *pt))) {
+                mmi.fState |= MFS_HILITE;
+                mMenuHiliteIndex = i;
+                needsUpdate = true;
+            } else if (i == oldMenuHilite) {
+                mmi.fState &= ~MFS_HILITE;
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                // Draw the menu item
+                DRAWITEMSTRUCT dis = {0};
+                dis.CtlType = ODT_MENU;
+                dis.itemID = mmi.wID;
+                dis.hwndItem = (HWND)menu;
+                dis.itemAction = ODA_DRAWENTIRE;
+                dis.hDC = hdc;
+
+               ScreenToNonClient(&itemRect);
+                ::CopyRect(&dis.rcItem, &itemRect);
+
+                if (mmi.fState & MFS_HILITE) {
+                    dis.itemState |= ODS_SELECTED;
+                } 
+                if (mmi.fState & MFS_GRAYED) {
+                    dis.itemState |= ODS_GRAYED;
+                } 
+
+                dis.itemState |= ODS_NOACCEL;
+
+                HandleDrawItem(&dis);
+            }
+        }
+    }
+
+    ReleaseDC(hdc);
+
+}
+
+void cef_dark_aero_window::HandleNcMouseLeave()
+{
+    if (mMenuActiveIndex == -1) {
+        HiliteMenuItemAt(NULL);
+    }
+    cef_dark_window::HandleNcMouseLeave();
+}
+
+BOOL cef_dark_aero_window::HandleNcLeftButtonDown(UINT uHitTest, LPPOINT pt)
+{
+    if (!cef_dark_window::HandleNcLeftButtonDown(uHitTest)) {
+        if (uHitTest == HTMENU) {
+            mMenuActiveIndex = mMenuHiliteIndex;
+        }
+        return FALSE;
+    } else {
+        return TRUE;
+    }
+}
+
+
+BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
+{
+    if (cef_dark_window::HandleNcMouseMove(uHitTest)) {
+        if (mMenuActiveIndex == -1) {
+            HiliteMenuItemAt(NULL);
+        }
+        return TRUE;
+    }
+
+    if (mMenuActiveIndex == -1) {
+        if (uHitTest == HTMENU) {
+            HiliteMenuItemAt(pt);
+            TrackNonClientMouseEvents();
+        } else {
+            HiliteMenuItemAt(NULL);
+        }
+    }
+
+    return FALSE;
+}
 
 BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
@@ -356,7 +467,6 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 
     return TRUE;
 }
-
 
 BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* pncsp, LRESULT* lr)
 {
@@ -436,10 +546,6 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         if (HandleDrawItem((LPDRAWITEMSTRUCT)lParam))
             return 0L;
         break;
-    case CDW_UPDATEMENU:
-        EnforceMenuBackground();
-        UpdateMenuBar();
-        return 0L;
     case WM_SETICON:
         mWindowIcon = 0;
         break;
@@ -457,7 +563,6 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
             UpdateMenuBar();
         }
         break;
-
     case WM_NCMOUSELEAVE:
         // NOTE: We want anyone else interested in this message
         //          to be notified. Otherwise the default implementation 
@@ -465,12 +570,21 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         HandleNcMouseLeave();
         break;
     case WM_NCMOUSEMOVE:
-        if (HandleNcMouseMove((UINT)wParam))
-            return 0L;
+        {
+            POINT pt;
+            POINTSTOPOINT(pt, lParam);
+
+            if (HandleNcMouseMove((UINT)wParam, &pt))
+                return 0L;
+        }
         break;
     case WM_NCLBUTTONDOWN:
-        if (HandleNcLeftButtonDown((UINT)wParam))
-            return 0L;
+        {
+            POINT pt;
+            POINTSTOPOINT(pt, lParam);
+            if (HandleNcLeftButtonDown((UINT)wParam, &pt))
+                return 0L;
+        }
         break;
     case WM_NCLBUTTONUP:
         {
@@ -503,6 +617,9 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     case WM_EXITSIZEMOVE:
         UpdateNonClientArea();
         break;
+    case WM_EXITMENULOOP:
+        mMenuActiveIndex = -1;
+        break;   
     }
 
     return lr;

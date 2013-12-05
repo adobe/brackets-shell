@@ -45,12 +45,17 @@ protected:
     BOOL HandlePaint();
     BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
     BOOL HandleSysCommand(UINT command);
+    BOOL HandleNcMouseMove(UINT uHitTest, LPPOINT pt);
+    BOOL HandleNcLeftButtonDown(UINT uHitTest, LPPOINT pt);
 
+    void HandleNcMouseLeave();
     int HandleNcHitTest(LPPOINT ptHit);
 
+    void PostHandleNcLeftButtonUp(UINT uHitTest, LPPOINT pt);
 
     void UpdateMenuBar();
     void ComputeMenuBarRect(RECT& rect);
+    void HiliteMenuItemAt(LPPOINT pt);
 
     virtual void UpdateNonClientArea();
     virtual void UpdateNonClientButtons();
@@ -62,4 +67,6 @@ protected:
 
 private:
     bool mReady;
+    int  mMenuHiliteIndex;
+    int  mMenuActiveIndex;
 };

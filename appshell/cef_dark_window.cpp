@@ -895,17 +895,17 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
     static wchar_t szMenuString[256] = L"";
 
     if (lpDIS->CtlType == ODT_MENU) {
-        int items = ::GetMenuItemCount((HMENU)lpDIS->hwndItem);
 
         InitMenuFont();
 
         HGDIOBJ fontOld = ::SelectObject(lpDIS->hDC, mMenuFont);            
         COLORREF rgbMenuText =  CEF_COLOR_NORMALTEXT;
+        HMENU hMenu = (HMENU)lpDIS->hwndItem;
 
-        ::GetMenuString((HMENU)lpDIS->hwndItem, lpDIS->itemID, szMenuString, _countof(szMenuString), MF_BYCOMMAND);
+        ::GetMenuString(hMenu, lpDIS->itemID, szMenuString, _countof(szMenuString), MF_BYCOMMAND);
         
-        // Add a little more room to the top fixes highlight issue
         RECT rectBG;
+        // Add a little more room to the top fixes highlight issue
         ::CopyRect(&rectBG, &lpDIS->rcItem);
         rectBG.top -= 2;
 
@@ -999,7 +999,7 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
                 // User isn't hovering over anything that 
                 //  we care about so just reset and redraw
                 mNonClientData.Reset();
-                UpdateNonClientButtons ();
+                UpdateNonClientButtons();
                 // let the DefaultWindowProc handle this 
                 return FALSE;
             }
@@ -1015,7 +1015,7 @@ BOOL cef_dark_window::HandleNcMouseMove(UINT uHitTest)
     }
 
     if (needUpdate) {
-        UpdateNonClientButtons ();
+        UpdateNonClientButtons();
     }
     return TRUE;
 }
