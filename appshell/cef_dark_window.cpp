@@ -625,30 +625,37 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         mis.CtlType = ODT_MENU;
         mis.itemID = mmi.wID;
 
+        RECT menuBarRect;
+        ComputeMenuBarRect(menuBarRect);
+
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
             ScreenToNonClient(&itemRect);
             
-            // Draw the menu item
-            DRAWITEMSTRUCT dis = {0};
-            dis.CtlType = ODT_MENU;
-            dis.itemID = mmi.wID;
-            dis.hwndItem = (HWND)menu;
-            dis.itemAction = ODA_DRAWENTIRE;
-            dis.hDC = hdc;
-            ::CopyRect(&dis.rcItem, &itemRect);
+            POINT pt = {itemRect.left, itemRect.top};
+            if (::PtInRect(&menuBarRect, pt)) {
+            
+                // Draw the menu item
+                DRAWITEMSTRUCT dis = {0};
+                dis.CtlType = ODT_MENU;
+                dis.itemID = mmi.wID;
+                dis.hwndItem = (HWND)menu;
+                dis.itemAction = ODA_DRAWENTIRE;
+                dis.hDC = hdc;
+                ::CopyRect(&dis.rcItem, &itemRect);
 
-            if (mmi.fState & MFS_HILITE) {
-                dis.itemState |= ODS_SELECTED;
-            } 
-            if (mmi.fState & MFS_GRAYED) {
-                dis.itemState |= ODS_GRAYED;
-            } 
+                if (mmi.fState & MFS_HILITE) {
+                    dis.itemState |= ODS_SELECTED;
+                } 
+                if (mmi.fState & MFS_GRAYED) {
+                    dis.itemState |= ODS_GRAYED;
+                } 
 
-            dis.itemState |= ODS_NOACCEL;
+                dis.itemState |= ODS_NOACCEL;
 
-            HandleDrawItem(&dis);
+                HandleDrawItem(&dis);
+            }
         }
     }
 }
