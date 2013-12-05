@@ -21,10 +21,70 @@
  */
 #include "cef_dark_aero_window.h"
 
-#include <dwmapi.h>
+// dll instance to dynamically load the Desktop Window Manager DLL
+static CDwmDLL gDesktopWindowManagerDLL;
 
-// Libraries
-#pragma comment(lib, "dwmapi")
+HINSTANCE CDwmDLL::mhDwmDll = NULL;
+PFNDWMEFICA CDwmDLL::pfnDwmExtendFrameIntoClientArea = NULL;
+PFNDWMDWP CDwmDLL::pfnDwmDefWindowProc = NULL;
+PFNDWMICE CDwmDLL::pfnDwmIsCompositionEnabled = NULL;
+
+CDwmDLL::CDwmDLL()
+{
+    LoadLibrary();
+}
+
+CDwmDLL::~CDwmDLL()
+{
+    FreeLibrary();
+}
+
+HINSTANCE CDwmDLL::LoadLibrary()
+{
+    if (mhDwmDll == NULL)
+    {
+        // dynamically load dwmapi.dll if running Windows Vista or later (ie. not on XP)
+        OSVERSIONINFO osvi;
+        ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        GetVersionEx(&osvi);
+        if ((osvi.dwMajorVersion > 5) || ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1) ))
+        {
+            mhDwmDll = ::LoadLibrary(TEXT("dwmapi.dll"));
+            if (mhDwmDll != NULL)
+            {
+                pfnDwmExtendFrameIntoClientArea = (PFNDWMEFICA)::GetProcAddress(mhDwmDll, "DwmExtendFrameIntoClientArea");
+                pfnDwmDefWindowProc = (PFNDWMDWP)::GetProcAddress(mhDwmDll, "DwmDefWindowProc");
+                pfnDwmIsCompositionEnabled = (PFNDWMICE)::GetProcAddress(mhDwmDll, "DwmIsCompositionEnabled");
+            }
+        }
+    }
+    return mhDwmDll;
+}
+
+void CDwmDLL::FreeLibrary()
+{
+    if (mhDwmDll != NULL)
+    {
+        ::FreeLibrary(mhDwmDll);
+        mhDwmDll = NULL;
+    }
+}
+
+HRESULT CDwmDLL::DwmExtendFrameIntoClientArea(HWND hWnd, const MARGINS* pMarInset)
+{
+    return (pfnDwmExtendFrameIntoClientArea != NULL) ? (*pfnDwmExtendFrameIntoClientArea)(hWnd, pMarInset) : S_FALSE;
+}
+
+BOOL CDwmDLL::DwmDefWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
+{
+    return (pfnDwmDefWindowProc != NULL) ? (*pfnDwmDefWindowProc)(hWnd, msg, wParam, lParam, plResult) : FALSE;
+}
+
+HRESULT CDwmDLL::DwmIsCompositionEnabled(BOOL* pfEnabled)
+{
+    return (pfnDwmIsCompositionEnabled != NULL) ? (*pfnDwmIsCompositionEnabled)(pfEnabled) : S_FALSE;
+}
 
 
 cef_dark_aero_window::cef_dark_aero_window() :
@@ -64,7 +124,7 @@ BOOL cef_dark_aero_window::HandleActivate()
     // Extend the frame into the client area.
     MARGINS margins = {0};
 
-    hr = ::DwmExtendFrameIntoClientArea(mWnd, &margins);
+    hr = CDwmDLL::DwmExtendFrameIntoClientArea(mWnd, &margins);
 
     return SUCCEEDED(hr);
 }
@@ -483,7 +543,7 @@ LRESULT cef_dark_aero_window::DwpCustomFrameProc(UINT message, WPARAM wParam, LP
 {
     LRESULT lr = 0L;
 
-    *pfCallDefWindowProc = (::DwmDefWindowProc(mWnd, message, wParam, lParam, &lr) == 0);
+    *pfCallDefWindowProc = CDwmDLL::DwmDefWindowProc(mWnd, message, wParam, lParam, &lr) == 0;
     
     switch (message) {
     case WM_CREATE:
