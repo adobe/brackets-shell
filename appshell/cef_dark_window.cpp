@@ -613,6 +613,9 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
     HMENU menu = GetMenu();
     int items = ::GetMenuItemCount(menu);
 
+    RECT menuBarRect;
+    ComputeMenuBarRect(menuBarRect);
+
     for (int i = 0; i < items; i++) {
         // Determine the menu item state and ID
         MENUITEMINFO mmi = {0};
@@ -625,14 +628,14 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         mis.CtlType = ODT_MENU;
         mis.itemID = mmi.wID;
 
-        RECT menuBarRect;
-        ComputeMenuBarRect(menuBarRect);
-
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
+
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
             ScreenToNonClient(&itemRect);
             
+            // Check to make sure it's actually in the 
+            //  the correct location (fixes aero drawing issue)
             POINT pt = {itemRect.left, itemRect.top};
             if (::PtInRect(&menuBarRect, pt)) {
             
