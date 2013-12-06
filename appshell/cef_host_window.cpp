@@ -60,15 +60,7 @@ bool cef_host_window::SubclassWindow(HWND hWnd)
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
     if (CanUseAreoGlass()) {
-        if (cef_dark_aero_window::SubclassWindow(hWnd)) {
-            RECT rectBrowser;
-            HWND hwndBrowser = GetBrowserHwnd();
-            if (hwndBrowser) {
-                GetBrowserRect(rectBrowser);
-                ::MoveWindow(hwndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
-            }
-        }
-        return false;
+        return cef_dark_aero_window::SubclassWindow(hWnd);
     }
     else 
 #endif
