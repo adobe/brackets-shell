@@ -177,7 +177,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings);
+        ::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }
