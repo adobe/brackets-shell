@@ -22,8 +22,6 @@
 #include "client_handler.h"
 #include "cef_host_window.h"
 #include "native_menu_model.h"
-#include <dwmapi.h>
-
 
 // externals
 extern CefRefPtr<ClientHandler> g_handler;
@@ -68,7 +66,7 @@ bool cef_host_window::SubclassWindow(HWND hWnd)
 #if defined(DARK_UI)
         return cef_dark_window::SubclassWindow(hWnd);
 #else
-        return cef_window::SubclassWindow(hwnd);
+        return cef_window::SubclassWindow(hWnd);
 #endif
     }
 }
@@ -77,18 +75,11 @@ bool cef_host_window::SubclassWindow(HWND hWnd)
 BOOL cef_host_window::GetBrowserRect(RECT& r) const
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    // for aero glass we have to use
-    //  the computed real client rect for the browser
     if (CanUseAreoGlass()) {
         return cef_dark_aero_window::GetRealClientRect(&r); 
     } 
-    else {
-        // all other modes just use the client area
-        return GetClientRect(&r); 
-    }
-#else
-    return GetClientRect(&r); 
 #endif
+    return GetClientRect(&r); 
 }
 
 HWND cef_host_window::GetBrowserHwnd()
