@@ -93,6 +93,9 @@ protected:
     virtual void InitDeviceContext(HDC hdc);
     virtual void DoPaintNonClientArea(HDC hdc);
 
+    void ComputeWindowCaptionRect(RECT& rect);
+
+
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
 private:

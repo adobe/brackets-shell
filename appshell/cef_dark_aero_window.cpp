@@ -151,6 +151,26 @@ BOOL cef_dark_aero_window::HandleActivate()
     return SUCCEEDED(hr);
 }
 
+// Computes the Rect where the window caption is drawn in window coordinates
+void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
+{
+    RECT wr;
+    GetWindowRect(&wr);
+
+    int top = mNcMetrics.iBorderWidth;
+
+    rect.top = 8;
+    rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
+
+    RECT ir;
+    ComputeWindowIconRect(ir);
+
+    RECT mr;
+    ComputeMinimizeButtonRect(mr);
+
+    rect.left = ir.right + 8;
+    rect.right = mr.left - 8;
+}
 
 // WM_NCHITTEST handler
 int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
@@ -274,6 +294,8 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
     DefaultWindowProc(WM_SYSCOMMAND, command, 0L);
     SetRedraw(TRUE);
 
+    UpdateMenuBar();
+
     wp.flags            = 0;
     wp.showCmd          = SW_MAXIMIZE;
 
@@ -371,7 +393,7 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
     GetRealClientRect(&rectClient);
 
     rect.top = rectCaption.bottom;
-    rect.bottom = rectClient.top + 1;
+    rect.bottom = rectClient.top + 2;
 
     rect.left = rectClient.left;
     rect.right = rectClient.right;
