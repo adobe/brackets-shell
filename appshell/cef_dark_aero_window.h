@@ -67,6 +67,7 @@ public:
 
     virtual BOOL GetRealClientRect(LPRECT r) const;
 
+    bool SubclassWindow(HWND hWnd);
 
 protected:
     // Window Message Handlers

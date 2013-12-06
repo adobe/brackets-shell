@@ -192,6 +192,9 @@ public:
     void SetRedraw(BOOL bRedraw)
     { DefaultWindowProc(WM_SETREDRAW, (WPARAM)bRedraw, 0); }
 
+    HWND GetWindow(UINT uCmd) 
+    { return ::GetWindow(mWnd, uCmd); }
+
 protected:
     // Attributes - Protected Members
     HWND mWnd;

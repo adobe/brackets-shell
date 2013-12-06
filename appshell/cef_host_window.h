@@ -47,6 +47,8 @@ public:
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
     HWND SafeGetCefBrowserHwnd();
+    HWND GetBrowserHwnd();
+    bool SubclassWindow(HWND hWnd);
 
     static BOOL CanUseAreoGlass();
 

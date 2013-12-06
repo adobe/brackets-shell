@@ -56,6 +56,32 @@ BOOL cef_host_window::CanUseAreoGlass()
 #endif
 }
 
+bool cef_host_window::SubclassWindow(HWND hWnd)
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    if (CanUseAreoGlass()) {
+        if (cef_dark_aero_window::SubclassWindow(hWnd)) {
+            RECT rectBrowser;
+            HWND hwndBrowser = GetBrowserHwnd();
+            if (hwndBrowser) {
+                GetBrowserRect(rectBrowser);
+                ::MoveWindow(hwndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
+            }
+        }
+        return false;
+    }
+    else 
+#endif
+    {
+#if defined(DARK_UI)
+        return cef_dark_window::SubclassWindow(hWnd);
+#else
+        return cef_window::SubclassWindow(hwnd);
+#endif
+    }
+}
+
+
 BOOL cef_host_window::GetBrowserRect(RECT& r) const
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
@@ -73,6 +99,10 @@ BOOL cef_host_window::GetBrowserRect(RECT& r) const
 #endif
 }
 
+HWND cef_host_window::GetBrowserHwnd()
+{
+    return GetWindow(GW_CHILD);
+}
 
 HWND cef_host_window::SafeGetCefBrowserHwnd()
 {

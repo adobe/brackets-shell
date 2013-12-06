@@ -112,9 +112,30 @@ BOOL cef_dark_aero_window::HandleCreate()
                  ::RectHeight(rcClient),
                  SWP_FRAMECHANGED);
 
-    cef_dark_window::InitDrawingResources();
+    InitDrawingResources();
     mReady = true;
     return TRUE;
+}
+
+bool cef_dark_aero_window::SubclassWindow(HWND hWnd)
+{
+    InitDrawingResources();
+    if (cef_window::SubclassWindow(hWnd)) {
+        RECT rcClient;
+        GetWindowRect(&rcClient);
+
+        // Inform application of the frame change.
+        SetWindowPos(NULL, 
+                     rcClient.left, 
+                     rcClient.top,
+                     ::RectWidth(rcClient), 
+                     ::RectHeight(rcClient),
+                     SWP_FRAMECHANGED);
+
+        mReady = true;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // WM_ACTIVATE handler
@@ -552,7 +573,7 @@ LRESULT cef_dark_aero_window::DwpCustomFrameProc(UINT message, WPARAM wParam, LP
         }
         break;
     case WM_NCCALCSIZE:
-        if (cef_dark_aero_window::HandleNcCalcSize((BOOL)(wParam != 0), reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam), &lr)) {
+        if (HandleNcCalcSize((BOOL)(wParam != 0), reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam), &lr)) {
             *pfCallDefWindowProc = false;
         }
         break;
@@ -595,6 +616,11 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_SETICON:
         mWindowIcon = 0;
+        {
+            RECT rectIcon;
+            ComputeWindowIconRect(rectIcon);
+            InvalidateRect(&rectIcon);
+        }
         break;
     }
 
