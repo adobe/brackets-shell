@@ -88,7 +88,6 @@ protected:
     void HiliteMenuItemAt(LPPOINT pt);
 
     virtual void UpdateNonClientArea();
-    virtual void UpdateNonClientButtons();
 
     virtual void InitDeviceContext(HDC hdc);
     virtual void DoPaintNonClientArea(HDC hdc);

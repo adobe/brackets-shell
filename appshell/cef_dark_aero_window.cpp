@@ -98,7 +98,7 @@ cef_dark_aero_window::~cef_dark_aero_window()
 {
 }
 
-
+// WM_CREATE hander
 BOOL cef_dark_aero_window::HandleCreate()
 {
     RECT rcClient;
@@ -117,6 +117,7 @@ BOOL cef_dark_aero_window::HandleCreate()
     return TRUE;
 }
 
+// WM_ACTIVATE handler
 BOOL cef_dark_aero_window::HandleActivate() 
 {
     HRESULT hr = S_OK;
@@ -223,6 +224,8 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
     return HTNOWHERE;
 }
 
+// WM_SYSCOMMAND handler
+//  We need to handle SC_MAXIMIZE to avoid any border leakage
 BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
 {
     if ((command & 0xFFF0) != SC_MAXIMIZE)
@@ -275,6 +278,7 @@ void cef_dark_aero_window::InitDeviceContext(HDC hdc)
 
 }
 
+// Redraws the non-client area
 void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
@@ -321,41 +325,10 @@ void cef_dark_aero_window::UpdateNonClientArea()
     ReleaseDC(hdc);
 }
 
-void cef_dark_aero_window::UpdateNonClientButtons () 
-{
-    // create a simple clipping region
-    //  that only includes the system buttons (min/max/restore/close)
-    HDC hdc = GetDC();
-
-    RECT rectCloseButton ;
-    ComputeCloseButtonRect (rectCloseButton) ;
- 
-    RECT rectMaximizeButton ;
-    ComputeMaximizeButtonRect (rectMaximizeButton) ;
- 
-    RECT rectMinimizeButton ;
-    ComputeMinimizeButtonRect (rectMinimizeButton) ;
-
-    RECT rectWindow ;
-    ComputeLogicalWindowRect (rectWindow) ;
-    ::ExcludeClipRect (hdc, rectWindow.left, rectWindow.top, rectWindow.right, rectWindow.bottom);
-
-    RECT rectButtons;
-    rectButtons.top = rectCloseButton.top;
-    rectButtons.right = rectCloseButton.right;
-    rectButtons.bottom = rectCloseButton.bottom;
-    rectButtons.left = rectMinimizeButton.left;
-
-    HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectButtons);
-
-    if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
-        DoDrawSystemIcons(hdc);
-    }
-
-    ::DeleteObject(hrgnUpdate);
-    ReleaseDC(hdc);
-}
-
+// WM_PAINT handler
+//  since we're extending the client area into the non-client
+//  area, we have to draw all of the non-clinet stuff during
+//  WM_PAINT
 BOOL cef_dark_aero_window::HandlePaint()
 {
     PAINTSTRUCT ps;
@@ -383,6 +356,7 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
     rect.right = rectClient.right;
 }
 
+// Redraws the menu bar
 void cef_dark_aero_window::UpdateMenuBar()
 {
 
@@ -408,6 +382,9 @@ void cef_dark_aero_window::UpdateMenuBar()
     ReleaseDC(hdc);
 }
 
+// The Aero version doesn't send us WM_DRAWITEM messages
+//  to draw the item when hovering so we have to do that
+// Pass NULL for pt to remove the highlight from any menu item
 void cef_dark_aero_window::HiliteMenuItemAt(LPPOINT pt)
 {
     HDC hdc = GetDC();
@@ -474,6 +451,7 @@ void cef_dark_aero_window::HiliteMenuItemAt(LPPOINT pt)
 
 }
 
+// WM_NCMOUSELEAVE handler
 void cef_dark_aero_window::HandleNcMouseLeave()
 {
     if (mMenuActiveIndex == -1) {
@@ -482,6 +460,7 @@ void cef_dark_aero_window::HandleNcMouseLeave()
     cef_dark_window::HandleNcMouseLeave();
 }
 
+// WM_NCLBUTTONDOWN handler
 BOOL cef_dark_aero_window::HandleNcLeftButtonDown(UINT uHitTest, LPPOINT pt)
 {
     if (!cef_dark_window::HandleNcLeftButtonDown(uHitTest)) {
@@ -494,7 +473,7 @@ BOOL cef_dark_aero_window::HandleNcLeftButtonDown(UINT uHitTest, LPPOINT pt)
     }
 }
 
-
+// WM_NCMOUSEMOVE handler
 BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
 {
     if (cef_dark_window::HandleNcMouseMove(uHitTest)) {
@@ -516,11 +495,16 @@ BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
     return FALSE;
 }
 
+// This is a special version of GetClientRect for Aero Glass
+//  to give us the portion of the window that is not our custom
+//  non-client glass so we can:
+//      1) Exclude it from drawing the background and other stuffs
+//      2) Position the browser window in derived classes
 BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
     GetClientRect(rect);
 
-    rect->top += 48;
+    rect->top += 49;
     rect->bottom -= 8;
     rect->left += 8;
     rect->right -= 8;
@@ -528,6 +512,8 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
     return TRUE;
 }
 
+// WM_NCCALCSIZE handler.  
+//  Basically tells the system that there is no non-client area
 BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* pncsp, LRESULT* lr)
 {
     pncsp->rgrc[0].left   = pncsp->rgrc[0].left   + 0;
@@ -539,6 +525,7 @@ BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARA
     return TRUE;
 }
 
+// Helper to dispatch messages to the Desktop Window Manager for processing
 LRESULT cef_dark_aero_window::DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc)
 {
     LRESULT lr = 0L;
@@ -611,6 +598,8 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         break;
     }
 
+    // First let the DesktopWindowManager handler the message and tell us if 
+    //  we should pass the message to the default window proc
     LRESULT lr = DwpCustomFrameProc(message, wParam, lParam, &callDefWindowProc);
 
     switch(message) {
@@ -656,6 +645,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         break;
     }
 
+    // call DefWindowProc?
     if (!callDefWindowProc) {
         return lr;
     }
