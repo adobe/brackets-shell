@@ -116,24 +116,24 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 			nodeStartTime = timeGetTime();
 
 			HMODULE module = GetModuleHandle(NULL);
-			TCHAR executablePath[MAX_PATH];
-			TCHAR scriptPath[MAX_PATH];
+			TCHAR executablePath[MAX_UNC_PATH];
+			TCHAR scriptPath[MAX_UNC_PATH];
 			TCHAR commandLine[BRACKETS_NODE_BUFFER_SIZE];
 
-			DWORD dwFLen = GetModuleFileName(module, executablePath, MAX_PATH);
+			DWORD dwFLen = GetModuleFileName(module, executablePath, MAX_UNC_PATH);
 			if (dwFLen == 0) {
 				fprintf(stderr, "[Node] Could not get module path");
 				ReleaseMutex(hNodeMutex);
 				restartNode(false);
 				return 0;
-			} else if (dwFLen == MAX_PATH) {
+			} else if (dwFLen == MAX_UNC_PATH) {
 				fprintf(stderr, "[Node] Path to module exceede max path length");
 				ReleaseMutex(hNodeMutex);
 				restartNode(false);
 				return 0;
 			}
 			PathRemoveFileSpec(executablePath);
-			StringCchCopy(scriptPath, MAX_PATH, executablePath);
+			StringCchCopy(scriptPath, MAX_UNC_PATH, executablePath);
 			PathAppend(executablePath, TEXT(NODE_EXECUTABLE_PATH));
 			PathAppend(scriptPath, TEXT(NODE_CORE_PATH));
 

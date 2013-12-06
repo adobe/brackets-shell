@@ -40,11 +40,6 @@
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
 
-// Arbitrarily large size for path name buffers. Paths *could* contain
-// up to 32768 characters, but this buffer should be large enough to handle
-// any reasonable path.
-#define PATH_BUFFER_SIZE 4096
-
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
@@ -144,8 +139,8 @@ bool LiveBrowserMgrWin::IsChromeWindow(HWND hwnd)
         return false;
     }
 
-    DWORD modulePathBufSize = _MAX_PATH+1;
-    WCHAR modulePathBuf[_MAX_PATH+1];
+    DWORD modulePathBufSize = MAX_UNC_PATH+1;
+    WCHAR modulePathBuf[MAX_UNC_PATH+1];
     DWORD modulePathSize = ::GetModuleFileNameEx(processHandle, NULL, modulePathBuf, modulePathBufSize );
     ::CloseHandle(processHandle);
     processHandle = NULL;
@@ -298,9 +293,9 @@ static std::wstring GetPathToLiveBrowser()
             HKEY_LOCAL_MACHINE, 
             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe",
             0, KEY_READ, &hKey)) {
-       wchar_t wpath[MAX_PATH] = {0};
+       wchar_t wpath[MAX_UNC_PATH] = {0};
 
-        DWORD length = MAX_PATH;
+        DWORD length = MAX_UNC_PATH;
         RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)wpath, &length);
         RegCloseKey(hKey);
 
@@ -310,7 +305,7 @@ static std::wstring GetPathToLiveBrowser()
     // We didn't get an "App Paths" entry. This could be because Chrome was only installed for
     // the current user, or because Chrome isn't installed at all.
     // Look for Chrome.exe at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
-    TCHAR localAppPath[MAX_PATH] = {0};
+    TCHAR localAppPath[MAX_UNC_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
     std::wstring appPath(localAppPath);
     appPath += L"\\Google\\Chrome\\Application\\chrome.exe";
@@ -320,8 +315,8 @@ static std::wstring GetPathToLiveBrowser()
     
 static bool ConvertToShortPathName(std::wstring & path)
 {
-    DWORD shortPathBufSize = _MAX_PATH+1;
-    WCHAR shortPathBuf[_MAX_PATH+1];
+    DWORD shortPathBufSize = MAX_UNC_PATH+1;
+    WCHAR shortPathBuf[MAX_UNC_PATH+1];
     DWORD finalShortPathSize = ::GetShortPathName(path.c_str(), shortPathBuf, shortPathBufSize);
     if( finalShortPathSize == 0 ) {
         return false;
@@ -413,7 +408,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
-    wchar_t szFile[MAX_PATH];
+    wchar_t szFile[MAX_UNC_PATH];
     szFile[0] = 0;
 
     // Windows common file dialogs can handle Windows path only, not Unix path.
@@ -489,7 +484,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         ofn.hwndOwner = GetActiveWindow();
         ofn.lStructSize = sizeof(ofn);
         ofn.lpstrFile = szFile;
-        ofn.nMaxFile = MAX_PATH;
+        ofn.nMaxFile = MAX_UNC_PATH;
         ofn.lpstrTitle = title.c_str();
 
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
@@ -519,7 +514,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                     selectedFiles->SetString(0, filePath);
                 } else {
                     // Multiple files are selected
-                    wchar_t fullPath[MAX_PATH];
+                    wchar_t fullPath[MAX_UNC_PATH];
                     for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
@@ -563,10 +558,10 @@ int32 ShowSaveDialog(ExtensionString title,
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.hwndOwner = GetActiveWindow();
     ofn.lStructSize = sizeof(ofn);
-    wchar_t szFile[MAX_PATH];
+    wchar_t szFile[MAX_UNC_PATH];
     wcscpy(szFile, proposedNewFilename.c_str());
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = MAX_PATH;
+    ofn.nMaxFile = MAX_UNC_PATH;
     ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
     ofn.lpstrInitialDir = initialDirectory.c_str();
     ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
@@ -682,11 +677,11 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
         hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
-            wchar_t pathBuffer[PATH_BUFFER_SIZE + 1];
+            wchar_t pathBuffer[MAX_UNC_PATH + 1];
             DWORD nChars;
 
-            nChars = ::GetFinalPathNameByHandleW(hFile, pathBuffer, PATH_BUFFER_SIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-            if (nChars && nChars <= PATH_BUFFER_SIZE) {
+            nChars = ::GetFinalPathNameByHandleW(hFile, pathBuffer, MAX_UNC_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+            if (nChars && nChars <= MAX_UNC_PATH) {
                 // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
                 realPath = &pathBuffer[4];  
 
@@ -806,7 +801,7 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
     //	that end with a trailing slash so remove it
     RemoveTrailingSlash(filename);
 
-    WCHAR filepath[MAX_PATH+1] = {0};
+    WCHAR filepath[MAX_UNC_PATH+1] = {0};
     wcscpy(filepath, filename.c_str());
 
     SHFILEOPSTRUCT operation = {0};
