@@ -658,6 +658,14 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
+// function prototype for GetFinalPathNameByHandleW(), which is unavailable on Windows XP and earlier
+typedef DWORD (WINAPI *PFNGFPNBH)(
+  _In_   HANDLE hFile,
+  _Out_  LPTSTR lpszFilePath,
+  _In_   DWORD cchFilePath,
+  _In_   DWORD dwFlags
+);
+
 int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
 
@@ -678,30 +686,35 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
     realPath = L"";
     if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
-        HANDLE      hFile;
+        // conditionally call GetFinalPathNameByHandleW() if it's available -- Windows Vista or later
+        HMODULE hDLL = ::GetModuleHandle(TEXT("kernel32.dll"));
+        PFNGFPNBH pfn = (hDLL != NULL) ? (PFNGFPNBH)::GetProcAddress(hDLL, "GetFinalPathNameByHandleW") : NULL;
+        if (pfn != NULL) {
+            HANDLE      hFile;
 
-        hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            wchar_t pathBuffer[PATH_BUFFER_SIZE + 1];
-            DWORD nChars;
+            hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                wchar_t pathBuffer[PATH_BUFFER_SIZE + 1];
+                DWORD nChars;
 
-            nChars = ::GetFinalPathNameByHandleW(hFile, pathBuffer, PATH_BUFFER_SIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-            if (nChars && nChars <= PATH_BUFFER_SIZE) {
-                // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
-                realPath = &pathBuffer[4];  
+                nChars = (*pfn)(hFile, pathBuffer, PATH_BUFFER_SIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+                if (nChars && nChars <= PATH_BUFFER_SIZE) {
+                    // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
+                    realPath = &pathBuffer[4];  
 
-                // UNC paths start with UNC. Update here, if needed.
-                if (realPath.find(L"UNC") == 0) {
-                    realPath = L"\\" + ExtensionString(&pathBuffer[7]);
+                    // UNC paths start with UNC. Update here, if needed.
+                    if (realPath.find(L"UNC") == 0) {
+                        realPath = L"\\" + ExtensionString(&pathBuffer[7]);
+                    }
+
+                    ConvertToUnixPath(realPath);
                 }
-
-                ConvertToUnixPath(realPath);
+                ::CloseHandle(hFile);
             }
-            ::CloseHandle(hFile);
-        }
 
-        // Note: all realPath errors are ignored. If the realPath can't be determined, it should not make the
-        // stat fail.
+            // Note: all realPath errors are ignored. If the realPath can't be determined, it should not make the
+            // stat fail.
+        }
     }
 
     return NO_ERROR;
