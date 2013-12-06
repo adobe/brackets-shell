@@ -58,7 +58,7 @@ module.exports = function (grunt) {
         var done = this.async(),
             repo = resolve(grunt.config("git.www.repo"));
         
-        spawn(["bash -c 'grunt build'"], { cwd: repo }).then(function (result) {
+        spawn(["bash -c grunt build"], { cwd: repo }).then(function (result) {
             done();
         }, function (err) {
             grunt.log.error(err);
