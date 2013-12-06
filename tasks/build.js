@@ -55,8 +55,8 @@ module.exports = function (grunt) {
 
     // task: build-www
     grunt.registerTask("build-www", "Check brackets repository for build artifacts", function () {
-        if (!grunt.file.exists(grunt.config("config-json"))) {
-            grunt.log.error(grunt.config("config-json") + " file does not exist. Run `grunt build` in the brackets repo first.")
+        if (!grunt.file.exists(grunt.config("www.files.cwd"))) {
+            grunt.log.error(grunt.config("www.files.cwd") + " file does not exist. Run `grunt build` in the brackets repo first.")
             return false;
         }
     });
