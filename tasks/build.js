@@ -54,16 +54,14 @@ module.exports = function (grunt) {
     });
 
     // task: build-www
-    grunt.registerTask("build-www", "Build brackets www repository", function () {
-        var done = this.async(),
-            repo = resolve(grunt.config("git.www.repo"));
-        
-        spawn(["grunt build"], { cwd: repo }).then(function (result) {
-            done();
-        }, function (err) {
-            grunt.log.error(err);
-            done(false);
-        });
+    grunt.registerTask("build-www", "Check brackets repository for build artifacts", function () {
+        var distPath = resolve(grunt.config("copy.www.files")[0].cwd);
+        grunt.log.writeln(distPath);
+
+        if (!grunt.file.exists(distPath)) {
+            grunt.log.error(distPath + " file does not exist. Run `grunt build` in the brackets repo first.")
+            return false;
+        }
     });
     
     // task: build-mac
