@@ -372,6 +372,7 @@ CefString AppGetChromiumVersionString() {
   return CefString(versionStream.str());
 }
 
+// set the minimum width to which the main window can be resized by the user
 void SetMinWidthMainWindow(int32 minWidth)
 {
     if (gMainWnd != NULL) {
