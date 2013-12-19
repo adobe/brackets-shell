@@ -204,7 +204,7 @@ module.exports = function (grunt) {
             "version"       : "3.1650.1539"
         },
         "node": {
-            "version"       : "0.10.22"
+            "version"       : "0.10.24"
         },
         "npm": {
             "version"       : "1.2.11"
