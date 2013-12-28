@@ -1098,8 +1098,9 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                     [newItem setKeyEquivalent:keyStr];
                     [newItem setKeyEquivalentModifierMask:mask];
                     [newItem setTag:tag];
-                    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
                 }
+                NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
+                
                 NSInteger positionIdx = -1;
                 int32 errCode = getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
                 if (positionIdx > -1) {
