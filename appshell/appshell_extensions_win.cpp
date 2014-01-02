@@ -1779,6 +1779,15 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
+    // The menu bar needs to be redrawn, but we don't want to redraw with
+    // *every* menu change since that causes flicker if we're changing a 
+    // bunch of menus in a row (like at "reload without user extensions"). 
+    // Set a timer here so we only do a single redraw.
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
+    }
+
     return RemoveMenuItem(browser, commandId);
 }
 
@@ -1796,7 +1805,16 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     DeleteMenu(mainMenu, tag, MF_BYCOMMAND);
     NativeMenuModel::getInstance(getMenuParent(browser)).removeMenuItem(commandId);
     RemoveKeyFromAcceleratorTable(tag);
-    DrawMenuBar((HWND)getMenuParent(browser));
+
+    // The menu bar needs to be redrawn, but we don't want to redraw with
+    // *every* menu change since that causes flicker if we're changing a 
+    // bunch of menus in a row (like at "reload without user extensions"). 
+    // Set a timer here so we only do a single redraw.
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
+    }
+
     return NO_ERROR;
 }
 
