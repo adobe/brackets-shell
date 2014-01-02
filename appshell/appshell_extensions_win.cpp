@@ -50,6 +50,11 @@ static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
 time_t FiletimeToTime(FILETIME const& ft);
 
+// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
+const DWORD kMenuRedrawTimeout = 100;
+UINT_PTR redrawTimerId = NULL;
+CefRefPtr<CefBrowser> redrawBrowser;
+
 extern HINSTANCE hInst;
 extern HACCEL hAccelTable;
 extern std::wstring gFilesToOpen;
@@ -811,7 +816,7 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
     ConvertToNativePath(filename);
 
     // Windows XP doesn't like directory names
-    //	that end with a trailing slash so remove it
+    // that end with a trailing slash so remove it
     RemoveTrailingSlash(filename);
 
     WCHAR filepath[MAX_UNC_PATH+1] = {0};
@@ -1568,15 +1573,21 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
-// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
-const DWORD kMenuRedrawTimeout = 100;
-UINT_PTR redrawTimerId = NULL;
-CefRefPtr<CefBrowser> redrawBrowser;
-
 void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD dwTime) {
     DrawMenuBar((HWND)getMenuParent(redrawBrowser));
     KillTimer(NULL, redrawTimerId);
     redrawTimerId = NULL;
+    redrawBrowser = NULL;
+}
+
+// The menu bar needs to be redrawn, but we don't want to redraw with *every* change
+// since that causes flicker if we're changing a bunch of titles in a row (like at
+// app startup).  Set a timer here to minimize the amount of drawing.
+void ScheduleMenuRedraw(CefRefPtr<CefBrowser> browser) {
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
+    }
 }
 
 int GetMenuItemPosition(HMENU hMenu, UINT commandID)
@@ -1668,14 +1679,8 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
         }
     }
 
-    // The menu bar needs to be redrawn, but we don't want to redraw with
-    // *every* title change since that causes flicker if we're changing a 
-    // bunch of titles in a row (like at app startup). 
-    // Set a timer here so we only do a single redraw.
-    if (!redrawTimerId) {
-        redrawBrowser = browser;
-        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
-    }
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
 
     return NO_ERROR;
 }
@@ -1779,14 +1784,8 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
-    // The menu bar needs to be redrawn, but we don't want to redraw with
-    // *every* menu change since that causes flicker if we're changing a 
-    // bunch of menus in a row (like at "reload without user extensions"). 
-    // Set a timer here so we only do a single redraw.
-    if (!redrawTimerId) {
-        redrawBrowser = browser;
-        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
-    }
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
 
     return RemoveMenuItem(browser, commandId);
 }
@@ -1806,14 +1805,8 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     NativeMenuModel::getInstance(getMenuParent(browser)).removeMenuItem(commandId);
     RemoveKeyFromAcceleratorTable(tag);
 
-    // The menu bar needs to be redrawn, but we don't want to redraw with
-    // *every* menu change since that causes flicker if we're changing a 
-    // bunch of menus in a row (like at "reload without user extensions"). 
-    // Set a timer here so we only do a single redraw.
-    if (!redrawTimerId) {
-        redrawBrowser = browser;
-        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
-    }
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
 
     return NO_ERROR;
 }
