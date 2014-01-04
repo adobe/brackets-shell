@@ -50,7 +50,7 @@ static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
 time_t FiletimeToTime(FILETIME const& ft);
 
-// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
+// Redraw timeout variables. See the comment above ScheduleMenuRedraw for details.
 const DWORD kMenuRedrawTimeout = 100;
 UINT_PTR redrawTimerId = NULL;
 CefRefPtr<CefBrowser> redrawBrowser;
