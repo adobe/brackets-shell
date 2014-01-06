@@ -21,9 +21,16 @@
  */
 #include "cef_dark_aero_window.h"
 
+// Constants
+static const int kWindowFrameSize = 8;
+static const int kNonClientAreaTopSize = kWindowFrameSize + 44;
+static const int kSystemIconZoomFactorCX = 12;
+static const int kSystemIconZoomFactorCY = 12;
+
 // dll instance to dynamically load the Desktop Window Manager DLL
 static CDwmDLL gDesktopWindowManagerDLL;
 
+// DWM Initializers 
 HINSTANCE CDwmDLL::mhDwmDll = NULL;
 PFNDWMEFICA CDwmDLL::pfnDwmExtendFrameIntoClientArea = NULL;
 PFNDWMDWP CDwmDLL::pfnDwmDefWindowProc = NULL;
@@ -151,6 +158,24 @@ BOOL cef_dark_aero_window::HandleActivate()
     return SUCCEEDED(hr);
 }
 
+// Computes the Rect where the System Icon is drawn in window coordinates
+void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect)
+{
+    int top = ::GetSystemMetrics (SM_CYFRAME);
+    int left = ::GetSystemMetrics (SM_CXFRAME);
+
+    if (IsZoomed()) {
+        top = ::kSystemIconZoomFactorCX;
+        left = ::kSystemIconZoomFactorCY;    
+    }
+
+    ::SetRectEmpty(&rect);
+    rect.top =  top;
+    rect.left = left;
+    rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
+    rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+}
+
 // Computes the Rect where the window caption is drawn in window coordinates
 void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
 {
@@ -159,7 +184,7 @@ void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
 
     int top = mNcMetrics.iBorderWidth;
 
-    rect.top = 8;
+    rect.top = ::kWindowFrameSize;
     rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
 
     RECT ir;
@@ -168,8 +193,8 @@ void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
     RECT mr;
     ComputeMinimizeButtonRect(mr);
 
-    rect.left = ir.right + 8;
-    rect.right = mr.left - 8;
+    rect.left = ir.right + ::kWindowFrameSize;
+    rect.right = mr.left - ::kWindowFrameSize;
 }
 
 // WM_NCHITTEST handler
@@ -555,10 +580,10 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
     GetClientRect(rect);
 
-    rect->top += 52;
-    rect->bottom -= 8;
-    rect->left += 8;
-    rect->right -= 8;
+    rect->top += ::kNonClientAreaTopSize;
+    rect->bottom -= ::kWindowFrameSize;
+    rect->left += ::kWindowFrameSize;
+    rect->right -= ::kWindowFrameSize;
 
     return TRUE;
 }

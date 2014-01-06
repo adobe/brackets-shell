@@ -94,7 +94,7 @@ protected:
     virtual void DoPaintNonClientArea(HDC hdc);
 
     void ComputeWindowCaptionRect(RECT& rect);
-
+    void ComputeWindowIconRect(RECT& rect);
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
