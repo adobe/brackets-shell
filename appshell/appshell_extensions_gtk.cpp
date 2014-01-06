@@ -227,6 +227,8 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
 
     DIR *dp;
     struct dirent *files;
+    struct stat statbuf;
+    ExtensionString curFile;
     
     /*struct dirent
     {
@@ -245,10 +247,27 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     {
         if(!strcmp(files->d_name,".") || !strcmp(files->d_name,".."))
             continue;
+        
         if(files->d_type==DT_DIR)
             resultDirs.push_back(ExtensionString(files->d_name));
         else if(files->d_type==DT_REG)
             resultFiles.push_back(ExtensionString(files->d_name));
+        else
+        {
+            // Some file systems do not support d_type we use
+            // for faster type detection. So on these file systems
+            // we may get DT_UNKNOWN for all file entries, but just  
+            // to be safe we will use slower stat call for all 
+            // file entries that are not DT_DIR or DT_REG.
+            curFile = path + files->d_name;
+            if(stat(curFile.c_str(), &statbuf) == -1)
+                continue;
+        
+            if(S_ISDIR(statbuf.st_mode))
+                resultDirs.push_back(ExtensionString(files->d_name));
+            else if(S_ISREG(statbuf.st_mode))
+                resultFiles.push_back(ExtensionString(files->d_name));
+        }
     }
 
     closedir(dp);
@@ -298,7 +317,7 @@ int Rename(ExtensionString oldName, ExtensionString newName)
     }
 }
 
-int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size)
+int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
     struct stat buf;
     if(stat(filename.c_str(),&buf)==-1)
@@ -307,7 +326,11 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     modtime = buf.st_mtime;
     isDir = S_ISDIR(buf.st_mode);
     size = (double)buf.st_size;
-
+    
+    // TODO: Implement realPath. If "filename" is a symlink, realPath should be the actual path
+    // to the linked object.
+    realPath = "";
+    
     return NO_ERROR;
 }
 
@@ -336,6 +359,7 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     return error;
 }
 
+
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
     const char *filenameStr = filename.c_str();    
@@ -348,8 +372,16 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_CANT_WRITE;
     }
     
-    if (!g_file_set_contents(filenameStr, contents.c_str(), contents.length(), &gerror)) {
-        error = GErrorToErrorCode(gerror);
+    FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
+        if (size != contents.length()) {
+            error = ERR_CANT_WRITE;
+        }
+
+        fclose(file);
+    } else {
+        return ConvertLinuxErrorCode(errno);
     }
 
     return error;

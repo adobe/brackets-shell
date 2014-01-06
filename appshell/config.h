@@ -26,6 +26,9 @@
 // Application name used in native code. This name is *not* used in resources.
 
 #ifdef OS_WIN
+// MAX_PATH is only 260 chars which really isn't big enough for really long unc pathnames
+//  so use this constant instead which accounts for some really long pathnames
+#define MAX_UNC_PATH 4096
 // Name of group (if any) that application prefs/settings/etc. are stored under
 // This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
