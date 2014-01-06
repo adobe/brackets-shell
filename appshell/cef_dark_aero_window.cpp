@@ -254,7 +254,6 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
              return HTBOTTOM;
     }
 
-    // If it's not in the menu, it's in the caption
     RECT rectMenu;
     ComputeRequiredMenuRect(rectMenu);
     NonClientToScreen(&rectMenu);
@@ -262,6 +261,15 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
     if (::PtInRect(&rectMenu, *ptHit))
         return HTMENU;
 
+    // If it's in the menu bar but not actually
+    //  on a menu item, then return caption so 
+    //  the window can be dragged from the dead space 
+    ComputeMenuBarRect(rectMenu);
+    NonClientToScreen(&rectMenu);
+    if (::PtInRect(&rectMenu, *ptHit))
+        return HTCAPTION;
+
+    // Aero requires that we return HTNOWHERE
     return HTNOWHERE;
 }
 
@@ -393,7 +401,7 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
     GetRealClientRect(&rectClient);
 
     rect.top = rectCaption.bottom;
-    rect.bottom = rectClient.top + 2;
+    rect.bottom = rectClient.top + 1;
 
     rect.left = rectClient.left;
     rect.right = rectClient.right;
@@ -547,7 +555,7 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
     GetClientRect(rect);
 
-    rect->top += 49;
+    rect->top += 52;
     rect->bottom -= 8;
     rect->left += 8;
     rect->right -= 8;
