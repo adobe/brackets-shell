@@ -29,6 +29,7 @@
 #include <algorithm>
 
 extern std::vector<CefString> gDroppedFiles;
+extern long g_minWindowWidth;
 
 namespace appshell_extensions {
 
@@ -682,7 +683,19 @@ public:
         } else if (message_name == "DragWindow") {     
             // Parameters: none       
             DragWindow(browser);
-        } 
+        } else if (message_name == "SetMinWindowWidth") {
+            // Parameters:
+            // 0: int32 - callback id
+            // 1: int32 - min window width
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_INT) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            if (error == NO_ERROR) {
+                SetMinWidthMainWindow(argList->GetInt(1));
+            }
+        }
         else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;

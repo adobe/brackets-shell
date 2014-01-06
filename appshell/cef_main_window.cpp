@@ -78,7 +78,8 @@ ATOM cef_main_window::RegisterWndClass()
     return classAtom;
 }
 
-cef_main_window::cef_main_window() 
+cef_main_window::cef_main_window() :
+m_minWindowWidth(kMinWindowWidth)
 {
 }
 
@@ -214,7 +215,7 @@ BOOL cef_main_window::HandlePaint()
 // WM_GETMINMAXINFO handler
 BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
-    mmi->ptMinTrackSize.x = ::kMinWindowWidth;
+    mmi->ptMinTrackSize.x = m_minWindowWidth;
     mmi->ptMinTrackSize.y = ::kMinWindowHeight;
     return TRUE;
 }

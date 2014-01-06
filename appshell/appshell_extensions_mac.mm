@@ -1256,6 +1256,15 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
     }
 }
 
+// set the minimum width to which the main window can be resized by the user
+void SetMinWidthMainWindow(int32 minWidth)
+{
+    NSWindow* mainWnd = [NSApp mainWindow];
+    if (mainWnd != NULL && minWidth > 0) {
+        [mainWnd setMinSize:NSMakeSize(minWidth, [mainWnd minSize].height)];
+    }
+}
+
 int32 GetArgvFromProcessID(int pid, NSString **argv);
 NSRunningApplication* GetLiveBrowserApp(NSString *bundleId, int debugPort)
 {

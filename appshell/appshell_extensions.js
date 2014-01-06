@@ -807,6 +807,18 @@ if (!appshell.app) {
     appshell.app.dragWindow = function () {
         DragWindow();
     };
+
+    /**
+     * Set the minimum width when resizing the frame window to avoid shrinking the editor to 0
+     * 
+     * @param {number} minimum width of frame window to set
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function SetMinWindowWidth();
+    appshell.app.setMinWindowWidth = function (minwidth, callback) {
+        SetMinWindowWidth(callback || _dummyCallback, minwidth);
+    };
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
