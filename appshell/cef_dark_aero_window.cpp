@@ -161,40 +161,48 @@ BOOL cef_dark_aero_window::HandleActivate()
 // Computes the Rect where the System Icon is drawn in window coordinates
 void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect)
 {
-    int top = ::GetSystemMetrics (SM_CYFRAME);
-    int left = ::GetSystemMetrics (SM_CXFRAME);
+	if (CanUseAeroGlass()) {
+		int top = ::GetSystemMetrics (SM_CYFRAME);
+		int left = ::GetSystemMetrics (SM_CXFRAME);
 
-    if (IsZoomed()) {
-        top = ::kSystemIconZoomFactorCX;
-        left = ::kSystemIconZoomFactorCY;    
-    }
+		if (IsZoomed()) {
+			top = ::kSystemIconZoomFactorCX;
+			left = ::kSystemIconZoomFactorCY;    
+		}
 
-    ::SetRectEmpty(&rect);
-    rect.top =  top;
-    rect.left = left;
-    rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
-    rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+		::SetRectEmpty(&rect);
+		rect.top =  top;
+		rect.left = left;
+		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
+		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+	} else {
+		cef_dark_window::ComputeWindowIconRect(rect);
+	}
 }
 
 // Computes the Rect where the window caption is drawn in window coordinates
 void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
 {
-    RECT wr;
-    GetWindowRect(&wr);
+	if (CanUseAeroGlass()) {
+		RECT wr;
+		GetWindowRect(&wr);
 
-    int top = mNcMetrics.iBorderWidth;
+		int top = mNcMetrics.iBorderWidth;
 
-    rect.top = ::kWindowFrameSize;
-    rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
+		rect.top = ::kWindowFrameSize;
+		rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
 
-    RECT ir;
-    ComputeWindowIconRect(ir);
+		RECT ir;
+		ComputeWindowIconRect(ir);
 
-    RECT mr;
-    ComputeMinimizeButtonRect(mr);
+		RECT mr;
+		ComputeMinimizeButtonRect(mr);
 
-    rect.left = ir.right + ::kWindowFrameSize;
-    rect.right = mr.left - ::kWindowFrameSize;
+		rect.left = ir.right + ::kWindowFrameSize;
+		rect.right = mr.left - ::kWindowFrameSize;
+	} else {
+		cef_dark_window::ComputeWindowCaptionRect(rect);
+	}
 }
 
 // WM_NCHITTEST handler

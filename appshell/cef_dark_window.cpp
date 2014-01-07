@@ -41,8 +41,7 @@ extern HINSTANCE hInst;
 static ULONG_PTR gdiplusToken = NULL;
 
 // Constants
-static const int kWindowFrameZoomFactorCX = 12;
-static const int kWindowFrameZoomFactorCY = 12;
+static const int kWindowFrameZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCY = 8;
 
 // GDI+ Helpers
