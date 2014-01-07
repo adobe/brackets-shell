@@ -50,7 +50,7 @@ public:
     HWND GetBrowserHwnd();
     bool SubclassWindow(HWND hWnd);
 
-    static BOOL CanUseAreoGlass();
+    virtual BOOL CanUseAeroGlass() const;
 
     BOOL GetBrowserRect(RECT& r) const;
 

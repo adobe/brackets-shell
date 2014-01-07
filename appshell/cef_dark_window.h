@@ -78,6 +78,9 @@ public:
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
     bool SubclassWindow(HWND hWnd);
 
+    // must be implemented in derived class
+    virtual BOOL CanUseAeroGlass() const = 0; 
+
 protected:
     // Window Message Handlers
     BOOL HandleNcCreate();

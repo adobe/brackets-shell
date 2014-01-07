@@ -102,7 +102,7 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
 
         HWND hwndBrowser = GetBrowserHwnd();
 
-        if (CanUseAreoGlass() && hwndBrowser) {
+        if (CanUseAeroGlass() && hwndBrowser) {
             RECT rectBrowser;
             GetBrowserRect(rectBrowser);
             ::MoveWindow(hwndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
@@ -118,7 +118,7 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
 // WM_SIZE handler
 BOOL cef_popup_window::HandleSize(BOOL bMinimize)
 {
-    if (CanUseAreoGlass()) {
+    if (CanUseAeroGlass()) {
 
         HWND hwnd = GetBrowserHwnd();
         if (!hwnd) 

@@ -34,7 +34,7 @@ cef_host_window::~cef_host_window(void)
 {
 }
 
-BOOL cef_host_window::CanUseAreoGlass()
+BOOL cef_host_window::CanUseAeroGlass() const
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
     #if defined(DARK_AERO_GLASS)
@@ -57,7 +57,7 @@ BOOL cef_host_window::CanUseAreoGlass()
 bool cef_host_window::SubclassWindow(HWND hWnd)
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    if (CanUseAreoGlass()) {
+    if (CanUseAeroGlass()) {
         return cef_dark_aero_window::SubclassWindow(hWnd);
     }
     else 
@@ -75,7 +75,7 @@ bool cef_host_window::SubclassWindow(HWND hWnd)
 BOOL cef_host_window::GetBrowserRect(RECT& r) const
 {
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    if (CanUseAreoGlass()) {
+    if (CanUseAeroGlass()) {
         return cef_dark_aero_window::GetRealClientRect(&r); 
     } 
 #endif
@@ -192,7 +192,7 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     LRESULT lr = 0;
     
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    if (CanUseAreoGlass()) {
+    if (CanUseAeroGlass()) {
         lr = cef_dark_aero_window::WindowProc(message, wParam, lParam);
     }
     else 

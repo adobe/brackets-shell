@@ -637,7 +637,7 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
             // Check to make sure it's actually in the 
             //  the correct location (fixes aero drawing issue)
             POINT pt = {itemRect.left, itemRect.top};
-            if (IsZoomed() || ::PtInRect(&menuBarRect, pt)) {
+            if (!CanUseAeroGlass() || IsZoomed() || ::PtInRect(&menuBarRect, pt)) {
             
                 // Draw the menu item
                 DRAWITEMSTRUCT dis = {0};
