@@ -58,6 +58,8 @@ protected:
     // Must be impelemented in derived class
     virtual const CefRefPtr<CefBrowser> GetBrowser() = 0;
 
+    void RecomputeLayout();
+
     // Message Handlers 
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
     BOOL HandleSize(BOOL bMinimize);

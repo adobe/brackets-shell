@@ -79,7 +79,8 @@ public:
     bool SubclassWindow(HWND hWnd);
 
     // must be implemented in derived class
-    virtual BOOL CanUseAeroGlass() const = 0; 
+    virtual BOOL CanUseAeroGlass() const
+    { return false; }
 
 protected:
     // Window Message Handlers
@@ -116,13 +117,13 @@ protected:
     virtual void DoRepaintClientArea();
 
     // Rect Computers
-    virtual void ComputeWindowIconRect(RECT& rect);
-    virtual void ComputeWindowCaptionRect(RECT& rect);
-    virtual void ComputeMinimizeButtonRect(RECT& rect);
-    virtual void ComputeMaximizeButtonRect(RECT& rect);
-    virtual void ComputeCloseButtonRect(RECT& rect);
-    virtual void ComputeMenuBarRect(RECT& rect);
-    virtual void ComputeRequiredMenuRect(RECT& rect);
+    virtual void ComputeWindowIconRect(RECT& rect) const;
+    virtual void ComputeWindowCaptionRect(RECT& rect) const;
+    virtual void ComputeMinimizeButtonRect(RECT& rect) const;
+    virtual void ComputeMaximizeButtonRect(RECT& rect) const;
+    virtual void ComputeCloseButtonRect(RECT& rect) const;
+    virtual void ComputeMenuBarRect(RECT& rect) const;
+    virtual void ComputeRequiredMenuRect(RECT& rect) const;
   
     
     // Drawing Initializers

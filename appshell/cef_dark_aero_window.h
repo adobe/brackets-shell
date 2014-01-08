@@ -85,7 +85,6 @@ protected:
     void PostHandleNcLeftButtonUp(UINT uHitTest, LPPOINT pt);
 
     void UpdateMenuBar();
-    void ComputeMenuBarRect(RECT& rect);
     void HiliteMenuItemAt(LPPOINT pt);
 
     virtual void UpdateNonClientArea();
@@ -93,13 +92,15 @@ protected:
     virtual void InitDeviceContext(HDC hdc);
     virtual void DoPaintNonClientArea(HDC hdc);
 
-    void ComputeWindowCaptionRect(RECT& rect);
-    void ComputeWindowIconRect(RECT& rect);
+    void ComputeMenuBarRect(RECT& rect) const;
+    void ComputeWindowCaptionRect(RECT& rect) const;
+    void ComputeWindowIconRect(RECT& rect) const;
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
-private:
     bool mReady;
+
+private:
     int  mMenuHiliteIndex;
     int  mMenuActiveIndex;
 };

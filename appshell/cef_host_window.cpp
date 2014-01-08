@@ -142,6 +142,19 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
     return DoCommand(commandString, callback);
 }
 
+void cef_host_window::RecomputeLayout()
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    HWND hWndBrowser = GetBrowserHwnd();
+    if (hWndBrowser && mReady && CanUseAeroGlass()) {
+        RECT rectBrowser;
+        ::SetRectEmpty(&rectBrowser);
+        GetBrowserRect(rectBrowser);
+        ::MoveWindow(hWndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
+    }
+#endif
+}
+
 // WM_SIZE handler
 BOOL cef_host_window::HandleSize(BOOL bMinimize)
 {
@@ -204,6 +217,14 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         lr = cef_window::WindowProc(message, wParam, lParam);
 #endif
     }
+
+    if (message == WM_WINDOWPOSCHANGING) {
+        LPWINDOWPOS lpwp = (LPWINDOWPOS)lParam;
+        if (lpwp->flags & SWP_FRAMECHANGED) {
+            RecomputeLayout();
+        }
+    }
+
 
     return lr;
 }

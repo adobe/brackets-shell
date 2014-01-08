@@ -23,7 +23,7 @@
 
 // Constants
 static const int kWindowFrameSize = 8;
-static const int kNonClientAreaTopSize = kWindowFrameSize + 44;
+static const int kNonClientAreaTopSize = kWindowFrameSize;
 static const int kSystemIconZoomFactorCX = 12;
 static const int kSystemIconZoomFactorCY = 12;
 
@@ -159,7 +159,7 @@ BOOL cef_dark_aero_window::HandleActivate()
 }
 
 // Computes the Rect where the System Icon is drawn in window coordinates
-void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect)
+void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 {
 	if (CanUseAeroGlass()) {
 		int top = ::GetSystemMetrics (SM_CYFRAME);
@@ -181,13 +181,11 @@ void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect)
 }
 
 // Computes the Rect where the window caption is drawn in window coordinates
-void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect)
+void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect) const
 {
 	if (CanUseAeroGlass()) {
 		RECT wr;
 		GetWindowRect(&wr);
-
-		int top = mNcMetrics.iBorderWidth;
 
 		rect.top = ::kWindowFrameSize;
 		rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
@@ -425,7 +423,7 @@ BOOL cef_dark_aero_window::HandlePaint()
 }
 
 // Computes the Rect where the menu bar is drawn in window coordinates
-void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
+void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect) const
 {
     RECT rectClient;
     RECT rectCaption;
@@ -433,8 +431,8 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
     ComputeWindowCaptionRect(rectCaption);
     GetRealClientRect(&rectClient);
 
-    rect.top = rectCaption.bottom;
-    rect.bottom = rectClient.top + 1;
+    rect.top = rectCaption.bottom + 1;
+    rect.bottom = rectClient.top - 1;
 
     rect.left = rectClient.left;
     rect.right = rectClient.right;
@@ -443,7 +441,6 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect)
 // Redraws the menu bar
 void cef_dark_aero_window::UpdateMenuBar()
 {
-
     HDC hdc = GetWindowDC();
 
     RECT rectWindow ;
@@ -588,7 +585,13 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 {
     GetClientRect(rect);
 
-    rect->top += ::kNonClientAreaTopSize;
+    RECT rectMenu;
+    ComputeRequiredMenuRect(rectMenu);
+
+    RECT rectCaption;
+    ComputeWindowCaptionRect(rectCaption);
+
+    rect->top = rectCaption.bottom + ::RectHeight(rectMenu) + 4;
     rect->bottom -= ::kWindowFrameSize;
     rect->left += ::kWindowFrameSize;
     rect->right -= ::kWindowFrameSize;

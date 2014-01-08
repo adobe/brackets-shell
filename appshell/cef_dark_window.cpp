@@ -297,7 +297,7 @@ BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
 }
 
 // Computes the Rect where the System Icon is drawn in window coordinates
-void cef_dark_window::ComputeWindowIconRect(RECT& rect)
+void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
 {
     int top = ::GetSystemMetrics (SM_CYFRAME);
     int left = ::GetSystemMetrics (SM_CXFRAME);
@@ -314,7 +314,7 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect)
 }
 
 // Computes the Rect where the window caption is drawn in window coordinates
-void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
+void cef_dark_window::ComputeWindowCaptionRect(RECT& rect) const
 {
     RECT wr;
     GetWindowRect(&wr);
@@ -339,7 +339,7 @@ void cef_dark_window::ComputeWindowCaptionRect(RECT& rect)
 }
 
 // Computes the Rect where the minimize button is drawn in window coordinates
-void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect)
+void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect) const
 {
     ComputeMaximizeButtonRect(rect);
 
@@ -349,7 +349,7 @@ void cef_dark_window::ComputeMinimizeButtonRect(RECT& rect)
 }
 
 // Computes the Rect where the maximize button is drawn in window coordinates
-void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
+void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect) const
 {
     ComputeCloseButtonRect(rect);
 
@@ -359,7 +359,7 @@ void cef_dark_window::ComputeMaximizeButtonRect(RECT& rect)
 }
 
 // Computes the Rect where the close button is drawn in window coordinates
-void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
+void cef_dark_window::ComputeCloseButtonRect(RECT& rect) const
 {
     int top = mNcMetrics.iBorderWidth;
     int right = mNcMetrics.iBorderWidth;
@@ -379,7 +379,7 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect)
 }
 
 
-void cef_dark_window::ComputeRequiredMenuRect(RECT& rect)
+void cef_dark_window::ComputeRequiredMenuRect(RECT& rect) const
 {
     HMENU menu = GetMenu();
     int items = ::GetMenuItemCount(menu);
@@ -400,7 +400,7 @@ void cef_dark_window::ComputeRequiredMenuRect(RECT& rect)
 }
 
 // Computes the Rect where the menu bar is drawn in window coordinates
-void cef_dark_window::ComputeMenuBarRect(RECT& rect)
+void cef_dark_window::ComputeMenuBarRect(RECT& rect) const 
 {
     RECT rectClient;
     RECT rectCaption;
