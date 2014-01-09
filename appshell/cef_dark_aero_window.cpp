@@ -351,48 +351,54 @@ BOOL cef_dark_aero_window::HandleSysCommand(UINT command)
 // Setup the device context for drawing
 void cef_dark_aero_window::InitDeviceContext(HDC hdc)
 {
-    RECT rectClipClient;
-    SetRectEmpty(&rectClipClient);
-    GetRealClientRect(&rectClipClient);
+	if (CanUseAeroGlass()) {
+        RECT rectClipClient;
+        SetRectEmpty(&rectClipClient);
+        GetRealClientRect(&rectClipClient);
 
-    // exclude the client area to reduce flicker
-    ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
-
+        // exclude the client area to reduce flicker
+        ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
+    } else {
+        cef_dark_window::InitDeviceContext(hdc);
+    }
 }
 
 // Redraws the non-client area
 void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
 {
-    EnforceMenuBackground();
+    if (CanUseAeroGlass()) {
+        EnforceMenuBackground();
 
-    HDC hdcOrig = hdc;
-    RECT rectWindow;
-    GetWindowRect(&rectWindow);
+        HDC hdcOrig = hdc;
+        RECT rectWindow;
+        GetWindowRect(&rectWindow);
 
-    int Width = ::RectWidth(rectWindow);
-    int Height = ::RectHeight(rectWindow);
+        int Width = ::RectWidth(rectWindow);
+        int Height = ::RectHeight(rectWindow);
 
-    HDC dcMem = ::CreateCompatibleDC(hdc);
-    HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
-    HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
+        HDC dcMem = ::CreateCompatibleDC(hdc);
+        HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
+        HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
 
-    hdc = dcMem;
+        hdc = dcMem;
 
-    InitDeviceContext(hdc);
-    InitDeviceContext(hdcOrig);
+        InitDeviceContext(hdc);
+        InitDeviceContext(hdcOrig);
 
-    DoDrawFrame(hdc);
-    DoDrawSystemMenuIcon(hdc);
-    DoDrawTitlebarText(hdc);
-    DoDrawSystemIcons(hdc);
-    DoDrawMenuBar(hdc);
+        DoDrawFrame(hdc);
+        DoDrawSystemMenuIcon(hdc);
+        DoDrawTitlebarText(hdc);
+        DoDrawSystemIcons(hdc);
+        DoDrawMenuBar(hdc);
 
-    ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
+        ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
 
-    ::SelectObject(dcMem, bmOld);
-    ::DeleteObject(bm);
-    ::DeleteDC(dcMem);
-
+        ::SelectObject(dcMem, bmOld);
+        ::DeleteObject(bm);
+        ::DeleteDC(dcMem);
+    } else {
+        cef_dark_aero_window::DoPaintNonClientArea(hdc);
+    }
 }
 
 // Force Drawing the non-client area.
@@ -402,9 +408,13 @@ void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
 //  artifacts over top of us
 void cef_dark_aero_window::UpdateNonClientArea()
 {
-    HDC hdc = GetDC();
-    DoPaintNonClientArea(hdc);
-    ReleaseDC(hdc);
+	if (CanUseAeroGlass()) {
+        HDC hdc = GetDC();
+        DoPaintNonClientArea(hdc);
+        ReleaseDC(hdc);
+    } else {
+        cef_dark_window::UpdateNonClientArea();
+    }
 }
 
 // WM_PAINT handler
@@ -425,17 +435,21 @@ BOOL cef_dark_aero_window::HandlePaint()
 // Computes the Rect where the menu bar is drawn in window coordinates
 void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect) const
 {
-    RECT rectClient;
-    RECT rectCaption;
+    if (CanUseAeroGlass()) {
+        RECT rectClient;
+        RECT rectCaption;
 
-    ComputeWindowCaptionRect(rectCaption);
-    GetRealClientRect(&rectClient);
+        ComputeWindowCaptionRect(rectCaption);
+        GetRealClientRect(&rectClient);
 
-    rect.top = rectCaption.bottom + 1;
-    rect.bottom = rectClient.top - 1;
+        rect.top = rectCaption.bottom + 1;
+        rect.bottom = rectClient.top - 1;
 
-    rect.left = rectClient.left;
-    rect.right = rectClient.right;
+        rect.left = rectClient.left;
+        rect.right = rectClient.right;
+    } else {
+        cef_dark_window::ComputeMenuBarRect(rect);
+    }
 }
 
 // Redraws the menu bar
