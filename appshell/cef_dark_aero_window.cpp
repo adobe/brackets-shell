@@ -397,7 +397,7 @@ void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
         ::DeleteObject(bm);
         ::DeleteDC(dcMem);
     } else {
-        cef_dark_aero_window::DoPaintNonClientArea(hdc);
+        cef_dark_window::DoPaintNonClientArea(hdc);
     }
 }
 
