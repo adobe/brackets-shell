@@ -23,9 +23,8 @@
 
 // Constants
 static const int kWindowFrameSize = 8;
-static const int kNonClientAreaTopSize = kWindowFrameSize;
-static const int kSystemIconZoomFactorCX = 12;
-static const int kSystemIconZoomFactorCY = 12;
+static const int kSystemIconZoomFactorCX = kWindowFrameSize + 2;
+static const int kSystemIconZoomFactorCY = kWindowFrameSize + 4;
 
 // dll instance to dynamically load the Desktop Window Manager DLL
 static CDwmDLL gDesktopWindowManagerDLL;
@@ -162,12 +161,12 @@ BOOL cef_dark_aero_window::HandleActivate()
 void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 {
 	if (CanUseAeroGlass()) {
-		int top = ::GetSystemMetrics (SM_CYFRAME);
-		int left = ::GetSystemMetrics (SM_CXFRAME);
+		int top = ::kWindowFrameSize;
+		int left = ::kWindowFrameSize;
 
 		if (IsZoomed()) {
-			top = ::kSystemIconZoomFactorCX;
-			left = ::kSystemIconZoomFactorCY;    
+			top = ::kSystemIconZoomFactorCY;
+			left = ::kSystemIconZoomFactorCX;    
 		}
 
 		::SetRectEmpty(&rect);
@@ -250,38 +249,38 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
     if (!IsZoomed()) {
 
         // Left Border
-        if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
+        if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::kWindowFrameSize)
         {
             // it's important that we know if the mouse is on a corner so that
             //    the right mouse cursor is displayed
-            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+            if (ptHit->y <= rectWindow.top + ::kWindowFrameSize)
                  return HTTOPLEFT;
  
-            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+            if (ptHit->y >= rectWindow.bottom - ::kWindowFrameSize)
                  return HTBOTTOMLEFT;
  
             return HTLEFT;
         }
 
         // Right Border
-        if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
+        if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::kWindowFrameSize) 
         {
             // it's important that we know if the mouse is on a corner so that
             //    the right mouse cursor is displayed
-            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+            if (ptHit->y <= rectWindow.top + ::kWindowFrameSize)
                 return HTTOPRIGHT;
  
-            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+            if (ptHit->y >= rectWindow.bottom - ::kWindowFrameSize)
                 return HTBOTTOMRIGHT;
  
             return HTRIGHT;
         }
 
         // Top and Bottom Borders
-        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
+        if (ptHit->y <= rectWindow.top + ::kWindowFrameSize) 
              return HTTOP;
              
-        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+        if (ptHit->y >= rectWindow.bottom - ::kWindowFrameSize)
              return HTBOTTOM;
     }
 
