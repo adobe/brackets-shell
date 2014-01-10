@@ -68,5 +68,7 @@
 
 // Comment out this line to enable OS themed drawing
 #define DARK_UI 
+#define DARK_AERO_GLASS
 #define CUSTOM_TRAFFIC_LIGHTS
 #define LIGHT_CAPTION_TEXT
+

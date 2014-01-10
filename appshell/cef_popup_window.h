@@ -39,6 +39,7 @@ protected:
     // Message Handlers
     BOOL HandleClose();
     BOOL HandleCommand(UINT commandId);
+    BOOL HandleSize(BOOL bMinimize);
 
     // Initialization
     void InitSystemIcon();

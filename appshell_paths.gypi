@@ -116,6 +116,8 @@
       'appshell/resource.h',
       'appshell/res/appshell.ico',
       'appshell/resource_util_win.cpp',
+	  'appshell/cef_dark_aero_window.cpp',
+	  'appshell/cef_dark_aero_window.h',
       'appshell/cef_dark_window.cpp',
       'appshell/cef_dark_window.h',
       'appshell/cef_host_window.cpp',

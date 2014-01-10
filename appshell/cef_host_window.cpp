@@ -23,7 +23,6 @@
 #include "cef_host_window.h"
 #include "native_menu_model.h"
 
-
 // externals
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -35,9 +34,62 @@ cef_host_window::~cef_host_window(void)
 {
 }
 
+BOOL cef_host_window::CanUseAeroGlass() const
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    #if defined(DARK_AERO_GLASS)
+        static BOOL bCalled = FALSE;
+        static BOOL fDwmEnabled = FALSE;
+
+        if (!bCalled) {
+            bCalled = SUCCEEDED(CDwmDLL::DwmIsCompositionEnabled(&fDwmEnabled));
+        }
+
+        return fDwmEnabled;
+    #else
+        return FALSE;
+    #endif
+#else
+    return FALSE;
+#endif
+}
+
+bool cef_host_window::SubclassWindow(HWND hWnd)
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    if (CanUseAeroGlass()) {
+        return cef_dark_aero_window::SubclassWindow(hWnd);
+    }
+    else 
+#endif
+    {
+#if defined(DARK_UI)
+        return cef_dark_window::SubclassWindow(hWnd);
+#else
+        return cef_window::SubclassWindow(hWnd);
+#endif
+    }
+}
+
+
+BOOL cef_host_window::GetBrowserRect(RECT& r) const
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    if (CanUseAeroGlass()) {
+        return cef_dark_aero_window::GetRealClientRect(&r); 
+    } 
+#endif
+    return GetClientRect(&r); 
+}
+
+HWND cef_host_window::GetBrowserHwnd()
+{
+    return GetWindow(GW_CHILD);
+}
+
 HWND cef_host_window::SafeGetCefBrowserHwnd()
 {
-    if (GetBrowser().get() && GetBrowser()->GetHost().get())
+    if (g_handler.get() && GetBrowser().get() && GetBrowser()->GetHost().get())
         return GetBrowser()->GetHost()->GetWindowHandle();
     return NULL;
 }
@@ -53,7 +105,7 @@ BOOL cef_host_window::HandleInitMenuPopup(HMENU hMenuPopup)
         UINT id = GetMenuItemID(hMenuPopup, i);
 
         bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-        UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+        UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_GRAYED | MF_BYCOMMAND;
         EnableMenuItem(hMenuPopup, id,  flagEnabled);
 
         bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
@@ -88,6 +140,19 @@ BOOL cef_host_window::DoCommand(UINT commandId, CefRefPtr<CommandCallback> callb
         callback = new EditCommandCallback(GetBrowser(), commandString);
     }
     return DoCommand(commandString, callback);
+}
+
+void cef_host_window::RecomputeLayout()
+{
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    HWND hWndBrowser = GetBrowserHwnd();
+    if (hWndBrowser && mReady && CanUseAeroGlass()) {
+        RECT rectBrowser;
+        ::SetRectEmpty(&rectBrowser);
+        GetBrowserRect(rectBrowser);
+        ::MoveWindow(hWndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
+    }
+#endif
 }
 
 // WM_SIZE handler
@@ -135,6 +200,31 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    LRESULT lr = cef_host_window_base::WindowProc(message, wParam, lParam);
+
+
+    LRESULT lr = 0;
+    
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    if (CanUseAeroGlass()) {
+        lr = cef_dark_aero_window::WindowProc(message, wParam, lParam);
+    }
+    else 
+#endif
+    {
+#if defined(DARK_UI)
+        lr = cef_dark_window::WindowProc(message, wParam, lParam);
+#else
+        lr = cef_window::WindowProc(message, wParam, lParam);
+#endif
+    }
+
+    if (message == WM_WINDOWPOSCHANGING) {
+        LPWINDOWPOS lpwp = (LPWINDOWPOS)lParam;
+        if (lpwp->flags & SWP_FRAMECHANGED) {
+            RecomputeLayout();
+        }
+    }
+
+
     return lr;
 }

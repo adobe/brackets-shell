@@ -143,12 +143,6 @@ void cef_main_window::PostNcDestroy()
 #endif
 }
 
-// Helper to get the location to place the browser
-void cef_main_window::GetCefBrowserRect(RECT& rect)
-{
-    GetClientRect(&rect);
-}
-
 // Helper to get the browser 
 const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 {
@@ -158,13 +152,15 @@ const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 // WM_CREATE handler
 BOOL cef_main_window::HandleCreate() 
 {
+    cef_host_window::HandleCreate();
+
     // Create the single static handler class instance
     g_handler = new ClientHandler();
     g_handler->SetMainHwnd(mWnd);
 
     RECT rect;
 
-    GetCefBrowserRect(rect);
+    GetBrowserRect(rect);
 
     CefWindowInfo info;
     CefBrowserSettings settings;
@@ -204,9 +200,13 @@ BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
 // WM_PAINT handler
 BOOL cef_main_window::HandlePaint()
 {
-    // avoid painting
     PAINTSTRUCT ps;
-    BeginPaint(&ps);
+    HDC hdc = BeginPaint(&ps);
+
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    DoPaintClientArea(hdc);
+#endif
+
     EndPaint(&ps);
     return TRUE;
 }
@@ -464,7 +464,7 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
         return FALSE;
 
     RECT rect;
-    GetClientRect(&rect);
+    GetBrowserRect(rect);
 
     // Minimizing the window to 0x0 which causes our layout to go all
     // screwy, so we just ignore it.
