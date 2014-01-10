@@ -105,7 +105,7 @@ BOOL cef_host_window::HandleInitMenuPopup(HMENU hMenuPopup)
         UINT id = GetMenuItemID(hMenuPopup, i);
 
         bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
-        UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+        UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_GRAYED | MF_BYCOMMAND;
         EnableMenuItem(hMenuPopup, id,  flagEnabled);
 
         bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
