@@ -42,7 +42,8 @@ static ULONG_PTR gdiplusToken = NULL;
 
 // Constants
 static const int kWindowFrameZoomFactorCY = 4;
-static const int kSystemIconZoomFactorCY = 8;
+static const int kSystemIconZoomFactorCY = 4;
+static const int kSystemIconZoomFactorCX = 2;
 
 // GDI+ Helpers
 static void RECT2Rect(Gdiplus::Rect& dest, const RECT& src) {
@@ -303,9 +304,9 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
     int left = ::GetSystemMetrics (SM_CXFRAME);
 
     if (IsZoomed()) {
-        top = ::kSystemIconZoomFactorCY;
+        top += ::kSystemIconZoomFactorCY;
+		left += ::kSystemIconZoomFactorCX;
     }
-
     ::SetRectEmpty(&rect);
     rect.top =  top;
     rect.left = left;
