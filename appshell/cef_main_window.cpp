@@ -179,8 +179,11 @@ BOOL cef_main_window::HandleCreate()
 }
 
 // WM_ERASEBKGND handler
-BOOL cef_main_window::HandleEraseBackground()
+BOOL cef_main_window::HandleEraseBackground(HDC hdc)
 {
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    DrawMenuBar(hdc);
+#endif
     return (SafeGetCefBrowserHwnd() != NULL);
 }
 
@@ -488,7 +491,7 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
             return 0L;
         break;
     case WM_ERASEBKGND:
-        if (HandleEraseBackground())
+        if (HandleEraseBackground((HDC)wParam))
             return 1L;
         break;
     case WM_SETFOCUS:

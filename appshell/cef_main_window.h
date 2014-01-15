@@ -49,7 +49,7 @@ protected:
     void RestoreWindowPlacement(int showCmd);
 
     // Message Handlers
-    BOOL HandleEraseBackground();
+    BOOL HandleEraseBackground(HDC hdc);
     BOOL HandleCreate();
     BOOL HandleSetFocus(HWND hLosingFocus);
     BOOL HandleDestroy();
