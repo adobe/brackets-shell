@@ -84,6 +84,7 @@ protected:
 
     void PostHandleNcLeftButtonUp(UINT uHitTest, LPPOINT pt);
 
+	void DrawMenuBar(HDC hdc);
     void UpdateMenuBar();
     void HiliteMenuItemAt(LPPOINT pt);
 
