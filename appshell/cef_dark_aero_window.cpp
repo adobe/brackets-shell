@@ -461,26 +461,27 @@ void cef_dark_aero_window::DrawMenuBar(HDC hdc)
     RECT rectRequired;
     ComputeRequiredMenuRect(rectRequired);
 
-	if (::RectHeight(rectRequired) > 0) {
-		RECT rectMenu;
-		ComputeMenuBarRect(rectMenu);
+    // No menu == nothing to draw 
+    if (::RectHeight(rectRequired) > 0) {
+        RECT rectMenu;
+        ComputeMenuBarRect(rectMenu);
 
-		HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectMenu);
+        HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectMenu);
 
-		if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
-			DoDrawFrame(hdc);   // Draw menu bar background
-			DoDrawMenuBar(hdc); // DraW menu items
-		}
+        if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
+	        DoDrawFrame(hdc);   // Draw menu bar background
+	        DoDrawMenuBar(hdc); // DraW menu items
+        }
 
-		::DeleteObject(hrgnUpdate);
-	}
+        ::DeleteObject(hrgnUpdate);
+    }
 }
 
 // Redraws the menu bar
 void cef_dark_aero_window::UpdateMenuBar()
 {
     HDC hdc = GetWindowDC();
-	DrawMenuBar(hdc);
+    DrawMenuBar(hdc);
     ReleaseDC(hdc);
 }
 
@@ -779,12 +780,12 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     case WM_SIZING:
     case WM_EXITSIZEMOVE:
         UpdateNonClientArea();
-		if (message == WM_WINDOWPOSCHANGED) 
-		{
-			RECT rect;
-			ComputeMenuBarRect(rect);
-			InvalidateRect(&rect, TRUE);
-		}
+        if (message == WM_WINDOWPOSCHANGED) 
+        {
+            RECT rect;
+            ComputeMenuBarRect(rect);
+            InvalidateRect(&rect, TRUE);
+        }
         break;
     case WM_EXITMENULOOP:
         mMenuActiveIndex = -1;
