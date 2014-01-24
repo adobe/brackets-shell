@@ -103,7 +103,7 @@
             {
               # Copy node executable to the output directory
               'destination': '<(PRODUCT_DIR)',
-              'files': ['deps/node/Brackets-node.exe'],
+              'files': ['deps/node/node.exe'],
             },
             {
               # Copy node server files to the output directory
