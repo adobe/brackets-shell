@@ -20,13 +20,13 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-#import "FullScreenbutton.h"
+#import "FullScreenButton.h"
 //#define FS_HOT_TO_COLD
 
 //these are defined in MainMainu.xib file
 static const int FULLSCREEN_BUTTON_TAG = 1004;
 
-@implementation FullScreenButton {	
+@implementation FullScreenButton {
     NSImage *inactive;
     NSImage *active;
     NSImage *hover;
@@ -52,22 +52,22 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     return self;
 }
 
-- (void)setup {    
+- (void)setup {
     inactive = [NSImage imageNamed:@"window-fullscreen-inactive"];
     active = [NSImage imageNamed:@"window-fullscreen-active"];
     hover = [NSImage imageNamed:@"window-fullscreen-hover"];
     pressed = [NSImage imageNamed:@"window-fullscreen-pressed"];
- 
+
 #ifdef FS_HOT_TO_COLD
     NSImage* saved = active;
     active = pressed;
     pressed = saved;
 #endif
-    
+
     // assume active
     activeState = YES;
     [self updateButtonStates];
-    
+
     //get notified of state
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateActiveState)
@@ -81,13 +81,13 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateActiveState)
                                                  name:NSWindowDidResignKeyNotification object:[self window]];
-    
-    
+
+
     NSTrackingAreaOptions focusTrackingAreaOptions = NSTrackingActiveInActiveApp;
     focusTrackingAreaOptions |= NSTrackingMouseEnteredAndExited;
     focusTrackingAreaOptions |= NSTrackingAssumeInside;
     focusTrackingAreaOptions |= NSTrackingInVisibleRect;
-        
+
     NSTrackingArea *focusTrackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
                                                                          options:focusTrackingAreaOptions owner:self userInfo:nil];
     [self addTrackingArea:focusTrackingArea];
@@ -96,7 +96,7 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
 - (void)mouseDown:(NSEvent *)theEvent {
     pressedState = YES;
     hoverState = NO;
-    
+
     if (!activeState) {
         [self.window makeKeyAndOrderFront:self];
         [self.window setOrderedIndex:0];

@@ -20,14 +20,14 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-#import "TrafficLightbutton.h"
+#import "TrafficLightButton.h"
 
 //these are defined in MainMainu.xib file
 static const int CLOSE_BUTTON_TAG = 1000;
 static const int MINIMIZE_BUTTON_TAG = 1001;
 static const int ZOOM_BUTTON_TAG = 1002;
 
-@implementation TrafficLightButton {	
+@implementation TrafficLightButton {
     NSImage *inactive;
     NSImage *active;
     NSImage *hover;
@@ -59,7 +59,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
     return self;
 }
 
-- (void)setup {    
+- (void)setup {
     NSString* buttonName = nil;
     //the numbers come from the XIB file.
     if ([self tag] == CLOSE_BUTTON_TAG) {
@@ -80,11 +80,11 @@ static const int ZOOM_BUTTON_TAG = 1002;
         dirtyHover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-hover",buttonName]];
         dirtyPressed = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
     }
-   
+
     // assume active
     activeState = YES;
     [self updateButtonStates];
-    
+
     //get notified of state
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateActiveState)
@@ -106,7 +106,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
                                              selector:@selector(hoverOut)
                                                  name:@"TrafficLightsMouseExit"
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(setDocumentEdited)
                                                  name:@"TrafficLightsDirty"
@@ -116,7 +116,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
 - (void)mouseDown:(NSEvent *)theEvent {
     pressedState = YES;
     hoverState = NO;
-    
+
     if (!activeState) {
         [self.window makeKeyAndOrderFront:self];
         [self.window setOrderedIndex:0];
@@ -141,7 +141,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
         [[self window] performZoom:nil];
         return;
     }
-    
+
     [self updateButtonStates];
     [super mouseUp:theEvent];
 }
@@ -191,7 +191,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
 }
 
 - (void)hoverIn:(NSNotification *) notification {
-    
+
     if ([[notification object] isEqual:[self superview]]) {
         hoverState = YES;
         if (closeButton && dirtyState) {
