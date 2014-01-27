@@ -49,7 +49,7 @@ protected:
     void RestoreWindowPlacement(int showCmd);
 
     // Message Handlers
-    BOOL HandleEraseBackground();
+    BOOL HandleEraseBackground(HDC hdc);
     BOOL HandleCreate();
     BOOL HandleSetFocus(HWND hLosingFocus);
     BOOL HandleDestroy();
@@ -64,7 +64,6 @@ protected:
 
     // Implementation
     virtual void PostNcDestroy();
-    virtual void GetCefBrowserRect(RECT& rect);
     virtual const CefRefPtr<CefBrowser> GetBrowser();
 
     // Find helper

@@ -82,7 +82,7 @@ bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
     HKEY hKey;
     bool result = false;
 
-    wchar_t key[MAX_PATH];
+    wchar_t key[MAX_UNC_PATH];
     key[0] = '\0';
     GetKey(g_szSoftwareFolder, GROUP_NAME, APP_NAME, pFolder, (LPWSTR)&key);
 

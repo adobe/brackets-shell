@@ -263,7 +263,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
                       nil];
 
         NSDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
-        NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchWithoutActivation | NSWorkspaceLaunchNewInstance;
+        NSUInteger launchOptions = NSWorkspaceLaunchDefault | NSWorkspaceLaunchNewInstance;
 
         liveBrowser = [[NSWorkspace sharedWorkspace] launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:nil];
         if (!liveBrowser) {
@@ -275,6 +275,8 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
         return NO_ERROR;
     }
+
+    [liveBrowser activateWithOptions:NSApplicationActivateIgnoringOtherApps];
 
     // Check for existing tab with url already loaded
     for (GoogleChromeWindow* chromeWindow in [chromeApp windows]) {
@@ -1096,8 +1098,9 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                     [newItem setKeyEquivalent:keyStr];
                     [newItem setKeyEquivalentModifierMask:mask];
                     [newItem setTag:tag];
-                    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
                 }
+                NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
+                
                 NSInteger positionIdx = -1;
                 int32 errCode = getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
                 if (positionIdx > -1) {
