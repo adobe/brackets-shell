@@ -59,7 +59,7 @@ module.exports = function (grunt) {
         grunt.log.writeln(distPath);
 
         if (!grunt.file.exists(distPath)) {
-            grunt.log.error(distPath + " file does not exist. Run `grunt build` in the brackets repo first.")
+            grunt.log.error(distPath + " file does not exist. Run `grunt build` in the brackets repo first.");
             return false;
         }
     });
@@ -111,30 +111,48 @@ module.exports = function (grunt) {
     // task: git
     grunt.registerMultiTask("git", "Pull specified repo branch from origin", function () {
         var repo = this.data.repo;
-        
+
         if (!repo) {
             grunt.fail.fatal("Missing repo config");
         }
-        
+
         repo = resolve(repo);
-        
+
         if (this.data.branch) {
             grunt.log.writeln("Updating repo " + this.target + " at " + repo + " to branch " + this.data.branch);
             
             var done = this.async(),
-                promise = spawn([
+                branchExists = spawn([
                     "git fetch origin",
-                    "git checkout " + this.data.branch,
-                    "git pull origin " + this.data.branch,
+                    "git checkout " + this.data.branch
+                ]),
+                commands;
+
+            branchExists.then(function (succesResult) {
+                var branch = succesResult.args[1];
+                commands = [
+                    "git pull origin " + branch,
                     "git submodule sync",
                     "git submodule update --init --recursive"
-                ], { cwd: repo });
-        
-            promise.then(function () {
-                done();
-            }, function (err) {
-                grunt.log.writeln(err);
-                done(false);
+                ];
+            }, function (rejectedResult) {
+                var branch = rejectedResult.args[1];
+                commands = [
+                    "git checkout -t -b " + branch + " origin/" + branch,
+                    "git submodule sync",
+                    "git submodule update --init --recursive"
+                ];
+            });
+
+            branchExists.finally(function () {
+                var promise = spawn(commands, { cwd: repo });
+
+                promise.then(function () {
+                    done();
+                }, function (err) {
+                    grunt.log.writeln(err);
+                    done(false);
+                });
             });
         } else {
             grunt.log.writeln("Skipping fetch for " + this.target + " repo");
