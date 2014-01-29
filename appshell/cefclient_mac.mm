@@ -153,7 +153,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 @implementation ClientWindowDelegate
 - (id) init {
-    [super init];
+    self = [super init];
     isReallyClosing = NO;
     isReentering = NO;
     customTitlebar = nil;
@@ -307,7 +307,7 @@ extern NSMutableArray* pendingOpenFiles;
         windowButton = [mainWindow standardWindowButton:NSWindowZoomButton];
         [windowButton setHidden:YES];
         
-        TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
+        TrafficLightsViewController     *tvController = [[[TrafficLightsViewController alloc] init] autorelease];
         if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
         {
             NSRect oldFrame = [tvController.view frame];
@@ -327,7 +327,7 @@ extern NSMutableArray* pendingOpenFiles;
         windowButton = [mainWindow standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
-        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
+        FullScreenViewController     *fsController = [[[FullScreenViewController alloc] init] autorelease];
         if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
         {
             NSRect oldFrame = [fsController.view frame];
@@ -489,7 +489,7 @@ extern NSMutableArray* pendingOpenFiles;
 @implementation ClientAppDelegate
 
 - (id) init {
-  [super init];  
+  self = [super init];
   // Register our handler for the "handleOpenFileEvent" (a.k.a. OpFl) apple event.
   [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
                                                      andSelector:@selector(handleOpenFileEvent:withReplyEvent:)
@@ -507,7 +507,7 @@ extern NSMutableArray* pendingOpenFiles;
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
-  ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
+  ClientWindowDelegate* delegate = [[[ClientWindowDelegate alloc] init] autorelease];
 
   // Create the delegate for menu events.
   ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
@@ -515,6 +515,7 @@ extern NSMutableArray* pendingOpenFiles;
   [[NSApp mainMenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
+  [menuDelegate release];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |

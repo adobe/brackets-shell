@@ -68,6 +68,7 @@
 
     NSLayoutManager *lm = [[NSLayoutManager alloc] init];
     int             height = [lm defaultLineHeightForFont:titleFont];
+    [lm release];
 
     // Draw the title text
     if (stringWidth)
@@ -93,7 +94,7 @@
         return 0.0f;
     
     NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
-    return [[[NSAttributedString alloc] initWithString:string attributes:attributes] size].width;
+    return [[[[NSAttributedString alloc] initWithString:string attributes:attributes] autorelease] size].width;
 }
 
 #pragma mark Property accessors
