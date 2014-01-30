@@ -94,7 +94,10 @@
         return 0.0f;
     
     NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
-    return [[[[NSAttributedString alloc] initWithString:string attributes:attributes] autorelease] size].width;
+    NSAttributedString *attributedString = [[NSAttributedString alloc] initWithString:string attributes:attributes];
+    CGFloat stringWidth = [attributedString size].width;
+    [attributedString release];
+    return stringWidth;
 }
 
 #pragma mark Property accessors
