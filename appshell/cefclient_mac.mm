@@ -606,7 +606,7 @@ extern NSMutableArray* pendingOpenFiles;
     
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
-                                [str UTF8String], settings);
+                                [str UTF8String], settings, NULL);
  
   [delegate initUI:mainWnd];
     
