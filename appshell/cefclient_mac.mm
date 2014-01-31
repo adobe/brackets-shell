@@ -515,7 +515,7 @@ extern NSMutableArray* pendingOpenFiles;
   [[NSApp mainMenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
   [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
-  [menuDelegate release];
+  [menuDelegate autorelease];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
