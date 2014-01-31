@@ -479,6 +479,14 @@ extern NSMutableArray* pendingOpenFiles;
 // BOBNOTE: Consider moving the AppDelegate interface into its own .h file
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
+{
+    ClientWindowDelegate *delegate;
+    ClientMenuDelegate *menuDelegate;
+}
+
+@property (nonatomic, retain) ClientWindowDelegate *delegate;
+@property (nonatomic, retain) ClientMenuDelegate *menuDelegate;
+
 - (void)createApp:(id)object;
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
@@ -487,6 +495,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 // BOBNOTE: Consider moving the AppDelegate implementation into its own .m file
 @implementation ClientAppDelegate
+@synthesize delegate, menuDelegate;
 
 - (id) init {
   self = [super init];
@@ -498,6 +507,12 @@ extern NSMutableArray* pendingOpenFiles;
   return self;
 }
 
+- (void)dealloc {
+    [self.delegate release];
+    [self.menuDelegate release];
+    [super dealloc];
+}
+
 // Create the application on the UI thread.
 - (void)createApp:(id)object {
   [NSApplication sharedApplication];
@@ -507,15 +522,14 @@ extern NSMutableArray* pendingOpenFiles;
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
-  ClientWindowDelegate* delegate = [[[ClientWindowDelegate alloc] init] autorelease];
+  [self setDelegate:[[ClientWindowDelegate alloc] init]];
 
   // Create the delegate for menu events.
-  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
+  [self setMenuDelegate:[[ClientMenuDelegate alloc] init]];
 
-  [[NSApp mainMenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
-  [menuDelegate autorelease];
+  [[NSApp mainMenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:self.menuDelegate];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
@@ -572,7 +586,7 @@ extern NSMutableArray* pendingOpenFiles;
 
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
-  [mainWnd setDelegate:delegate];
+  [mainWnd setDelegate:self.delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
@@ -609,7 +623,7 @@ extern NSMutableArray* pendingOpenFiles;
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
  
-  [delegate initUI:mainWnd];
+  [self.delegate initUI:mainWnd];
     
   // Show the window.
   [mainWnd display];
