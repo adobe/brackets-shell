@@ -255,7 +255,7 @@ module.exports = function (grunt) {
         grunt.file.mkdir("deps/node");
         
         // copy node.exe to Brackets-node
-        grunt.file.copy(exeFile,  "deps/node/Brackets-node.exe");
+        grunt.file.copy(exeFile,  "deps/node/node.exe");
         
         // unzip NPM
         unzip(npmFile, "deps/node").then(function () {

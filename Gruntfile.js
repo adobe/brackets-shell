@@ -100,7 +100,7 @@ module.exports = function (grunt) {
                             "locales/**",
                             "node-core/**",
                             "Brackets.exe",
-                            "Brackets-node.exe",
+                            "node.exe",
                             "cef.pak",
                             "devtools_resources.pak",
                             "icudt.dll",
@@ -156,7 +156,7 @@ module.exports = function (grunt) {
                     {
                         "dot"       : true,
                         "expand"    : true,
-                        "cwd"       : "<%= git.www.repo %>/src",
+                        "cwd"       : "<%= git.www.repo %>/dist",
                         "src"       : ["**", "!**/.git*"],
                         "dest"      : "<%= build.staging %>/www/"
                     }
@@ -204,7 +204,7 @@ module.exports = function (grunt) {
             "version"       : "3.1547.1459"
         },
         "node": {
-            "version"       : "0.10.18"
+            "version"       : "0.10.24"
         },
         "npm": {
             "version"       : "1.2.11"

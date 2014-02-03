@@ -186,6 +186,11 @@ BOOL cef_window::HandleNcDestroy()
     return TRUE;
 }
 
+BOOL cef_window::HandleCreate()
+{
+    return FALSE;
+}
+
 // PostNcDestroy base implementaiton
 void cef_window::PostNcDestroy()
 {
@@ -236,7 +241,7 @@ void cef_window::ScreenToNonClient(LPRECT r) const
 
 // Computes the client rect relative to the Window Rect
 //    Used to compute the clipping region, etc...
-void cef_window::ComputeLogicalClientRect(RECT& rectClient)
+void cef_window::ComputeLogicalClientRect(RECT& rectClient) const
 {
     WINDOWINFO wi ;
     ::ZeroMemory (&wi, sizeof (wi)) ;
@@ -255,7 +260,7 @@ void cef_window::ComputeLogicalClientRect(RECT& rectClient)
 }
 
 // Retrieves the window rect in logical coordinates
-void cef_window::ComputeLogicalWindowRect (RECT& rectWindow)
+void cef_window::ComputeLogicalWindowRect (RECT& rectWindow) const
 {
     RECT wr;
     GetWindowRect (&wr);
