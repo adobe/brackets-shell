@@ -111,48 +111,30 @@ module.exports = function (grunt) {
     // task: git
     grunt.registerMultiTask("git", "Pull specified repo branch from origin", function () {
         var repo = this.data.repo;
-
+        
         if (!repo) {
             grunt.fail.fatal("Missing repo config");
         }
-
+        
         repo = resolve(repo);
-
+        
         if (this.data.branch) {
             grunt.log.writeln("Updating repo " + this.target + " at " + repo + " to branch " + this.data.branch);
             
             var done = this.async(),
-                branchExists = spawn([
+                promise = spawn([
                     "git fetch origin",
-                    "git checkout " + this.data.branch
-                ]),
-                commands;
-
-            branchExists.then(function (succesResult) {
-                var branch = succesResult.args[1];
-                commands = [
-                    "git pull origin " + branch,
+                    "git checkout " + this.data.branch,
+                    "git pull origin " + this.data.branch,
                     "git submodule sync",
                     "git submodule update --init --recursive"
-                ];
-            }, function (rejectedResult) {
-                var branch = rejectedResult.args[1];
-                commands = [
-                    "git checkout -t -b " + branch + " origin/" + branch,
-                    "git submodule sync",
-                    "git submodule update --init --recursive"
-                ];
-            });
-
-            branchExists.finally(function () {
-                var promise = spawn(commands, { cwd: repo });
-
-                promise.then(function () {
-                    done();
-                }, function (err) {
-                    grunt.log.writeln(err);
-                    done(false);
-                });
+                ], { cwd: repo });
+        
+            promise.then(function () {
+                done();
+            }, function (err) {
+                grunt.log.writeln(err);
+                done(false);
             });
         } else {
             grunt.log.writeln("Skipping fetch for " + this.target + " repo");
