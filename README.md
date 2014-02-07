@@ -1,7 +1,6 @@
 ## Overview
 
-This is the new CEF3-based application shell for [Brackets](https://github.com/adobe/brackets). 
-This replaces the old [brackets-app](https://github.com/adobe/brackets-app) shell.
+This is the CEF3-based application shell for [Brackets](https://github.com/adobe/brackets). 
 
 Please read the main [README in the brackets repo](https://github.com/adobe/brackets/blob/master/README.md) 
 for general information about Brackets.
@@ -13,9 +12,14 @@ or on the [#brackets channel on freenode](http://webchat.freenode.net/?channels=
 If you run into any issues with this new shell, please file a bug in the 
 [brackets issue tracker](https://github.com/adobe/brackets/issues).
 
+_Note: The brackets-shell is only maintained for use by the Brackets project. Although some people have 
+definitely had success using it as an app shell for other projects, we don't provide any official 
+support for that and we haven't done a ton of work to make the app shell easily reusable. Many people 
+will likely find it easier to use a project like node-webkit, which is more generic by design._
+
 ## Running
 
-NOTE: There are no downloads for the brackets-shell. You either need to 
+There are no downloads for the brackets-shell. You either need to 
 build from source, or grab the [latest Brackets installer](http://download.brackets.io) 
 and run the shell from that.
 
