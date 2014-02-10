@@ -604,7 +604,7 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     path += '*';
 
     // Convert to native path to ensure that FindFirstFile and FindNextFile
-    // functions correctly for all paths including paths to a network drive.
+    // function correctly for all paths including paths to a network drive.
     ConvertToNativePath(path);
 
     WIN32_FIND_DATA ffd;
