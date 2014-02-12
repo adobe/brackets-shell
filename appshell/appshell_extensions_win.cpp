@@ -543,7 +543,9 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 
             } else {
                 // If multiple files are not allowed, add the single file
-                selectedFiles->SetString(0, szFile);
+                std::wstring filePath(szFile);
+                ConvertToUnixPath(filePath);
+                selectedFiles->SetString(0, filePath);
             }
         }
     }
