@@ -543,7 +543,9 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 
             } else {
                 // If multiple files are not allowed, add the single file
-                selectedFiles->SetString(0, szFile);
+                std::wstring filePath(szFile);
+                ConvertToUnixPath(filePath);
+                selectedFiles->SetString(0, filePath);
             }
         }
     }
@@ -602,6 +604,10 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
         path += '/';
 
     path += '*';
+
+    // Convert to native path to ensure that FindFirstFile and FindNextFile
+    // function correctly for all paths including paths to a network drive.
+    ConvertToNativePath(path);
 
     WIN32_FIND_DATA ffd;
     HANDLE hFind = FindFirstFile(path.c_str(), &ffd);
