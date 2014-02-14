@@ -61,9 +61,9 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac u
 #else
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
-    gtk_widget_get_ancestor(
+    return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
-        GTK_TYPE_WINDOW);
+        GTK_TYPE_VBOX);
 }
 #endif
 

@@ -610,7 +610,7 @@ GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_CONTAINER(widget))
+        if (GTK_IS_MENU_BAR(widget))
             return widget;
     }
 
@@ -632,6 +632,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
     gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    gtk_widget_show(menuHeader);
 
     // FIXME add lookup for menu widgets
     _menuWidget = menuWidget;
@@ -650,6 +651,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     g_signal_connect(entry, "activate", FakeCallback, NULL);
     // FIXME add lookup for menu widgets
     gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    gtk_widget_show(entry);
 
     return NO_ERROR;
 }
