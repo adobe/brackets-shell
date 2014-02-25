@@ -1,0 +1,2 @@
+VERSION=<%= version %>
+MINOR_VERSION=<%= minorVersion %>

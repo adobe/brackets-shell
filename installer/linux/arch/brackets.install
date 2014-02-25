@@ -1,0 +1,17 @@
+post_install() {
+    xdg-icon-resource forceupdate --theme hicolor &> /dev/null
+    update-desktop-database -q
+    update-mime-database usr/share/mime
+    echo "==> Linux version doesn't always run as expected. See: https://github.com/adobe/brackets/wiki/Linux-Version#known-issues"
+    echo "==> To use Live Preview with chromium do: # ln -s /usr/bin/chromium /usr/bin/google-chrome"
+}
+
+post_upgrade() {
+    post_install
+}
+
+post_remove() {
+    xdg-icon-resource forceupdate --theme hicolor &> /dev/null
+    update-desktop-database -q
+    update-mime-database usr/share/mime
+}

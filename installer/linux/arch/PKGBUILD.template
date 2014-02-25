@@ -1,0 +1,104 @@
+# Maintainer: Brackets Team <brackets-dev@googlegroups.com>
+pkgname=brackets
+pkgver=
+pkgrel=1
+pkgdesc="A code editor for HTML, CSS and JavaScript. "
+arch=("i686" "x86_64")
+url="http://brackets.io"
+license=("MIT")
+depends=("brackets-lib" "gconf" "nodejs" "nspr" "systemd")
+makedepends=("prelink")
+optdepends=(
+	"alsa-lib: <future use>"
+	"chromium: to enable Live Preview"
+	"gnuplot: to enable node benchmarking"
+	"gtk2: to enable native UI"
+	"ruby: to enable LiveDevelopment Inspector"
+	"desktop-file-utils: for update-desktop-database"
+	"hicolor-icon-theme: for hicolor theme hierarchy"
+)
+provides=("brackets" "adobe-brackets")
+conflicts=("brackets-git")
+replaces=()
+backup=()
+options=()
+install=${pkgname}.install
+
+source=()
+
+
+prepare() {
+	cd "$srcdir"
+
+	echo "  -> Fixing executable stack..."
+	execstack -c "Brackets" 
+}
+
+package() {
+	cd ${srcdir}
+
+	echo "  -> Installing program..."
+	install -dm755 "${pkgdir}/usr/bin"
+	install -Dm755 \
+		"Brackets" \
+		"${pkgdir}/opt/${pkgname}/Brackets"
+
+	install -Dm755 \
+		"brackets" \
+		"${pkgdir}/opt/${pkgname}/brackets"
+
+	ln -s "/opt/${pkgname}/brackets" "${pkgdir}/usr/bin/brackets"
+
+	for _file in *.pak; do
+		install -Dm644 \
+			"${_file}" \
+			"${pkgdir}/opt/${pkgname}/${_file}"
+	done
+
+	for _file in "lib/"*; do
+		local _filename="${_file##*/}"
+		install -Dm755 \
+			"${_file}" \
+			"${pkgdir}/usr/lib/${_filename}"
+	done
+
+	for _file in "locales/"*; do
+		install -Dm644 \
+			"${_file}" \
+			"${pkgdir}/opt/${pkgname}/${_file}"
+	done
+
+	cp -dpr --no-preserve=ownership \
+		"www" \
+		"${pkgdir}/opt/${pkgname}/www"
+
+	cp -dpr --no-preserve=ownership \
+		"samples" \
+		"${pkgdir}/opt/${pkgname}/samples"
+
+
+	echo "  -> Installing icons..."
+	local _icon_dir="usr/share/icons/hicolor"
+	install -Dm644 \
+		"${pkgname}.svg" \
+		"${pkgdir}/${_icon_dir}/scalable/apps/${pkgname}.svg"
+	for _icon in "appshell"*.png; do
+		local _icon_size="${_icon##*appshell}"
+		install -Dm644 \
+			"${_icon}" \
+			"${pkgdir}/${_icon_dir}/${_icon_size%.png}x${_icon_size%.png}/apps/${pkgname}.png"
+	done
+
+
+	echo "  -> Installing .desktop file..."
+	install -Dm755 \
+		"${pkgname}.desktop" \
+		"${pkgdir}/usr/share/applications/${pkgname}.desktop"
+
+
+	echo "  -> Installing license..."
+	install -Dm644 \
+		"license" \
+		"${pkgdir}/usr/share/licenses/${pkgname}/license"
+
+}

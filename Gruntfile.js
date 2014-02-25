@@ -35,7 +35,7 @@ module.exports = function (grunt) {
     } else if (platform === "win") {
         staging = "installer/win/staging";
     } else {
-        staging = "installer/linux/debian/package-root/opt/brackets";
+        staging = "installer/linux/staging";
     }
 
     grunt.initConfig({
@@ -84,7 +84,8 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/debian/*.deb"],
+            "installer-linux"   : ["installer/linux/*.deb",
+                                   "installer/linux/*.pkg.tar*"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
@@ -142,7 +143,7 @@ module.exports = function (grunt) {
                     },
                     {
                         "expand"    : true,
-                        "cwd"       : "installer/linux/debian/",
+                        "cwd"       : "installer/linux/linux/",
                         "src"       : [
                             "brackets.desktop",
                             "brackets"
