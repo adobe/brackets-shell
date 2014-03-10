@@ -1364,10 +1364,22 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             }
         }
 
-        // Create the new accelerator table, and 
-        // destroy the old one.
-        DestroyAcceleratorTable(haccelOld); 
-        hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        bool existingOne = false;
+        for (int i = 0; i < numAccelerators - 1; i++) {
+            if (lpaccelNew[i].cmd == lpaccelNew[newItem].cmd &&
+                    lpaccelNew[i].fVirt == lpaccelNew[newItem].fVirt &&
+                    lpaccelNew[i].key == lpaccelNew[newItem].key) {
+                existingOne = true;
+                break;
+            }
+        }
+
+        if (!existingOne) {
+            // Create the new accelerator table, and 
+            // destroy the old one.
+            DestroyAcceleratorTable(haccelOld); 
+            hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        }
         LocalFree(lpaccelNew);
     }
 
