@@ -183,7 +183,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   CefInitialize(main_args, settings, app.get());
 
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
+  if (cmdLine->HasSwitch(cefclient::kStartupUrl)) {
+    wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupUrl).c_str());
+  }
+  else if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
 	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
   }
   else {
