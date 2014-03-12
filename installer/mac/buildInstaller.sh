@@ -2,7 +2,7 @@
 
 # config
 releaseName="Brackets"
-dmgName="${releaseName} Sprint 37"
+dmgName="${releaseName} Sprint 38"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"
