@@ -81,7 +81,10 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), g_get_prgname());
+    // TODO: the name of the executable should be used and 
+    // converted to lowercase
+    // const gchar *appName = g_get_prgname();
+    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), "brackets");
     CefString result = CefString(supportDir);
     g_free(supportDir);
     
