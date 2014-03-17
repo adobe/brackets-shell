@@ -55,7 +55,7 @@
 #ifdef OS_LINUX
 // TODO linux preferences
 //#define GROUP_NAME @""
-//#define APP_NAME @"Brackets"
+#define APP_NAME "Brackets"
 //#define WINDOW_TITLE APP_NAME
 
 // Path for node resources is in dependencies dir and relative to the location of the appshell executable
