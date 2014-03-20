@@ -328,6 +328,8 @@ module.exports = function (grunt) {
         
         if (platform === "linux") {
             gypCommand = "bash -c 'python2 gyp/gyp --depth=.'";
+        } else if (platform === "win") {
+            gypCommand = "cmd /C \"gyp\\gyp appshell.gyp -I common.gypi --depth=.\"";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
         }
