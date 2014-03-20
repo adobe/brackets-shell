@@ -24,8 +24,8 @@
         "semver": "2.0.11"
     },
     "scripts": {
-        "preinstall": "bash -c 'mv appshell.gyp .appshell.gyp'",
+        "preinstall": "node -e \"var fs=require('fs');var n='appshell.gyp';fs.renameSync(n,'.'+n);\"",
         "install": "",
-        "postinstall": "bash -c 'mv .appshell.gyp appshell.gyp;'"
+        "postinstall": "node -e \"var fs=require('fs');var n='appshell.gyp';fs.renameSync('.'+n,n);\""
     }
 }
