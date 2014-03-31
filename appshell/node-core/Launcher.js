@@ -77,6 +77,9 @@ maxerr: 50, node: true */
      */
     function uncaughtExceptionHandler() {
         var args = Array.prototype.slice.call(arguments, 0);
+        args = args.map(function (arg) {
+            return arg instanceof Error ? arg.stack : arg;
+        });
         args.unshift("[Launcher] uncaught exception at top level, exiting.");
         Logger.error.apply(null, args);
         exit();
