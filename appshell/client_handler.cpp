@@ -15,6 +15,7 @@
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
+
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
@@ -264,6 +265,9 @@ void ClientHandler::OnBeforeContextMenu(
     // Add a "Show DevTools" item to all context menus.
     model->AddItem(CLIENT_ID_SHOW_DEVTOOLS, "&Show DevTools");
 
+
+    // TODO: Determine if dev tools is already open
+/*  
     CefString devtools_url = browser->GetHost()->GetDevToolsURL(true);
     if (devtools_url.empty() ||
         m_OpenDevToolsURLs.find(devtools_url) != m_OpenDevToolsURLs.end()) {
@@ -271,6 +275,7 @@ void ClientHandler::OnBeforeContextMenu(
       // already open for the current URL.
       model->SetEnabled(CLIENT_ID_SHOW_DEVTOOLS, false);
     }
+*/
   }
 }
 
@@ -326,13 +331,14 @@ std::string ClientHandler::GetLastDownloadFile() {
 }
 
 void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
-  std::string devtools_url = browser->GetHost()->GetDevToolsURL(true);
-  if (!devtools_url.empty() &&
-      m_OpenDevToolsURLs.find(devtools_url) == m_OpenDevToolsURLs.end()) {
-    m_OpenDevToolsURLs.insert(devtools_url);
-    browser->GetMainFrame()->ExecuteJavaScript(
-        "window.open('" +  devtools_url + "');", "about:blank", 0);
-  }
+    CefWindowInfo wi;
+    CefBrowserSettings settings;
+    
+#if defined(OS_WIN)
+    wi.SetAsPopup(browser->GetHost()->GetWindowHandle(), "DevTools");
+#endif
+
+    browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings);
 }
 
 bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)
