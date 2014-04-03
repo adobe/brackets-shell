@@ -264,18 +264,6 @@ void ClientHandler::OnBeforeContextMenu(
 
     // Add a "Show DevTools" item to all context menus.
     model->AddItem(CLIENT_ID_SHOW_DEVTOOLS, "&Show DevTools");
-
-
-    // TODO: Determine if dev tools is already open
-/*  
-    CefString devtools_url = browser->GetHost()->GetDevToolsURL(true);
-    if (devtools_url.empty() ||
-        m_OpenDevToolsURLs.find(devtools_url) != m_OpenDevToolsURLs.end()) {
-      // Disable the menu option if DevTools isn't enabled or if a window is
-      // already open for the current URL.
-      model->SetEnabled(CLIENT_ID_SHOW_DEVTOOLS, false);
-    }
-*/
   }
 }
 

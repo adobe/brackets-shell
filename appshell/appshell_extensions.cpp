@@ -360,14 +360,8 @@ public:
             }
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
-            
-            // The CEF-hosted dev tools do not work. Open in a separate browser window instead.
-            // handler->ShowDevTools(browser);
             g_handler->ShowDevTools(browser);
-            /*
-            ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
-            OpenLiveBrowser(url, false);
-            */
+
         } else if (message_name == "GetNodeState") {
             // Parameters:
             //  0: int32 - callback id
