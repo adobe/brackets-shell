@@ -53,7 +53,9 @@ HINSTANCE CDwmDLL::LoadLibrary()
         OSVERSIONINFO osvi;
         ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning (disable: 4996)
         GetVersionEx(&osvi);
+#pragma warning (default: 4996)
         if ((osvi.dwMajorVersion > 5) || ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1) ))
         {
             mhDwmDll = ::LoadLibrary(TEXT("dwmapi.dll"));

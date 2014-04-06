@@ -425,7 +425,9 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         OSVERSIONINFO osvi;
         memset(&osvi, 0, sizeof(OSVERSIONINFO));
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+#pragma warning (disable: 4996)
         if (GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6)) {
+#pragma warning (default: 4996)
             // for Vista or later, use the MSDN-preferred implementation of the Open File dialog in pick folders mode
             IFileDialog *pfd;
             if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {

@@ -2,12 +2,17 @@
 :: This file should *not* be called directly. It is called by the build.sh script.
 ECHO OFF
 
+IF DEFINED VS120COMNTOOLS GOTO VS2013
 IF DEFINED VS110COMNTOOLS GOTO VS2012
 IF DEFINED VS100COMNTOOLS GOTO VS2010
 
 :VSNotInstalled
-ECHO Visual Studio 2010 or 2012 must be installed.
+ECHO Visual Studio 2010, 2012 or 2013 must be installed.
 GOTO Exit
+
+:VS2013
+call "%VS120COMNTOOLS%/vsvars32.bat"
+GOTO Build
 
 :VS2012
 call "%VS110COMNTOOLS%/vsvars32.bat"
