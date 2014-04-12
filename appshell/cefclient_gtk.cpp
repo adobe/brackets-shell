@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
   
   // Set window icon
   std::vector<std::string> icons(APPICONS, APPICONS + sizeof(APPICONS) / sizeof(APPICONS[0]) );
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
   CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://"+szInitialUrl, browserSettings);
+      "file://"+szInitialUrl, browserSettings, NULL);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
