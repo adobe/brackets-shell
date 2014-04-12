@@ -155,13 +155,13 @@
           ],
           'postbuilds': [
             {
-              'postbuild_name': 'Fix Framework Link',
-              'action': [
-                'install_name_tool',
-                '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
-                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
+              #'postbuild_name': 'Fix Framework Link',
+              #'action': [
+              #  'install_name_tool',
+              #  '-change',
+              #  '@executable_path/libcef.dylib',
+              #  '@executable_path/../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+              #  '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
             {
@@ -206,7 +206,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(CONFIGURATION)/Chromium Embedded Framework.framework',
             ],
           },
           'sources': [
@@ -363,7 +363,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(CONFIGURATION)/Chromium Embedded Framework.framework',
             ],
           },
           'sources': [
@@ -396,13 +396,13 @@
               # (DYLIB_INSTALL_NAME_BASE) relative to the main executable
               # (chrome).  A different relative path needs to be used in
               # appshell_helper_app.
-              'postbuild_name': 'Fix Framework Link',
-              'action': [
-                'install_name_tool',
-                '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
-                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
+              #'postbuild_name': 'Fix Framework Link',
+              #'action': [
+              #  'install_name_tool',
+              #  '-change',
+              #  '@executable_path/libcef.dylib',
+              #  '@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+              #  '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
           ],
