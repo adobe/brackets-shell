@@ -621,7 +621,7 @@ extern NSMutableArray* pendingOpenFiles;
     
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
-                                [str UTF8String], settings);
+                                [str UTF8String], settings, nil);
  
   [self.delegate initUI:mainWnd];
     
@@ -736,7 +736,7 @@ int main(int argc, char* argv[]) {
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -762,7 +762,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   // Load the startup path from prefs
   CGEventRef event = CGEventCreate(NULL);

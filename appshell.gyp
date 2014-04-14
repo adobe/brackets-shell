@@ -7,6 +7,9 @@
     'pkg-config': 'pkg-config',
     'target_arch%': 'environment',
     'chromium_code': 1,
+    'framework_name': 'Chromium Embedded Framework',
+    'linux_use_gold_binary': 0,
+    'linux_use_gold_flags': 0,
     'conditions': [
       [ 'OS=="mac"', {
         # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
@@ -95,6 +98,10 @@
               '-l$(ConfigurationName)/libcef.lib'
             ],
           },
+          'library_dirs': [
+            # Needed to find cef_sandbox.lib using #pragma comment(lib, ...).
+            '$(ConfigurationName)',
+          ],          
           'sources': [
             '<@(includes_win)',
             '<@(appshell_sources_win)',
@@ -133,20 +140,6 @@
           'copies': [
             {
               # Add library dependencies to the bundle.
-              'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries/',
-              'files': [
-                '$(CONFIGURATION)/libcef.dylib',
-              ],
-            },
-            {
-              # Add other resources to the bundle.
-              'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks/Chromium Embedded Framework.framework/',
-              'files': [
-                'Resources/',
-              ],
-            },
-            {
-              # Add the helper app.
               'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks',
               'files': [
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
@@ -155,12 +148,21 @@
           ],
           'postbuilds': [
             {
+             'postbuild_name': 'Add framework',
+              'action': [
+                'cp',
+                '-Rf',
+                '${CONFIGURATION}/<(framework_name).framework',
+                '${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Frameworks/'
+              ],
+            },
+            {
               'postbuild_name': 'Fix Framework Link',
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+                '@executable_path/<(framework_name)',
+                '@executable_path/../Frameworks/<(framework_name).framework/<(framework_name)',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
@@ -206,7 +208,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
             ],
           },
           'sources': [
@@ -363,7 +365,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
             ],
           },
           'sources': [
@@ -400,8 +402,8 @@
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+                '@executable_path/<(framework_name)',
+                '@executable_path/../../../../Frameworks/<(framework_name).framework/<(framework_name)',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
