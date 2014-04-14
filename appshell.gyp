@@ -7,7 +7,6 @@
     'pkg-config': 'pkg-config',
     'target_arch%': 'environment',
     'chromium_code': 1,
-    'framework_name': 'Chromium\ Embedded\ Framework',
     'linux_use_gold_binary': 0,
     'linux_use_gold_flags': 0,
     'conditions': [
@@ -152,7 +151,7 @@
               'action': [
                 'cp',
                 '-Rf',
-                '${CONFIGURATION}/<(framework_name).framework',
+                '${CONFIGURATION}/Chromium\ Embedded\ Framework.framework',
                 '${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Frameworks/'
               ],
             },
@@ -161,8 +160,8 @@
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/<(framework_name)',
-                '@executable_path/../Frameworks/<(framework_name).framework/<(framework_name)',
+                '@executable_path/Chromium\ Embedded\ Framework',
+                '@executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
@@ -208,7 +207,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
+              '$(CONFIGURATION)/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework',
             ],
           },
           'sources': [
@@ -365,7 +364,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
+              '$(CONFIGURATION)/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework',
             ],
           },
           'sources': [
@@ -402,8 +401,8 @@
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/<(framework_name)',
-                '@executable_path/../../../../Frameworks/<(framework_name).framework/<(framework_name)',
+                '@executable_path/Chromium\ Embedded\ Framework',
+                '@executable_path/../../../../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
