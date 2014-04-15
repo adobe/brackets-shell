@@ -328,6 +328,12 @@ module.exports = function (grunt) {
         
         if (platform === "mac") {
             promise = promise.then(function () {
+                // TODO: Make changes to appshell.xcodeproj\project.pbxproj to fixup the framework
+                /*
+                 # Fix framework type.
+  data = data.replace('lastKnownFileType = text; name = "Chromium Embedded Framework";', \
+                      'explicitFileType = "compiled.mach-o.dylib"; name = "Chromium Embedded Framework";')
+                */
                 // FIXME port to JavaScript?
                 return exec("bash scripts/fix-xcode.sh");
             });
