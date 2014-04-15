@@ -165,6 +165,8 @@ int main(int argc, char* argv[]) {
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  settings.no_sandbox = TRUE;
+
   // Check cache_path setting
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
