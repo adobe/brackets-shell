@@ -365,7 +365,7 @@
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/Chromium\ Embedded\ Framework.framework/<Chromium\ Embedded\ Framework',
+              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
             ],
           },
           'sources': [
