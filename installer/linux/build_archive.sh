@@ -13,7 +13,7 @@ find debian -type d -exec chmod 755 {} \;
 rm -f brackets.tar.gz
 
 # Move everything we'll be using to a temporary directory for easy clean-up
-mkdir archive/out
+mkdir -p archive/out
 cp -r debian/package-root/opt/brackets archive/out
 
 # Add brackets.svg
@@ -31,3 +31,6 @@ cp archive/README.md archive/out/brackets
 tar -cf brackets.tar -C archive/out brackets/
 
 gzip brackets.tar
+
+# Clean-up after ourselves once the tarball has been generated.
+rm -rf archive/out
