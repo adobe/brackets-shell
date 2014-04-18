@@ -29,8 +29,9 @@
 #include <algorithm>
 
 extern std::vector<CefString> gDroppedFiles;
+#ifdef OS_WIN
 extern CefRefPtr<ClientHandler> g_handler;
-
+#endif 
 
 namespace appshell_extensions {
 
@@ -360,7 +361,10 @@ public:
             }
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
+#ifdef OS_WIN
+            // TODO: Figure out how to get this to build on mac/linux
             g_handler->ShowDevTools(browser);
+#endif 
 
         } else if (message_name == "GetNodeState") {
             // Parameters:
