@@ -30,7 +30,11 @@
         'SDKROOT': '',
         'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
         'COMBINE_HIDPI_IMAGES': 'YES',
-        'ARCHS': "$(ARCHS_STANDARD_32_BIT)"
+        'ARCHS': "$(ARCHS_STANDARD_32_BIT)",
+        'FRAMEWORK_SEARCH_PATHS': [
+          '$(inherited)',
+          '$(CONFIGURATION)'
+        ]
       },
   },
   'targets': [
@@ -101,7 +105,7 @@
           'library_dirs': [
             # Needed to find cef_sandbox.lib using #pragma comment(lib, ...).
             '$(ConfigurationName)',
-          ],          
+          ],
           'sources': [
             '<@(includes_win)',
             '<@(appshell_sources_win)',
@@ -391,6 +395,10 @@
             'SYMROOT': 'xcodebuild',
             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
             'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+            'FRAMEWORK_SEARCH_PATHS': [
+              '$(inherited)',
+              '$(CONFIGURATION)'
+            ]
           },
           'postbuilds': [
             {
