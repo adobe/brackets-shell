@@ -750,7 +750,6 @@ bool GetBufferAsUTF8(char *buffer, DWORD& buffSize)
             CopyMemory (buffer, buffer+3, buffSize - 3);
             buffSize -= 3;
         }
-
     }
 
     return (result > 0);
