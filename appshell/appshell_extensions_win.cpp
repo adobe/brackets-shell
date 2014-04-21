@@ -726,20 +726,30 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return NO_ERROR;
 }
 
-bool IsBufferUTF(LPVOID buffer, DWORD buffSize)
+bool GetBufferAsUTF8(char *buffer, DWORD buffSize)
 {
     int result = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
-    if (!IsTextUnicode(buffer, buffSize, &result)) {
-        // NO BOM -- use MultiByteToWideChar to try and convert from UTF8 to UNICODE
-        int outBuffSize = (buffSize + 1) * 2;
-        wchar_t* outBuffer = new wchar_t[outBuffSize];
-        int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (LPCSTR)buffer, buffSize, outBuffer, outBuffSize);
-        delete []outBuffer;
-        return (result > 0);
-    } else {
-        return true;
+    if (IsTextUnicode(buffer, buffSize, &result) && (result & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16)) {
+         return false;
     }
+        
+    int outBuffSize = (buffSize + 1) * 2;
+    wchar_t* outBuffer = new wchar_t[outBuffSize];
+    result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, buffer, buffSize, outBuffer, outBuffSize);
+    delete []outBuffer;
+
+    if (result > 0) {
+        // remove BOM from UTF-8 input stream
+        if ((buffer[0] == (char)0xEF) && 
+            (buffer[1] == (char)0xBB) && 
+            (buffer[2] == (char)0xBF)) {
+            CopyMemory (buffer, buffer+3, buffSize - 3);
+        }
+
+    }
+
+    return (result > 0);
 }
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
@@ -766,7 +776,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     DWORD dwBytesRead;
     char* buffer = (char*)malloc(dwFileSize);
     if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-        if (!IsBufferUTF(buffer, dwFileSize)) {
+        if (!GetBufferAsUTF8(buffer, dwFileSize)) {
             error = ERR_UNSUPPORTED_ENCODING;
         } else {
             contents = std::string(buffer, dwFileSize);
