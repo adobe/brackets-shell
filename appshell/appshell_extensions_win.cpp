@@ -726,6 +726,22 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return NO_ERROR;
 }
 
+bool IsBufferUTF(LPVOID buffer, DWORD buffSize)
+{
+    int result = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
+
+    if (!IsTextUnicode(buffer, buffSize, &result)) {
+        // NO BOM -- use MultiByteToWideChar to try and convert from UTF8 to UNICODE
+        int outBuffSize = (buffSize + 1) * 2;
+        wchar_t* outBuffer = new wchar_t[outBuffSize];
+        int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (LPCSTR)buffer, buffSize, outBuffer, outBuffSize);
+        delete []outBuffer;
+        return (result > 0);
+    } else {
+        return true;
+    }
+}
+
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != L"utf8")
@@ -750,7 +766,11 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     DWORD dwBytesRead;
     char* buffer = (char*)malloc(dwFileSize);
     if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-        contents = std::string(buffer, dwFileSize);
+        if (!IsBufferUTF(buffer, dwFileSize)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else {
+            contents = std::string(buffer, dwFileSize);
+        }        
     }
     else {
         if (!buffer)
