@@ -730,20 +730,21 @@ bool GetBufferAsUTF8(char *buffer, DWORD& buffSize)
 {
     int result = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
-    // we currently don't support UTF-16 only ANSI and UTF-8 really
+    // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
     if (IsTextUnicode(buffer, buffSize, &result) && (result & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16)) {
          return false;
     }
 
-    // See if we can convert the buffer to UTF-8    
+    // See if we can convert the buffer to UNICODE from UTF-8
+    //  if the buffer isn't UTF-8, this will fail and the result will be 0
     int outBuffSize = (buffSize + 1) * 2;
     wchar_t* outBuffer = new wchar_t[outBuffSize];
     result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, buffer, buffSize, outBuffer, outBuffSize);
     delete []outBuffer;
 
     if (result > 0) {
-        // The buffer is UTF-8
-        // remove BOM from the input stream if there is one
+        // The buffer is UTF-8 and has a BOM then
+        // remove BOM from the input stream 
         if ((buffer[0] == (char)0xEF) && 
             (buffer[1] == (char)0xBB) && 
             (buffer[2] == (char)0xBF)) {
