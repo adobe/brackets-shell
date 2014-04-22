@@ -788,8 +788,8 @@ bool quickTestBufferForUTF8(char *buffer, DWORD buffSize)
         ======================================= + =============== + ==========================================================================
         0xxxxxxx  ASCII                         |      1 byte     | Don't need to check for this.  
         110xxxxx 10xxxxxx                       |      2 byte     | Need to check for the first byte as the last char in the buffer
-        1110xxxx 10xxxxxx 10xxxxxx              |      3 byte     | Need to check for the first 2 bytes as the last 2 chars in the buffer
-        11110xxx 10xxxxxx 10xxxxxx 10xxxxxx     |      4 byte     | Need to check for the last 3 bytes 
+        1110xxxx 10xxxxxx 10xxxxxx              |      3 byte     | Need to check for the first 2 bytes at positions 2 and 3
+        11110xxx 10xxxxxx 10xxxxxx 10xxxxxx     |      4 byte     | Need to check for the first 3 bytes at positions 1, 2 and 3
         ======================================= + =============== + ==========================================================================
     */
 
