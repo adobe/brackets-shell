@@ -726,35 +726,96 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return NO_ERROR;
 }
 
-bool GetBufferAsUTF8(char *buffer, DWORD& buffSize)
+const int BOMLength = 3;
+
+bool hasBOM(char* buffer, DWORD buffSize)
+{
+    return ((buffSize >= BOMLength) && (buffer[0] == (char)0xEF) && (buffer[1] == (char)0xBB) && (buffer[2] == (char)0xBF));
+
+}
+
+bool hasUTF16_32(char* buffer, DWORD buffSize)
 {
     int result = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
     // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
-    if (IsTextUnicode(buffer, buffSize, &result) && (result & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16)) {
-         return false;
-    }
+    return (IsTextUnicode(buffer, buffSize, &result) && (result & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16));
+}
 
+
+
+bool GetBufferAsUTF8(char *buffer, DWORD& buffSize)
+{
     // See if we can convert the buffer to UNICODE from UTF-8
     //  if the buffer isn't UTF-8, this will fail and the result will be 0
     int outBuffSize = (buffSize + 1) * 2;
     wchar_t* outBuffer = new wchar_t[outBuffSize];
-    result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, buffer, buffSize, outBuffer, outBuffSize);
+    int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, buffer, buffSize, outBuffer, outBuffSize);
     delete []outBuffer;
 
-    if (result > 0) {
-        // The buffer is UTF-8 and has a BOM then
-        // remove BOM from the input stream 
-        if ((buffer[0] == (char)0xEF) && 
-            (buffer[1] == (char)0xBB) && 
-            (buffer[2] == (char)0xBF)) {
-            CopyMemory (buffer, buffer+3, buffSize - 3);
-            buffSize -= 3;
-        }
+    if ((result > 0) && hasBOM(buffer, buffSize)) {
+        buffSize -= BOMLength;
+        CopyMemory (buffer, buffer+3, buffSize);
     }
 
     return (result > 0);
 }
+
+bool quickTestBufferForUTF8(char *buffer, DWORD buffSize)
+{
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(buffer, buffSize)) {
+        return false;
+    }
+
+    // If it has a UTF-8 BOM, then 
+    //  assume it's UTF8
+    if (hasBOM(buffer, buffSize)) {
+        return true;
+    }
+
+    // If it's a valid UTF-8 as-is then
+    //  assume it's UTF8
+    if (GetBufferAsUTF8(buffer, buffSize)) {
+        return true;
+    }
+
+    // Our quick test failed so we need to check
+    //  the control masks for a malformed buffer
+
+    /*  http://stackoverflow.com/a/1031683
+        Bit Mask                                    Composition     Disposition
+        ======================================= + =============== + ==========================================================================
+        0xxxxxxx  ASCII                         |      1 byte     | Don't need to check for this.  
+        110xxxxx 10xxxxxx                       |      2 byte     | Need to check for the first byte as the last char in the buffer
+        1110xxxx 10xxxxxx 10xxxxxx              |      3 byte     | Need to check for the first 2 bytes as the last 2 chars in the buffer
+        11110xxx 10xxxxxx 10xxxxxx 10xxxxxx     |      4 byte     | Need to check for the last 3 bytes 
+        ======================================= + =============== + ==========================================================================
+    */
+
+    char L1 = buffer[buffSize - 3]; // check for 4 byte
+    char L2 = buffer[buffSize - 2]; // check for 3 byte
+    char L3 = buffer[buffSize - 1]; // check for 2 byte
+
+    if (((L1 & 0xF8) == 0xF0) && ((L2 & 0xC0) == 0x80) && ((L3 & 0xC0) == 0x80)) {
+        // 4 byte with last byte missing
+        return true;
+    }
+
+    if (((L2 & 0xF0) == 0xE0) && ((L3 & 0xC0) == 0x80)) {
+        // 3 byte with last byte missing
+        return true;
+    }
+
+    if ((L3 & 0xE0) == 0xC0) {
+        // 2 byte with last byte missing
+        return true;
+    }
+
+    // most likely not a UTF-8 buffer
+    return false;
+}
+
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
@@ -776,25 +837,68 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     if (INVALID_HANDLE_VALUE == hFile)
         return ConvertWinErrorCode(GetLastError()); 
 
+    char* buffer = NULL;
     DWORD dwFileSize = GetFileSize(hFile, NULL);
     DWORD dwBytesRead;
-    char* buffer = (char*)malloc(dwFileSize);
-    if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-        if (!GetBufferAsUTF8(buffer, dwFileSize)) {
-            error = ERR_UNSUPPORTED_ENCODING;
-        } else {
-            contents = std::string(buffer, dwFileSize);
-        }        
+        
+    // first just read a few bytes of the file
+    //  to check for a binary or text format 
+    //  that we can't handle
+
+    // we just want to read enough to satisfy the
+    //  UTF-16 or UTF-32 test with or without a BOM
+    // the UTF-8 test could result in a false-positive
+    //  but we'll check again with all bits if we 
+    //  think it's UTF-8 based on just a few charactters
+        
+    // if we're going to read fewer bytes than our
+    //  quick test then we skip the quick test and just
+    //  do the full test below since it will be fewer reads
+    const DWORD quickTestSize = 3232L; 
+    static char quickTestBuffer[quickTestSize+1];
+
+    if (dwFileSize > quickTestSize) {
+        ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
+        if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
+            if (!quickTestBufferForUTF8(quickTestBuffer, quickTestSize)) {
+                error = ERR_UNSUPPORTED_ENCODING;
+            }
+            else {
+                // reset the file pointer back to beginning
+                //  since we're going to re-read the file wi
+                SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+            }
+        }
     }
-    else {
-        if (!buffer)
-            error = ERR_UNKNOWN;
-        else
-            error = ConvertWinErrorCode(GetLastError());
+
+    if (error == NO_ERROR) {
+        // either we did a quick test and we think it's UTF-8 or 
+        //  the file is small enough that we didn't spend the time
+        //  to do a quick test so alloc the memory to read the entire
+        //  file into memory and test it again...
+        buffer = (char*)malloc(dwFileSize);
+        if (buffer) {
+            if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+                if (!GetBufferAsUTF8(buffer, dwFileSize)) {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                } else {
+                    contents = std::string(buffer, dwFileSize);
+                }        
+            }
+        }
+        else {
+            if (!buffer) {
+                error = ERR_UNKNOWN;
+            } else {
+                error = ConvertWinErrorCode(GetLastError());
+            }
+        }
     }
+
     CloseHandle(hFile);
-    if (buffer)
+    if (buffer) {
         free(buffer);
+    }
 
     return error; 
 }
