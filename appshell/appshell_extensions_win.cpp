@@ -802,8 +802,23 @@ bool quickTestBufferForUTF8(char *buffer, DWORD buffSize)
         return true;
     }
 
+    if (((L2 & 0xF8) == 0xF0) && ((L3 & 0xC0) == 0x80)) {
+        // 4 byte with last 2 bytes missing
+        return true;
+    }
+
+    if ((L3 & 0xF8) == 0xF0) {
+        // 4 byte with last 3 bytes missing
+        return true;
+    }
+
     if (((L2 & 0xF0) == 0xE0) && ((L3 & 0xC0) == 0x80)) {
         // 3 byte with last byte missing
+        return true;
+    }
+
+    if ((L3 & 0xF0) == 0xE0) {
+        // 3 byte with last 2 bytes missing
         return true;
     }
 
