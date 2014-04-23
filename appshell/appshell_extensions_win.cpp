@@ -756,7 +756,11 @@ bool hasUTF16_32(UTFValidationState& validationState)
         int flags = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
         // Check to see if validationState is UTF-16 or UTF-32 with or without a BOM
-        bool result = (IsTextUnicode(validationState.data, validationState.dataLen, &flags) && (flags & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16));
+        BOOL test = IsTextUnicode(validationState.data, validationState.dataLen, &flags);
+        // The check for IsTextUnicode could return FALSE but some bits turned on in the 
+        //  flags result when statstical analysis is applied.  treat those as UTF16 / UTF32 
+        //  since we are only looking for UTF8 data which always fails with flags == 0
+        bool result = ((test != FALSE) || (flags > 0));
 
         validationState.utf1632 = (result ? CS_YES : CS_NO);
     }
@@ -793,8 +797,22 @@ bool GetBufferAsUTF8(UTFValidationState& validationState)
     return (result > 0);
 }
 
+bool IsUTFLeadByte(char data)
+{
+   return (((data & 0xF8) == 0xF0) ||
+           ((data & 0xF8) == 0xF0) ||
+           ((data & 0xF0) == 0xE0));
+}
+
+// we can't validate something that's smaller than 12 bytes 
+const int kMinValidationLength = 12;
+
 bool quickTestBufferForUTF8(UTFValidationState& validationState)
 {
+    if (validationState.dataLen < kMinValidationLength) {
+        return false;
+    }
+
     // if we know it's UTF-16 or UTF-32 then bail
     if (hasUTF16_32(validationState)) {
         return false;
@@ -806,61 +824,23 @@ bool quickTestBufferForUTF8(UTFValidationState& validationState)
         return true;
     }
 
-    // If it's a valid UTF-8 as-is then
-    //  assume it's UTF8
-    if (GetBufferAsUTF8(validationState)) {
-        return true;
+    // find the last lead byte and truncate 
+    //  the buffer beforehand and check that to avoid 
+    //  checking a malformed data stream
+    for (int i = 0; i < 3; i++) {
+        int index = (validationState.dataLen - i);
+
+        if ((index > 0) && (IsUTFLeadByte(validationState.data[index]))){
+            validationState.dataLen = index;
+        }
+
     }
 
-    // Our quick test failed so we need to check
-    //  the control masks for a malformed validationState
-
-    /*  http://stackoverflow.com/a/1031683
-        Bit Mask                                    Composition     Disposition
-        ======================================= + =============== + ==========================================================================
-        0xxxxxxx  ASCII                         |      1 byte     | Don't need to check for this.  
-        110xxxxx 10xxxxxx                       |      2 byte     | Need to check for the first byte as the last char in the validationState
-        1110xxxx 10xxxxxx 10xxxxxx              |      3 byte     | Need to check for the first 2 bytes at positions 2 and 3
-        11110xxx 10xxxxxx 10xxxxxx 10xxxxxx     |      4 byte     | Need to check for the first 3 bytes at positions 1, 2 and 3
-        ======================================= + =============== + ==========================================================================
-    */
-
-    char L1 = validationState.data[validationState.dataLen - 3]; // check for 4 byte
-    char L2 = validationState.data[validationState.dataLen - 2]; // check for 3 byte
-    char L3 = validationState.data[validationState.dataLen - 1]; // check for 2 byte
-
-    if (((L1 & 0xF8) == 0xF0) && ((L2 & 0xC0) == 0x80) && ((L3 & 0xC0) == 0x80)) {
-        // 4 byte with last byte missing
-        return true;
-    }
-
-    if (((L2 & 0xF8) == 0xF0) && ((L3 & 0xC0) == 0x80)) {
-        // 4 byte with last 2 bytes missing
-        return true;
-    }
-
-    if ((L3 & 0xF8) == 0xF0) {
-        // 4 byte with last 3 bytes missing
-        return true;
-    }
-
-    if (((L2 & 0xF0) == 0xE0) && ((L3 & 0xC0) == 0x80)) {
-        // 3 byte with last byte missing
-        return true;
-    }
-
-    if ((L3 & 0xF0) == 0xE0) {
-        // 3 byte with last 2 bytes missing
-        return true;
-    }
-
-    if ((L3 & 0xE0) == 0xC0) {
-        // 2 byte with last byte missing
-        return true;
-    }
-
-    // most likely not a UTF-8 validationState
-    return false;
+    // this will check to see if the we have valid
+    //  UTF8 data in the sample data.  This should tell
+    //  us if it's binary or not but doesn't necessarily
+    //  tell us if the file is valid UTF8
+    return (GetBufferAsUTF8(validationState));
 }
 
 
