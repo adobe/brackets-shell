@@ -728,74 +728,106 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
 const int BOMLength = 3;
 
-bool hasBOM(char* buffer, DWORD buffSize)
-{
-    return ((buffSize >= BOMLength) && (buffer[0] == (char)0xEF) && (buffer[1] == (char)0xBB) && (buffer[2] == (char)0xBF));
+typedef enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
 
+typedef struct UTFValidationState {
+
+    UTFValidationState () {
+        data = NULL;
+        dataLen = 0;
+        utf1632 = CS_UNKNOWN;
+        preserveBOM = true;
+    }
+
+    char*            data;
+    DWORD            dataLen;
+    CheckedState     utf1632;
+    bool             preserveBOM;
+} UTFValidationState;
+
+bool hasBOM(UTFValidationState& validationState)
+{
+    return ((validationState.dataLen >= BOMLength) && (validationState.data[0] == (char)0xEF) && (validationState.data[1] == (char)0xBB) && (validationState.data[2] == (char)0xBF));
 }
 
-bool hasUTF16_32(char* buffer, DWORD buffSize)
+bool hasUTF16_32(UTFValidationState& validationState)
 {
-    int result = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
+    if (validationState.utf1632 == CS_UNKNOWN) {
+        int flags = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
-    // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
-    return (IsTextUnicode(buffer, buffSize, &result) && (result & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16));
+        // Check to see if validationState is UTF-16 or UTF-32 with or without a BOM
+        bool result = (IsTextUnicode(validationState.data, validationState.dataLen, &flags) && (flags & IS_TEXT_UNICODE_ASCII16|IS_TEXT_UNICODE_REVERSE_ASCII16));
+
+        validationState.utf1632 = (result ? CS_YES : CS_NO);
+    }
+
+    return (validationState.utf1632 == CS_YES);
 }
 
-
-
-bool GetBufferAsUTF8(char *buffer, DWORD& buffSize)
+void RemoveBOM(UTFValidationState& validationState)
 {
-    // See if we can convert the buffer to UNICODE from UTF-8
-    //  if the buffer isn't UTF-8, this will fail and the result will be 0
-    int outBuffSize = (buffSize + 1) * 2;
+    if (!validationState.preserveBOM) {
+        validationState.dataLen -= BOMLength;
+        CopyMemory (validationState.data, validationState.data+3, validationState.dataLen);
+    }
+}
+
+bool GetBufferAsUTF8(UTFValidationState& validationState)
+{
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(validationState)) {
+        return false;
+    }
+
+    // See if we can convert the validationState to UNICODE from UTF-8
+    //  if the validationState isn't UTF-8, this will fail and the result will be 0
+    int outBuffSize = (validationState.dataLen + 1) * 2;
     wchar_t* outBuffer = new wchar_t[outBuffSize];
-    int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, buffer, buffSize, outBuffer, outBuffSize);
+    int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, validationState.data, validationState.dataLen, outBuffer, outBuffSize);
     delete []outBuffer;
 
-    if ((result > 0) && hasBOM(buffer, buffSize)) {
-        buffSize -= BOMLength;
-        CopyMemory (buffer, buffer+3, buffSize);
+    if ((result > 0) && hasBOM(validationState)) {
+        RemoveBOM(validationState);
     }
 
     return (result > 0);
 }
 
-bool quickTestBufferForUTF8(char *buffer, DWORD buffSize)
+bool quickTestBufferForUTF8(UTFValidationState& validationState)
 {
     // if we know it's UTF-16 or UTF-32 then bail
-    if (hasUTF16_32(buffer, buffSize)) {
+    if (hasUTF16_32(validationState)) {
         return false;
     }
 
     // If it has a UTF-8 BOM, then 
     //  assume it's UTF8
-    if (hasBOM(buffer, buffSize)) {
+    if (hasBOM(validationState)) {
         return true;
     }
 
     // If it's a valid UTF-8 as-is then
     //  assume it's UTF8
-    if (GetBufferAsUTF8(buffer, buffSize)) {
+    if (GetBufferAsUTF8(validationState)) {
         return true;
     }
 
     // Our quick test failed so we need to check
-    //  the control masks for a malformed buffer
+    //  the control masks for a malformed validationState
 
     /*  http://stackoverflow.com/a/1031683
         Bit Mask                                    Composition     Disposition
         ======================================= + =============== + ==========================================================================
         0xxxxxxx  ASCII                         |      1 byte     | Don't need to check for this.  
-        110xxxxx 10xxxxxx                       |      2 byte     | Need to check for the first byte as the last char in the buffer
+        110xxxxx 10xxxxxx                       |      2 byte     | Need to check for the first byte as the last char in the validationState
         1110xxxx 10xxxxxx 10xxxxxx              |      3 byte     | Need to check for the first 2 bytes at positions 2 and 3
         11110xxx 10xxxxxx 10xxxxxx 10xxxxxx     |      4 byte     | Need to check for the first 3 bytes at positions 1, 2 and 3
         ======================================= + =============== + ==========================================================================
     */
 
-    char L1 = buffer[buffSize - 3]; // check for 4 byte
-    char L2 = buffer[buffSize - 2]; // check for 3 byte
-    char L3 = buffer[buffSize - 1]; // check for 2 byte
+    char L1 = validationState.data[validationState.dataLen - 3]; // check for 4 byte
+    char L2 = validationState.data[validationState.dataLen - 2]; // check for 3 byte
+    char L3 = validationState.data[validationState.dataLen - 1]; // check for 2 byte
 
     if (((L1 & 0xF8) == 0xF0) && ((L2 & 0xC0) == 0x80) && ((L3 & 0xC0) == 0x80)) {
         // 4 byte with last byte missing
@@ -827,7 +859,7 @@ bool quickTestBufferForUTF8(char *buffer, DWORD buffSize)
         return true;
     }
 
-    // most likely not a UTF-8 buffer
+    // most likely not a UTF-8 validationState
     return false;
 }
 
@@ -864,18 +896,25 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     //  UTF-16 or UTF-32 test with or without a BOM
     // the UTF-8 test could result in a false-positive
     //  but we'll check again with all bits if we 
-    //  think it's UTF-8 based on just a few charactters
+    //  think it's UTF-8 based on just a few characters
         
     // if we're going to read fewer bytes than our
     //  quick test then we skip the quick test and just
     //  do the full test below since it will be fewer reads
-    const DWORD quickTestSize = 3232L; 
+
+    // 1000 chars + 32-bit BOM (UTF-32), 2001 chars + 16 bit BOM (UTF-16)
+    const DWORD quickTestSize = 3204L; 
     static char quickTestBuffer[quickTestSize+1];
+
+    UTFValidationState validationState;
+
+    validationState.data = quickTestBuffer;
+    validationState.dataLen = quickTestSize;
 
     if (dwFileSize > quickTestSize) {
         ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
         if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
-            if (!quickTestBufferForUTF8(quickTestBuffer, quickTestSize)) {
+            if (!quickTestBufferForUTF8(validationState)) {
                 error = ERR_UNSUPPORTED_ENCODING;
             }
             else {
@@ -893,8 +932,13 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
         //  file into memory and test it again...
         buffer = (char*)malloc(dwFileSize);
         if (buffer) {
+
+            validationState.data = buffer;
+            validationState.dataLen = dwFileSize;
+            validationState.preserveBOM = false;
+
             if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-                if (!GetBufferAsUTF8(buffer, dwFileSize)) {
+                if (!GetBufferAsUTF8(validationState)) {
                     error = ERR_UNSUPPORTED_ENCODING;
                 } else {
                     contents = std::string(buffer, dwFileSize);
