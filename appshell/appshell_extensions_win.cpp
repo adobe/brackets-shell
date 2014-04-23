@@ -784,7 +784,7 @@ bool GetBufferAsUTF8(UTFValidationState& validationState)
     }
 
     // See if we can convert the validationState to UNICODE from UTF-8
-    //  if the validationState isn't UTF-8, this will fail and the result will be 0
+    //  if the data isn't UTF-8, this will fail and the result will be 0
     int outBuffSize = (validationState.dataLen + 1) * 2;
     wchar_t* outBuffer = new wchar_t[outBuffSize];
     int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, validationState.data, validationState.dataLen, outBuffer, outBuffSize);
