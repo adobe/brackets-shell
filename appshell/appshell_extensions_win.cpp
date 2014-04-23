@@ -755,7 +755,7 @@ bool hasUTF16_32(UTFValidationState& validationState)
     if (validationState.utf1632 == CS_UNKNOWN) {
         int flags = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
 
-        // Check to see if validationState is UTF-16 or UTF-32 with or without a BOM
+        // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
         BOOL test = IsTextUnicode(validationState.data, validationState.dataLen, &flags);
         // The check for IsTextUnicode could return FALSE but some bits turned on in the 
         //  flags result when statstical analysis is applied.  treat those as UTF16 / UTF32 
@@ -783,7 +783,7 @@ bool GetBufferAsUTF8(UTFValidationState& validationState)
         return false;
     }
 
-    // See if we can convert the validationState to UNICODE from UTF-8
+    // See if we can convert the data to UNICODE from UTF-8
     //  if the data isn't UTF-8, this will fail and the result will be 0
     int outBuffSize = (validationState.dataLen + 1) * 2;
     wchar_t* outBuffer = new wchar_t[outBuffSize];
