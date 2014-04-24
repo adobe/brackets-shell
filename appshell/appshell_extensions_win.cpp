@@ -740,9 +740,9 @@ typedef struct UTFValidationState {
     }
 
     char*            data;
-    DWORD            dataLen;
-    CheckedState     utf1632;
     bool             preserveBOM;
+    CheckedState     utf1632;
+    DWORD            dataLen;
 } UTFValidationState;
 
 bool hasBOM(UTFValidationState& validationState)
@@ -883,7 +883,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     //  do the full test below since it will be fewer reads
 
     // 1000 chars + 32-bit BOM (UTF-32), 2001 chars + 16 bit BOM (UTF-16)
-    const DWORD quickTestSize = 3204L; 
+    const DWORD quickTestSize = 4004; //  ((32 / 8) * 1000 ) + 4 = 4004, ((16 / 8) * 2001) + 2
     static char quickTestBuffer[quickTestSize+1];
 
     UTFValidationState validationState;
