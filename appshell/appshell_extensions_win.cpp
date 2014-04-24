@@ -734,15 +734,15 @@ typedef struct UTFValidationState {
 
     UTFValidationState () {
         data        = NULL;
-        preserveBOM = true;
-        utf1632     = CS_UNKNOWN;
         dataLen     = 0;
+        utf1632     = CS_UNKNOWN;
+        preserveBOM = true;
     }
 
     char*            data;
-    bool             preserveBOM;
-    CheckedState     utf1632;
     DWORD            dataLen;
+    CheckedState     utf1632;
+    bool             preserveBOM;
 } UTFValidationState;
 
 bool hasBOM(UTFValidationState& validationState)
