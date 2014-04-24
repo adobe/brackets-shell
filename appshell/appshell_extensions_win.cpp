@@ -882,8 +882,15 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     //  quick test then we skip the quick test and just
     //  do the full test below since it will be fewer reads
 
-    // 1000 chars + 32-bit BOM (UTF-32), 2001 chars + 16 bit BOM (UTF-16)
-    const DWORD quickTestSize = 4004; //  ((32 / 8) * 1000 ) + 4 = 4004, ((16 / 8) * 2001) + 2
+    // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
+    //  but with enough that we can test for true UTF data to test against 
+    //  without reading partial character streams roughly 1000 characters 
+    //  at UTF32 should do it:
+    // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
+    // 1001 chars without BOM  (UTF-32) = 4004 bytes 
+    // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
+    // 2002 chars without BOM  (UTF-16) = 4004 bytes 
+    const DWORD quickTestSize = 4004; 
     static char quickTestBuffer[quickTestSize+1];
 
     UTFValidationState validationState;
