@@ -733,10 +733,10 @@ typedef enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
 typedef struct UTFValidationState {
 
     UTFValidationState () {
-        data = NULL;
-        dataLen = 0;
-        utf1632 = CS_UNKNOWN;
+        data        = NULL;
         preserveBOM = true;
+        utf1632     = CS_UNKNOWN;
+        dataLen     = 0;
     }
 
     char*            data;
