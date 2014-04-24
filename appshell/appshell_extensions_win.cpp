@@ -921,7 +921,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
                 if (!GetBufferAsUTF8(validationState)) {
                     error = ERR_UNSUPPORTED_ENCODING;
                 } else {
-                    contents = std::string(buffer, dwFileSize);
+                    contents = std::string(buffer, validationState.dataLen);
                 }        
             }
         }
