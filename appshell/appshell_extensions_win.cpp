@@ -778,6 +778,10 @@ void RemoveBOM(UTFValidationState& validationState)
 
 bool GetBufferAsUTF8(UTFValidationState& validationState)
 {
+    if (validationState.dataLen == 0) {
+        return true;
+    }    
+    
     // if we know it's UTF-16 or UTF-32 then bail
     if (hasUTF16_32(validationState)) {
         return false;
@@ -810,7 +814,8 @@ const int kMinValidationLength = 12;
 bool quickTestBufferForUTF8(UTFValidationState& validationState)
 {
     if (validationState.dataLen < kMinValidationLength) {
-        return false;
+        // we really don't know so just assume it's valid
+        return true;
     }
 
     // if we know it's UTF-16 or UTF-32 then bail
