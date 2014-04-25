@@ -799,9 +799,9 @@ bool GetBufferAsUTF8(UTFValidationState& validationState)
 
 bool IsUTFLeadByte(char data)
 {
-   return (((data & 0xF8) == 0xF0) ||
-           ((data & 0xF8) == 0xF0) ||
-           ((data & 0xF0) == 0xE0));
+   return (((data & 0xF8) == 0xF0) || // 4 BYTE
+           ((data & 0xE0) == 0xE0) || // 3 BYTE
+           ((data & 0xE0) == 0xC0));  // 2 BYTE
 }
 
 // we can't validate something that's smaller than 12 bytes 
@@ -827,11 +827,12 @@ bool quickTestBufferForUTF8(UTFValidationState& validationState)
     // find the last lead byte and truncate 
     //  the buffer beforehand and check that to avoid 
     //  checking a malformed data stream
-    for (int i = 0; i < 3; i++) {
+    for (int i = 1; i < 4; i++) {
         int index = (validationState.dataLen - i);
 
         if ((index > 0) && (IsUTFLeadByte(validationState.data[index]))){
             validationState.dataLen = index;
+            break;
         }
 
     }
