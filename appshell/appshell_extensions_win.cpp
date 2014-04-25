@@ -800,7 +800,7 @@ bool GetBufferAsUTF8(UTFValidationState& validationState)
 bool IsUTFLeadByte(char data)
 {
    return (((data & 0xF8) == 0xF0) || // 4 BYTE
-           ((data & 0xE0) == 0xE0) || // 3 BYTE
+           ((data & 0xF0) == 0xE0) || // 3 BYTE
            ((data & 0xE0) == 0xC0));  // 2 BYTE
 }
 
