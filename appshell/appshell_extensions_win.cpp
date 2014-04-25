@@ -872,6 +872,12 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 
     char* buffer = NULL;
     DWORD dwFileSize = GetFileSize(hFile, NULL);
+
+    if (dwFileSize == 0) {
+        contents = "";
+        return error;
+    }
+
     DWORD dwBytesRead;
         
     // first just read a few bytes of the file
@@ -936,14 +942,12 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
                 } else {
                     contents = std::string(buffer, validationState.dataLen);
                 }        
+            } else {
+                error = ConvertWinErrorCode(GetLastError(), false);
             }
         }
-        else {
-            if (!buffer) {
-                error = ERR_UNKNOWN;
-            } else {
-                error = ConvertWinErrorCode(GetLastError());
-            }
+        else { 
+            error = ERR_UNKNOWN;
         }
     }
 
