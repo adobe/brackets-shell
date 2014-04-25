@@ -1366,9 +1366,7 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 
         bool existingOne = false;
         for (int i = 0; i < numAccelerators - 1; i++) {
-            if (lpaccelNew[i].cmd == lpaccelNew[newItem].cmd &&
-                    lpaccelNew[i].fVirt == lpaccelNew[newItem].fVirt &&
-                    lpaccelNew[i].key == lpaccelNew[newItem].key) {
+            if (memcmp(&lpaccelNew[i], &lpaccelNew[newItem], sizeof(ACCEL)) == 0) {
                 existingOne = true;
                 break;
             }
