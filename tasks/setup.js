@@ -118,11 +118,11 @@ module.exports = function (grunt) {
             
             // some paths to deps/cef/* are platform specific and may not exist
             if (grunt.file.exists(path)) {
-                links.push(fs.unlinkSync(path));
+                fs.unlinkSync(path);
             }
         });
         
-        links.push(fs.unlinkSync("deps/cef"));
+        fs.unlinkSync("deps/cef");
         
         // wait for all symlinks to complete
         q.all(links).then(function () {
