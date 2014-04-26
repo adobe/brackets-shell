@@ -86,7 +86,7 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
-            var cefTasks = ["cef-clean", "cef-unlink", "cef-extract", "cef-symlinks"];
+            var cefTasks = [ "cef-unlink", "cef-clean", "cef-extract", "cef-symlinks"];
             
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
