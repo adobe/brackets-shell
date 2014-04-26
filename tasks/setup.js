@@ -86,7 +86,7 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
-            var cefTasks = ["cef-clean", "cef-extract", "cef-symlinks"];
+            var cefTasks = ["cef-clean", "cef-unlink", "cef-extract", "cef-symlinks"];
             
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
@@ -125,6 +125,31 @@ module.exports = function (grunt) {
         // run curl
         grunt.log.writeln("Downloading " + grunt.config("cefZipSrc") + ". This may take a while...");
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
+    });
+    
+    // task: cef-unsymlink
+    grunt.registerTask("cef-unlink", "Remove symlinks for CEF", function () {
+        var done    = this.async(),
+            path,
+            links   = [];
+        
+        // create symlinks
+        Object.keys(CEF_MAPPING).forEach(function (key, index) {
+            path = CEF_MAPPING[key];
+            
+            // some paths to deps/cef/* are platform specific and may not exist
+            if (grunt.file.exists(path)) {
+                links.push(fs.unlink(path));
+            }
+        });
+        
+        // wait for all symlinks to complete
+        q.all(links).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
     });
     
     // task: cef-extract
