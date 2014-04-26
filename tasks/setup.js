@@ -103,19 +103,35 @@ module.exports = function (grunt) {
     
     // task: cef-clean
     grunt.registerTask("cef-clean", "Removes CEF binaries and linked folders", function () {
-        var path;
+        var done    = this.async(),
+            path,
+            links   = [];
         
         // delete dev symlinks from "setup_for_hacking"
         common.deleteFile("Release/dev", { force: true });
         common.deleteFile("Debug/dev", { force: true });
         
-        // delete symlinks to cef
+        
+        // create symlinks
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
-            common.deleteFile(CEF_MAPPING[key]);
+            path = CEF_MAPPING[key];
+            
+            // some paths to deps/cef/* are platform specific and may not exist
+            if (grunt.file.exists(path)) {
+                links.push(fs.unlink(path));
+            }
         });
         
+        // wait for all symlinks to complete
+        q.all(links).then(function () {
+            fs.unlinkSync("deps/cef");
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
         // finally delete CEF binary\
-        common.deleteFile("deps/cef", { force: true });
+//        common.deleteFile("deps/cef", { force: true });
     });
     
     // task: cef-download
