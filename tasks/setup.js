@@ -118,10 +118,11 @@ module.exports = function (grunt) {
             
             // some paths to deps/cef/* are platform specific and may not exist
             if (grunt.file.exists(path)) {
-                links.push(fs.unlink(path));
+                links.push(fs.unlinkSync(path));
             }
         });
         
+        links.push(fs.unlinkSync("deps/cef"));
         
         // wait for all symlinks to complete
         q.all(links).then(function () {
@@ -130,8 +131,6 @@ module.exports = function (grunt) {
             grunt.log.error(err);
             done(false);
         });
-        // finally delete CEF binary\
-        common.deleteFile("deps/cef", { force: true });
     });
     
     // task: cef-download
