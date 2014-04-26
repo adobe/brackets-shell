@@ -40,10 +40,7 @@ module.exports = function (grunt) {
             "deps/cef/Resources"    : "Resources",
             "deps/cef/tools"        : "tools"
         },
-        CEF_LINKS_MAP    = {
-            "deps/cef/Debug"        : "Debug",
-            "deps/cef/Release"      : "Release"
-        },
+        
         /* use promises instead of callbacks */
         link,
         rename          = common.rename,
@@ -138,8 +135,8 @@ module.exports = function (grunt) {
             links   = [];
         
         // create symlinks
-        Object.keys(CEF_LINKS_MAP).forEach(function (key, index) {
-            path = CEF_LINKS_MAP[key];
+        Object.keys(CEF_MAPPING).forEach(function (key, index) {
+            path = CEF_MAPPING[key];
             
             // some paths to deps/cef/* are platform specific and may not exist
             if (grunt.file.exists(path)) {
