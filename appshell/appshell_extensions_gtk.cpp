@@ -351,7 +351,7 @@ bool has_utf16be_BOM(gchar* data, gsize length)
 
 bool has_utf16le_BOM(gchar* data, gsize length)
 {
-    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFF) && (data[1] == (gchar)0xFEB));
+    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFF) && (data[1] == (gchar)0xFE));
 }
 
 bool has_utf32be_BOM(gchar* data, gsize length)
