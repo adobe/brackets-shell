@@ -945,6 +945,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
             } else {
                 error = ConvertWinErrorCode(GetLastError(), false);
             }
+            free(buffer);
+
         }
         else { 
             error = ERR_UNKNOWN;
@@ -952,10 +954,6 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     }
 
     CloseHandle(hFile);
-    if (buffer) {
-        free(buffer);
-    }
-
     return error; 
 }
 
