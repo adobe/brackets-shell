@@ -572,31 +572,11 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     else
         return ERR_UNSUPPORTED_ENCODING; 
     
-    
-    const int kUTF8BOMLength = 3;
-    
-    uint32 modTime;
-    bool isDir;
-    double size;
-    ExtensionString realPath;
-    
-    int32 result = GetFileInfo(filename, modTime, isDir, size, realPath);
-    
-    if (result != NO_ERROR) {
-        return result;
-    }
-    
     NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
     
     if (fileContents) 
     {
         contents = [fileContents UTF8String];
-
-        if ((contents.size() != size)  && (contents.size() != (size - kUTF8BOMLength))) {
-            // UTF16 or UTF32 without a BOM
-            return ERR_UNSUPPORTED_ENCODING;
-        }
-        
         return NO_ERROR;
     }
     
