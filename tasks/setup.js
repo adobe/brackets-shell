@@ -122,9 +122,10 @@ module.exports = function (grunt) {
             }
         });
         
+        links.push("deps/cef");
+        
         // wait for all symlinks to complete
         q.all(links).then(function () {
-            fs.unlinkSync("deps/cef");
             done();
         }, function (err) {
             grunt.log.error(err);
