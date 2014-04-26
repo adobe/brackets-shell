@@ -334,6 +334,14 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     return NO_ERROR;
 }
 
+const int BOMLength = 3;
+
+bool hasBOM(gchar* data, gsize length)
+{
+    return ((length >= BOMLength) && (data[0] == (char)0xEF) && (data[1] == (char)0xBB) && (data[2] == (char)0xBF));
+}
+
+
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != "utf8") {
@@ -347,17 +355,23 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     
     if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
         error = GErrorToErrorCode(gerror);
-
         if (error == ERR_NOT_FILE) {
             error = ERR_CANT_READ;
         }
     } else {
-        contents.assign(file_get_contents, len);
+        if (hasBOM(file_get_contents, len)) {
+            contents.assign(file_get_contents + BOMLength, len);        
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else {
+            contents.assign(file_get_contents, len);
+        }
         g_free(file_get_contents);
     }
 
     return error;
 }
+
 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
