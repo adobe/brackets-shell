@@ -122,7 +122,6 @@ module.exports = function (grunt) {
             }
         });
         
-        links.push("deps/cef");
         
         // wait for all symlinks to complete
         q.all(links).then(function () {
@@ -132,7 +131,7 @@ module.exports = function (grunt) {
             done(false);
         });
         // finally delete CEF binary\
-//        common.deleteFile("deps/cef", { force: true });
+        common.deleteFile("deps/cef", { force: true });
     });
     
     // task: cef-download
