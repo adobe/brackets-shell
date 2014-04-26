@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint vars:true*/
+/*jslint vars:true, plusplus: true*/
 /*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
@@ -62,6 +62,26 @@ module.exports = function (grunt) {
             return symlink(srcpath, destpath, typeArg);
         };
     }());
+    
+    function rimraf(dir) {
+        var i,
+            list = fs.readdirSync(dir);
+        for (i = 0; i < list.length; i++) {
+            
+            var filename = path.join(dir, list[i]),
+                stat = fs.statSync(filename);
+
+            if (filename !== "." && filename !== "..") {
+                if (stat.isDirectory()) {
+                    rimraf(filename);
+                } else {
+                    // rm fiilename
+                    fs.unlinkSync(filename);
+                }
+            }
+        }
+        fs.rmdirSync(dir);
+    }
     
     function unzip(src, dest) {
         grunt.verbose.writeln("Extracting " + src);
@@ -108,9 +128,12 @@ module.exports = function (grunt) {
             links   = [];
         
         // delete dev symlinks from "setup_for_hacking"
-        common.deleteFile("Release/dev", { force: true });
-        common.deleteFile("Debug/dev", { force: true });
-        
+        if (grunt.file.exists("Release/dev")) {
+            fs.unlinkSync("Release/dev");
+        }
+        if (grunt.file.exists("Debug/dev")) {
+            fs.unlinkSync("Debug/dev");
+        }
         
         // create symlinks
         Object.keys(CEF_MAPPING).forEach(function (key, index) {
@@ -122,15 +145,10 @@ module.exports = function (grunt) {
             }
         });
         
-        fs.unlinkSync("deps/cef");
-        
-        // wait for all symlinks to complete
-        q.all(links).then(function () {
-            done();
-        }, function (err) {
-            grunt.log.error(err);
-            done(false);
-        });
+        if (grunt.file.exists("deps/cef")) {
+            rimraf("deps/cef");
+        }
+        done();
     });
     
     // task: cef-download
