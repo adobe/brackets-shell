@@ -127,23 +127,7 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
-        // delete dev symlinks from "setup_for_hacking"
-        if (grunt.file.exists("Release/dev")) {
-            fs.unlinkSync("Release/dev");
-        }
-        if (grunt.file.exists("Debug/dev")) {
-            fs.unlinkSync("Debug/dev");
-        }
-        
-        // create symlinks
-        Object.keys(CEF_MAPPING).forEach(function (key, index) {
-            path = CEF_MAPPING[key];
-            
-            // some paths to deps/cef/* are platform specific and may not exist
-            if (grunt.file.exists(path)) {
-                fs.unlinkSync(path);
-            }
-        });
+
         
         if (grunt.file.exists("deps/cef")) {
             rimraf("deps/cef");
