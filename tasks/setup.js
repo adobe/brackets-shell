@@ -66,6 +66,9 @@ module.exports = function (grunt) {
     function rimraf(dir) {
         var i,
             list = fs.readdirSync(dir);
+
+        grunt.log.writeln("rm -rf " + dir);
+        
         for (i = 0; i < list.length; i++) {
             
             var filename = path.join(dir, list[i]),
@@ -76,11 +79,17 @@ module.exports = function (grunt) {
                     rimraf(filename);
                 } else {
                     // rm fiilename
+                    grunt.log.writeln("unlink " + filename);
                     fs.unlinkSync(filename);
                 }
             }
         }
-        fs.rmdirSync(dir);
+        
+        list = fs.readdirSync(dir);
+        for (i = 0; i < list.length; i++) {
+            var f = path.join(dir, list[i]);
+            grunt.log.writeln("entry found " + f);
+        }
     }
     
     function unzip(src, dest) {
@@ -107,7 +116,7 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
-            var cefTasks = [ "cef-unlink", "cef-clean", "cef-extract", "cef-symlinks"];
+            var cefTasks = [ "cef-clean", "cef-unlink", "cef-extract", "cef-symlinks"];
             
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
@@ -127,7 +136,7 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
-
+        grunt.log.writeln("cleaning...");
         
         if (grunt.file.exists("deps/cef")) {
             rimraf("deps/cef");
