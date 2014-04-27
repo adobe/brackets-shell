@@ -77,6 +77,7 @@ module.exports = function (grunt) {
             if (filename !== "." && filename !== "..") {
                 if (stat.isDirectory()) {
                     rimraf(filename);
+                    fs.rmdirSync(filename);
                 } else {
                     // rm fiilename
                     grunt.log.writeln("unlink " + filename);
