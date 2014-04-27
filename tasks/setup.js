@@ -64,8 +64,8 @@ module.exports = function (grunt) {
     }());
     
     function rimraf(dir) {
-        grunt.log.writeln("deleting" + dir);
-        return exec("bash -c \"rm -rf" + dir + "\"");
+        grunt.log.writeln("deleting " + dir);
+        return exec("bash -c 'rm -rf " + dir + "'");
     }
     
     function unzip(src, dest) {
