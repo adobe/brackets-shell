@@ -115,6 +115,8 @@ module.exports = function (grunt) {
         grunt.log.writeln("cleaning...");
         rimraf("deps/cef").then(function () {
             done();
+        }, function (err) {
+            done();
         });
     });
     
@@ -209,7 +211,7 @@ module.exports = function (grunt) {
             path = CEF_MAPPING[key];
             
             // some paths to deps/cef/* are platform specific and may not exist
-            if (grunt.file.exists(key)) {
+            if (grunt.file.exists(key) && !grunt.file.exists(path)) {
                 links.push(link(key, path));
             }
         });
