@@ -64,7 +64,7 @@ module.exports = function (grunt) {
     }());
     
     function rimraf(dir) {
-        grunt.log.writeln("deleting " + dir);
+        grunt.verbose.writeln("rm -rf " + dir);
         return exec("bash -c 'rm -rf " + dir + "'");
     }
     
@@ -112,7 +112,8 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
-        grunt.log.writeln("cleaning...");
+        grunt.verbose.writeln("cleaning cef...");
+        
         rimraf("deps/cef").then(function () {
             common.deleteFile("deps/cef", { force: true });
             done();
