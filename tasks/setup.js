@@ -21,7 +21,7 @@
  * 
  */
 /*jslint vars:true, plusplus: true*/
-/*global module, require, process*/
+/*global module, require, process, node*/
 module.exports = function (grunt) {
     "use strict";
 
@@ -112,11 +112,11 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
-        grunt.verbose.writeln("cleaning cef...");
-        
         rimraf("deps/cef").then(function () {
-            common.deleteFile("deps/cef", { force: true });
-            done();
+            setTimeout(function () {
+                common.deleteFile("deps/cef", { force: true });
+                done();
+            }, 3000);
         }, function (err) {
             done(false);
         });
