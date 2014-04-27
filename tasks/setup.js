@@ -114,9 +114,10 @@ module.exports = function (grunt) {
         
         grunt.log.writeln("cleaning...");
         rimraf("deps/cef").then(function () {
+            common.deleteFile("deps/cef", { force: true });
             done();
         }, function (err) {
-            done();
+            done(false);
         });
     });
     
