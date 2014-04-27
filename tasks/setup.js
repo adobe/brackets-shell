@@ -116,7 +116,7 @@ module.exports = function (grunt) {
             setTimeout(function () {
                 common.deleteFile("deps/cef", { force: true });
                 done();
-            }, 3000);
+            }, 5000);
         }, function (err) {
             done(false);
         });
