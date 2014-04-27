@@ -112,8 +112,10 @@ module.exports = function (grunt) {
             path,
             links   = [];
         
+        grunt.log.writeln("deleting deps/cef");
         rimraf("deps/cef").then(function () {
             setTimeout(function () {
+                grunt.log.writeln("deleting deps/cef again");
                 common.deleteFile("deps/cef", { force: true });
                 done();
             }, 5000);
