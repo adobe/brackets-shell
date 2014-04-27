@@ -120,7 +120,16 @@ module.exports = function (grunt) {
                 done();
             }, 5000);
         }, function (err) {
-            done(false);
+            grunt.log.writeln("retrying delete deps/cef");
+            rimraf("deps/cef").then(function () {
+                setTimeout(function () {
+                    grunt.log.writeln("deleting deps/cef again");
+                    common.deleteFile("deps/cef", { force: true });
+                    done();
+                }, 5000);
+            }, function (err) {
+                done(false);
+            });
         });
     });
     
