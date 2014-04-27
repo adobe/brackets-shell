@@ -86,6 +86,8 @@ module.exports = function (grunt) {
             }
         }
         
+        fs.rmdirSync(dir);
+        
         list = fs.readdirSync(dir);
         for (i = 0; i < list.length; i++) {
             var f = path.join(dir, list[i]);
