@@ -264,8 +264,6 @@ public:
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
 
-  std::set<std::string> m_OpenDevToolsURLs;
-  
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;
                         
