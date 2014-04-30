@@ -875,84 +875,82 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 
     if (dwFileSize == 0) {
         contents = "";
-        return error;
-    }
-
-    DWORD dwBytesRead;
+    } else {
+        DWORD dwBytesRead;
         
-    // first just read a few bytes of the file
-    //  to check for a binary or text format 
-    //  that we can't handle
+        // first just read a few bytes of the file
+        //  to check for a binary or text format 
+        //  that we can't handle
 
-    // we just want to read enough to satisfy the
-    //  UTF-16 or UTF-32 test with or without a BOM
-    // the UTF-8 test could result in a false-positive
-    //  but we'll check again with all bits if we 
-    //  think it's UTF-8 based on just a few characters
+        // we just want to read enough to satisfy the
+        //  UTF-16 or UTF-32 test with or without a BOM
+        // the UTF-8 test could result in a false-positive
+        //  but we'll check again with all bits if we 
+        //  think it's UTF-8 based on just a few characters
         
-    // if we're going to read fewer bytes than our
-    //  quick test then we skip the quick test and just
-    //  do the full test below since it will be fewer reads
+        // if we're going to read fewer bytes than our
+        //  quick test then we skip the quick test and just
+        //  do the full test below since it will be fewer reads
 
-    // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
-    //  but with enough that we can test for true UTF data to test against 
-    //  without reading partial character streams roughly 1000 characters 
-    //  at UTF32 should do it:
-    // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
-    // 1001 chars without BOM  (UTF-32) = 4004 bytes 
-    // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
-    // 2002 chars without BOM  (UTF-16) = 4004 bytes 
-    const DWORD quickTestSize = 4004; 
-    static char quickTestBuffer[quickTestSize+1];
+        // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
+        //  but with enough that we can test for true UTF data to test against 
+        //  without reading partial character streams roughly 1000 characters 
+        //  at UTF32 should do it:
+        // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
+        // 1001 chars without BOM  (UTF-32) = 4004 bytes 
+        // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
+        // 2002 chars without BOM  (UTF-16) = 4004 bytes 
+        const DWORD quickTestSize = 4004; 
+        static char quickTestBuffer[quickTestSize+1];
 
-    UTFValidationState validationState;
+        UTFValidationState validationState;
 
-    validationState.data = quickTestBuffer;
-    validationState.dataLen = quickTestSize;
+        validationState.data = quickTestBuffer;
+        validationState.dataLen = quickTestSize;
 
-    if (dwFileSize > quickTestSize) {
-        ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
-        if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
-            if (!quickTestBufferForUTF8(validationState)) {
-                error = ERR_UNSUPPORTED_ENCODING;
-            }
-            else {
-                // reset the file pointer back to beginning
-                //  since we're going to re-read the file wi
-                SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
-            }
-        }
-    }
-
-    if (error == NO_ERROR) {
-        // either we did a quick test and we think it's UTF-8 or 
-        //  the file is small enough that we didn't spend the time
-        //  to do a quick test so alloc the memory to read the entire
-        //  file into memory and test it again...
-        buffer = (char*)malloc(dwFileSize);
-        if (buffer) {
-
-            validationState.data = buffer;
-            validationState.dataLen = dwFileSize;
-            validationState.preserveBOM = false;
-
-            if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-                if (!GetBufferAsUTF8(validationState)) {
+        if (dwFileSize > quickTestSize) {
+            ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
+            if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
+                if (!quickTestBufferForUTF8(validationState)) {
                     error = ERR_UNSUPPORTED_ENCODING;
-                } else {
-                    contents = std::string(buffer, validationState.dataLen);
-                }        
-            } else {
-                error = ConvertWinErrorCode(GetLastError(), false);
+                }
+                else {
+                    // reset the file pointer back to beginning
+                    //  since we're going to re-read the file wi
+                    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+                }
             }
-            free(buffer);
-
         }
-        else { 
-            error = ERR_UNKNOWN;
+
+        if (error == NO_ERROR) {
+            // either we did a quick test and we think it's UTF-8 or 
+            //  the file is small enough that we didn't spend the time
+            //  to do a quick test so alloc the memory to read the entire
+            //  file into memory and test it again...
+            buffer = (char*)malloc(dwFileSize);
+            if (buffer) {
+
+                validationState.data = buffer;
+                validationState.dataLen = dwFileSize;
+                validationState.preserveBOM = false;
+
+                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+                    if (!GetBufferAsUTF8(validationState)) {
+                        error = ERR_UNSUPPORTED_ENCODING;
+                    } else {
+                        contents = std::string(buffer, validationState.dataLen);
+                    }        
+                } else {
+                    error = ConvertWinErrorCode(GetLastError(), false);
+                }
+                free(buffer);
+
+            }
+            else { 
+                error = ERR_UNKNOWN;
+            }
         }
     }
-
     CloseHandle(hFile);
     return error; 
 }
