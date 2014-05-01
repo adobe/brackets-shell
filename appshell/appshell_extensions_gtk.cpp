@@ -334,6 +334,50 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     return NO_ERROR;
 }
 
+const int utf8_BOM_Len = 3;
+const int utf16_BOM_Len = 2;
+const int utf32_BOM_Len = 4;
+
+bool has_utf8_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf8_BOM_Len) &&
+                (data[0] == (gchar)0xEF) && (data[1] == (gchar)0xBB) && (data[2] == (gchar)0xBF));
+}
+
+bool has_utf16be_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFE) && (data[1] == (gchar)0xFF));
+}
+
+bool has_utf16le_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFF) && (data[1] == (gchar)0xFE));
+}
+
+bool has_utf32be_BOM(gchar* data, gsize length)
+{
+    return ((length >=  utf32_BOM_Len) &&
+             (data[0] == (gchar)0x00) && (data[1] == (gchar)0x00) &&
+             (data[2] == (gchar)0xFE) && (data[3] == (gchar)0xFF));
+}
+
+bool has_utf32le_BOM(gchar* data, gsize length)
+{
+   return ((length >=  utf32_BOM_Len) &&
+             (data[0] == (gchar)0xFE) && (data[1] == (gchar)0xFF) &&
+             (data[2] == (gchar)0x00) && (data[3] == (gchar)0x00));
+}
+
+
+bool has_utf16_32_BOM(gchar* data, gsize length) 
+{
+    return (has_utf32be_BOM(data ,length) ||
+            has_utf32le_BOM(data ,length) ||
+            has_utf16be_BOM(data ,length) ||
+            has_utf16le_BOM(data ,length) );
+}
+
+
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != "utf8") {
@@ -347,17 +391,25 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     
     if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
         error = GErrorToErrorCode(gerror);
-
         if (error == ERR_NOT_FILE) {
             error = ERR_CANT_READ;
         }
     } else {
-        contents.assign(file_get_contents, len);
+        if (has_utf16_32_BOM(file_get_contents, len)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else  if (has_utf8_BOM(file_get_contents, len)) {
+            contents.assign(file_get_contents + utf8_BOM_Len, len);        
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else {
+            contents.assign(file_get_contents, len);
+        }
         g_free(file_get_contents);
     }
 
     return error;
 }
+
 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
