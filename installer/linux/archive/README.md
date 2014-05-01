@@ -4,7 +4,9 @@ Setup
 Run ./install to install the .desktop file and brackets command line tool to your ~/.local directory.
 Run ./uninstall to remove these files.
 
-Requires libudev.so.0. You may need to do this:
+Requires libudev.so.0. install.sh will attempt to symlink this file automatically if it exists.
+
+If you see a libudev-related error message, you may need to do this:
   # 64-bit Fedora system.
   ln -s /usr/lib64/libudev.so.1 /usr/lib64/libudev.so.0
   # 32-bit Fedora system
