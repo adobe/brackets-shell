@@ -758,7 +758,7 @@ bool hasUTF16_32(UTFValidationState& validationState)
         // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
         BOOL test = IsTextUnicode(validationState.data, validationState.dataLen, &flags);
 
-        validationState.utf1632 = ((test != FALSE) ? CS_YES : CS_NO);
+        validationState.utf1632 = (test ? CS_YES : CS_NO);
     }
 
     return (validationState.utf1632 == CS_YES);
