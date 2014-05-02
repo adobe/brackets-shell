@@ -20,8 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-/*jslint vars:true, plusplus: true*/
-/*global module, require, process, node*/
+/*jslint vars:true*/
+/*global module, require, process*/
 module.exports = function (grunt) {
     "use strict";
 
@@ -40,7 +40,6 @@ module.exports = function (grunt) {
             "deps/cef/Resources"    : "Resources",
             "deps/cef/tools"        : "tools"
         },
-        
         /* use promises instead of callbacks */
         link,
         rename          = common.rename,
@@ -62,11 +61,6 @@ module.exports = function (grunt) {
             return symlink(srcpath, destpath, typeArg);
         };
     }());
-    
-    function rimraf(dir) {
-        grunt.verbose.writeln("rm -rf " + dir);
-        return exec("bash -c 'rm -rf " + dir + "'");
-    }
     
     function unzip(src, dest) {
         grunt.verbose.writeln("Extracting " + src);
@@ -92,7 +86,7 @@ module.exports = function (grunt) {
         
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
-            var cefTasks = [ "cef-clean", "cef-unlink", "cef-extract", "cef-symlinks"];
+            var cefTasks = ["cef-clean", "cef-extract", "cef-symlinks"];
             
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
@@ -108,31 +102,19 @@ module.exports = function (grunt) {
     
     // task: cef-clean
     grunt.registerTask("cef-clean", "Removes CEF binaries and linked folders", function () {
-        var done    = this.async(),
-            path,
-            links   = [];
+        var path;
         
-        grunt.log.writeln("deleting deps/cef");
-        rimraf("deps/cef").then(function () {
-            setTimeout(function () {
-                grunt.log.writeln("deleting deps/cef again");
-                common.deleteFile("deps/cef", { force: true });
-                done();
-            }, 5000);
-        }, function (err) {
-            setTimeout(function () {
-                grunt.log.writeln("retrying delete deps/cef");
-                rimraf("deps/cef").then(function () {
-                    setTimeout(function () {
-                        grunt.log.writeln("deleting deps/cef again");
-                        common.deleteFile("deps/cef", { force: true });
-                        done();
-                    }, 5000);
-                }, function (err) {
-                    done(false);
-                });
-            }, 5000);
+        // delete dev symlinks from "setup_for_hacking"
+        common.deleteFile("Release/dev", { force: true });
+        common.deleteFile("Debug/dev", { force: true });
+        
+        // delete symlinks to cef
+        Object.keys(CEF_MAPPING).forEach(function (key, index) {
+            common.deleteFile(CEF_MAPPING[key]);
         });
+        
+        // finally delete CEF binary\
+        common.deleteFile("deps/cef", { force: true });
     });
     
     // task: cef-download
@@ -143,31 +125,6 @@ module.exports = function (grunt) {
         // run curl
         grunt.log.writeln("Downloading " + grunt.config("cefZipSrc") + ". This may take a while...");
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
-    });
-    
-    // task: cef-unsymlink
-    grunt.registerTask("cef-unlink", "Remove symlinks for CEF", function () {
-        var done    = this.async(),
-            path,
-            links   = [];
-        
-        // create symlinks
-        Object.keys(CEF_MAPPING).forEach(function (key, index) {
-            path = CEF_MAPPING[key];
-            
-            // some paths to deps/cef/* are platform specific and may not exist
-            if (grunt.file.exists(path)) {
-                links.push(fs.unlink(path));
-            }
-        });
-        
-        // wait for all symlinks to complete
-        q.all(links).then(function () {
-            done();
-        }, function (err) {
-            grunt.log.error(err);
-            done(false);
-        });
     });
     
     // task: cef-extract
@@ -226,7 +183,7 @@ module.exports = function (grunt) {
             path = CEF_MAPPING[key];
             
             // some paths to deps/cef/* are platform specific and may not exist
-            if (grunt.file.exists(key) && !grunt.file.exists(path)) {
+            if (grunt.file.exists(key)) {
                 links.push(link(key, path));
             }
         });
@@ -371,12 +328,6 @@ module.exports = function (grunt) {
         
         if (platform === "mac") {
             promise = promise.then(function () {
-                // TODO: Make changes to appshell.xcodeproj\project.pbxproj to fixup the framework
-                /*
-                 # Fix framework type.
-  data = data.replace('lastKnownFileType = text; name = "Chromium Embedded Framework";', \
-                      'explicitFileType = "compiled.mach-o.dylib"; name = "Chromium Embedded Framework";')
-                */
                 // FIXME port to JavaScript?
                 return exec("bash scripts/fix-xcode.sh");
             });
