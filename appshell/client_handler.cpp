@@ -105,12 +105,6 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	} else if (browser->IsPopup()) {
-      // Remove the record for DevTools popup windows.
-      std::set<std::string>::iterator it =
-          m_OpenDevToolsURLs.find(browser->GetMainFrame()->GetURL());
-      if (it != m_OpenDevToolsURLs.end())
-        m_OpenDevToolsURLs.erase(it);
 	}
 
     browser_window_map_.erase(browser->GetHost()->GetWindowHandle());

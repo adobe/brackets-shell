@@ -1,6 +1,7 @@
 // Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
+#define OS_MAC
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
@@ -447,6 +448,12 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     //+ Communicating between the shell and JS is async, so there's no easy way for the JS to decided what to do
     //    in the middle of the key event, unless we introduce promises there, but that is a lot of work now
     
+    
+    // CEF 1750 -- We need to not handle keys for the DevTools Window.
+    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/devtools.html") {
+        return false;
+    }
+    
     if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
         return true;
     }
@@ -474,6 +481,8 @@ CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
   }
   return browser;
 }
+
+
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
   return true;
