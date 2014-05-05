@@ -245,4 +245,21 @@ module.exports = function (grunt) {
             done(false);
         });
     });
+
+    // task: build-linux-archive
+    grunt.registerTask("build-linux-archive", "Build portable Linux .tar.gz", function() {
+        grunt.task.requires(["package"]);
+
+        var done = this.async(),
+            sprint = semver.parse(grunt.config("pkg").version).minor;
+
+        spawn(["bash build_archive.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
+            return common.rename("installer/linux/brackets.tar.gz", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.tar.gz");
+        }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
 };
