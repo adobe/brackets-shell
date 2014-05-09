@@ -296,7 +296,7 @@ int32 MakeDir(ExtensionString path, int mode)
     file = g_file_new_for_path(pathStr);
     mode = mode | 0777;
 
-    if (!g_file_make_directory(file, NULL, &gerror)) {
+    if (!g_file_make_directory_with_parents(file, NULL, &gerror)) {
         error = GErrorToErrorCode(gerror);
     }
     g_object_unref(file);
