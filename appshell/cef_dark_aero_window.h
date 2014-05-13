@@ -83,18 +83,16 @@ protected:
 
     void PostHandleNcLeftButtonUp(UINT uHitTest, LPPOINT pt);
 
-    void DrawMenuBar(HDC hdc);
-    void UpdateMenuBar();
-    void HiliteMenuItemAt(LPPOINT pt);
+    virtual void DrawMenuBar(HDC hdc);
+    virtual void HiliteMenuItemAt(LPPOINT pt);
 
     virtual void UpdateNonClientArea();
 
     virtual void InitDeviceContext(HDC hdc);
-    virtual void DoPaintNonClientArea(HDC hdc);
 
-    void ComputeMenuBarRect(RECT& rect) const;
-    void ComputeWindowCaptionRect(RECT& rect) const;
-    void ComputeWindowIconRect(RECT& rect) const;
+    virtual void ComputeMenuBarRect(RECT& rect) const;
+    virtual void ComputeWindowCaptionRect(RECT& rect) const;
+    virtual void ComputeWindowIconRect(RECT& rect) const;
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
