@@ -162,6 +162,9 @@ public:
     BOOL IsIconic() const
     { return ::IsIconic(mWnd); }
 
+    BOOL IsWindowVisible() const 
+    { return ::IsWindowVisible(mWnd); }
+
     void SetStyle(DWORD dwStyle) 
     { SetWindowLong(GWL_STYLE, dwStyle); }
 

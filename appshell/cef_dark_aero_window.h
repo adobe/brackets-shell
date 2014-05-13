@@ -23,7 +23,13 @@
 #include "cef_dark_window.h"
 #include <dwmapi.h>
 
-#define CDW_UPDATEMENU WM_USER+1004
+// Undocumented Aero Messages
+#define WM_UAHDESTROYWINDOW    0x0090
+#define WM_UAHDRAWMENU         0x0091
+#define WM_UAHDRAWMENUITEM     0x0092
+#define WM_UAHINITMENU         0x0093
+#define WM_UAHMEASUREMENUITEM  0x0094
+#define WM_UAHNCPAINTMENUPOPUP 0x0095
 
 // prototypes for DWM function pointers
 typedef HRESULT (STDAPICALLTYPE *PFNDWMEFICA)(HWND hWnd, __in const MARGINS* pMarInset);
@@ -83,18 +89,17 @@ protected:
 
     void PostHandleNcLeftButtonUp(UINT uHitTest, LPPOINT pt);
 
-    void DrawMenuBar(HDC hdc);
-    void UpdateMenuBar();
-    void HiliteMenuItemAt(LPPOINT pt);
+    virtual void DrawMenuBar(HDC hdc);
+    virtual void HiliteMenuItemAt(LPPOINT pt);
 
     virtual void UpdateNonClientArea();
+    virtual void UpdateMenuBar();
 
     virtual void InitDeviceContext(HDC hdc);
-    virtual void DoPaintNonClientArea(HDC hdc);
 
-    void ComputeMenuBarRect(RECT& rect) const;
-    void ComputeWindowCaptionRect(RECT& rect) const;
-    void ComputeWindowIconRect(RECT& rect) const;
+    virtual void ComputeMenuBarRect(RECT& rect) const;
+    virtual void ComputeWindowCaptionRect(RECT& rect) const;
+    virtual void ComputeWindowIconRect(RECT& rect) const;
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
