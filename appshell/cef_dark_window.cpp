@@ -101,11 +101,13 @@ cef_dark_window::cef_dark_window() :
     mPressedSysMaximizeButton(0),
     mWindowIcon(0),
     mBackgroundBrush(0),
-    mFrameOutlinePen(0),
+    mFrameOutlineActivePen(0),
+    mFrameOutlineInactivePen(0),
     mCaptionFont(0),
     mMenuFont(0),
     mHighlightBrush(0),
-    mHoverBrush(0)
+    mHoverBrush(0),
+    mIsActive(TRUE)
 {
     ::ZeroMemory(&mNcMetrics, sizeof(mNcMetrics));
 }
@@ -153,17 +155,17 @@ void cef_dark_window::InitDrawingResources()
     if (mBackgroundBrush == NULL) {                            
         mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
     }
-    if (mBackgroundBrush == NULL) {                            
-        mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
-    }
     if (mHighlightBrush == NULL) {                            
         mHighlightBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HILITE_BACKGROUND);
     }
     if (mHoverBrush == NULL) {                            
         mHoverBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HOVER_BACKGROUND);
     }
-    if (mFrameOutlinePen == NULL) {
-        mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
+    if (mFrameOutlineActivePen == NULL) {
+        mFrameOutlineActivePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE_ACTIVE);
+    }
+    if (mFrameOutlineInactivePen == NULL) {
+        mFrameOutlineInactivePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE_INACTIVE);
     }
 }
 
@@ -263,7 +265,8 @@ BOOL cef_dark_window::HandleNcDestroy()
     ::DeleteObject(mMenuFont);
     ::DeleteObject(mHighlightBrush);
     ::DeleteObject(mHoverBrush);
-    ::DeleteObject(mFrameOutlinePen);
+    ::DeleteObject(mFrameOutlineActivePen);
+    ::DeleteObject(mFrameOutlineInactivePen);
 
     return cef_window::HandleNcDestroy();
 }
@@ -431,7 +434,7 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     // Paint the entire thing with the background brush
     ::FillRect(hdc, &rectFrame, mBackgroundBrush);
 
-    HGDIOBJ oldPen = ::SelectObject(hdc, mFrameOutlinePen);
+    HGDIOBJ oldPen = (mIsActive) ? ::SelectObject(hdc, mFrameOutlineActivePen) : ::SelectObject(hdc, mFrameOutlineInactivePen);
     HGDIOBJ oldbRush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
 
     // Now draw a PX tuxedo border around the edge
@@ -622,11 +625,6 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         mmi.cbSize = sizeof (mmi);
         mmi.fMask = MIIM_STATE|MIIM_ID;
         ::GetMenuItemInfo (menu, i, TRUE, &mmi);
-        
-        // Drawitem only works on ID
-        MEASUREITEMSTRUCT mis = {0};
-        mis.CtlType = ODT_MENU;
-        mis.itemID = mmi.wID;
 
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
@@ -634,31 +632,35 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
             ScreenToNonClient(&itemRect);
             
-            // Check to make sure it's actually in the 
-            //  the correct location (fixes aero drawing issue)
-            POINT pt = {itemRect.left, itemRect.top};
-            if (!CanUseAeroGlass() || ::PtInRect(&menuBarRect, pt)) {
-            
-                // Draw the menu item
-                DRAWITEMSTRUCT dis = {0};
-                dis.CtlType = ODT_MENU;
-                dis.itemID = mmi.wID;
-                dis.hwndItem = (HWND)menu;
-                dis.itemAction = ODA_DRAWENTIRE;
-                dis.hDC = hdc;
-                ::CopyRect(&dis.rcItem, &itemRect);
+            POINT ptTopLeftItem = {itemRect.left, itemRect.top}; 
 
-                if (mmi.fState & MFS_HILITE) {
-                    dis.itemState |= ODS_SELECTED;
-                } 
-                if (mmi.fState & MFS_GRAYED) {
-                    dis.itemState |= ODS_GRAYED;
-                } 
-
-                dis.itemState |= ODS_NOACCEL;
-
-                HandleDrawItem(&dis);
+            if (CanUseAeroGlass() && !::PtInRect(&menuBarRect, ptTopLeftItem)) {
+                // Check to make sure it's actually in the 
+                //  the correct location (fixes aero drawing issue)
+                int itemHeight = ::RectHeight(itemRect);
+                itemRect.top = menuBarRect.top;
+                itemRect.bottom = itemRect.top + itemHeight;
             }
+
+            // Draw the menu item
+            DRAWITEMSTRUCT dis = {0};
+            dis.CtlType = ODT_MENU;
+            dis.itemID = mmi.wID;
+            dis.hwndItem = (HWND)menu;
+            dis.itemAction = ODA_DRAWENTIRE;
+            dis.hDC = hdc;
+            ::CopyRect(&dis.rcItem, &itemRect);
+
+            if (mmi.fState & MFS_HILITE) {
+                dis.itemState |= ODS_SELECTED;
+            } 
+            if (mmi.fState & MFS_GRAYED) {
+                dis.itemState |= ODS_GRAYED;
+            } 
+
+            dis.itemState |= ODS_NOACCEL;
+
+            HandleDrawItem(&dis);
         }
     }
 }
@@ -669,32 +671,15 @@ void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
 
-    HDC hdcOrig = hdc;
-    RECT rectWindow;
-    GetWindowRect(&rectWindow);
+    cef_buffered_dc dc(this, hdc);
 
-    int Width = ::RectWidth(rectWindow);
-    int Height = ::RectHeight(rectWindow);
-
-    HDC dcMem = ::CreateCompatibleDC(hdc);
-    HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
-    HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
-
-    hdc = dcMem;
-
-    InitDeviceContext(hdc);
-    InitDeviceContext(hdcOrig);
-    DoDrawFrame(hdc);
-    DoDrawSystemMenuIcon(hdc);
-    DoDrawTitlebarText(hdc);
-    DoDrawSystemIcons(hdc);
-    DoDrawMenuBar(hdc);
-
-    ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
-
-    ::SelectObject(dcMem, bmOld);
-    ::DeleteObject(bm);
-    ::DeleteDC(dcMem);
+    InitDeviceContext(dc);
+    InitDeviceContext(dc.GetWindowDC());
+    DoDrawFrame(dc);
+    DoDrawSystemMenuIcon(dc);
+    DoDrawTitlebarText(dc);
+    DoDrawSystemIcons(dc);
+    DoDrawMenuBar(dc);
 }
 
 // Special case for derived classes to implement
@@ -1203,6 +1188,10 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
                 DoRepaintClientArea();
             }
         }
+        break;
+    case WM_ACTIVATEAPP:
+        mIsActive = (BOOL)wParam;
+        UpdateNonClientArea();
         break;
     }
     return lr;

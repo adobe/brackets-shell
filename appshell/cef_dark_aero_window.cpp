@@ -318,44 +318,6 @@ void cef_dark_aero_window::InitDeviceContext(HDC hdc)
     }
 }
 
-// Redraws the non-client area
-void cef_dark_aero_window::DoPaintNonClientArea(HDC hdc)
-{
-    if (CanUseAeroGlass()) {
-        EnforceMenuBackground();
-
-        HDC hdcOrig = hdc;
-        RECT rectWindow;
-        GetWindowRect(&rectWindow);
-
-        int Width = ::RectWidth(rectWindow);
-        int Height = ::RectHeight(rectWindow);
-
-        HDC dcMem = ::CreateCompatibleDC(hdc);
-        HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
-        HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
-
-        hdc = dcMem;
-
-        InitDeviceContext(hdc);
-        InitDeviceContext(hdcOrig);
-
-        DoDrawFrame(hdc);
-        DoDrawSystemMenuIcon(hdc);
-        DoDrawTitlebarText(hdc);
-        DoDrawSystemIcons(hdc);
-        DoDrawMenuBar(hdc);
-
-        ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
-
-        ::SelectObject(dcMem, bmOld);
-        ::DeleteObject(bm);
-        ::DeleteDC(dcMem);
-    } else {
-        cef_dark_window::DoPaintNonClientArea(hdc);
-    }
-}
-
 // Force Drawing the non-client area.
 //  Normally WM_NCPAINT is used but there are times when you
 //  need to force drawing the entire non-client area when
@@ -397,7 +359,7 @@ void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect) const
         ComputeWindowCaptionRect(rectCaption);
         GetRealClientRect(&rectClient);
 
-        rect.top = rectCaption.bottom + 1;
+        rect.top = ::GetSystemMetrics(SM_CYFRAME) + mNcMetrics.iCaptionHeight + 1;
         rect.bottom = rectClient.top - 1;
 
         rect.left = rectClient.left;
@@ -433,13 +395,6 @@ void cef_dark_aero_window::DrawMenuBar(HDC hdc)
     }
 }
 
-// Redraws the menu bar
-void cef_dark_aero_window::UpdateMenuBar()
-{
-    HDC hdc = GetWindowDC();
-    DrawMenuBar(hdc);
-    ReleaseDC(hdc);
-}
 
 // The Aero version doesn't send us WM_DRAWITEM messages
 //  to draw the item when hovering so we have to do that
@@ -675,7 +630,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     switch(message) {
     case WM_ACTIVATE:
         if (mReady) {
-            UpdateMenuBar();
+            UpdateNonClientArea();
         }
         break;
     case WM_NCMOUSELEAVE:
@@ -742,6 +697,10 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     case WM_EXITMENULOOP:
         mMenuActiveIndex = -1;
         break;   
+    case WM_ACTIVATEAPP:
+        mIsActive = (BOOL)wParam;
+        UpdateNonClientArea();
+        break;
     }
 
     return lr;
