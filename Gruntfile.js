@@ -201,7 +201,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1750.1644"
+            "version"       : "3.1750.1700"
         },
         "node": {
             "version"       : "0.10.24"
