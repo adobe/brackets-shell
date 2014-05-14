@@ -100,7 +100,8 @@ cef_dark_window::cef_dark_window() :
     mPressedSysMinimizeButton(0),
     mPressedSysMaximizeButton(0),
     mWindowIcon(0),
-    mBackgroundBrush(0),
+    mBackgroundActiveBrush(0),
+    mBackgroundInactiveBrush(0),
     mFrameOutlineActivePen(0),
     mFrameOutlineInactivePen(0),
     mCaptionFont(0),
@@ -150,10 +151,14 @@ void cef_dark_window::InitDrawingResources()
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
     }
     LoadSysButtonImages();
+  
 
     // Create Brushes and Pens 
-    if (mBackgroundBrush == NULL) {                            
-        mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
+    if (mBackgroundActiveBrush == NULL) {                            
+        mBackgroundActiveBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND_ACTIVE);
+    }
+    if (mBackgroundInactiveBrush == NULL) {                            
+        mBackgroundInactiveBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND_INACTIVE);
     }
     if (mHighlightBrush == NULL) {                            
         mHighlightBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HILITE_BACKGROUND);
@@ -260,7 +265,8 @@ BOOL cef_dark_window::HandleNcDestroy()
     delete mPressedSysMinimizeButton;
     delete mPressedSysMaximizeButton;
 
-    ::DeleteObject(mBackgroundBrush);
+    ::DeleteObject(mBackgroundActiveBrush);
+    ::DeleteObject(mBackgroundInactiveBrush);
     ::DeleteObject(mCaptionFont);
     ::DeleteObject(mMenuFont);
     ::DeleteObject(mHighlightBrush);
@@ -432,7 +438,7 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     rectFrame.right = ::RectWidth(rectWindow);
 
     // Paint the entire thing with the background brush
-    ::FillRect(hdc, &rectFrame, mBackgroundBrush);
+    ::FillRect(hdc, &rectFrame, (mIsActive) ? mBackgroundActiveBrush : mBackgroundInactiveBrush);
 
     HGDIOBJ oldPen = (mIsActive) ? ::SelectObject(hdc, mFrameOutlineActivePen) : ::SelectObject(hdc, mFrameOutlineInactivePen);
     HGDIOBJ oldbRush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
@@ -592,8 +598,8 @@ void cef_dark_window::EnforceMenuBackground()
 
     ::GetMenuInfo(mbi.hMenu, &mi);
     
-    if (mi.hbrBack != mBackgroundBrush) {
-        mi.hbrBack = mBackgroundBrush;
+    if (mi.hbrBack != mBackgroundActiveBrush) {
+        mi.hbrBack = mBackgroundActiveBrush;
         ::SetMenuInfo(mbi.hMenu, &mi);
     }
 }
@@ -907,7 +913,7 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
         if (lpDIS->itemState & ODS_SELECTED || lpDIS->itemState & ODS_HOTLIGHT) {
             ::FillRect(lpDIS->hDC, &rectBG, mHoverBrush);
         } else {
-            ::FillRect(lpDIS->hDC, &rectBG, mBackgroundBrush);
+            ::FillRect(lpDIS->hDC, &rectBG, (mIsActive) ? mBackgroundActiveBrush : mBackgroundInactiveBrush);
         }
         
         if (lpDIS->itemState & ODS_GRAYED) {

@@ -30,9 +30,10 @@ namespace Gdiplus
 };
 
 // Color Constants
-#define CEF_COLOR_BACKGROUND                RGB(60, 63, 65)
+#define CEF_COLOR_BACKGROUND_ACTIVE         RGB(60, 63, 65)
+#define CEF_COLOR_BACKGROUND_INACTIVE       RGB(157, 159, 160)
 #define CEF_COLOR_FRAME_OUTLINE_ACTIVE      RGB(42, 44, 45)
-#define CEF_COLOR_FRAME_OUTLINE_INACTIVE    RGB(242, 244, 245)
+#define CEF_COLOR_FRAME_OUTLINE_INACTIVE    RGB(125, 128, 129)
 #define CEF_COLOR_NORMALTEXT                RGB(215, 216, 217)
 #define CEF_COLOR_MENU_HILITE_BACKGROUND    RGB(247, 247, 247)
 #define CEF_COLOR_MENU_HOVER_BACKGROUND     RGB(45, 46, 48)
@@ -159,7 +160,8 @@ protected:
     BOOL                         mIsActive;
 
     HFONT                        mCaptionFont;
-    HBRUSH                       mBackgroundBrush;
+    HBRUSH                       mBackgroundActiveBrush;
+    HBRUSH                       mBackgroundInactiveBrush;
     HICON                        mWindowIcon;
 
     HFONT                        mMenuFont;
