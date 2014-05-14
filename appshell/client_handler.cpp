@@ -317,7 +317,7 @@ void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
     CefBrowserSettings settings;
     
 #if defined(OS_WIN)
-    wi.SetAsPopup(browser->GetHost()->GetWindowHandle(), "DevTools");
+    wi.SetAsPopup(NULL, "DevTools");
 #endif
 
     browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings);
