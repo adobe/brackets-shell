@@ -34,7 +34,7 @@ public:
         , mBmOld(NULL)
         , mWidth(0)
         , mHeight(0)
-        , mReleaseDcOnDestroy(hdc == NULL)
+        , mReleaseDcOnDestroy(false)
     {
         CommonInit();
     }
@@ -59,14 +59,20 @@ public:
         
         if (mReleaseDcOnDestroy) {
             mWnd->ReleaseDC(mWindowDC);
+            mReleaseDcOnDestroy = true;
         }
     }
 
 private:
+    cef_buffered_dc()
+    {
+    }
+
     cef_buffered_dc(const cef_buffered_dc&)
     {
     }
 
+protected:
     void CommonInit() 
     {
         if (mWindowDC == NULL) {
@@ -83,7 +89,6 @@ private:
         mBmOld = ::SelectObject(mDcMem, mBitmap);
     }
 
-protected:
     cef_window* mWnd;
     HDC         mWindowDC;
     HDC         mDcMem;
