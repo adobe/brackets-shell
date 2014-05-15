@@ -69,6 +69,10 @@ private:
 
     void CommonInit() 
     {
+        if (mWindowDC == NULL) {
+            mWindowDC = mWnd->GetDC();
+        }
+
         RECT rectWindow;
         mWnd->GetWindowRect(&rectWindow);
         mWidth = ::RectWidth(rectWindow);
