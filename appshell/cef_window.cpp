@@ -20,8 +20,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #include "cef_window.h"
-#undef NDEBUG
-#include <assert.h>
 
 // Externals
 extern HINSTANCE hInst;   
@@ -97,10 +95,7 @@ static void _HookWindowCreate(cef_window* window)
 // Disabled Hooking
 static void _UnHookWindowCreate()
 {
-    BOOL result = ::UnhookWindowsHookEx(gHookData.mhHook);
-    if (!result) {
-        DWORD dwError = ::GetLastError();
-    }
+   ::UnhookWindowsHookEx(gHookData.mhHook);
     gHookData.Reset();
     
 }
