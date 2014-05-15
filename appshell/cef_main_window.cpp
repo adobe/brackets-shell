@@ -182,9 +182,6 @@ BOOL cef_main_window::HandleCreate()
 // WM_ERASEBKGND handler
 BOOL cef_main_window::HandleEraseBackground(HDC hdc)
 {
-#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DrawMenuBar(hdc);
-#endif
     return (SafeGetCefBrowserHwnd() != NULL);
 }
 
@@ -208,7 +205,7 @@ BOOL cef_main_window::HandlePaint()
     HDC hdc = BeginPaint(&ps);
 
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DoPaintClientArea(hdc);
+    DoPaintNonClientArea(hdc);
 #endif
 
     EndPaint(&ps);
