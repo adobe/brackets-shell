@@ -26,21 +26,7 @@
 class cef_buffered_dc 
 {
 public:
-    cef_buffered_dc(cef_window* window) 
-        : mWnd(window)
-        , mWindowDC(NULL)
-        , mDcMem(NULL)
-        , mBitmap(NULL)
-        , mBmOld(NULL)
-        , mWidth(0)
-        , mHeight(0)
-        , mReleaseDcOnDestroy(true)
-    {
-        mWindowDC = mWnd->GetDC();
-        CommonInit();
-    }
-
-    cef_buffered_dc(cef_window* window, HDC hdc) 
+    cef_buffered_dc(cef_window* window, HDC hdc = NULL) 
         : mWnd(window)
         , mWindowDC(hdc)
         , mDcMem(NULL)
@@ -48,7 +34,7 @@ public:
         , mBmOld(NULL)
         , mWidth(0)
         , mHeight(0)
-        , mReleaseDcOnDestroy(false)
+        , mReleaseDcOnDestroy(hdc == NULL)
     {
         CommonInit();
     }
