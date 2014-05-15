@@ -59,7 +59,6 @@ public:
         
         if (mReleaseDcOnDestroy) {
             mWnd->ReleaseDC(mWindowDC);
-            mReleaseDcOnDestroy = true;
         }
     }
 
@@ -77,6 +76,7 @@ protected:
     {
         if (mWindowDC == NULL) {
             mWindowDC = mWnd->GetDC();
+            mReleaseDcOnDestroy = true;
         }
 
         RECT rectWindow;
