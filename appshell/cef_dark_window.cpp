@@ -87,27 +87,27 @@ namespace ResourceImage
  * cef_dark_window
  */
 cef_dark_window::cef_dark_window() :
-    mSysCloseButton(0),
-    mSysRestoreButton(0),
-    mSysMinimizeButton(0),
-    mSysMaximizeButton(0),
-    mHoverSysCloseButton(0),
-    mHoverSysRestoreButton(0),
-    mHoverSysMinimizeButton(0),
-    mHoverSysMaximizeButton(0),
-    mPressedSysCloseButton(0),
-    mPressedSysRestoreButton(0),
-    mPressedSysMinimizeButton(0),
-    mPressedSysMaximizeButton(0),
-    mWindowIcon(0),
-    mBackgroundActiveBrush(0),
-    mBackgroundInactiveBrush(0),
-    mFrameOutlineActivePen(0),
-    mFrameOutlineInactivePen(0),
-    mCaptionFont(0),
-    mMenuFont(0),
-    mHighlightBrush(0),
-    mHoverBrush(0),
+    mSysCloseButton(NULL),
+    mSysRestoreButton(NULL),
+    mSysMinimizeButton(NULL),
+    mSysMaximizeButton(NULL),
+    mHoverSysCloseButton(NULL),
+    mHoverSysRestoreButton(NULL),
+    mHoverSysMinimizeButton(NULL),
+    mHoverSysMaximizeButton(NULL),
+    mPressedSysCloseButton(NULL),
+    mPressedSysRestoreButton(NULL),
+    mPressedSysMinimizeButton(NULL),
+    mPressedSysMaximizeButton(NULL),
+    mWindowIcon(NULL),
+    mBackgroundActiveBrush(NULL),
+    mBackgroundInactiveBrush(NULL),
+    mFrameOutlineActivePen(NULL),
+    mFrameOutlineInactivePen(NULL),
+    mCaptionFont(NULL),
+    mMenuFont(NULL),
+    mHighlightBrush(NULL),
+    mHoverBrush(NULL),
     mIsActive(TRUE)
 {
     ::ZeroMemory(&mNcMetrics, sizeof(mNcMetrics));
@@ -598,9 +598,16 @@ void cef_dark_window::EnforceMenuBackground()
 
     ::GetMenuInfo(mbi.hMenu, &mi);
     
-    if (mi.hbrBack != mBackgroundActiveBrush) {
-        mi.hbrBack = mBackgroundActiveBrush;
-        ::SetMenuInfo(mbi.hMenu, &mi);
+    if (mIsActive) {
+        if (mi.hbrBack != mBackgroundActiveBrush) {
+            mi.hbrBack = mBackgroundActiveBrush;
+            ::SetMenuInfo(mbi.hMenu, &mi);
+        }
+    } else {
+        if (mi.hbrBack != mBackgroundInactiveBrush) {
+            mi.hbrBack = mBackgroundInactiveBrush;
+            ::SetMenuInfo(mbi.hMenu, &mi);
+        }
     }
 }
 

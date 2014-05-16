@@ -1,6 +1,6 @@
 #pragma once
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2014 Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -51,15 +51,7 @@ public:
 
     ~cef_buffered_dc() 
     {
-        ::BitBlt(mWindowDC, 0, 0, mWidth, mHeight, mDcMem, 0, 0, SRCCOPY);
-
-        ::SelectObject(mDcMem, mBmOld);
-        ::DeleteObject(mBitmap);
-        ::DeleteDC(mDcMem);
-        
-        if (mReleaseDcOnDestroy) {
-            mWnd->ReleaseDC(mWindowDC);
-        }
+        Destroy();
     }
 
 private:
@@ -74,19 +66,36 @@ private:
 protected:
     void CommonInit() 
     {
-        if (mWindowDC == NULL) {
-            mWindowDC = mWnd->GetDC();
-            mReleaseDcOnDestroy = true;
+        if (mWnd) {
+            if (mWindowDC == NULL) {
+                mWindowDC = mWnd->GetDC();
+                mReleaseDcOnDestroy = true;
+            }
+
+            RECT rectWindow;
+            mWnd->GetWindowRect(&rectWindow);
+            mWidth = ::RectWidth(rectWindow);
+            mHeight = ::RectHeight(rectWindow);
+
+            mDcMem = ::CreateCompatibleDC(mWindowDC);
+            mBitmap = ::CreateCompatibleBitmap(mWindowDC, mWidth, mHeight);
+            mBmOld = ::SelectObject(mDcMem, mBitmap);
         }
+    }
 
-        RECT rectWindow;
-        mWnd->GetWindowRect(&rectWindow);
-        mWidth = ::RectWidth(rectWindow);
-        mHeight = ::RectHeight(rectWindow);
+    void Destroy() 
+    {
+        if (mWnd) {
+            ::BitBlt(mWindowDC, 0, 0, mWidth, mHeight, mDcMem, 0, 0, SRCCOPY);
 
-        mDcMem = ::CreateCompatibleDC(mWindowDC);
-        mBitmap = ::CreateCompatibleBitmap(mWindowDC, mWidth, mHeight);
-        mBmOld = ::SelectObject(mDcMem, mBitmap);
+            ::SelectObject(mDcMem, mBmOld);
+            ::DeleteObject(mBitmap);
+            ::DeleteDC(mDcMem);
+        
+            if (mReleaseDcOnDestroy) {
+                mWnd->ReleaseDC(mWindowDC);
+            }
+        }
     }
 
     cef_window* mWnd;
