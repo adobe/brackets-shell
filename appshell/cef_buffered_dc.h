@@ -59,7 +59,7 @@ private:
     {
     }
 
-    cef_buffered_dc(const cef_buffered_dc&)
+    cef_buffered_dc(const cef_buffered_dc& other)
     {
     }
 
