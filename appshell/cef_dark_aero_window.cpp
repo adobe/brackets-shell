@@ -395,6 +395,11 @@ void cef_dark_aero_window::DrawMenuBar(HDC hdc)
     }
 }
 
+void cef_dark_aero_window::UpdateMenuBar()
+{
+    cef_buffered_dc dc(this);
+    DrawMenuBar(dc);
+}
 
 // The Aero version doesn't send us WM_DRAWITEM messages
 //  to draw the item when hovering so we have to do that
@@ -599,15 +604,17 @@ LRESULT cef_dark_aero_window::DwpCustomFrameProc(UINT message, WPARAM wParam, LP
 // WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-    char szBuffer[256];
+ /*   char szBuffer[256];
     ::sprintf (szBuffer, "Window Message %04x\n", message);
     ::OutputDebugStringA(szBuffer);
-
+    */
     bool callDefWindowProc = true;
 
     switch (message) 
     {
-
+    case WM_UAHDRAWMENU:
+        UpdateMenuBar();
+        return 0L;
     case WM_MEASUREITEM:
         if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))
             return 0L;
@@ -631,6 +638,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     LRESULT lr = DwpCustomFrameProc(message, wParam, lParam, &callDefWindowProc);
 
     switch(message) {
+    case WM_NCACTIVATE:
     case WM_ACTIVATE:
         if (mReady) {
             UpdateNonClientArea();
