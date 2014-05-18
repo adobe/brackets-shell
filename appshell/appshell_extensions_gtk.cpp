@@ -704,7 +704,11 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
-    GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+    GtkWidget* entry;
+    if (itemTitle == "---")
+        entry = gtk_separator_menu_item_new();
+    else
+        entry = gtk_menu_item_new_with_label(itemTitle.c_str());
     g_signal_connect(entry, "activate", FakeCallback, NULL);
     // FIXME add lookup for menu widgets
     gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
