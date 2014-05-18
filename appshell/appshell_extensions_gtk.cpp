@@ -652,21 +652,26 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
 {
 }
 
-GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
+static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
 {
     GtkWidget* window = (GtkWidget*)getMenuParent(browser);
     GtkWidget* widget;
     GList *children, *iter;
+    GtkWidget* menuBar = NULL;
 
     children = gtk_container_get_children(GTK_CONTAINER(window));
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_MENU_BAR(widget))
-            return widget;
+        if (GTK_IS_MENU_BAR(widget)) {
+            menuBar = widget;
+            break;
+        }
     }
 
-    return NULL;
+    g_list_free(children);
+
+    return menuBar;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
