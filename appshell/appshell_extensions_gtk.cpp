@@ -26,7 +26,7 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include "appshell_extensions.h"
-#include "appshell_extensions_platform.h"
+#include "native_menu_model.h"
 #include "client_handler.h"
 
 #include <errno.h>
@@ -36,8 +36,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
-
-GtkWidget* _menuWidget;
 
 // Supported browsers (order matters):
 //   - google-chorme 
@@ -677,22 +675,21 @@ static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
               ExtensionString position, ExtensionString relativeId)
 {
-    // if (tag == kTagNotFound) {
-    //     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
-    // } else {
-    //     // menu already there
-    //     return NO_ERROR;
-    // }
+    int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
+    } else {
+        // menu is already there
+        return NO_ERROR;
+    }
 
     GtkWidget* menuBar = GetMenuBar(browser);
     GtkWidget* menuWidget = gtk_menu_new();
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
+    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, menuHeader);
     gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
     gtk_widget_show(menuHeader);
-
-    // FIXME add lookup for menu widgets
-    _menuWidget = menuWidget;
     
     return NO_ERROR;
 }
@@ -704,14 +701,28 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString position, ExtensionString relativeId)
 {
+    int parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
+    if (parentTag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (tag == kTagNotFound) {
+        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
+    } else {
+        return NO_ERROR;
+    }
+
     GtkWidget* entry;
     if (itemTitle == "---")
         entry = gtk_separator_menu_item_new();
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
     g_signal_connect(entry, "activate", FakeCallback, NULL);
-    // FIXME add lookup for menu widgets
-    gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, entry);
+    GtkWidget* menuHeader = (GtkWidget*) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
+    GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menuWidget), entry);
     gtk_widget_show(entry);
 
     return NO_ERROR;
