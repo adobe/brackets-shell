@@ -37,6 +37,8 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 
+extern CefRefPtr<ClientHandler> g_handler;
+
 // Supported browsers (order matters):
 //   - google-chorme 
 //   - chromium-browser - chromium executable name (in ubuntu)
@@ -694,7 +696,13 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
     return NO_ERROR;
 }
 
-void FakeCallback() {
+static void Callback(GtkMenuItem* menuItem, gpointer userData) {
+    if (g_handler.get() && g_handler->GetBrowserId()) {
+        int tag = GPOINTER_TO_INT(userData);
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+        g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+    }
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
@@ -718,7 +726,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         entry = gtk_separator_menu_item_new();
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", FakeCallback, NULL);
+    g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, entry);
     GtkWidget* menuHeader = (GtkWidget*) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
