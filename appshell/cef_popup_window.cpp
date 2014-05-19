@@ -98,7 +98,6 @@ void cef_popup_window::InitSystemIcon()
 void cef_popup_window::SetClassStyles() 
 {
     SetClassLong(mWnd, GCL_STYLE, CS_SAVEBITS);
-    SetClassLong(mWnd, GCL_HBRBACKGROUND, (LONG)::CreateSolidBrush(CEF_COLOR_BACKGROUND_ACTIVE));
 }
 
 // Subclasses the HWND and initializes the dark drawing code
