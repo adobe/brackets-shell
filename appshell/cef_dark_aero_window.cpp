@@ -608,8 +608,6 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message) 
     {
-    case WM_NCPAINT:
-        return 0L;
     case WM_MEASUREITEM:
         if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))
             return 0L;
