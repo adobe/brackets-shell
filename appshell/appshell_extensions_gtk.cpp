@@ -674,12 +674,61 @@ static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
     return menuBar;
 }
 
-int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
-              ExtensionString position, ExtensionString relativeId)
+static int GetPosition(const ExtensionString& positionString, const ExtensionString& relativeId,
+                       GtkWidget* container, NativeMenuModel& model)
 {
-    int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    if (positionString == "" || positionString == "last")
+        return -1;
+    else if (positionString == "first")
+        return 0;
+    else if (relativeId.size() > 0) {
+        int relativeTag = model.getTag(relativeId);
+        GtkWidget* relativeMenuItem = (GtkWidget*) model.getOsItem(relativeTag);
+        int position = 0;
+        GList* children = gtk_container_get_children(GTK_CONTAINER(container));
+        GList* iter;
+        for (iter = children; iter != NULL; iter = g_list_next(iter)) {
+            if (iter->data == relativeMenuItem)
+                break;
+            position++;
+        }
+        if (iter == NULL)
+            position = -1;
+        else if (positionString == "before")
+            ;
+        else if (positionString == "after")
+            position++;
+        else if (positionString == "firstInSection") {
+            for (; iter != NULL; iter = g_list_previous(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position--;
+            }
+            position++;
+        }
+        else if (positionString == "lastInSection") {
+            for (; iter != NULL; iter = g_list_next(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position++;
+            }
+        }
+        else
+            position = -1;
+        g_list_free(children);
+        return position;
+    }
+    else
+        return -1;
+}
+
+int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
+              ExtensionString positionString, ExtensionString relativeId)
+{
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
+        tag = model.getOrCreateTag(command, ExtensionString());
     } else {
         // menu is already there
         return NO_ERROR;
@@ -689,8 +738,12 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
     GtkWidget* menuWidget = gtk_menu_new();
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
-    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, menuHeader);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    model.setOsItem(tag, menuHeader);
+    int position = GetPosition(positionString, relativeId, menuBar, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuBar), menuHeader, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
     gtk_widget_show(menuHeader);
     
     return NO_ERROR;
@@ -707,16 +760,17 @@ static void Callback(GtkMenuItem* menuItem, gpointer userData) {
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
-                  ExtensionString position, ExtensionString relativeId)
+                  ExtensionString positionString, ExtensionString relativeId)
 {
-    int parentTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(parentCommand);
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int parentTag = model.getTag(parentCommand);
     if (parentTag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
 
-    int tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    int tag = model.getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, parentCommand);
+        tag = model.getOrCreateTag(command, parentCommand);
     } else {
         return NO_ERROR;
     }
@@ -727,10 +781,14 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
     g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
-    NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, entry);
-    GtkWidget* menuHeader = (GtkWidget*) NativeMenuModel::getInstance(getMenuParent(browser)).getOsItem(parentTag);
+    model.setOsItem(tag, entry);
+    GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menuWidget), entry);
+    int position = GetPosition(positionString, relativeId, menuWidget, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuWidget), entry, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuWidget), entry);
     gtk_widget_show(entry);
 
     return NO_ERROR;
