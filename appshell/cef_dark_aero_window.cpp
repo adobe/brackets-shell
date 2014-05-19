@@ -546,7 +546,7 @@ BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARA
     pncsp->rgrc[0].right  = pncsp->rgrc[0].right  - 0;
     pncsp->rgrc[0].bottom = pncsp->rgrc[0].bottom - 0;
 
-    *lr = 0;
+    *lr = IsZoomed() ? WVR_REDRAW : 0;
     return TRUE;
 }
 

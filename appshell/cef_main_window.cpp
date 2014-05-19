@@ -64,7 +64,7 @@ ATOM cef_main_window::RegisterWndClass()
         ::ZeroMemory (&wcex, sizeof (wcex));
         wcex.cbSize = sizeof(WNDCLASSEX);
 
-        wcex.style         = CS_HREDRAW | CS_VREDRAW;
+        wcex.style         = CS_SAVEBITS;
         wcex.lpfnWndProc   = ::DefWindowProc;
         wcex.hInstance     = ::hInst;
         wcex.hIcon         = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
