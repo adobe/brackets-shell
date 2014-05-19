@@ -604,16 +604,11 @@ LRESULT cef_dark_aero_window::DwpCustomFrameProc(UINT message, WPARAM wParam, LP
 // WindowProc handles dispatching of messages and routing back to the base class or to Windows
 LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
- /*   char szBuffer[256];
-    ::sprintf (szBuffer, "Window Message %04x\n", message);
-    ::OutputDebugStringA(szBuffer);
-    */
     bool callDefWindowProc = true;
 
     switch (message) 
     {
-    case WM_UAHDRAWMENU:
-        UpdateMenuBar();
+    case WM_NCPAINT:
         return 0L;
     case WM_MEASUREITEM:
         if (HandleMeasureItem((LPMEASUREITEMSTRUCT)lParam))

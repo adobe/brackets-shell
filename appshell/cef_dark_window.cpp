@@ -626,11 +626,6 @@ void cef_dark_window::InitDeviceContext(HDC hdc)
 //  that the background has already been drawn using DoDrawFrame
 void cef_dark_window::DoDrawMenuBar(HDC hdc)
 {
-    // Put a breakpoint here and, If you hit this breakpoint and see a white line under the menubar
-    //  then you need to look in the output window and copy all of the Window Messages since the last 
-    //  "Done Drawing Menu Bar" message and send them to jsbooher@adobe for analysis
-   // ::OutputDebugStringA("Drawing Menu Bar\n");
-
     HMENU menu = GetMenu();
     int items = ::GetMenuItemCount(menu);
 
@@ -681,8 +676,6 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
             HandleDrawItem(&dis);
         }
     }
-
-    //::OutputDebugStringA("Done Drawing Menu Bar\n");
 }
 
 // Paints the entire non-client area.  

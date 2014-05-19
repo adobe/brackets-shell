@@ -23,14 +23,13 @@
 #include "cef_dark_window.h"
 #include <dwmapi.h>
 
-// These are undocument Aero messages
+// Undocumented Aero Messages
 #define WM_UAHDESTROYWINDOW    0x0090
 #define WM_UAHDRAWMENU         0x0091
 #define WM_UAHDRAWMENUITEM     0x0092
 #define WM_UAHINITMENU         0x0093
 #define WM_UAHMEASUREMENUITEM  0x0094
 #define WM_UAHNCPAINTMENUPOPUP 0x0095
-
 
 // prototypes for DWM function pointers
 typedef HRESULT (STDAPICALLTYPE *PFNDWMEFICA)(HWND hWnd, __in const MARGINS* pMarInset);
