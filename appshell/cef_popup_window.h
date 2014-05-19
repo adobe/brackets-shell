@@ -43,6 +43,7 @@ protected:
 
     // Initialization
     void InitSystemIcon();
+    void SetClassStyles();
 
     // Implementation
     virtual void PostNcDestroy();

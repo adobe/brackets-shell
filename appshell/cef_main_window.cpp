@@ -69,7 +69,7 @@ ATOM cef_main_window::RegisterWndClass()
         wcex.hInstance     = ::hInst;
         wcex.hIcon         = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
         wcex.hCursor       = ::LoadCursor(NULL, IDC_ARROW);
-        wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+        wcex.hbrBackground = (HBRUSH)::CreateSolidBrush(CEF_COLOR_BACKGROUND_ACTIVE);
         wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
         wcex.lpszClassName = ::kWindowClassname;
         wcex.hIconSm       = ::LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
