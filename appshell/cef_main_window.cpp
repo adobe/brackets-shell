@@ -64,7 +64,7 @@ ATOM cef_main_window::RegisterWndClass()
         ::ZeroMemory (&wcex, sizeof (wcex));
         wcex.cbSize = sizeof(WNDCLASSEX);
 
-        wcex.style         = CS_HREDRAW | CS_VREDRAW;
+        wcex.style         = CS_SAVEBITS;
         wcex.lpfnWndProc   = ::DefWindowProc;
         wcex.hInstance     = ::hInst;
         wcex.hIcon         = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
@@ -182,9 +182,6 @@ BOOL cef_main_window::HandleCreate()
 // WM_ERASEBKGND handler
 BOOL cef_main_window::HandleEraseBackground(HDC hdc)
 {
-#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DrawMenuBar(hdc);
-#endif
     return (SafeGetCefBrowserHwnd() != NULL);
 }
 
@@ -208,7 +205,7 @@ BOOL cef_main_window::HandlePaint()
     HDC hdc = BeginPaint(&ps);
 
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DoPaintClientArea(hdc);
+    DoPaintNonClientArea(hdc);
 #endif
 
     EndPaint(&ps);
