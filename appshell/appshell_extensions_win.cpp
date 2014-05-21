@@ -1528,18 +1528,26 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
                     // Get the virtual key code for non-alpha-numeric characters.
                     int keyCode = ::VkKeyScan(ascii);
                     WORD vKey = (short)(keyCode & 0x000000FF);
+                    bool isAltGr = ((keyCode & 0x0000FF00) >> 8) >= 6;
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
                     UINT unshiftedChar = ::MapVirtualKey(vKey, 2);    
                     bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
   
-                    // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with
-                    // one of the number keys on the keyboard, then we don't have a functionable shortcut. 
+                    // If one of the following is found, then the shortcut is not available for the
+                    // current keyboard layout. 
+                    //
+                    //     * keyCode is -1 -- meaning the key is not available on the current keyboard layout
+                    //     * is a dead key -- a key used to attach a specific diacritic to a base letter. 
+                    //     * is altGr character -- the character is only available when Ctrl and Alt keys are also pressed together.
+                    //     * unshiftedChar is 0 -- meaning the key is not available on the current keyboard layout
+                    //     * The key is a shifted character sharing with one of the number keys on the keyboard. An example 
+                    //       of this is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
+                    // 
                     // So don't update the accelerator table. Just return false here so that the
-                    // caller can remove the shortcut string from the menu title. An example of this 
-                    // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
-                    if (keyCode == -1 || isDeadKey || unshiftedChar == 0 ||
+                    // caller can remove the shortcut string from the menu title. 
+                    if (keyCode == -1 || isDeadKey || isAltGr || unshiftedChar == 0 ||
                         (unshiftedChar >= '0' && unshiftedChar <= '9')) {
                         LocalFree(lpaccelNew);
                         return false;
@@ -1674,6 +1682,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (displayKeyStr.length() > 0) {
         title = title + L"\t" + displayKeyStr;
     }
+
+    // Add shortcut to the accelerator table first. If the shortcut cannot 
+    // be added, then don't show it in the menu title.
+    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
+        title = title.substr(0, title.find('\t'));
+    }
+
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
     bool inserted = false;
@@ -1723,11 +1738,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
-
-    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
-        title = title.substr(0, title.find('\t'));
-        SetMenuTitle(browser, command, title);
-    }
 
     return errCode;
 }
