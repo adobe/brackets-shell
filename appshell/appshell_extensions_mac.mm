@@ -1116,6 +1116,11 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     return NO_ERROR;
 }
 
+void MenuItemStateChanged(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    
+}
+
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool &checked, int& index)
 {
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);

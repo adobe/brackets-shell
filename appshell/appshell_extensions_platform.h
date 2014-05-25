@@ -133,6 +133,8 @@ int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId
 
 int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
 
+void MenuItemStateChanged(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId);
+
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index);
 
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle);
