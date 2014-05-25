@@ -796,11 +796,19 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
-    return NO_ERROR;
+    // works for menu and menu item
+    return RemoveMenuItem(browser, commandId);
 }
 
 int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    model.removeMenuItem(commandId);
+    gtk_widget_destroy(menuItem);
     return NO_ERROR;
 }
 
@@ -811,11 +819,23 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), menuTitle.c_str());
     return NO_ERROR;
 }
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    menuTitle = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
     return NO_ERROR;
 }
 
