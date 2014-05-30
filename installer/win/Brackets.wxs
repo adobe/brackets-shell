@@ -14,21 +14,21 @@
                 do not change this guid unless you are starting a new major version of the product. -->
     <Product Id='*' UpgradeCode='3B75C4E6-41C6-43E0-B0B2-92C7C7614AF1' Name='!(loc.ProductName)' Language='1033'
              Version='$(var.ProductVersionNumber)' Manufacturer='$(var.ProductManufacturer)'  >
-  
+
         <Package Description='!(loc.ProductName)' Comments='Installer for !(loc.ProductName)'
                  Manufacturer='$(var.ProductManufacturer)' InstallerVersion='300' Compressed='yes'
                  Languages="1033,1036"/>
-    
+
         <Media Id='1' Cabinet='product.cab' EmbedCab='yes' />
-        
+
         <!-- defines upgrade experience for all releases related by the same UpgradeCode (above) -->
         <MajorUpgrade Schedule="afterInstallInitialize"
                       DowngradeErrorMessage="A later version of !(loc.ProductName) is already installed.  Setup will now exit." />
- 
+
         <Property Id="ARPPRODUCTICON" Value="appicon.ico"/>
         <Icon Id="appicon.ico" SourceFile="appicon.ico"/>
         <Property Id="ALLUSERS" Value="1" />
-      
+
         <DirectoryRef Id="INSTALLDIR" />
 
         <DirectoryRef Id="ProgramMenuFolder">
@@ -39,7 +39,7 @@
                                Value="1" KeyPath="yes"/>
             </Component>
         </DirectoryRef>
-    
+
         <Component Id="FileAssociations" Guid="{D0195E8D-0881-42B6-9B4F-DA84D9396506}" Directory="INSTALLDIR" KeyPath="yes">
             <!-- Capabilities keys for Vista/7 "Set Program Access and Defaults" -->
             <RegistryValue Root="HKLM" Key="SOFTWARE\$(var.RegistryRoot)\Capabilities" Name="ApplicationIcon"
@@ -70,8 +70,13 @@
                            Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
             <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open"
                            Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
+            <!-- Register as Run command -->
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$(var.ExeName).exe"
+                           Name="(Default)" Value="[INSTALLDIR]\$(var.ExeName).exe" Type="string" />
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$(var.ExeName).exe"
+                           Name="Path" Value="[INSTALLDIR]\" Type="string" />
         </Component>
-        
+
         <!-- Start Menu Shortcuts-->
         <UIRef Id="WixUI_MyInstallDir" />
         <UIRef Id="WixUI_ErrorProgressText" />
@@ -93,7 +98,7 @@
 
         <!-- Add image assets -->
         <WixVariable Id="WixUIBannerBmp" Value="win_install_banner.jpg" />
-    
+
         <!--Setup Folder Structure -->
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder'>
@@ -101,20 +106,20 @@
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
         </Directory>
-    
-        <!-- Set default install location -->    
+
+        <!-- Set default install location -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- Install Files -->
         <Feature Id="MainApplication" Title="Main Application" Level="1">
             <!-- From devmanager.wxs -->
             <ComponentGroupRef Id='BRACKETSHARVESTMANAGER'/>
-        
+
             <ComponentRef  Id='StartMenuShortcut' />
 
             <ComponentRef  Id='FileAssociations' />
-        </Feature>                  
+        </Feature>
 
-        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />
     </Product>
 </Wix>
 
