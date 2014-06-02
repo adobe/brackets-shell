@@ -46,11 +46,11 @@ module.exports = function (grunt) {
             /* linux */
             "cef-linux32": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32_release.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32.zip"
             },
             "cef-linux64": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64_release.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64.zip"
             },
             "node-linux32": {
                 "dest"      : "<%= downloads %>",
@@ -63,7 +63,7 @@ module.exports = function (grunt) {
             /* mac */
             "cef-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_macosx.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_macosx32.zip"
             },
             "node-mac": {
                 "dest"      : "<%= downloads %>",
@@ -72,7 +72,7 @@ module.exports = function (grunt) {
             /* win */
             "cef-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_windows.zip"
+                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_windows32.zip"
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
@@ -201,7 +201,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "version"       : "3.1547.1459"
+            "version"       : "3.1750.1700"
         },
         "node": {
             "version"       : "0.10.24"

@@ -31,5 +31,5 @@ int main(int argc, char* argv[]) {
   CefRefPtr<CefApp> app(new ClientApp);
 
   // Execute the secondary process.
-  return CefExecuteProcess(main_args, app);
+  return CefExecuteProcess(main_args, app, NULL);
 }
