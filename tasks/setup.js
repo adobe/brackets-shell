@@ -21,7 +21,7 @@
  * 
  */
 /*jslint vars:true*/
-/*global module, require, process*/
+/*global module, require, process, setTimeout*/
 module.exports = function (grunt) {
     "use strict";
 
@@ -30,6 +30,7 @@ module.exports = function (grunt) {
         child_process   = require("child_process"),
         path            = require("path"),
         q               = require("q"),
+        AdmZip          = require('adm-zip'),
         /* win only (lib), mac only (Resources, tools) */
         CEF_MAPPING     = {
             "deps/cef/Debug"        : "Debug",
@@ -64,7 +65,17 @@ module.exports = function (grunt) {
     
     function unzip(src, dest) {
         grunt.verbose.writeln("Extracting " + src);
-        return exec("unzip -q " + src + " -d " + dest);
+        var deferred = q.defer();
+        var zip = new AdmZip(src);
+        setTimeout(function() {
+            try {
+                zip.extractAllTo(dest);
+                deferred.resolve();
+            } catch(err) {
+                deferred.reject(err);
+            }
+        });
+        return deferred.promise;
     }
 
     // task: cef
@@ -317,6 +328,8 @@ module.exports = function (grunt) {
         
         if (platform === "linux") {
             gypCommand = "bash -c 'python2 gyp/gyp --depth=.'";
+        } else if (platform === "win") {
+            gypCommand = "cmd /C \"gyp\\gyp appshell.gyp -I common.gypi --depth=.\"";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
         }
