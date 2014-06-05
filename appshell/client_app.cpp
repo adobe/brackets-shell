@@ -206,7 +206,50 @@ class AppShellExtensionHandler : public CefV8Handler {
 
 
 ClientApp::ClientApp() {
+}
+
+void ClientApp::OnRegisterCustomSchemes(
+    CefRefPtr<CefSchemeRegistrar> registrar) {
+  // Default schemes that support cookies.
+  cookieable_schemes_.push_back("http");
+  cookieable_schemes_.push_back("https");
+
+  RegisterCustomSchemes(registrar, cookieable_schemes_);
+}
+
+void ClientApp::OnContextInitialized() {
+  CreateBrowserDelegates(browser_delegates_);
+
+  // Register cookieable schemes with the global cookie manager.
+  CefRefPtr<CefCookieManager> manager = CefCookieManager::GetGlobalManager();
+  ASSERT(manager.get());
+  manager->SetSupportedSchemes(cookieable_schemes_);
+
+  BrowserDelegateSet::iterator it = browser_delegates_.begin();
+  for (; it != browser_delegates_.end(); ++it)
+    (*it)->OnContextInitialized(this);
+}
+
+void ClientApp::OnBeforeChildProcessLaunch(
+      CefRefPtr<CefCommandLine> command_line) {
+  BrowserDelegateSet::iterator it = browser_delegates_.begin();
+  for (; it != browser_delegates_.end(); ++it)
+    (*it)->OnBeforeChildProcessLaunch(this, command_line);
+}
+
+void ClientApp::OnRenderProcessThreadCreated(
+    CefRefPtr<CefListValue> extra_info) {
+  BrowserDelegateSet::iterator it = browser_delegates_.begin();
+  for (; it != browser_delegates_.end(); ++it)
+    (*it)->OnRenderProcessThreadCreated(this, extra_info);
+}
+
+void ClientApp::OnRenderThreadCreated(CefRefPtr<CefListValue> extra_info) {
   CreateRenderDelegates(render_delegates_);
+
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end(); ++it)
+    (*it)->OnRenderThreadCreated(this, extra_info);
 }
 
 void ClientApp::OnWebKitInitialized() {
@@ -220,6 +263,44 @@ void ClientApp::OnWebKitInitialized() {
   RenderDelegateSet::iterator it = render_delegates_.begin();
   for (; it != render_delegates_.end(); ++it)
     (*it)->OnWebKitInitialized(this);
+}
+
+
+void ClientApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end(); ++it)
+    (*it)->OnBrowserCreated(this, browser);
+}
+
+void ClientApp::OnBrowserDestroyed(CefRefPtr<CefBrowser> browser) {
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end(); ++it)
+    (*it)->OnBrowserDestroyed(this, browser);
+}
+
+CefRefPtr<CefLoadHandler> ClientApp::GetLoadHandler() {
+  CefRefPtr<CefLoadHandler> load_handler;
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end() && !load_handler.get(); ++it)
+    load_handler = (*it)->GetLoadHandler(this);
+
+  return load_handler;
+}
+
+bool ClientApp::OnBeforeNavigation(CefRefPtr<CefBrowser> browser,
+                                   CefRefPtr<CefFrame> frame,
+                                   CefRefPtr<CefRequest> request,
+                                   NavigationType navigation_type,
+                                   bool is_redirect) {
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end(); ++it) {
+    if ((*it)->OnBeforeNavigation(this, browser, frame, request,
+                                  navigation_type, is_redirect)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void ClientApp::OnContextCreated(CefRefPtr<CefBrowser> browser,
@@ -275,6 +356,14 @@ void ClientApp::OnUncaughtException(CefRefPtr<CefBrowser> browser,
         (*it)->OnUncaughtException(this, browser, frame, context, exception,
                                    stackTrace);
     }
+}
+
+void ClientApp::OnFocusedNodeChanged(CefRefPtr<CefBrowser> browser,
+                                     CefRefPtr<CefFrame> frame,
+                                     CefRefPtr<CefDOMNode> node) {
+  RenderDelegateSet::iterator it = render_delegates_.begin();
+  for (; it != render_delegates_.end(); ++it)
+    (*it)->OnFocusedNodeChanged(this, browser, frame, node);
 }
 
 bool ClientApp::OnProcessMessageReceived(

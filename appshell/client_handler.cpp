@@ -90,7 +90,7 @@ bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 
   if (m_BrowserId == browser->GetIdentifier()) {
     // Notify the parent window that it will be closed.
-    browser->GetHost()->ParentWindowWillClose();
+    //browser->GetHost()->ParentWindowWillClose();
   }
 
   // A popup browser window is not contained in another window, so we can let

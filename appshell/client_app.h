@@ -16,7 +16,24 @@ class ClientApp : public CefApp,
                   public CefBrowserProcessHandler,
                   public CefRenderProcessHandler {
  public:
-  
+    // Interface for browser delegates. All BrowserDelegates must be returned via
+  // CreateBrowserDelegates. Do not perform work in the BrowserDelegate
+  // constructor. See CefBrowserProcessHandler for documentation.
+  class BrowserDelegate : public virtual CefBase {
+   public:
+    virtual void OnContextInitialized(CefRefPtr<ClientApp> app) {}
+
+    virtual void OnBeforeChildProcessLaunch(
+        CefRefPtr<ClientApp> app,
+        CefRefPtr<CefCommandLine> command_line) {}
+
+    virtual void OnRenderProcessThreadCreated(
+        CefRefPtr<ClientApp> app,
+        CefRefPtr<CefListValue> extra_info) {}
+  };
+
+  typedef std::set<CefRefPtr<BrowserDelegate> > BrowserDelegateSet;
+
   // Interface for renderer delegates. All RenderDelegates must be returned via
   // CreateRenderDelegates. Do not perform work in the RenderDelegate
   // constructor. See CefRenderProcessHandler for documentation.
@@ -32,7 +49,9 @@ class ClientApp : public CefApp,
       
       virtual void OnBrowserDestroyed(CefRefPtr<ClientApp> app,
                                       CefRefPtr<CefBrowser> browser) {}
-      
+      virtual CefRefPtr<CefLoadHandler> GetLoadHandler(CefRefPtr<ClientApp> app) {
+        return NULL;
+      }
       virtual bool OnBeforeNavigation(CefRefPtr<ClientApp> app,
                                       CefRefPtr<CefBrowser> browser,
                                       CefRefPtr<CefFrame> frame,
@@ -41,7 +60,7 @@ class ClientApp : public CefApp,
                                       bool is_redirect) {
           return false;
       }
-      
+
       virtual void OnContextCreated(CefRefPtr<ClientApp> app,
                                     CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
@@ -95,23 +114,46 @@ class ClientApp : public CefApp,
   static CefString AppGetDocumentsDirectory();
 
 private:
+  // Creates all of the BrowserDelegate objects. Implemented in
+  // client_app_delegates.
+  static void CreateBrowserDelegates(BrowserDelegateSet& delegates);
+
   // Creates all of the RenderDelegate objects. Implemented in
   // client_app_delegates.
   static void CreateRenderDelegates(RenderDelegateSet& delegates);
 
   // Registers custom schemes. Implemented in client_app_delegates.
-  static void RegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar);
+  static void RegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar,
+                                    std::vector<CefString>& cookiable_schemes);
+
 
   // CefApp methods.
   virtual void OnRegisterCustomSchemes(
-      CefRefPtr<CefSchemeRegistrar> registrar) OVERRIDE {
-    RegisterCustomSchemes(registrar);
-  }
+      CefRefPtr<CefSchemeRegistrar> registrar) OVERRIDE;
+  virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler()
+      OVERRIDE { return this; }
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()
       OVERRIDE { return this; }
 
+// CefBrowserProcessHandler methods.
+  virtual void OnContextInitialized() OVERRIDE;
+  virtual void OnBeforeChildProcessLaunch(
+      CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+  virtual void OnRenderProcessThreadCreated(CefRefPtr<CefListValue> extra_info)
+                                            OVERRIDE;
+
   // CefRenderProcessHandler methods.
+  virtual void OnRenderThreadCreated(CefRefPtr<CefListValue> extra_info)
+                                     OVERRIDE;
   virtual void OnWebKitInitialized() OVERRIDE;
+  virtual void OnBrowserCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
+  virtual void OnBrowserDestroyed(CefRefPtr<CefBrowser> browser) OVERRIDE;
+  virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
+  virtual bool OnBeforeNavigation(CefRefPtr<CefBrowser> browser,
+                                  CefRefPtr<CefFrame> frame,
+                                  CefRefPtr<CefRequest> request,
+                                  NavigationType navigation_type,
+                                  bool is_redirect) OVERRIDE;
   virtual void OnContextCreated(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 CefRefPtr<CefV8Context> context) OVERRIDE;
@@ -124,14 +166,24 @@ private:
                                    CefRefPtr<CefV8Context> context,
                                    CefRefPtr<CefV8Exception> exception,
                                    CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE;
+  virtual void OnFocusedNodeChanged(CefRefPtr<CefBrowser> browser,
+                                    CefRefPtr<CefFrame> frame,
+                                    CefRefPtr<CefDOMNode> node) OVERRIDE;
   virtual bool OnProcessMessageReceived(
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
+  // Set of supported BrowserDelegates. Only used in the browser process.
+  BrowserDelegateSet browser_delegates_;
+
   // Set of supported RenderDelegates.
   RenderDelegateSet render_delegates_;
-                      
+
+  // Schemes that will be registered with the global cookie manager. Used in
+  // both the browser and renderer process.
+  std::vector<CefString> cookieable_schemes_;
+
   // Set of callbacks
   CallbackMap callback_map_;
 					  
