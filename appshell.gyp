@@ -127,7 +127,7 @@
             {
               # Copy resources
               'destination': '<(PRODUCT_DIR)',
-              'files': ['Resources/cef.pak', 'Resources/devtools_resources.pak'],
+              'files': ['Resources/cef.pak', 'Resources/devtools_resources.pak', 'Resources/icudtl.dat'],
             },
             {
               # Copy locales
