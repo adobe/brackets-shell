@@ -174,13 +174,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
-
-#if 0
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
-#endif
 
   // Initialize CEF.
   settings.no_sandbox = true;
