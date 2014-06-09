@@ -87,14 +87,6 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
 bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier()) {
-    // Notify the parent window that it will be closed.
-    //browser->GetHost()->ParentWindowWillClose();
-  }
-
-  // A popup browser window is not contained in another window, so we can let
-  // these windows close by themselves.
   return false;
 }
 

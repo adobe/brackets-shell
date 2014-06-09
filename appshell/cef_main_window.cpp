@@ -50,7 +50,7 @@ static const long           kMinWindowWidth = 390;
 static const long           kMinWindowHeight = 200;
 
 // Globals
-static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
+extern const wchar_t        kCefWindowClosingPropName[] = L"CLOSING";
 
 // The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
