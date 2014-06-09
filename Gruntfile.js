@@ -29,7 +29,7 @@ module.exports = function (grunt) {
         resolve = common.resolve,
         platform = common.platform(),
         staging;
-    
+
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
     } else if (platform === "win") {
@@ -46,11 +46,11 @@ module.exports = function (grunt) {
             /* linux */
             "cef-linux32": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux32_release.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
             "cef-linux64": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_linux64_release.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_linux64_release.zip"
             },
             "node-linux32": {
                 "dest"      : "<%= downloads %>",
@@ -63,7 +63,11 @@ module.exports = function (grunt) {
             /* mac */
             "cef-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_macosx.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx.zip"
+            },
+            "cef-mac-symbols": {
+                "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32_release_symbols.7z",
+                "dest" : "<%= downloads %>/cefsymbols"
             },
             "node-mac": {
                 "dest"      : "<%= downloads %>",
@@ -72,7 +76,11 @@ module.exports = function (grunt) {
             /* win */
             "cef-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://dev.brackets.io/cef/cef_binary_<%= cef.version %>_windows.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows.zip"
+            },
+            "cef-win-symbols": {
+                "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>windows32_debug_symbols.7z",
+                "dest" : "<%= downloads %>/cefsymbols"
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
@@ -201,6 +209,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
             "version"       : "3.1547.1459"
         },
         "node": {
