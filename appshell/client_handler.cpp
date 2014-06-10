@@ -15,6 +15,7 @@
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
+
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
@@ -86,14 +87,6 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
 bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier()) {
-    // Notify the parent window that it will be closed.
-    browser->GetHost()->ParentWindowWillClose();
-  }
-
-  // A popup browser window is not contained in another window, so we can let
-  // these windows close by themselves.
   return false;
 }
 
@@ -104,12 +97,6 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	} else if (browser->IsPopup()) {
-      // Remove the record for DevTools popup windows.
-      std::set<std::string>::iterator it =
-          m_OpenDevToolsURLs.find(browser->GetMainFrame()->GetURL());
-      if (it != m_OpenDevToolsURLs.end())
-        m_OpenDevToolsURLs.erase(it);
 	}
 
     browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
@@ -263,14 +250,6 @@ void ClientHandler::OnBeforeContextMenu(
 
     // Add a "Show DevTools" item to all context menus.
     model->AddItem(CLIENT_ID_SHOW_DEVTOOLS, "&Show DevTools");
-
-    CefString devtools_url = browser->GetHost()->GetDevToolsURL(true);
-    if (devtools_url.empty() ||
-        m_OpenDevToolsURLs.find(devtools_url) != m_OpenDevToolsURLs.end()) {
-      // Disable the menu option if DevTools isn't enabled or if a window is
-      // already open for the current URL.
-      model->SetEnabled(CLIENT_ID_SHOW_DEVTOOLS, false);
-    }
   }
 }
 
@@ -326,13 +305,14 @@ std::string ClientHandler::GetLastDownloadFile() {
 }
 
 void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
-  std::string devtools_url = browser->GetHost()->GetDevToolsURL(true);
-  if (!devtools_url.empty() &&
-      m_OpenDevToolsURLs.find(devtools_url) == m_OpenDevToolsURLs.end()) {
-    m_OpenDevToolsURLs.insert(devtools_url);
-    browser->GetMainFrame()->ExecuteJavaScript(
-        "window.open('" +  devtools_url + "');", "about:blank", 0);
-  }
+    CefWindowInfo wi;
+    CefBrowserSettings settings;
+    
+#if defined(OS_WIN)
+    wi.SetAsPopup(NULL, "DevTools");
+#endif
+
+    browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings);
 }
 
 bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)

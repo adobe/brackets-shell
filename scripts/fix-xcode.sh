@@ -14,3 +14,7 @@ mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
 # I couldn't find a clean way to fix that in the .gyp file, so it is hard-coded here.
 sed 's:PRODUCT_NAME = All;:PRODUCT_NAME = All; COMBINE_HIDPI_IMAGES = YES;:' appshell.xcodeproj/project.pbxproj > tmp_pbxproj.txt
 mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj
+
+# fix naming issues with CEF
+cat appshell.xcodeproj/project.pbxproj | sed 's/$(CONFIGURATION)\/Chromium Embedded Framework.framework/$(CONFIGURATION)/' | sed 's/lastKnownFileType = text; name = \"Chromium Embedded Framework\"/explicitFileType = \"compiled.mach-o.dylib\"; name = \"Chromium Embedded Framework\"/'  > tmp_pbxproj.txt
+mv tmp_pbxproj.txt appshell.xcodeproj/project.pbxproj

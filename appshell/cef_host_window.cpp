@@ -19,6 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+#include "include\cef_app.h"
 #include "client_handler.h"
 #include "cef_host_window.h"
 #include "native_menu_model.h"
@@ -198,6 +199,22 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandleInitMenuPopup((HMENU)wParam))
             return 0L;
         break;
+    
+    
+    case WM_ENTERMENULOOP:
+      if (!wParam) {
+        // Entering the menu loop for the application menu.
+        CefSetOSModalLoop(true);
+      }
+      break;
+
+    case WM_EXITMENULOOP:
+      if (!wParam) {
+        // Exiting the menu loop for the application menu.
+        CefSetOSModalLoop(false);
+      }
+      break;    
+    
     }
 
 

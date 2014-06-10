@@ -35,10 +35,12 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include "config.h"
-#define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
+
+extern const wchar_t kCefWindowClosingPropName[];
+
 
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
@@ -1056,7 +1058,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
         HWND browserHwnd = browser->GetHost()->GetWindowHandle();
-        SetProp(browserHwnd, CLOSING_PROP, (HANDLE)1);
+        SetProp(browserHwnd, kCefWindowClosingPropName, (HANDLE)1);
         browser->GetHost()->CloseBrowser(true);
 
         ::PostMessage(browser->IsPopup() ? browserHwnd : GetParent(browserHwnd),

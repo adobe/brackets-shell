@@ -50,7 +50,7 @@ static const long           kMinWindowWidth = 390;
 static const long           kMinWindowHeight = 200;
 
 // Globals
-static wchar_t              kCefWindowClosingPropName[] = L"CLOSING";
+extern const wchar_t        kCefWindowClosingPropName[] = L"CLOSING";
 
 // The Main Window's window class init helper
 ATOM cef_main_window::RegisterWndClass()
@@ -174,7 +174,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings);
+        ::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }

@@ -28,9 +28,7 @@
 
 // Externals
 extern HINSTANCE hInst;
-
-// Constants
-static wchar_t   gCefWindowClosingPropName[] = L"CLOSING";
+extern const wchar_t kCefWindowClosingPropName[];
 
 cef_popup_window::cef_popup_window(CefRefPtr<CefBrowser> browser) :
     mBrowser(browser)
@@ -54,10 +52,10 @@ BOOL cef_popup_window::HandleClose()
 {
     if (SafeGetCefBrowserHwnd()) {
         HWND browserHwnd = SafeGetCefBrowserHwnd();
-        HANDLE closing = ::GetProp(browserHwnd, ::gCefWindowClosingPropName);
+        HANDLE closing = ::GetProp(browserHwnd, ::kCefWindowClosingPropName);
     
         if (closing) {
-            ::RemoveProp(browserHwnd, ::gCefWindowClosingPropName);
+            ::RemoveProp(browserHwnd, ::kCefWindowClosingPropName);
             return FALSE;
         } else {
             DoCommand(FILE_CLOSE_WINDOW, new CloseWindowCommandCallback(mBrowser));
