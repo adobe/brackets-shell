@@ -127,84 +127,87 @@ module.exports = function (grunt) {
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
 
+    function symbolFileLocation() {
+        return path.resolve(process.cwd(), "deps/cef/symbols/");
+    }
+
     grunt.registerTask("cef-symbols", "Download and unpack the CEF symbols", function () {
         var config      = "cef-" + platform + common.arch() + "-symbols",
             zipSymbols  = grunt.config("curl-dir." + config + ".src");
 
         if (zipSymbols) {
-            var zipName     = path.basename(zipSymbols),
-                zipDest     = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
-                txtName;
+            var symbolSrcUrls = zipSymbols;
 
-            // extract zip file name and set config property
-            grunt.config("cefSymbolsZipDest", zipDest);
-            grunt.config("cefSymbolsZipSrc", zipSymbols);
-            grunt.config("cefSymbolsZipName", zipName);
-            grunt.config("cefConfig", config);
-
-            // remove .zip extension
-            txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
-
-            // optionally download if CEF is not found
-            if (!grunt.file.exists("symbols/cef/" + txtName)) {
-                var cefTasks = ["cef-symbols-extract"];
-
-                if (grunt.file.exists(zipDest)) {
-                    grunt.verbose.writeln("Found CEF symbols download " + zipDest);
-                } else {
-                    cefTasks.unshift("cef-symbols-download");
-                }
-
-                grunt.task.run(cefTasks);
-            } else {
-                grunt.verbose.writeln("Skipping CEF symbols download. Found symbols/cef/" + txtName);
+            if (!Array.isArray(zipSymbols)) {
+                symbolSrcUrls = [];
+                symbolSrcUrls.push(zipSymbols);
             }
+
+            symbolSrcUrls.forEach(function (srcUrl) {
+                var zipName = path.basename(srcUrl),
+                    zipDest = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
+                    txtName;
+
+                // extract zip file name and set config property
+                grunt.config("cefConfig", config);
+
+                // remove .zip extension
+                txtName = path.basename(zipName, ".zip") + ".txt";
+
+                // optionally download if CEF is not found
+                if (!grunt.file.exists(path.resolve(path.join(symbolFileLocation(), txtName)))) {
+                    // pass the name of the zip file
+                    var cefTasks = ["cef-symbols-extract" + ":" + zipDest];
+
+                    if (grunt.file.exists(zipDest)) {
+                        grunt.verbose.writeln("Found CEF symbols download " + zipDest);
+                    } else {
+                        cefTasks.unshift("cef-symbols-download" + ":" + config);
+                    }
+
+                    grunt.task.run(cefTasks);
+                } else {
+                    grunt.verbose.writeln("Skipping CEF symbols download. Found deps/cef/symbols/" + txtName);
+                }
+            });
         }
     });
 
     // task: cef-extract-symbols
     grunt.registerTask("cef-symbols-extract", "Extract CEF symbols zip", function () {
-        // requires cef to set "cefZipName" in config
         grunt.task.requires(["cef-symbols"]);
 
-//        var done    = this.async(),
-//            zipDest = grunt.config("cefSymbolsZipDest"),
-//            zipName = grunt.config("cefSymbolsZipName"),
-//            unzipPromise;
-//
-//        // unzip to symbols/
-//        unzipPromise = unzip(zipDest, "symbols");
-//
-//        // remove .zip ext
-//        zipName = path.basename(zipName, ".7z");
-//
-//        unzipPromise.then(function () {
-//            // rename version stamped name to cef
-//            return rename("deps/" + zipName, "deps/cef");
-//        }).then(function () {
-//            var memo = path.resolve(process.cwd(), "symbols/cef/" + zipName + ".txt"),
-//                permissionsPromise,
-//                defer = q.defer();
-//
-//                // write empty file with zip file
-//            grunt.file.write(memo, "");
-//            done();
-//        }, function (err) {
-//            grunt.log.writeln(err);
-//            done(false);
-//        });
+        var done    = this.async(),
+            zipDest = arguments[0],
+            zipName = path.basename(zipDest, '.zip'),
+            unzipPromise;
+
+        // unzip to deps/cef/symbols/
+        unzipPromise = unzip(zipDest, symbolFileLocation());
+
+        unzipPromise.then(function () {
+            var memo = path.resolve(path.join(symbolFileLocation(), zipName + ".txt"));
+
+            // write empty file with zip file
+            grunt.file.write(memo, "");
+            done();
+        }, function (err) {
+            grunt.log.writeln(err);
+            done(false);
+        });
     });
 
     // task: cef-download-symbols
     grunt.registerTask("cef-symbols-download", "Download and extract the CEF debug/release symbols", function () {
-        // requires -cef-download-symbols to set "cefSymbolZipName" in config
         grunt.task.requires(["cef-symbols"]);
 
+        var downloadConfig = arguments[0];
+
         // run curl
-        grunt.log.writeln("Downloading " + grunt.config("cefSymbolZipSrc") + ". This may take a while...");
+        grunt.log.writeln("Downloading " + downloadConfig + ". This may take a while...");
         // curl doesn't give me the option to handle download errors on my own. If the requested file can't
         // be found, curl will log an error to the console.
-        grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
+        grunt.task.run("curl-dir:" + downloadConfig);
     });
 
     // task: cef-extract

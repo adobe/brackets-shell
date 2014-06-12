@@ -66,7 +66,7 @@ module.exports = function (grunt) {
                 "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx.zip"
             },
             "cef-mac-symbols": {
-                "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32_release_symbols.7z",
+                "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32_release_symbols.zip",
                 "dest" : "<%= downloads %>/cefsymbols"
             },
             "node-mac": {
@@ -79,7 +79,7 @@ module.exports = function (grunt) {
                 "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows.zip"
             },
             "cef-win-symbols": {
-                "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>windows32_debug_symbols.7z",
+                "src"  : ["<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_debug_symbols.zip", "<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_release_symbols.zip"],
                 "dest" : "<%= downloads %>/cefsymbols"
             },
             "node-win": {
