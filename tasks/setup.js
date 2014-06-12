@@ -157,7 +157,8 @@ module.exports = function (grunt) {
                 // optionally download if CEF is not found
                 if (!grunt.file.exists(path.resolve(path.join(symbolFileLocation(), txtName)))) {
                     // pass the name of the zip file
-                    var cefTasks = ["cef-symbols-extract" + ":" + zipDest];
+					var zipDestSafe = zipDest.replace(":", "|");
+                    var cefTasks = ["cef-symbols-extract" + ":" + zipDestSafe];
 
                     if (grunt.file.exists(zipDest)) {
                         grunt.verbose.writeln("Found CEF symbols download " + zipDest);
@@ -178,7 +179,7 @@ module.exports = function (grunt) {
         grunt.task.requires(["cef-symbols"]);
 
         var done    = this.async(),
-            zipDest = arguments[0],
+            zipDest = arguments[0].replace("|", ":"),
             zipName = path.basename(zipDest, '.zip'),
             unzipPromise;
 
