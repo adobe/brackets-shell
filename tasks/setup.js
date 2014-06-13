@@ -67,6 +67,11 @@ module.exports = function (grunt) {
         return exec("unzip -q " + src + " -d " + dest);
     }
 
+    function curl(src, dest) {
+        grunt.verbose.writeln("Downloading " + src);
+        return exec("curl -o " + dest + " " + src);
+    }
+
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config   = "cef-" + platform + common.arch(),
@@ -127,8 +132,50 @@ module.exports = function (grunt) {
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
 
-    function symbolFileLocation() {
-        return path.resolve(process.cwd(), "deps/cef/symbols/");
+    grunt.registerTask("curl-download", function () {
+        var downloadConfig = arguments[0],
+            downloadSource = grunt.config("curl-dir." + downloadConfig + ".src"),
+            downloadDest = path.join(process.cwd(), grunt.config("curl-dir." + downloadConfig + ".dest")),
+            downloadSourceURLS = downloadSource,
+            done = this.async();
+
+        if (!Array.isArray(downloadSource)) {
+            downloadSourceURLS = [];
+            downloadSourceURLS.push(downloadSource);
+        }
+
+        var promises = downloadSourceURLS.map(function (srcUrl) {
+            var filename = path.basename(srcUrl),
+                dest = path.join(downloadDest, filename);
+
+            grunt.verbose.writeln("Download " + srcUrl + " to " + dest);
+            return curl(srcUrl, dest);
+        });
+
+        q.all(promises).then(done).catch(function (err) {
+            done(err);
+        });
+    });
+
+    function cefFileLocation() {
+        return path.resolve(process.cwd(), "deps/cef");
+    }
+
+    // Deduct the configuration (debug|release) from the zip file name
+    function symbolCompileConfiguration(zipFileName) {
+        if (zipFileName) {
+            var re = /\w+?[\d+\.\d+\.\d+]+_\w+?_(\w+?)_\w+\.zip/;
+            var match = zipFileName.match(re);
+
+            if (!match) {
+                grunt.log.error("File name doesn't match the pattern for cef symbols:", zipFileName);
+                return zipFileName;
+            }
+
+            return match[1];
+        } else {
+            grunt.log.error("Please provide a zip file name");
+        }
     }
 
     grunt.registerTask("cef-symbols", "Download and unpack the CEF symbols", function () {
@@ -146,7 +193,8 @@ module.exports = function (grunt) {
             symbolSrcUrls.forEach(function (srcUrl) {
                 var zipName = path.basename(srcUrl),
                     zipDest = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
-                    txtName;
+                    txtName,
+                    _symbolFileLocation;
 
                 // extract zip file name and set config property
                 grunt.config("cefConfig", config);
@@ -155,9 +203,11 @@ module.exports = function (grunt) {
                 txtName = path.basename(zipName, ".zip") + ".txt";
 
                 // optionally download if CEF is not found
-                if (!grunt.file.exists(path.resolve(path.join(symbolFileLocation(), txtName)))) {
+                _symbolFileLocation = path.join(cefFileLocation(), symbolCompileConfiguration(zipName));
+
+                if (!grunt.file.exists(path.resolve(path.join(_symbolFileLocation, txtName)))) {
                     // pass the name of the zip file
-					var zipDestSafe = zipDest.replace(":", "|");
+                    var zipDestSafe = zipDest.replace(":", "|");
                     var cefTasks = ["cef-symbols-extract" + ":" + zipDestSafe];
 
                     if (grunt.file.exists(zipDest)) {
@@ -168,7 +218,7 @@ module.exports = function (grunt) {
 
                     grunt.task.run(cefTasks);
                 } else {
-                    grunt.verbose.writeln("Skipping CEF symbols download. Found deps/cef/symbols/" + txtName);
+                    grunt.verbose.writeln("Skipping CEF symbols download. Found " + _symbolFileLocation + "/" + txtName);
                 }
             });
         }
@@ -183,11 +233,35 @@ module.exports = function (grunt) {
             zipName = path.basename(zipDest, '.zip'),
             unzipPromise;
 
-        // unzip to deps/cef/symbols/
-        unzipPromise = unzip(zipDest, symbolFileLocation());
+        var symbolFileLocation = path.join(cefFileLocation(), symbolCompileConfiguration(path.basename(zipDest)));
+
+        // unzip to deps/cef
+        unzipPromise = unzip(zipDest, symbolFileLocation);
+
+        var symbolDir = path.join(symbolFileLocation, zipName);
 
         unzipPromise.then(function () {
-            var memo = path.resolve(path.join(symbolFileLocation(), zipName + ".txt"));
+            var rename = q.denodeify(fs.rename),
+                readdir = q.denodeify(fs.readdir);
+
+            return readdir(symbolDir).then(function (files) {
+                if (files.length) {
+                    var promises = files.map(function (file) {
+                        return rename(path.join(symbolDir, file), path.join(path.dirname(symbolDir), file));
+                    });
+
+                    return q.all(promises);
+                } else {
+                    return;
+                }
+            }, function (err) {
+                return err;
+            });
+        }).then(function () {
+            var rmdir = q.denodeify(fs.rmdir);
+            return rmdir(symbolDir);
+        }).then(function () {
+            var memo = path.resolve(path.join(symbolFileLocation, zipName + ".txt"));
 
             // write empty file with zip file
             grunt.file.write(memo, "");
@@ -208,7 +282,8 @@ module.exports = function (grunt) {
         grunt.log.writeln("Downloading " + downloadConfig + ". This may take a while...");
         // curl doesn't give me the option to handle download errors on my own. If the requested file can't
         // be found, curl will log an error to the console.
-        grunt.task.run("curl-dir:" + downloadConfig);
+        //grunt.task.run("curl-dir:" + downloadConfig);
+        grunt.task.run("curl-download:" + downloadConfig);
     });
 
     // task: cef-extract
