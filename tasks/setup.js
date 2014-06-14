@@ -64,12 +64,17 @@ module.exports = function (grunt) {
 
     function unzip(src, dest) {
         grunt.verbose.writeln("Extracting " + src);
-        return exec("unzip -q " + src + " -d " + dest);
+        return exec("unzip -q \"" + src + "\" -d \"" + dest + "\"");
     }
 
     function curl(src, dest) {
-        grunt.verbose.writeln("Downloading " + src);
-        return exec("curl -o " + dest + " " + src);
+        if (process.platform === "win32") {
+            var dest = dest.replace(/\\/g, "/");
+        }
+
+        grunt.verbose.writeln("Downloading " + src + " to " + dest);
+        var cmd = "curl -o \"" + dest + "\" \"" + src + "\"";
+        return exec(cmd);
     }
 
     // task: cef
@@ -143,6 +148,9 @@ module.exports = function (grunt) {
             downloadSourceURLS = [];
             downloadSourceURLS.push(downloadSource);
         }
+
+        // ensure the download directory exists
+        fs.mkdirSync(downloadDest);
 
         var promises = downloadSourceURLS.map(function (srcUrl) {
             var filename = path.basename(srcUrl),
