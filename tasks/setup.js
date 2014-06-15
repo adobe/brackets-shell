@@ -67,16 +67,6 @@ module.exports = function (grunt) {
         return exec("unzip -q \"" + src + "\" -d \"" + dest + "\"");
     }
 
-    function curl(src, dest) {
-        if (process.platform === "win32") {
-            var dest = dest.replace(/\\/g, "/");
-        }
-
-        grunt.verbose.writeln("Downloading " + src + " to " + dest);
-        var cmd = "curl -o \"" + dest + "\" \"" + src + "\"";
-        return exec(cmd);
-    }
-
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
         var config   = "cef-" + platform + common.arch(),
@@ -135,34 +125,6 @@ module.exports = function (grunt) {
         // run curl
         grunt.log.writeln("Downloading " + grunt.config("cefZipSrc") + ". This may take a while...");
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
-    });
-
-    grunt.registerTask("curl-download", function () {
-        var downloadConfig = arguments[0],
-            downloadSource = grunt.config("curl-dir." + downloadConfig + ".src"),
-            downloadDest = path.join(process.cwd(), grunt.config("curl-dir." + downloadConfig + ".dest")),
-            downloadSourceURLS = downloadSource,
-            done = this.async();
-
-        if (!Array.isArray(downloadSource)) {
-            downloadSourceURLS = [];
-            downloadSourceURLS.push(downloadSource);
-        }
-
-        // ensure the download directory exists
-        fs.mkdirSync(downloadDest);
-
-        var promises = downloadSourceURLS.map(function (srcUrl) {
-            var filename = path.basename(srcUrl),
-                dest = path.join(downloadDest, filename);
-
-            grunt.verbose.writeln("Download " + srcUrl + " to " + dest);
-            return curl(srcUrl, dest);
-        });
-
-        q.all(promises).then(done).catch(function (err) {
-            done(err);
-        });
     });
 
     function cefFileLocation() {
@@ -290,8 +252,7 @@ module.exports = function (grunt) {
         grunt.log.writeln("Downloading " + downloadConfig + ". This may take a while...");
         // curl doesn't give me the option to handle download errors on my own. If the requested file can't
         // be found, curl will log an error to the console.
-        //grunt.task.run("curl-dir:" + downloadConfig);
-        grunt.task.run("curl-download:" + downloadConfig);
+        grunt.task.run("curl-dir:" + downloadConfig);
     });
 
     // task: cef-extract
