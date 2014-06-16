@@ -523,6 +523,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     NSString* oldPathStr = [NSString stringWithUTF8String:oldName.c_str()];
     NSString* newPathStr = [NSString stringWithUTF8String:newName.c_str()];
     
+    // check if the filename change is a case-only change
     if (compareCaseInsensitive(oldName, newName) != 0) {
         // Check to make sure newName doesn't already exist. On OS 10.7 and later, moveItemAtPath
         // returns a nice "NSFileWriteFileExists" error in this case, but 10.6 returns a generic
