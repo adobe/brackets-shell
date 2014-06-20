@@ -72,7 +72,7 @@
                            Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
             <!-- Register as Run command -->
             <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$(var.ExeName).exe"
-                           Name="(Default)" Value="[INSTALLDIR]\$(var.ExeName).exe" Type="string" />
+                           Value="[INSTALLDIR]\$(var.ExeName).exe" Type="string" />
             <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$(var.ExeName).exe"
                            Name="Path" Value="[INSTALLDIR]\" Type="string" />
         </Component>
