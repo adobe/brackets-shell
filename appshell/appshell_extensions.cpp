@@ -237,7 +237,7 @@ public:
                 error = Rename(oldName, newName);
             }
           // No additional response args for this function
-        } else if (message_name == "GetFileModificationTime") {
+        } else if (message_name == "GetFileInfo") {
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
@@ -248,14 +248,18 @@ public:
             
             if (error == NO_ERROR) {
                 ExtensionString filename = argList->GetString(1);
+                ExtensionString realPath;
                 uint32 modtime;
+                double size;
                 bool isDir;
                 
-                error = GetFileModificationTime(filename, modtime, isDir);
+                error = GetFileInfo(filename, modtime, isDir, size, realPath);
                 
                 // Set response args for this function
                 responseArgs->SetInt(2, modtime);
                 responseArgs->SetBool(3, isDir);
+                responseArgs->SetInt(4, size);
+                responseArgs->SetString(5, realPath);
             }
         } else if (message_name == "ReadFile") {
             // Parameters:
@@ -360,7 +364,6 @@ public:
             
             ExtensionString url(browser->GetHost()->GetDevToolsURL(true));
             OpenLiveBrowser(url, false);
-
         } else if (message_name == "GetNodeState") {
             // Parameters:
             //  0: int32 - callback id

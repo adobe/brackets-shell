@@ -65,6 +65,7 @@ ATOM cef_main_window::RegisterWndClass()
         ::ZeroMemory (&wcex, sizeof (wcex));
         wcex.cbSize = sizeof(WNDCLASSEX);
 
+        wcex.style         = CS_SAVEBITS;
         wcex.lpfnWndProc   = ::DefWindowProc;
         wcex.hInstance     = ::hInst;
         wcex.hIcon         = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
@@ -140,12 +141,6 @@ void cef_main_window::PostNcDestroy()
 #endif
 }
 
-// Helper to get the location to place the browser
-void cef_main_window::GetCefBrowserRect(RECT& rect)
-{
-    GetClientRect(&rect);
-}
-
 // Helper to get the browser 
 const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 {
@@ -155,13 +150,15 @@ const CefRefPtr<CefBrowser> cef_main_window::GetBrowser()
 // WM_CREATE handler
 BOOL cef_main_window::HandleCreate() 
 {
+    cef_host_window::HandleCreate();
+
     // Create the single static handler class instance
     g_handler = new ClientHandler();
     g_handler->SetMainHwnd(mWnd);
 
     RECT rect;
 
-    GetCefBrowserRect(rect);
+    GetBrowserRect(rect);
 
     CefWindowInfo info;
     CefBrowserSettings settings;
@@ -180,7 +177,7 @@ BOOL cef_main_window::HandleCreate()
 }
 
 // WM_ERASEBKGND handler
-BOOL cef_main_window::HandleEraseBackground()
+BOOL cef_main_window::HandleEraseBackground(HDC hdc)
 {
     return (SafeGetCefBrowserHwnd() != NULL);
 }
@@ -201,9 +198,13 @@ BOOL cef_main_window::HandleSetFocus(HWND hLosingFocus)
 // WM_PAINT handler
 BOOL cef_main_window::HandlePaint()
 {
-    // avoid painting
     PAINTSTRUCT ps;
-    BeginPaint(&ps);
+    HDC hdc = BeginPaint(&ps);
+
+#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
+    DoPaintNonClientArea(hdc);
+#endif
+
     EndPaint(&ps);
     return TRUE;
 }
@@ -261,52 +262,6 @@ BOOL cef_main_window::HandleExitCommand()
     }
     return TRUE;
 }
-
-// WM_SIZE handler
-BOOL cef_main_window::HandleSize(BOOL bMinimize)
-{
-    // Minimizing the window to 0x0 which causes our layout to go all
-    // screwy, so we just ignore it.
-    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-    if (!hwnd) 
-        return FALSE;
-
-    RECT rect;
-    GetClientRect(&rect);
-
-    if (!bMinimize) 
-    {
-        HDWP hdwp = ::BeginDeferWindowPos(1);
-        hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
-        ::EndDeferWindowPos(hdwp);
-    }
-
-#ifdef DARK_UI
-    // We turn off redraw during activation to minimized flicker
-    //    which causes problems on some versions of Windows. If the app
-    //  was minimized and was re-activated, it will restore and the client area isn't 
-    //    drawn so redraw the client area now or it will be hollow in the middle...
-    if (GetProp(L"WasMinimized")) {
-        DoRepaintClientArea();
-    }
-    SetProp(L"WasMinimized", (HANDLE)bMinimize);
-#endif
-
-    return FALSE;
-}
-
-void cef_main_window::DoRepaintClientArea()
-{
-    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
-    if (!hwnd) 
-        return;
-
-    RECT rect;
-    GetClientRect(&rect);
-    
-    ::RedrawWindow(hwnd, &rect, NULL, RDW_ERASE|RDW_INTERNALPAINT|RDW_INVALIDATE|RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN);
-}
-
 
 // WM_COMMAND handler
 BOOL cef_main_window::HandleCommand(UINT commandId)
@@ -485,14 +440,57 @@ void cef_main_window::RestoreWindowPlacement(const int showCmd)
 BOOL cef_main_window::HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData) 
 {
     if ((lpCopyData) && (lpCopyData->dwData == ID_WM_COPYDATA_SENDOPENFILECOMMAND) && (lpCopyData->cbData > 0)) {
-        // another Brackets instance requests that we open the given filename
+        // another Brackets instance requests that we open the given files/folders
         std::wstring wstrFilename = (LPCWSTR)lpCopyData->lpData;
+        std::wstring wstrFileArray = L"[";
+        bool hasMultipleFiles = false;
+        
+        if (wstrFilename.find('"') != std::wstring::npos) {
+            if (wstrFilename.find(L"\" ") != std::wstring::npos ||
+               (wstrFilename.front() != '"' || wstrFilename.back() != '"')) {
+                hasMultipleFiles = true;
+            }
+        } else {
+            hasMultipleFiles = (wstrFilename.find(L" ") != std::wstring::npos);
+        }
 
-        // Windows Explorer might enclose the filename in double-quotes.  We need to strip these off.
-        if ((wstrFilename.front() == '\"') && wstrFilename.back() == '\"')
-            wstrFilename = wstrFilename.substr(1, wstrFilename.length() - 2);
+        if (hasMultipleFiles) {
+            std::size_t curFilePathEnd1 = wstrFilename.find(L" ");
+            std::size_t curFilePathEnd2 = wstrFilename.find(L"\" ");
+            std::size_t nextQuoteIndex  = wstrFilename.find(L"\"");
+ 
+            while ((nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) || 
+                   (nextQuoteIndex != 0 && curFilePathEnd1 != std::wstring::npos)) {
 
-        g_handler->SendOpenFileCommand(g_handler->GetBrowser(), CefString(wstrFilename.c_str()));
+                if (nextQuoteIndex == 0 && curFilePathEnd2 != std::wstring::npos) {
+                    // Appending a file path that is already wrapped in double-quotes.
+                    wstrFileArray += (wstrFilename.substr(0, curFilePathEnd2 + 1) + L",");
+
+                    // Strip the current file path and move index to next file path.
+                    wstrFilename = wstrFilename.substr(curFilePathEnd2 + 2);
+                } else {
+                    // Explicitly wrap a file path in double-quotes and append it to the file array.
+                    wstrFileArray += (L"\"" + wstrFilename.substr(0, curFilePathEnd1) + L"\",");
+
+                    // Strip the current file path and move index to next file path.
+                    wstrFilename = wstrFilename.substr(curFilePathEnd1 + 1);
+                }
+
+                curFilePathEnd1 = wstrFilename.find(L" ");
+                curFilePathEnd2 = wstrFilename.find(L"\" ");
+                nextQuoteIndex = wstrFilename.find(L"\"");
+            }
+        }
+
+        // Add the last file or the only file into the file array.
+        if (wstrFilename.front() == '"' && wstrFilename.back() == '"') {
+            wstrFileArray += wstrFilename;
+        } else if (wstrFilename.length()) {
+            wstrFileArray += (L"\"" + wstrFilename + L"\"");
+        }
+        wstrFileArray += L"]";
+
+        g_handler->SendOpenFileCommand(g_handler->GetBrowser(), CefString(wstrFileArray.c_str()));
         return TRUE;
     }
 
@@ -532,6 +530,28 @@ HWND cef_main_window::FindFirstTopLevelInstance()
     return hFirstInstanceWnd;
 }
 
+// WM_SIZE handler
+BOOL cef_main_window::HandleSize(BOOL bMinimize)
+{
+    CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
+    if (!hwnd) 
+        return FALSE;
+
+    RECT rect;
+    GetBrowserRect(rect);
+
+    // Minimizing the window to 0x0 which causes our layout to go all
+    // screwy, so we just ignore it.
+    if (!bMinimize) 
+    {
+        HDWP hdwp = ::BeginDeferWindowPos(1);
+        hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
+        ::EndDeferWindowPos(hdwp);
+    }
+
+    return FALSE;
+}
+
 // WindowProc -- Dispatches and routes window messages
 LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -542,7 +562,7 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
             return 0L;
         break;
     case WM_ERASEBKGND:
-        if (HandleEraseBackground())
+        if (HandleEraseBackground((HDC)wParam))
             return 1L;
         break;
     case WM_SETFOCUS:

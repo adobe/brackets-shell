@@ -40,7 +40,6 @@
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
 
-
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
@@ -50,6 +49,11 @@ int ConvertWinErrorCode(int errorCode, bool isReading = true);
 static std::wstring GetPathToLiveBrowser();
 static bool ConvertToShortPathName(std::wstring & path);
 time_t FiletimeToTime(FILETIME const& ft);
+
+// Redraw timeout variables. See the comment above ScheduleMenuRedraw for details.
+const DWORD kMenuRedrawTimeout = 100;
+UINT_PTR redrawTimerId = NULL;
+CefRefPtr<CefBrowser> redrawBrowser;
 
 extern HINSTANCE hInst;
 extern HACCEL hAccelTable;
@@ -140,8 +144,8 @@ bool LiveBrowserMgrWin::IsChromeWindow(HWND hwnd)
         return false;
     }
 
-    DWORD modulePathBufSize = _MAX_PATH+1;
-    WCHAR modulePathBuf[_MAX_PATH+1];
+    DWORD modulePathBufSize = MAX_UNC_PATH+1;
+    WCHAR modulePathBuf[MAX_UNC_PATH+1];
     DWORD modulePathSize = ::GetModuleFileNameEx(processHandle, NULL, modulePathBuf, modulePathBufSize );
     ::CloseHandle(processHandle);
     processHandle = NULL;
@@ -294,9 +298,9 @@ static std::wstring GetPathToLiveBrowser()
             HKEY_LOCAL_MACHINE, 
             L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe",
             0, KEY_READ, &hKey)) {
-       wchar_t wpath[MAX_PATH] = {0};
+       wchar_t wpath[MAX_UNC_PATH] = {0};
 
-        DWORD length = MAX_PATH;
+        DWORD length = MAX_UNC_PATH;
         RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)wpath, &length);
         RegCloseKey(hKey);
 
@@ -306,7 +310,7 @@ static std::wstring GetPathToLiveBrowser()
     // We didn't get an "App Paths" entry. This could be because Chrome was only installed for
     // the current user, or because Chrome isn't installed at all.
     // Look for Chrome.exe at C:\Users\{USERNAME}\AppData\Local\Google\Chrome\Application\chrome.exe
-    TCHAR localAppPath[MAX_PATH] = {0};
+    TCHAR localAppPath[MAX_UNC_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppPath);
     std::wstring appPath(localAppPath);
     appPath += L"\\Google\\Chrome\\Application\\chrome.exe";
@@ -316,8 +320,8 @@ static std::wstring GetPathToLiveBrowser()
     
 static bool ConvertToShortPathName(std::wstring & path)
 {
-    DWORD shortPathBufSize = _MAX_PATH+1;
-    WCHAR shortPathBuf[_MAX_PATH+1];
+    DWORD shortPathBufSize = MAX_UNC_PATH+1;
+    WCHAR shortPathBuf[MAX_UNC_PATH+1];
     DWORD finalShortPathSize = ::GetShortPathName(path.c_str(), shortPathBuf, shortPathBufSize);
     if( finalShortPathSize == 0 ) {
         return false;
@@ -409,7 +413,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      ExtensionString fileTypes,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
-    wchar_t szFile[MAX_PATH];
+    wchar_t szFile[MAX_UNC_PATH];
     szFile[0] = 0;
 
     // Windows common file dialogs can handle Windows path only, not Unix path.
@@ -485,7 +489,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
         ofn.hwndOwner = GetActiveWindow();
         ofn.lStructSize = sizeof(ofn);
         ofn.lpstrFile = szFile;
-        ofn.nMaxFile = MAX_PATH;
+        ofn.nMaxFile = MAX_UNC_PATH;
         ofn.lpstrTitle = title.c_str();
 
         // TODO (issue #65) - Use passed in file types. Note, when fileTypesStr is null, all files should be shown
@@ -515,7 +519,7 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                     selectedFiles->SetString(0, filePath);
                 } else {
                     // Multiple files are selected
-                    wchar_t fullPath[MAX_PATH];
+                    wchar_t fullPath[MAX_UNC_PATH];
                     for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
@@ -539,7 +543,9 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 
             } else {
                 // If multiple files are not allowed, add the single file
-                selectedFiles->SetString(0, szFile);
+                std::wstring filePath(szFile);
+                ConvertToUnixPath(filePath);
+                selectedFiles->SetString(0, filePath);
             }
         }
     }
@@ -559,10 +565,10 @@ int32 ShowSaveDialog(ExtensionString title,
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.hwndOwner = GetActiveWindow();
     ofn.lStructSize = sizeof(ofn);
-    wchar_t szFile[MAX_PATH];
+    wchar_t szFile[MAX_UNC_PATH];
     wcscpy(szFile, proposedNewFilename.c_str());
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = MAX_PATH;
+    ofn.nMaxFile = MAX_UNC_PATH;
     ofn.lpstrFilter = L"All Files\0*.*\0Web Files\0*.js;*.css;*.htm;*.html\0Text Files\0*.txt\0\0";
     ofn.lpstrInitialDir = initialDirectory.c_str();
     ofn.Flags = OFN_ENABLESIZING | OFN_NOREADONLYRETURN | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_EXPLORER;
@@ -598,6 +604,10 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
         path += '/';
 
     path += '*';
+
+    // Convert to native path to ensure that FindFirstFile and FindNextFile
+    // function correctly for all paths including paths to a network drive.
+    ConvertToNativePath(path);
 
     WIN32_FIND_DATA ffd;
     HANDLE hFind = FindFirstFile(path.c_str(), &ffd);
@@ -654,25 +664,187 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
     return NO_ERROR;
 }
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir)
+// function prototype for GetFinalPathNameByHandleW(), which is unavailable on Windows XP and earlier
+typedef DWORD (WINAPI *PFNGFPNBH)(
+  _In_   HANDLE hFile,
+  _Out_  LPTSTR lpszFilePath,
+  _In_   DWORD cchFilePath,
+  _In_   DWORD dwFlags
+);
+
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath)
 {
-    DWORD dwAttr = GetFileAttributes(filename.c_str());
-
-    if (dwAttr == INVALID_FILE_ATTRIBUTES) {
-        return ConvertWinErrorCode(GetLastError()); 
-    }
-
-    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
 
     WIN32_FILE_ATTRIBUTE_DATA   fad;
     if (!GetFileAttributesEx(filename.c_str(), GetFileExInfoStandard, &fad)) {
         return ConvertWinErrorCode(GetLastError());
     }
 
+    DWORD dwAttr = fad.dwFileAttributes;
+    isDir = ((dwAttr & FILE_ATTRIBUTE_DIRECTORY) != 0);
+
     modtime = FiletimeToTime(fad.ftLastWriteTime);
+
+    LARGE_INTEGER size_tmp;
+    size_tmp.HighPart = fad.nFileSizeHigh;
+    size_tmp.LowPart = fad.nFileSizeLow;
+    size = size_tmp.QuadPart;
+
+    realPath = L"";
+    if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT) {
+        // conditionally call GetFinalPathNameByHandleW() if it's available -- Windows Vista or later
+        HMODULE hDLL = ::GetModuleHandle(TEXT("kernel32.dll"));
+        PFNGFPNBH pfn = (hDLL != NULL) ? (PFNGFPNBH)::GetProcAddress(hDLL, "GetFinalPathNameByHandleW") : NULL;
+        if (pfn != NULL) {
+            HANDLE      hFile;
+
+            hFile = ::CreateFileW(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                wchar_t pathBuffer[MAX_UNC_PATH + 1];
+                DWORD nChars;
+
+                nChars = (*pfn)(hFile, pathBuffer, MAX_UNC_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+                if (nChars && nChars <= MAX_UNC_PATH) {
+                    // Path returned by GetFilePathNameByHandle starts with "\\?\". Remove from returned value.
+                    realPath = &pathBuffer[4];  
+
+                    // UNC paths start with UNC. Update here, if needed.
+                    if (realPath.find(L"UNC") == 0) {
+                        realPath = L"\\" + ExtensionString(&pathBuffer[7]);
+                    }
+
+                    ConvertToUnixPath(realPath);
+                }
+                ::CloseHandle(hFile);
+            }
+
+            // Note: all realPath errors are ignored. If the realPath can't be determined, it should not make the
+            // stat fail.
+        }
+    }
 
     return NO_ERROR;
 }
+
+const int BOMLength = 3;
+
+typedef enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
+
+typedef struct UTFValidationState {
+
+    UTFValidationState () {
+        data        = NULL;
+        dataLen     = 0;
+        utf1632     = CS_UNKNOWN;
+        preserveBOM = true;
+    }
+
+    char*            data;
+    DWORD            dataLen;
+    CheckedState     utf1632;
+    bool             preserveBOM;
+} UTFValidationState;
+
+bool hasBOM(UTFValidationState& validationState)
+{
+    return ((validationState.dataLen >= BOMLength) && (validationState.data[0] == (char)0xEF) && (validationState.data[1] == (char)0xBB) && (validationState.data[2] == (char)0xBF));
+}
+
+bool hasUTF16_32(UTFValidationState& validationState)
+{
+    if (validationState.utf1632 == CS_UNKNOWN) {
+        int flags = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
+
+        // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
+        BOOL test = IsTextUnicode(validationState.data, validationState.dataLen, &flags);
+
+        validationState.utf1632 = (test ? CS_YES : CS_NO);
+    }
+
+    return (validationState.utf1632 == CS_YES);
+}
+
+void RemoveBOM(UTFValidationState& validationState)
+{
+    if (!validationState.preserveBOM) {
+        validationState.dataLen -= BOMLength;
+        CopyMemory (validationState.data, validationState.data+3, validationState.dataLen);
+    }
+}
+
+bool GetBufferAsUTF8(UTFValidationState& validationState)
+{
+    if (validationState.dataLen == 0) {
+        return true;
+    }    
+    
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(validationState)) {
+        return false;
+    }
+
+    // See if we can convert the data to UNICODE from UTF-8
+    //  if the data isn't UTF-8, this will fail and the result will be 0
+    int outBuffSize = (validationState.dataLen + 1) * 2;
+    wchar_t* outBuffer = new wchar_t[outBuffSize];
+    int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, validationState.data, validationState.dataLen, outBuffer, outBuffSize);
+    delete []outBuffer;
+
+    if ((result > 0) && hasBOM(validationState)) {
+        RemoveBOM(validationState);
+    }
+
+    return (result > 0);
+}
+
+bool IsUTFLeadByte(char data)
+{
+   return (((data & 0xF8) == 0xF0) || // 4 BYTE
+           ((data & 0xF0) == 0xE0) || // 3 BYTE
+           ((data & 0xE0) == 0xC0));  // 2 BYTE
+}
+
+// we can't validate something that's smaller than 12 bytes 
+const int kMinValidationLength = 12;
+
+bool quickTestBufferForUTF8(UTFValidationState& validationState)
+{
+    if (validationState.dataLen < kMinValidationLength) {
+        // we really don't know so just assume it's valid
+        return true;
+    }
+
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(validationState)) {
+        return false;
+    }
+
+    // If it has a UTF-8 BOM, then 
+    //  assume it's UTF8
+    if (hasBOM(validationState)) {
+        return true;
+    }
+
+    // find the last lead byte and truncate 
+    //  the buffer beforehand and check that to avoid 
+    //  checking a malformed data stream
+    for (int i = 1; i < 4; i++) {
+        int index = (validationState.dataLen - i);
+
+        if ((index > 0) && (IsUTFLeadByte(validationState.data[index]))){
+            validationState.dataLen = index;
+            break;
+        }
+
+    }
+
+    // this will check to see if the we have valid
+    //  UTF8 data in the sample data.  This should tell
+    //  us if it's binary or not but doesn't necessarily
+    //  tell us if the file is valid UTF8
+    return (GetBufferAsUTF8(validationState));
+}
+
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
@@ -694,22 +866,88 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     if (INVALID_HANDLE_VALUE == hFile)
         return ConvertWinErrorCode(GetLastError()); 
 
+    char* buffer = NULL;
     DWORD dwFileSize = GetFileSize(hFile, NULL);
-    DWORD dwBytesRead;
-    char* buffer = (char*)malloc(dwFileSize);
-    if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-        contents = std::string(buffer, dwFileSize);
-    }
-    else {
-        if (!buffer)
-            error = ERR_UNKNOWN;
-        else
-            error = ConvertWinErrorCode(GetLastError());
+
+    if (dwFileSize == 0) {
+        contents = "";
+    } else {
+        DWORD dwBytesRead;
+        
+        // first just read a few bytes of the file
+        //  to check for a binary or text format 
+        //  that we can't handle
+
+        // we just want to read enough to satisfy the
+        //  UTF-16 or UTF-32 test with or without a BOM
+        // the UTF-8 test could result in a false-positive
+        //  but we'll check again with all bits if we 
+        //  think it's UTF-8 based on just a few characters
+        
+        // if we're going to read fewer bytes than our
+        //  quick test then we skip the quick test and just
+        //  do the full test below since it will be fewer reads
+
+        // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
+        //  but with enough that we can test for true UTF data to test against 
+        //  without reading partial character streams roughly 1000 characters 
+        //  at UTF32 should do it:
+        // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
+        // 1001 chars without BOM  (UTF-32) = 4004 bytes 
+        // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
+        // 2002 chars without BOM  (UTF-16) = 4004 bytes 
+        const DWORD quickTestSize = 4004; 
+        static char quickTestBuffer[quickTestSize+1];
+
+        UTFValidationState validationState;
+
+        validationState.data = quickTestBuffer;
+        validationState.dataLen = quickTestSize;
+
+        if (dwFileSize > quickTestSize) {
+            ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
+            if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
+                if (!quickTestBufferForUTF8(validationState)) {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+                else {
+                    // reset the file pointer back to beginning
+                    //  since we're going to re-read the file wi
+                    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+                }
+            }
+        }
+
+        if (error == NO_ERROR) {
+            // either we did a quick test and we think it's UTF-8 or 
+            //  the file is small enough that we didn't spend the time
+            //  to do a quick test so alloc the memory to read the entire
+            //  file into memory and test it again...
+            buffer = (char*)malloc(dwFileSize);
+            if (buffer) {
+
+                validationState.data = buffer;
+                validationState.dataLen = dwFileSize;
+                validationState.preserveBOM = false;
+
+                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+                    if (!GetBufferAsUTF8(validationState)) {
+                        error = ERR_UNSUPPORTED_ENCODING;
+                    } else {
+                        contents = std::string(buffer, validationState.dataLen);
+                    }        
+                } else {
+                    error = ConvertWinErrorCode(GetLastError(), false);
+                }
+                free(buffer);
+
+            }
+            else { 
+                error = ERR_UNKNOWN;
+            }
+        }
     }
     CloseHandle(hFile);
-    if (buffer)
-        free(buffer);
-
     return error; 
 }
 
@@ -770,10 +1008,10 @@ int32 ShellDeleteFileOrDirectory(ExtensionString filename, bool allowUndo)
     ConvertToNativePath(filename);
 
     // Windows XP doesn't like directory names
-    //	that end with a trailing slash so remove it
+    // that end with a trailing slash so remove it
     RemoveTrailingSlash(filename);
 
-    WCHAR filepath[MAX_PATH+1] = {0};
+    WCHAR filepath[MAX_UNC_PATH+1] = {0};
     wcscpy(filepath, filename.c_str());
 
     SHFILEOPSTRUCT operation = {0};
@@ -1129,16 +1367,17 @@ int32 getNewMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& p
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, ExtensionString command,
               ExtensionString position, ExtensionString relativeId)
 {
-    HMENU mainMenu = GetMenu((HWND)getMenuParent(browser));
+    HWND mainWindow = (HWND)getMenuParent(browser);
+    HMENU mainMenu = GetMenu(mainWindow);
     if (mainMenu == NULL) {
         mainMenu = CreateMenu();
-        SetMenu((HWND)getMenuParent(browser), mainMenu);
+        SetMenu(mainWindow, mainMenu);
     }
 
-    int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
+    int32 tag = NativeMenuModel::getInstance(mainWindow).getTag(command);
     if (tag == kTagNotFound) {
-        tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
-        NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)mainMenu);
+        tag = NativeMenuModel::getInstance(mainWindow).getOrCreateTag(command, ExtensionString());
+        NativeMenuModel::getInstance(mainWindow).setOsItem(tag, (void*)mainMenu);
     } else {
         // menu is already there
         return NO_ERROR;
@@ -1175,11 +1414,12 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     }
     else
     {
-        int32 relativeTag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(relativeId);
+        int32 relativeTag = NativeMenuModel::getInstance(mainWindow).getTag(relativeId);
         if (!InsertMenuItem(mainMenu, relativeTag, FALSE, &menuInfo)) {
             return ConvertErrnoCode(GetLastError());
         }
     }
+    ::SendMessage(mainWindow, WM_USER+1004, 0, 0);
     return errCode;
 }
 
@@ -1286,20 +1526,28 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
                     lpaccelNew[newItem].key = ascii;
                 } else {
                     // Get the virtual key code for non-alpha-numeric characters.
-                    int keyCode = ::VkKeyScan(ascii);
-                    WORD vKey = (short)(keyCode & 0x000000FF);
+                    SHORT keyCode = ::VkKeyScan(ascii);
+                    WORD vKey = (WORD)(keyCode & 0xFF);
+                    bool isAltGr = ((keyCode & 0x600) == 0x600);
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
-                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);    
+                    UINT unshiftedChar = ::MapVirtualKey(vKey, MAPVK_VK_TO_CHAR);    
                     bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
   
-                    // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with
-                    // one of the number keys on the keyboard, then we don't have a functionable shortcut. 
+                    // If one of the following is found, then the shortcut is not available for the
+                    // current keyboard layout. 
+                    //
+                    //     * keyCode is -1 -- meaning the key is not available on the current keyboard layout
+                    //     * is a dead key -- a key used to attach a specific diacritic to a base letter. 
+                    //     * is altGr character -- the character is only available when Ctrl and Alt keys are also pressed together.
+                    //     * unshiftedChar is 0 -- meaning the key is not available on the current keyboard layout
+                    //     * The key is a shifted character sharing with one of the number keys on the keyboard. An example 
+                    //       of this is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
+                    // 
                     // So don't update the accelerator table. Just return false here so that the
-                    // caller can remove the shortcut string from the menu title. An example of this 
-                    // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
-                    if (keyCode == -1 || isDeadKey || unshiftedChar == 0 ||
+                    // caller can remove the shortcut string from the menu title. 
+                    if (keyCode == -1 || isDeadKey || isAltGr || unshiftedChar == 0 ||
                         (unshiftedChar >= '0' && unshiftedChar <= '9')) {
                         LocalFree(lpaccelNew);
                         return false;
@@ -1310,10 +1558,20 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             }
         }
 
-        // Create the new accelerator table, and 
-        // destroy the old one.
-        DestroyAcceleratorTable(haccelOld); 
-        hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        bool existingOne = false;
+        for (int i = 0; i < numAccelerators - 1; i++) {
+            if (memcmp(&lpaccelNew[i], &lpaccelNew[newItem], sizeof(ACCEL)) == 0) {
+                existingOne = true;
+                break;
+            }
+        }
+
+        if (!existingOne) {
+            // Create the new accelerator table, and 
+            // destroy the old one.
+            DestroyAcceleratorTable(haccelOld); 
+            hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        }
         LocalFree(lpaccelNew);
     }
 
@@ -1424,6 +1682,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (displayKeyStr.length() > 0) {
         title = title + L"\t" + displayKeyStr;
     }
+
+    // Add shortcut to the accelerator table first. If the shortcut cannot 
+    // be added, then don't show it in the menu title.
+    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
+        title = title.substr(0, title.find('\t'));
+    }
+
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
     bool inserted = false;
@@ -1473,12 +1738,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
-    DrawMenuBar((HWND)getMenuParent(browser));
-
-    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
-        title = title.substr(0, title.find('\t'));
-        SetMenuTitle(browser, command, title);
-    }
 
     return errCode;
 }
@@ -1528,15 +1787,21 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
-// Redraw timeout variables. See the comment at the bottom of SetMenuTitle for details.
-const DWORD kMenuRedrawTimeout = 100;
-UINT_PTR redrawTimerId = NULL;
-CefRefPtr<CefBrowser> redrawBrowser;
-
 void CALLBACK MenuRedrawTimerHandler(HWND hWnd, UINT uMsg, UINT_PTR idEvt, DWORD dwTime) {
     DrawMenuBar((HWND)getMenuParent(redrawBrowser));
     KillTimer(NULL, redrawTimerId);
     redrawTimerId = NULL;
+    redrawBrowser = NULL;
+}
+
+// The menu bar needs to be redrawn, but we don't want to redraw with *every* change
+// since that causes flicker if we're changing a bunch of titles in a row (like at
+// app startup).  Set a timer here to minimize the amount of drawing.
+void ScheduleMenuRedraw(CefRefPtr<CefBrowser> browser) {
+    if (!redrawTimerId) {
+        redrawBrowser = browser;
+        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
+    }
 }
 
 int GetMenuItemPosition(HMENU hMenu, UINT commandID)
@@ -1628,14 +1893,8 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
         }
     }
 
-    // The menu bar needs to be redrawn, but we don't want to redraw with
-    // *every* title change since that causes flicker if we're changing a 
-    // bunch of titles in a row (like at app startup). 
-    // Set a timer here so we only do a single redraw.
-    if (!redrawTimerId) {
-        redrawBrowser = browser;
-        redrawTimerId = SetTimer(NULL, redrawTimerId, kMenuRedrawTimeout, MenuRedrawTimerHandler);
-    }
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
 
     return NO_ERROR;
 }
@@ -1739,6 +1998,9 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
+
     return RemoveMenuItem(browser, commandId);
 }
 
@@ -1756,7 +2018,10 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     DeleteMenu(mainMenu, tag, MF_BYCOMMAND);
     NativeMenuModel::getInstance(getMenuParent(browser)).removeMenuItem(commandId);
     RemoveKeyFromAcceleratorTable(tag);
-    DrawMenuBar((HWND)getMenuParent(browser));
+
+    // The menu bar needs to be redrawn
+    ScheduleMenuRedraw(browser);
+
     return NO_ERROR;
 }
 

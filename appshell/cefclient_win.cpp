@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
@@ -36,8 +37,8 @@ std::wstring     gFilesToOpen;              // Filenames passed as arguments to 
 cef_main_window* gMainWnd = NULL;
 
 // static variables (not exported)
-static char      szWorkingDir[MAX_PATH];    // The current working directory
-static wchar_t   szInitialUrl[MAX_PATH] = {0};
+static char      szWorkingDir[MAX_UNC_PATH];    // The current working directory
+static wchar_t   szInitialUrl[MAX_UNC_PATH] = {0};
 
 
 // Forward declarations of functions included in this code module:
@@ -130,7 +131,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     return exit_code;
 
   // Retrieve the current working directory.
-  if (_getcwd(szWorkingDir, MAX_PATH) == NULL)
+  if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
 
   // Parse command line arguments. The passed in values are ignored on Windows.
@@ -190,9 +191,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	if (GetAsyncKeyState(VK_SHIFT) == 0) {
 	// Get the full pathname for the app. We look for the index.html
 	// file relative to this location.
-	wchar_t appPath[MAX_PATH];
+	wchar_t appPath[MAX_UNC_PATH];
 	wchar_t *pathRoot;
-	GetModuleFileName(NULL, appPath, MAX_PATH);
+	GetModuleFileName(NULL, appPath, MAX_UNC_PATH);
 
 	// Strip the .exe filename (and preceding "\") from the appPath
 	// and store in pathRoot
@@ -222,7 +223,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
       OPENFILENAME ofn = {0};
       ofn.lStructSize = sizeof(ofn);
       ofn.lpstrFile = szInitialUrl;
-      ofn.nMaxFile = MAX_PATH;
+      ofn.nMaxFile = MAX_UNC_PATH;
       ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
       ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
@@ -317,8 +318,8 @@ void GetFileVersionString(std::wstring &retVersion) {
   UINT pLenFileInfo = 0;
 
   HMODULE module = GetModuleHandle(NULL);
-  TCHAR executablePath[MAX_PATH];
-  GetModuleFileName(module, executablePath, MAX_PATH);
+  TCHAR executablePath[MAX_UNC_PATH];
+  GetModuleFileName(module, executablePath, MAX_UNC_PATH);
 
   dwSize = GetFileVersionInfoSize(executablePath, NULL);
   if (dwSize == 0) {
@@ -361,4 +362,12 @@ CefString AppGetProductVersionString() {
   s.append(L"/");
   s.append(version);
   return CefString(s);
+}
+
+CefString AppGetChromiumVersionString() {
+  std::wostringstream versionStream(L"");
+  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
+                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
+
+  return CefString(versionStream.str());
 }

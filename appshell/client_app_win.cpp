@@ -120,7 +120,7 @@ CefString ClientApp::AppGetSupportDirectory()
     if (!IsPortableInstall())
     {
         // for normal installations, use the user's APPDATA folder
-        wchar_t dataPath[MAX_PATH];
+        wchar_t dataPath[MAX_UNC_PATH];
         SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
         appSupportPath = dataPath;
     }
@@ -141,7 +141,7 @@ CefString ClientApp::AppGetSupportDirectory()
 
 CefString ClientApp::AppGetDocumentsDirectory()
 {
-    wchar_t dataPath[MAX_PATH] = {0};
+    wchar_t dataPath[MAX_UNC_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, dataPath);
     std::wstring appUserDocuments = dataPath;
 

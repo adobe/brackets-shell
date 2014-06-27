@@ -290,7 +290,7 @@ maxerr: 50, node: true */
                 eventNames.forEach(function (eventName) {
                     d.events.push({
                         name: eventName,
-                        parameters: _domains[domainName].events[eventName]
+                        parameters: _domains[domainName].events[eventName].parameters
                     });
                 });
                 _cachedDomainDescriptions.push(d);

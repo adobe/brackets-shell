@@ -43,6 +43,8 @@ static const int ERR_OUT_OF_SPACE           = 7;
 static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
 static const int ERR_FILE_EXISTS            = 10;
+static const int ERR_BROWSER_NOT_INSTALLED  = 11;
+static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
@@ -59,9 +61,9 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac u
 #else
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
-    gtk_widget_get_ancestor(
+    return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
-        GTK_TYPE_WINDOW);
+        GTK_TYPE_VBOX);
 }
 #endif
 
@@ -94,7 +96,7 @@ int32 MakeDir(ExtensionString path, int32 mode);
 
 int32 Rename(ExtensionString oldName, ExtensionString newName);
 
-int32 GetFileModificationTime(ExtensionString filename, uint32& modtime, bool& isDir);
+int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath);
 
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
 

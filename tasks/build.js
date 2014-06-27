@@ -45,12 +45,23 @@ module.exports = function (grunt) {
     }
     
     // task: full-build
-    grunt.registerTask("full-build", ["git", "create-project", "build", "build-branch", "build-num", "build-sha", "stage", "package"]);
+    grunt.registerTask("full-build", ["git", "create-project", "build-www", "build", "stage", "package"]);
     grunt.registerTask("installer", ["full-build", "build-installer"]);
     
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
         grunt.task.run("build-" + platform);
+    });
+
+    // task: build-www
+    grunt.registerTask("build-www", "Check brackets repository for build artifacts", function () {
+        var distPath = resolve(grunt.config("copy.www.files")[0].cwd);
+        grunt.log.writeln(distPath);
+
+        if (!grunt.file.exists(distPath)) {
+            grunt.log.error(distPath + " file does not exist. Run `grunt build` in the brackets repo first.");
+            return false;
+        }
     });
     
     // task: build-mac
@@ -62,9 +73,9 @@ module.exports = function (grunt) {
             "xcodebuild -project appshell.xcodeproj -config Release build"
         ]).then(function (result) {
             if (result.stderr.match('xcrun: Error')) {
-              grunt.log.error('Unable to run : ' + result.cmd + ' ' + result.args.join(' '));
-              grunt.log.error(result.stderr);
-              return done(false);
+                grunt.log.error('Unable to run : ' + result.cmd + ' ' + result.args.join(' '));
+                grunt.log.error(result.stderr);
+                return done(false);
             }
             done();
         }, function (err) {
@@ -130,65 +141,6 @@ module.exports = function (grunt) {
         }
     });
     
-    // task: build-branch
-    grunt.registerTask("build-branch", "Write www repo branch to config property build.build-branch", function () {
-        var done = this.async(),
-            wwwRepo = resolve(grunt.config("git.www.repo"));
-        
-        spawn(["git status"], { cwd: wwwRepo })
-            .then(function (result) {
-                var branch = /On branch (.*)/.exec(result.stdout.trim());
-               
-                if (branch && branch[1]) {
-                    grunt.log.writeln("Build branch " + branch);
-                    grunt.config("build.build-branch", branch);
-                }
-                
-                done();
-            }, function (err) {
-                grunt.log.error(err);
-                done(false);
-            });
-    });
-    
-    // task: build-num
-    grunt.registerTask("build-num", "Compute www repo build number and set config property build.build-number", function () {
-        var done = this.async(),
-            wwwRepo = resolve(grunt.config("git.www.repo"));
-        
-        spawn(["git log --format=%h"], { cwd: wwwRepo })
-            .then(function (result) {
-                var buildNum = result.stdout.toString().match(/[0-9a-f]\n/g).length;
-                
-                grunt.log.writeln("Build number " + buildNum);
-                grunt.config("build.build-number", buildNum);
-                
-                done();
-            }, function (err) {
-                grunt.log.error(err);
-                done(false);
-            });
-    });
-    
-    // task: build-sha
-    grunt.registerTask("build-sha", "Write www repo SHA to config property build.build-sha", function () {
-        var done = this.async(),
-            wwwRepo = resolve(grunt.config("git.www.repo"));
-        
-        spawn(["git log -1"], { cwd: wwwRepo })
-            .then(function (result) {
-                var sha = /commit (.*)/.exec(result.stdout.trim())[1];
-                
-                grunt.log.writeln("SHA " + sha);
-                grunt.config("build.build-sha", sha);
-                
-                done();
-            }, function (err) {
-                grunt.log.error(err);
-                done(false);
-            });
-    });
-    
     // task: stage
     grunt.registerTask("stage", "Stage release files", function () {
         // stage platform-specific binaries
@@ -225,24 +177,7 @@ module.exports = function (grunt) {
     
     // task: package
     grunt.registerTask("package", "Package www files", function () {
-        grunt.task.run(["clean:www", "copy:www", "copy:samples", "write-config"]);
-    });
-    
-    // task: write-config
-    grunt.registerTask("write-config", "Update version data in www config.json payload", function () {
-        grunt.task.requires(["build-num", "build-branch", "build-sha"]);
-        
-        var configJSON = grunt.file.readJSON(grunt.config("config-json")),
-            branch     = grunt.config("build.build-branch");
-        
-        configJSON.version = configJSON.version.substr(0, configJSON.version.lastIndexOf("-") + 1) + grunt.config("build.build-number");
-        configJSON.repository.SHA = grunt.config("build.build-sha");
-
-        if (branch) {
-            configJSON.repository.branch = branch;
-        }
-        
-        common.writeJSON(grunt.config("config-json"), configJSON);
+        grunt.task.run(["clean:www", "copy:www", "copy:samples"]);
     });
     
     // task: build-installer
@@ -303,6 +238,23 @@ module.exports = function (grunt) {
         
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
             return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.deb");
+        }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+
+    // task: build-linux-archive
+    grunt.registerTask("build-linux-archive", "Build portable Linux .tar.gz", function() {
+        grunt.task.requires(["package"]);
+
+        var done = this.async(),
+            sprint = semver.parse(grunt.config("pkg").version).minor;
+
+        spawn(["bash build_archive.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
+            return common.rename("installer/linux/brackets.tar.gz", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.tar.gz");
         }).then(function () {
             done();
         }, function (err) {

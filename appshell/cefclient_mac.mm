@@ -4,9 +4,11 @@
 // found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
+#import <objc/runtime.h>
 #include <sstream>
 #include "cefclient.h"
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
@@ -20,6 +22,15 @@
 #include "client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
+
+#include "TrafficLightsView.h"
+#include "TrafficLightsViewController.h"
+#include "client_colors_mac.h"
+
+#include "FullScreenView.h"
+#include "FullScreenViewController.h"
+
+#import "CustomTitlebarView.h"
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -35,6 +46,9 @@ NSURL* startupUrl = nil;
 // Content area size for newly created windows.
 const int kWindowWidth = 1000;
 const int kWindowHeight = 700;
+const int kMinWindowWidth = 375;
+const int kMinWindowHeight = 200;
+
 
 // Memory AutoRelease pool.
 static NSAutoreleasePool* g_autopool = nil;
@@ -94,6 +108,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+// BOBNOTE: Consider moving the delegate interface into its own .h file
 @interface ClientMenuDelegate : NSObject <NSMenuDelegate> {
 }
 - (void)menuWillOpen:(NSMenu *)menu;
@@ -113,10 +128,15 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+// BOBNOTE: Consider moving the delegate interface into its own .h file
 // Receives notifications from controls and the browser window. Will delete
 // itself when done.
 @interface ClientWindowDelegate : NSObject <NSWindowDelegate> {
-  BOOL isReallyClosing;
+    BOOL isReallyClosing;
+    NSView* fullScreenButtonView;
+    NSView* trafficLightsView;
+    BOOL  isReentering;
+    CustomTitlebarView  *customTitlebar;
 }
 - (void)setIsReallyClosing;
 - (IBAction)handleMenuAction:(id)sender;
@@ -127,14 +147,19 @@ extern NSMutableArray* pendingOpenFiles;
 - (void)notifyConsoleMessage:(id)object;
 - (void)notifyDownloadComplete:(id)object;
 - (void)notifyDownloadError:(id)object;
+- (void)setFullScreenButtonView:(NSView*)view;
+- (void)setTrafficLightsView:(NSView*)view;
 @end
 
 @implementation ClientWindowDelegate
-
 - (id) init {
-  [super init];
-  isReallyClosing = false;
-  return self;
+    self = [super init];
+    isReallyClosing = NO;
+    isReentering = NO;
+    customTitlebar = nil;
+    fullScreenButtonView = nil;
+    trafficLightsView = nil;
+    return self;
 }
 
 - (void)setIsReallyClosing {
@@ -179,6 +204,167 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 
+-(void)setFullScreenButtonView:(NSView *)view {
+    fullScreenButtonView = view;
+}
+
+
+-(void)setTrafficLightsView:(NSView *)view {
+    trafficLightsView = view;
+}
+
+-(void)windowTitleDidChange:(NSString*)title {
+#ifdef DARK_UI
+    if (customTitlebar) {
+        [customTitlebar setTitleString:title];
+    }
+#endif
+}
+
+- (BOOL)isFullScreenSupported {
+    SInt32 version;
+    Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1070);
+}
+
+-(BOOL)needsFullScreenActivateHack {
+    SInt32 version;
+    Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1090);
+}
+
+-(void)windowDidResize:(NSNotification *)notification
+{
+
+// BOBNOTE: this should be moved into the CustomTitlebarView class
+#ifdef DARK_UI
+    NSWindow* window = [notification object];
+
+    if ([self isFullScreenSupported]) {
+        
+        NSView* themeView = [[window contentView] superview];
+        NSRect  parentFrame = [themeView frame];
+        
+        NSRect oldFrame = [fullScreenButtonView frame];
+        NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
+                                     parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                     oldFrame.size.width,                                  // width
+                                     oldFrame.size.height);
+        
+        [fullScreenButtonView setFrame:newFrame];
+        [themeView setNeedsDisplay:YES];
+    }
+#endif
+}
+
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    if (fullScreenButtonView) {
+        [fullScreenButtonView removeFromSuperview];
+        fullScreenButtonView = nil;
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:YES];
+    }
+    if (customTitlebar) {
+        [customTitlebar setHidden:YES];
+    }
+    
+    if ([self needsFullScreenActivateHack]) {
+        [NSApp activateIgnoringOtherApps:YES];
+        [NSApp unhide:nil];
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+#ifdef DARK_UI
+    if ([self needsFullScreenActivateHack]) {
+        NSWindow* window = [notification object];
+        NSView* contentView = [window contentView];
+        
+        [contentView setNeedsDisplay:YES];
+    }
+#endif
+}
+
+-(void)initUI:(NSWindow*)mainWindow {
+    NSView* contentView = [mainWindow contentView];
+    NSView* themeView = [contentView superview];
+    NSRect  parentFrame = [themeView frame];
+    NSButton *windowButton = nil;
+    
+#ifdef CUSTOM_TRAFFIC_LIGHTS
+    if (!trafficLightsView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowCloseButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowMiniaturizeButton];
+        [windowButton setHidden:YES];
+        windowButton = [mainWindow standardWindowButton:NSWindowZoomButton];
+        [windowButton setHidden:YES];
+        
+        TrafficLightsViewController     *tvController = [[[TrafficLightsViewController alloc] init] autorelease];
+        if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
+        {
+            NSRect oldFrame = [tvController.view frame];
+            NSRect newFrame = NSMakeRect(kTrafficLightsViewX,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [tvController.view setFrame:newFrame];
+            [themeView addSubview:tvController.view];
+            [self setTrafficLightsView:tvController.view];
+        }
+    }
+    
+#endif
+#ifdef DARK_UI
+    if ([self isFullScreenSupported] && !fullScreenButtonView) {
+        windowButton = [mainWindow standardWindowButton:NSWindowFullScreenButton];
+        [windowButton setHidden:YES];
+        
+        FullScreenViewController     *fsController = [[[FullScreenViewController alloc] init] autorelease];
+        if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
+        {
+            NSRect oldFrame = [fsController.view frame];
+            NSRect newFrame = NSMakeRect(parentFrame.size.width - oldFrame.size.width - 4,	// x position
+                                         parentFrame.size.height - oldFrame.size.height - kTrafficLightsViewY,   // y position
+                                         oldFrame.size.width,                                  // width
+                                         oldFrame.size.height);                                // height
+            [fsController.view setFrame:newFrame];
+            [themeView addSubview:fsController.view];
+            [self setFullScreenButtonView:fsController.view];
+        }
+    }
+#endif
+    
+
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+    // This effectively recreates the full screen button in it's default \
+    // state.  Don't do this until after animation has completed or it will
+    // be in the wrong state and look funny...
+    NSWindow* window = [notification object];
+    [self initUI:window];
+}
+
+
+-(void)windowWillExitFullScreen:(NSNotification *)notification {
+    // show the buttons and title bar so they appear during the
+    //  transition from fullscreen back to normal
+    if (customTitlebar) {
+        [customTitlebar setHidden:NO];
+    }
+    if (trafficLightsView) {
+        [trafficLightsView setHidden:NO];
+    }
+}
+
 - (void)alert:(NSString*)title withMessage:(NSString*)message {
   NSAlert *alert = [NSAlert alertWithMessageText:title
                                    defaultButton:@"OK"
@@ -214,6 +400,26 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 - (void)windowDidBecomeKey:(NSNotification*)notification {
+#ifdef DARK_UI
+    if (!isReentering)
+    {
+        NSWindow    *thisWindow = [notification object];
+        NSView*     contentView = [thisWindow contentView];
+        NSRect      bounds = [[contentView superview] bounds];
+
+        customTitlebar = [[CustomTitlebarView alloc] initWithFrame:bounds];
+        
+        [customTitlebar setTitleString: [thisWindow title]];
+
+        [customTitlebar setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
+        [[contentView superview] addSubview:customTitlebar positioned:NSWindowBelow relativeTo:[[[contentView superview] subviews] objectAtIndex:0]];
+        
+        NSButton    *windowButton = [thisWindow standardWindowButton:NSWindowFullScreenButton];
+        [windowButton setHidden:YES];
+        isReentering = YES;
+    }
+#endif
+    
   if (g_handler.get() && g_handler->GetBrowserId()) {
     // Give focus to the browser window.
     g_handler->GetBrowser()->GetHost()->SetFocus(true);
@@ -270,23 +476,41 @@ extern NSMutableArray* pendingOpenFiles;
 
 @end
 
+// BOBNOTE: Consider moving the AppDelegate interface into its own .h file
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
+{
+    ClientWindowDelegate *delegate;
+    ClientMenuDelegate *menuDelegate;
+}
+
+@property (nonatomic, retain) ClientWindowDelegate *delegate;
+@property (nonatomic, retain) ClientMenuDelegate *menuDelegate;
+
 - (void)createApp:(id)object;
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
 @end
 
+
+// BOBNOTE: Consider moving the AppDelegate implementation into its own .m file
 @implementation ClientAppDelegate
+@synthesize delegate, menuDelegate;
 
 - (id) init {
-  [super init];  
+  self = [super init];
   // Register our handler for the "handleOpenFileEvent" (a.k.a. OpFl) apple event.
   [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
                                                      andSelector:@selector(handleOpenFileEvent:withReplyEvent:)
                                                    forEventClass:'aevt'
                                                       andEventID:'OpFl'];
   return self;
+}
+
+- (void)dealloc {
+    [self.delegate release];
+    [self.menuDelegate release];
+    [super dealloc];
 }
 
 // Create the application on the UI thread.
@@ -298,20 +522,21 @@ extern NSMutableArray* pendingOpenFiles;
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
-  ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
+  [self setDelegate:[[ClientWindowDelegate alloc] init]];
 
   // Create the delegate for menu events.
-  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
+  [self setMenuDelegate:[[ClientMenuDelegate alloc] init]];
 
-  [[NSApp mainMenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
+  [[NSApp mainMenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:self.menuDelegate];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
                           NSClosableWindowMask |
                           NSMiniaturizableWindowMask |
-                          NSResizableWindowMask );
+                          NSResizableWindowMask |
+                          NSTexturedBackgroundWindowMask );
 
   // Get the available screen space
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
@@ -337,6 +562,14 @@ extern NSMutableArray* pendingOpenFiles;
                        backing:NSBackingStoreBuffered
                        defer:NO];
 
+#ifdef DARK_UI
+  NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+  // Background fill, solid for now.
+  NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
+  [mainWnd setMinSize:NSMakeSize(kMinWindowWidth, kMinWindowHeight)];
+  [mainWnd setBackgroundColor:fillColor];
+#endif
+    
   // "Preclude the window controller from changing a window’s position from the
   // one saved in the defaults system" (NSWindow Class Reference)
   [[mainWnd windowController] setShouldCascadeWindows: NO];
@@ -353,7 +586,7 @@ extern NSMutableArray* pendingOpenFiles;
 
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
-  [mainWnd setDelegate:delegate];
+  [mainWnd setDelegate:self.delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
@@ -374,16 +607,32 @@ extern NSMutableArray* pendingOpenFiles;
 
   settings.web_security = STATE_DISABLED;
 
+#ifdef DARK_INITIAL_PAGE
+  // Avoid white flash at startup or refresh by making this the default
+  // CSS.
+  // 'aHRtbCxib2R5e2JhY2tncm91bmQ6cmdiYSgxMDksIDExMSwgMTEyLCAxKTt9' stands for 'html,body{background:rgba(109, 111, 112, 1);}'.
+  const char* strCss = "data:text/css;charset=utf-8;base64,aHRtbCxib2R5e2JhY2tncm91bmQ6cmdiYSgxMDksIDExMSwgMTEyLCAxKTt9";
+  CefString(&settings.user_style_sheet_location).FromASCII(strCss);
+#endif
+    
   window_info.SetAsChild(contentView, 0, 0, content_rect.size.width, content_rect.size.height);
   
+
+    
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
                                 [str UTF8String], settings);
  
+  [self.delegate initUI:mainWnd];
+    
   // Show the window.
   [mainWnd display];
   [mainWnd makeKeyAndOrderFront: nil];
+  [NSApp requestUserAttention:NSInformationalRequest];
+  [NSApp unhide:nil];
 }
+
+
 
 // Handle the Openfile apple event. This is a custom apple event similar to the regular
 // Open event, but can handle file paths in the form "path[:lineNumber[:columnNumber]]".
@@ -443,8 +692,17 @@ extern NSMutableArray* pendingOpenFiles;
     NSWindow* targetWindow = [clientApp findTargetWindow];
     if (targetWindow) {
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
-      for (NSUInteger i = 0; i < [filenames count]; i++) {
-        g_handler->SendOpenFileCommand(browser, CefString([[filenames objectAtIndex:i] UTF8String]));
+      NSUInteger count = [filenames count];
+      if (count) {
+        std::string files = "[";
+        for (NSUInteger i = 0; i < count; i++) {
+          if (i > 0) {
+            files += ", ";
+          }
+          files += ("\"" + std::string([[filenames objectAtIndex:i] UTF8String]) + "\"");
+        }
+        files += "]";
+        g_handler->SendOpenFileCommand(browser, CefString(files));
       }
     }
   } else {
@@ -529,7 +787,7 @@ int main(int argc, char* argv[]) {
       if ([[NSFileManager defaultManager] fileExistsAtPath:devFile]) {
         startupUrl = [NSURL fileURLWithPath:devFile];
       }
-      
+
       if (startupUrl == nil) {
         // If the dev file wasn't found, look for /Contents/www/index.html
         NSString* indexFile = [bundlePath stringByAppendingString:@"/Contents/www/index.html"];
@@ -557,7 +815,7 @@ int main(int argc, char* argv[]) {
   
   // Create the application delegate and window.
   [delegate performSelectorOnMainThread:@selector(createApp:) withObject:nil
-                          waitUntilDone:NO];
+                          waitUntilDone:YES];
 
   // Run the application message loop.
   CefRunMessageLoop();
@@ -595,6 +853,14 @@ CefString AppGetProductVersionString() {
   [s appendString:@"/"];
   [s appendString:(NSString*)[[NSBundle mainBundle]
                               objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
+  CefString result = CefString([s UTF8String]);
+  return result;
+}
+
+CefString AppGetChromiumVersionString() {
+  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
+                           cef_version_info(2), cef_version_info(3),
+                           cef_version_info(4), cef_version_info(5)];
   CefString result = CefString([s UTF8String]);
   return result;
 }

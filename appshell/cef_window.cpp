@@ -35,11 +35,11 @@ struct HookData {
     }
     void Reset()
     {
-        mOldHook = NULL;
+        mhHook = NULL;
         mWindow = NULL;        
     }
 
-    HHOOK       mOldHook;
+    HHOOK       mhHook;
     cef_window* mWindow;
 } gHookData;
 
@@ -61,11 +61,11 @@ cef_window::~cef_window(void)
 static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code != HCBT_CREATEWND)
-        return CallNextHookEx(gHookData.mOldHook, code, wParam, lParam);
+        return CallNextHookEx(gHookData.mhHook, code, wParam, lParam);
     
     LPCREATESTRUCT lpcs = ((LPCBT_CREATEWND)lParam)->lpcs;
 
-    HHOOK nextHook = gHookData.mOldHook;
+    HHOOK nextHook = gHookData.mhHook;
 
     if (lpcs->lpCreateParams && lpcs->lpCreateParams == (LPVOID)gHookData.mWindow) 
     {
@@ -74,7 +74,8 @@ static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
         // Rest the hook data here since we've already hooked this window
         //  this allows for other windows to be created in the WM_CREATE handlers
         //  of subclassed windows
-        gHookData.Reset();
+        gHookData.mWindow = 0;
+
     }
 
     return CallNextHookEx(nextHook, code, wParam, lParam);
@@ -84,17 +85,19 @@ static LRESULT CALLBACK _HookProc(int code, WPARAM wParam, LPARAM lParam)
 static void _HookWindowCreate(cef_window* window)
 {
     // can only hook one creation at a time
-    if (gHookData.mOldHook || gHookData.mWindow) 
+    if (gHookData.mhHook || gHookData.mWindow) 
         return;
 
-    gHookData.mOldHook = ::SetWindowsHookEx(WH_CBT, _HookProc, NULL, ::GetCurrentThreadId());
+    gHookData.mhHook = ::SetWindowsHookEx(WH_CBT, _HookProc, NULL, ::GetCurrentThreadId());
     gHookData.mWindow = window;
 }
 
 // Disabled Hooking
 static void _UnHookWindowCreate()
 {
+   ::UnhookWindowsHookEx(gHookData.mhHook);
     gHookData.Reset();
+    
 }
 
 // Window Proc which receives messages from subclassed windows
@@ -186,6 +189,11 @@ BOOL cef_window::HandleNcDestroy()
     return TRUE;
 }
 
+BOOL cef_window::HandleCreate()
+{
+    return FALSE;
+}
+
 // PostNcDestroy base implementaiton
 void cef_window::PostNcDestroy()
 {
@@ -236,7 +244,7 @@ void cef_window::ScreenToNonClient(LPRECT r) const
 
 // Computes the client rect relative to the Window Rect
 //    Used to compute the clipping region, etc...
-void cef_window::ComputeLogicalClientRect(RECT& rectClient)
+void cef_window::ComputeLogicalClientRect(RECT& rectClient) const
 {
     WINDOWINFO wi ;
     ::ZeroMemory (&wi, sizeof (wi)) ;
@@ -255,7 +263,7 @@ void cef_window::ComputeLogicalClientRect(RECT& rectClient)
 }
 
 // Retrieves the window rect in logical coordinates
-void cef_window::ComputeLogicalWindowRect (RECT& rectWindow)
+void cef_window::ComputeLogicalWindowRect (RECT& rectWindow) const
 {
     RECT wr;
     GetWindowRect (&wr);

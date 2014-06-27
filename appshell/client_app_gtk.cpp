@@ -81,9 +81,11 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    // FIXME (jasonsanjose): hardcode "brackets"...why doesn't g_get_prgname() work here?
-    gchar *supportDir = g_strdup_printf("%s/brackets", g_get_user_config_dir());
-    return std::string(supportDir);
+    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), APP_NAME);
+    CefString result = CefString(supportDir);
+    g_free(supportDir);
+    
+    return result;
 }
 
 CefString ClientApp::AppGetDocumentsDirectory() 
@@ -92,7 +94,6 @@ CefString ClientApp::AppGetDocumentsDirectory()
     if (dir == NULL)  {
         return AppGetSupportDirectory();
     } else {
-        std::string documents_dir (dir);
-        return documents_dir;
+        return CefString(dir);
     }
 }

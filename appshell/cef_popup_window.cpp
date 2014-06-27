@@ -95,10 +95,25 @@ void cef_popup_window::InitSystemIcon()
     }
 }
 
+void cef_popup_window::SetClassStyles() 
+{
+    SetClassLong(mWnd, GCL_STYLE, CS_SAVEBITS);
+}
+
 // Subclasses the HWND and initializes the dark drawing code
 bool cef_popup_window::SubclassWindow(HWND wnd)
 {
      if (cef_host_window::SubclassWindow(wnd)) {
+
+        HWND hwndBrowser = GetBrowserHwnd();
+
+        if (CanUseAeroGlass() && hwndBrowser) {
+            RECT rectBrowser;
+            GetBrowserRect(rectBrowser);
+            ::MoveWindow(hwndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
+        }
+        
+        SetClassStyles();
         InitSystemIcon();
         GetBrowser()->GetHost()->SetFocus(true);
         return true;
@@ -106,10 +121,45 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
     return false;
 }
 
+// WM_SIZE handler
+BOOL cef_popup_window::HandleSize(BOOL bMinimize)
+{
+    if (CanUseAeroGlass()) {
+
+        HWND hwnd = GetBrowserHwnd();
+        if (!hwnd) 
+            return FALSE;
+
+        RECT rect;
+        GetBrowserRect(rect);
+
+        if (!bMinimize) 
+        {
+            HDWP hdwp = ::BeginDeferWindowPos(1);
+            hdwp = ::DeferWindowPos(hdwp, hwnd, NULL, rect.left, rect.top, ::RectWidth(rect), ::RectHeight(rect), SWP_NOZORDER);
+            ::EndDeferWindowPos(hdwp);
+        }
+
+        // For popup windows, we don't the CEF handler for WM_SIZE to 
+        //  move the window on us or it will trash the non-client area 
+        //  that the base class does for aero glass.
+        return TRUE;
+    }
+
+    // otherwise we don't have special requirements
+    //  so let the default CEF implemation for WM_SIZE reposition
+    //  the window at 0,0 in the client area...
+    return FALSE;
+}
+
 LRESULT cef_popup_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) 
+    switch (message)
     {
+    case WM_SIZE:
+        if (HandleSize(wParam == SIZE_MINIMIZED))
+            return 0L;
+        break;
     case WM_CLOSE:
         if (HandleClose())
             return 0L;

@@ -29,7 +29,8 @@ maxerr: 50, node: true */
     "use strict";
     
     var Logger = require("./Logger"),
-        Server = require("./Server");
+        Server = require("./Server"),
+        os     = require("os");
     
     /** @define {boolean} Whether debugger should be enabled at launch
      *
@@ -76,6 +77,9 @@ maxerr: 50, node: true */
      */
     function uncaughtExceptionHandler() {
         var args = Array.prototype.slice.call(arguments, 0);
+        args = args.map(function (arg) {
+            return arg instanceof Error ? arg.stack : arg;
+        });
         args.unshift("[Launcher] uncaught exception at top level, exiting.");
         Logger.error.apply(null, args);
         exit();
@@ -122,6 +126,11 @@ maxerr: 50, node: true */
             });
         };
         process._debugProcess(process.pid);
+    }
+
+    // Set environment variable to use built-in Node.js API for temp directory
+    if (!process.env["TMPDIR"] && !process.env["TMP"] && !process.env["TEMP"]) {
+        process.env["TMPDIR"] = process.env["TMP"] = process.env["TEMP"] = os.tmpdir();
     }
     
     exports.launch = launch;

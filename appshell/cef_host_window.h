@@ -20,7 +20,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "cef_dark_window.h"
+#include "cef_dark_aero_window.h"
 #include "include/cef_browser.h"
 #include "command_callbacks.h"
 #include "config.h"
@@ -28,11 +28,14 @@
 // This the base class for all windows which host a browser instance
 //  You must derive a from this class and implement GetBrowser()
 //  Or use cef_main_window or cef_popup_window which implement GetBrowser()
-
 #ifdef DARK_UI
-typedef cef_dark_window cef_host_window_base;
+    #ifdef DARK_AERO_GLASS
+        typedef cef_dark_aero_window cef_host_window_base;
+    #else
+        typedef cef_dark_window cef_host_window_base;
+    #endif
 #else
-typedef cef_window cef_host_window_base;
+    typedef cef_window cef_host_window_base;
 #endif
 
 class cef_host_window : public cef_host_window_base
@@ -44,17 +47,29 @@ public:
 
     virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);
     HWND SafeGetCefBrowserHwnd();
+    HWND GetBrowserHwnd();
+    bool SubclassWindow(HWND hWnd);
+
+    virtual BOOL CanUseAeroGlass() const;
+
+    BOOL GetBrowserRect(RECT& r) const;
 
 protected:
     // Must be impelemented in derived class
     virtual const CefRefPtr<CefBrowser> GetBrowser() = 0;
 
+    void RecomputeLayout();
+
     // Message Handlers 
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
+    BOOL HandleSize(BOOL bMinimize);
 
     // Command Implementation
     BOOL DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback = 0);
     BOOL DoCommand(const CefString& commandString, CefRefPtr<CommandCallback> callback = 0);
+
+    // Implementation
+    virtual void DoRepaintClientArea();
 
     // Helper to get a command string from command id
     CefString GetCommandString(UINT commandId);

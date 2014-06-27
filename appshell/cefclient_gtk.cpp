@@ -2,6 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#include "cefclient.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,10 +10,12 @@
 #include <sys/stat.h>
 #include "cefclient.h"
 #include "include/cef_app.h"
+#include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
+#include "client_switches.h"
 #include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
@@ -140,6 +143,7 @@ int main(int argc, char* argv[]) {
 
   g_appStartupTime = time(NULL);
 
+  gtk_init(&argc, &argv);
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
@@ -153,8 +157,6 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* window;
 
-  gtk_init(&argc, &argv);
-
   // Parse command line arguments.
   AppInitCommandLine(argc, argv);
 
@@ -167,17 +169,23 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
   }
-
-  szInitialUrl = AppGetRunningDirectory();
-  szInitialUrl.append("/dev/src/index.html");
-
-  if (!FileExists(szInitialUrl)) {
+  
+  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+  
+  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
+    szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+  } else {
     szInitialUrl = AppGetRunningDirectory();
-    szInitialUrl.append("/www/index.html");
-
+    szInitialUrl.append("/dev/src/index.html");
+  
     if (!FileExists(szInitialUrl)) {
-      if (GetInitialUrl() < 0)
-        return 0;
+      szInitialUrl = AppGetRunningDirectory();
+      szInitialUrl.append("/www/index.html");
+  
+      if (!FileExists(szInitialUrl)) {
+        if (GetInitialUrl() < 0)
+          return 0;
+      }
     }
   }
 
@@ -259,6 +267,11 @@ int main(int argc, char* argv[]) {
 }
 
 CefString AppGetProductVersionString() {
+  // TODO
+  return CefString("");
+}
+
+CefString AppGetChromiumVersionString() {
   // TODO
   return CefString("");
 }

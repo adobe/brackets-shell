@@ -68,11 +68,11 @@ public:
     { return ::PostMessage(mWnd, uMsg, wParam, lParam); }
 
     // Logistics
-    HWND GetSafeWnd() 
+    HWND GetSafeWnd() const
     { return (this != NULL) ? mWnd : NULL; }
 
     // Various Win API helpers
-    HMENU GetMenu() 
+    HMENU GetMenu() const
     { return ::GetMenu(mWnd); }
 
     BOOL UpdateWindow()
@@ -156,11 +156,14 @@ public:
     BOOL InvalidateRect(LPRECT lpRect, BOOL bErase = FALSE)
     { return ::InvalidateRect(mWnd, lpRect, bErase); }
 
-    BOOL IsZoomed() 
+    BOOL IsZoomed() const
     { return ::IsZoomed(mWnd); }
 
-    BOOL IsIconic() 
+    BOOL IsIconic() const
     { return ::IsIconic(mWnd); }
+
+    BOOL IsWindowVisible() const 
+    { return ::IsWindowVisible(mWnd); }
 
     void SetStyle(DWORD dwStyle) 
     { SetWindowLong(GWL_STYLE, dwStyle); }
@@ -192,6 +195,9 @@ public:
     void SetRedraw(BOOL bRedraw)
     { DefaultWindowProc(WM_SETREDRAW, (WPARAM)bRedraw, 0); }
 
+    HWND GetWindow(UINT uCmd) 
+    { return ::GetWindow(mWnd, uCmd); }
+
 protected:
     // Attributes - Protected Members
     HWND mWnd;
@@ -199,10 +205,11 @@ protected:
 
     // Implementation
     BOOL HandleNcDestroy();
+    BOOL HandleCreate();
     virtual void PostNcDestroy();
 
-    void ComputeLogicalClientRect(RECT& rectClient);
-    void ComputeLogicalWindowRect (RECT& rectWindow);
+    void ComputeLogicalClientRect(RECT& rectClient) const;
+    void ComputeLogicalWindowRect (RECT& rectWindow) const;
 
     BOOL TrackNonClientMouseEvents(bool track = true);
 };

@@ -49,24 +49,22 @@ protected:
     void RestoreWindowPlacement(const int showCmd);
 
     // Message Handlers
-    BOOL HandleEraseBackground();
+    BOOL HandleEraseBackground(HDC hdc);
     BOOL HandleCreate();
     BOOL HandleSetFocus(HWND hLosingFocus);
     BOOL HandleDestroy();
     BOOL HandleClose();
-    BOOL HandleSize(BOOL bMinimize);
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
     BOOL HandleCommand(UINT commandId);
     BOOL HandleExitCommand();
     BOOL HandlePaint();
     BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
     BOOL HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData);
+    BOOL HandleSize(BOOL bMinimize);
 
     // Implementation
     virtual void PostNcDestroy();
-    virtual void GetCefBrowserRect(RECT& rect);
     virtual const CefRefPtr<CefBrowser> GetBrowser();
-    virtual void DoRepaintClientArea();
 
     // Find helper
     static BOOL CALLBACK FindSuitableBracketsInstanceHelper(HWND hwnd, LPARAM lParam);

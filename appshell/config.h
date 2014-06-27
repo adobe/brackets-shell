@@ -26,6 +26,9 @@
 // Application name used in native code. This name is *not* used in resources.
 
 #ifdef OS_WIN
+// MAX_PATH is only 260 chars which really isn't big enough for really long unc pathnames
+//  so use this constant instead which accounts for some really long pathnames
+#define MAX_UNC_PATH 4096
 // Name of group (if any) that application prefs/settings/etc. are stored under
 // This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
@@ -33,7 +36,7 @@
 #define WINDOW_TITLE APP_NAME
 
 // Paths for node resources are relative to the location of the appshell executable
-#define NODE_EXECUTABLE_PATH "Brackets-node.exe"
+#define NODE_EXECUTABLE_PATH "node.exe"
 #define NODE_CORE_PATH "node-core"
 #define FIRST_INSTANCE_MUTEX_NAME	(APP_NAME L".Shell.Instance")
 #endif
@@ -52,7 +55,7 @@
 #ifdef OS_LINUX
 // TODO linux preferences
 //#define GROUP_NAME @""
-//#define APP_NAME @"Brackets"
+#define APP_NAME "Brackets"
 //#define WINDOW_TITLE APP_NAME
 
 // Path for node resources is in dependencies dir and relative to the location of the appshell executable
@@ -65,3 +68,7 @@
 
 // Comment out this line to enable OS themed drawing
 #define DARK_UI 
+#define DARK_AERO_GLASS
+#define CUSTOM_TRAFFIC_LIGHTS
+#define LIGHT_CAPTION_TEXT
+
