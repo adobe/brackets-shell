@@ -238,6 +238,10 @@ BOOL cef_main_window::HandleClose()
         BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
         if (closing) 
         {
+            if (!g_handler->CanCloseBrowser(GetBrowser())) {
+                PostMessage(WM_CLOSE, 0 ,0);
+                return TRUE;
+            }
             ::RemoveProp(hwnd, ::kCefWindowClosingPropName);
         } 
         else 
