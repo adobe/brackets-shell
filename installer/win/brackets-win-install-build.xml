@@ -11,7 +11,7 @@ default="build.mul">
   <!-- Product & version labeling -->
   <!-- See also: product name definitions in Brackets_<locale>.wxl -->
   <property name="product.shortname" value="Brackets"/>
-  <property name="product.sprint.number" value="42"/>
+  <property name="product.sprint.number" value="43"/>
   <property name="product.version.number" value="0.${product.sprint.number}"/>
   <property name="product.version.name" value="Sprint ${product.sprint.number}"/>
   <property name="product.fullname" value="Brackets ${product.version.name}"/>
