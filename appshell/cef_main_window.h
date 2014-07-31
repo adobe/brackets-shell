@@ -46,7 +46,7 @@ protected:
     // Initalization - Protected Members
     void SaveWindowRestoreRect();
     void LoadWindowRestoreRect(int& showCmd);
-    void RestoreWindowPlacement(const int showCmd);
+    void RestoreWindowPlacement(int showCmd);
 
     // Message Handlers
     BOOL HandleEraseBackground(HDC hdc);

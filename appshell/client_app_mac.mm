@@ -87,10 +87,20 @@ std::string ClientApp::GetExtensionJSSource()
 //   which is marked by the existence of a file named "makePortable" in the same folder as .app.
 bool ClientApp::IsPortableInstall()
 {
-    std::string filename = ClientApp::AppGetAppDirectory();
-    filename += "/makePortable";
+    std::string filename;
+	GetPortableInstallFilename(filename);
     NSString * nsFilename = [NSString stringWithUTF8String:filename.c_str()];
     return [[NSFileManager defaultManager] fileExistsAtPath:nsFilename];
+}
+
+// return the name of the portable install data file
+void ClientApp::GetPortableInstallFilename(std::wstring& filename)
+{
+	// the existence of this file in the same folder as the Brackets application will
+	//   cause the application to be run in a "portable" state
+	filename = ClientApp::AppGetAppDirectory();
+	filename += L"/";
+	filename += MAKEPORTABLE_BRACKETS_FILENAME;
 }
 
 // returns the directory to which the app has been installed

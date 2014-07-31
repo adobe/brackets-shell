@@ -32,6 +32,15 @@
 extern HINSTANCE                hInst;
 extern CefRefPtr<ClientHandler> g_handler;
 
+// portable build file structure
+typedef struct {
+	char szSignature[18];		// MAKEPORTABLE_BRACKETS_SIGNATURE_STRING
+	unsigned short uVersion;	// current file version
+	RECT rcWindow;
+	RECT rcRestored;
+	UINT showCmd;
+} sCefMainWindowData;
+
 // constants
 static const wchar_t        kWindowClassname[] = L"CEFCLIENT";
 static const wchar_t        kWindowPostionFolder[] = L"Window Position";
@@ -326,26 +335,22 @@ void cef_main_window::SaveWindowRestoreRect()
             else
             {
                 // for portable installations, serialize to a file in the app folder
-                std::wstring filename = ClientApp::AppGetSupportDirectory();
-                filename += L"\\lastWindowState.dat";
+				sCefMainWindowData data;
+				memset(&data, 0, sizeof(sCefMainWindowData));
+				strcpy(data.szSignature, MAKEPORTABLE_BRACKETS_SIGNATURE_STRING);
+				data.uVersion = MAKEPORTABLE_BRACKETS_VERSION_CURRENT;
+				data.rcWindow = mWindowRect;
+				data.rcRestored = mRestoredRect;
+				data.showCmd = wp.showCmd;
+
+                std::wstring filename;
+				ClientApp::GetPortableInstallFilename(filename);
                 HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_WRITE,
                     FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
                 if (INVALID_HANDLE_VALUE != hFile)
                 {
-                    DWORD dwBytesWritten;
-                    std::stringstream streambuf;
-                    streambuf << mWindowRect.left << ' ';
-                    streambuf << mWindowRect.top << ' ';
-                    streambuf << mWindowRect.right << ' ';
-                    streambuf << mWindowRect.bottom << ' ';
-                    streambuf << mRestoredRect.left << ' ';
-                    streambuf << mRestoredRect.top << ' ';
-                    streambuf << mRestoredRect.right << ' ';
-                    streambuf << mRestoredRect.bottom << ' ';
-                    streambuf << wp.showCmd;
-                    std::string contents = streambuf.str();
-                    ::WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL);
-
+                    DWORD dwBytesWritten = 0L;
+					::WriteFile(hFile, (LPVOID)&data, sizeof(data), &dwBytesWritten, NULL);
                     ::CloseHandle(hFile);
                 }
            }
@@ -381,28 +386,29 @@ void cef_main_window::LoadWindowRestoreRect(int& showCmd)
     else
     {
 		// for portable installations, serialize to a file in the app folder
-		std::wstring filename = ClientApp::AppGetSupportDirectory();
-		filename += L"\\lastWindowState.dat";
+		std::wstring filename;
+		ClientApp::GetPortableInstallFilename(filename);
 		HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
 			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (INVALID_HANDLE_VALUE != hFile)
 		{
 			DWORD dwFileSize = ::GetFileSize(hFile, NULL);
 			DWORD dwBytesRead;
-			BYTE* buffer = (BYTE*)malloc(dwFileSize);
-			if (buffer && ::ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL))
+			sCefMainWindowData data;
+			if ((sizeof(sCefMainWindowData) == dwFileSize)
+				&& ::ReadFile(hFile, (LPVOID)&data, sizeof(sCefMainWindowData), &dwBytesRead, NULL)
+				&& (dwBytesRead == sizeof(sCefMainWindowData))
+				&& (strcmp(data.szSignature, MAKEPORTABLE_BRACKETS_SIGNATURE_STRING) == 0))
 			{
-				std::string contents((char*)buffer, dwBytesRead);
-				std::stringstream streambuf(contents);
-				streambuf >> mWindowRect.left;
-				streambuf >> mWindowRect.top;
-				streambuf >> mWindowRect.right;
-				streambuf >> mWindowRect.bottom;
-				streambuf >> mRestoredRect.left;
-				streambuf >> mRestoredRect.top;
-				streambuf >> mRestoredRect.right;
-				streambuf >> mRestoredRect.bottom;
-				streambuf >> showCmd;
+				if (data.uVersion <= MAKEPORTABLE_BRACKETS_VERSION_1)
+				{
+					mWindowRect = data.rcWindow;
+					mRestoredRect = data.rcRestored;
+					showCmd = data.showCmd;
+				}
+
+				// future version struct additions go here...
+				// if (data.uVersion <= MAKEPORTABLE_BRACKETS_VERSION_xx) { }
 			}
 			::CloseHandle(hFile);
 		}
@@ -411,7 +417,7 @@ void cef_main_window::LoadWindowRestoreRect(int& showCmd)
 
 // Initialization helper -- 
 //  Loads the Restores data and positions the window in its previously saved state
-void cef_main_window::RestoreWindowPlacement(const int showCmd)
+void cef_main_window::RestoreWindowPlacement(int showCmd)
 {
     if (showCmd == SW_MAXIMIZE)
     {

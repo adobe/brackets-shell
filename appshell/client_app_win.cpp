@@ -161,12 +161,22 @@ bool ClientApp::IsPortableInstall()
 
     if (isPortableInstall == UNINITIALIZED)
     {
-	    std::wstring filename = ClientApp::AppGetAppDirectory();
-	    filename += L"/makePortable";
+	    std::wstring filename;
+		GetPortableInstallFilename(filename);
 	    HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
 		    FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	    isPortableInstall = (INVALID_HANDLE_VALUE != hFile) ? ISPORTABLE : ISNOTPORTABLE;
 	    ::CloseHandle(hFile);
     }
 	return (isPortableInstall == ISPORTABLE) ? true : false;
+}
+
+// return the name of the portable install data file
+void ClientApp::GetPortableInstallFilename(std::wstring& filename)
+{
+	// the existence of this file in the same folder as the Brackets application will
+	//   cause the application to be run in a "portable" state
+	filename = ClientApp::AppGetAppDirectory();
+	filename += L"/";
+	filename += MAKEPORTABLE_BRACKETS_FILENAME;
 }
