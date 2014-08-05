@@ -318,7 +318,7 @@ bool ClientApp::OnProcessMessageReceived(
             
             context->Exit();
             
-            callback_map_.erase(callbackId);
+            //callback_map_.erase(callbackId);
         } else if (message->GetName() == "executeCommand") {
             // This is called by the browser process to execute a command via JavaScript
             // 
