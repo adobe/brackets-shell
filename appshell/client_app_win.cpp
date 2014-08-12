@@ -178,5 +178,5 @@ void ClientApp::GetPortableInstallFilename(std::wstring& filename)
 	//   cause the application to be run in a "portable" state
 	filename = ClientApp::AppGetAppDirectory();
 	filename += L"/";
-	filename += MAKEPORTABLE_BRACKETS_FILENAME;
+	filename += L MAKEPORTABLE_BRACKETS_FILENAME;
 }

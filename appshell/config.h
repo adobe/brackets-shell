@@ -75,7 +75,7 @@
 // filename of Brackets' make portable switch
 // the existence of this file in the same folder as the Brackets application will
 //   cause the application to be run in a "portable" state
-#define MAKEPORTABLE_BRACKETS_FILENAME			L"portable"
+#define MAKEPORTABLE_BRACKETS_FILENAME			"portable"
 #define MAKEPORTABLE_BRACKETS_SIGNATURE_STRING	"BracketsPortable"
 #define MAKEPORTABLE_BRACKETS_VERSION_1			1
 #define MAKEPORTABLE_BRACKETS_VERSION_CURRENT	MAKEPORTABLE_BRACKETS_VERSION_1

@@ -92,7 +92,13 @@ class ClientApp : public CefApp,
   CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
   static bool IsPortableInstall();
-  static void GetPortableInstallFilename(std::wstring& filename);
+  static void GetPortableInstallFilename(
+#ifdef OS_WIN
+                                         std::wstring& filename
+#else
+                                         std::string& filename
+#endif //OS_WIN
+                                         );
   static CefString AppGetAppDirectory();
   static CefString AppGetSupportDirectory();
   static CefString AppGetDocumentsDirectory();

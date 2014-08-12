@@ -94,12 +94,12 @@ bool ClientApp::IsPortableInstall()
 }
 
 // return the name of the portable install data file
-void ClientApp::GetPortableInstallFilename(std::wstring& filename)
+void ClientApp::GetPortableInstallFilename(std::string& filename)
 {
 	// the existence of this file in the same folder as the Brackets application will
 	//   cause the application to be run in a "portable" state
 	filename = ClientApp::AppGetAppDirectory();
-	filename += L"/";
+	filename += "/";
 	filename += MAKEPORTABLE_BRACKETS_FILENAME;
 }
 
