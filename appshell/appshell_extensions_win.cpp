@@ -1526,13 +1526,13 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
                     lpaccelNew[newItem].key = ascii;
                 } else {
                     // Get the virtual key code for non-alpha-numeric characters.
-                    int keyCode = ::VkKeyScan(ascii);
-                    WORD vKey = (short)(keyCode & 0x000000FF);
-                    bool isAltGr = ((keyCode & 0x0000FF00) >> 8) >= 6;
+                    SHORT keyCode = ::VkKeyScan(ascii);
+                    WORD vKey = (WORD)(keyCode & 0xFF);
+                    bool isAltGr = ((keyCode & 0x600) == 0x600);
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
-                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);    
+                    UINT unshiftedChar = ::MapVirtualKey(vKey, MAPVK_VK_TO_CHAR);    
                     bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
   
                     // If one of the following is found, then the shortcut is not available for the
