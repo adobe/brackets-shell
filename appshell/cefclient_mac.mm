@@ -691,6 +691,17 @@ extern NSMutableArray* pendingOpenFiles;
     ClientApplication * clientApp = (ClientApplication *)theApplication;
     NSWindow* targetWindow = [clientApp findTargetWindow];
     if (targetWindow) {
+      // if files are droppend and the Open/Save Dialog is visible, then browser is NULL
+      // find the main window. If this is not the main window, then it's a modal dialog like open or save. The main
+      // window has a reference to the CerBrowser instance
+      // This fixes https://github.com/adobe/brackets/issues/7752
+      if (![targetWindow isMainWindow]) {
+          targetWindow = [targetWindow parentWindow];
+      }
+
+      // move App window to front
+      [targetWindow orderFront: self];
+        
       CefRefPtr<CefBrowser> browser = ClientHandler::GetBrowserForNativeWindow(targetWindow);
       NSUInteger count = [filenames count];
       if (count) {
