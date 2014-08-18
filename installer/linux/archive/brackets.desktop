@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Brackets
+Type=Application
+Categories=Development
+Exec=brackets %U
+Icon=brackets
+MimeType=text/html;text/css;application/javascript;text/javascript;

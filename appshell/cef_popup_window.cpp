@@ -95,6 +95,11 @@ void cef_popup_window::InitSystemIcon()
     }
 }
 
+void cef_popup_window::SetClassStyles() 
+{
+    SetClassLong(mWnd, GCL_STYLE, CS_SAVEBITS);
+}
+
 // Subclasses the HWND and initializes the dark drawing code
 bool cef_popup_window::SubclassWindow(HWND wnd)
 {
@@ -108,6 +113,7 @@ bool cef_popup_window::SubclassWindow(HWND wnd)
             ::MoveWindow(hwndBrowser, rectBrowser.left, rectBrowser.top, ::RectWidth(rectBrowser), ::RectHeight(rectBrowser), FALSE);
         }
         
+        SetClassStyles();
         InitSystemIcon();
         GetBrowser()->GetHost()->SetFocus(true);
         return true;

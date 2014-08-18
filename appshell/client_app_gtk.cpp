@@ -81,7 +81,7 @@ double ClientApp::GetElapsedMilliseconds()
 
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), g_get_prgname());
+    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), APP_NAME);
     CefString result = CefString(supportDir);
     g_free(supportDir);
     

@@ -91,6 +91,7 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     NSTrackingArea *focusTrackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
                                                                          options:focusTrackingAreaOptions owner:self userInfo:nil];
     [self addTrackingArea:focusTrackingArea];
+    [focusTrackingArea release];
 }
 
 - (void)mouseDown:(NSEvent *)theEvent {

@@ -118,7 +118,7 @@ void ClientHandler::CloseMainWindow() {
 @implementation PopupClientWindowDelegate
 
 - (id) init {
-  [super init];
+  self = [super init];
   isReallyClosing = NO;
   fullScreenButtonView = nil;
   customTitlebar = nil;
@@ -245,7 +245,7 @@ void ClientHandler::CloseMainWindow() {
         windowButton = [theWin standardWindowButton:NSWindowZoomButton];
         [windowButton setHidden:YES];
         
-        TrafficLightsViewController     *tlController = [[TrafficLightsViewController alloc] init];
+        TrafficLightsViewController     *tlController = [[[TrafficLightsViewController alloc] init] autorelease];
         
         if ([NSBundle loadNibNamed: @"TrafficLights" owner: tlController])
         {
@@ -266,7 +266,7 @@ void ClientHandler::CloseMainWindow() {
         windowButton = [theWin standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
-        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
+        FullScreenViewController     *fsController = [[[FullScreenViewController alloc] init] autorelease];
         if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
         {
             NSRect oldFrame = [fsController.view frame];
