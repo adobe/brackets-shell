@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 
+<!--
     Copyright (c) Microsoft Corporation.  All rights reserved.
 
     The use and distribution terms for this software are covered by the
@@ -15,36 +15,38 @@
 -->
 <WixLocalization Culture="fr-fr" xmlns="http://schemas.microsoft.com/wix/2006/localization">
     <String Id="LicenseRtf" Overridable="yes">EULA_fr-fr.rtf</String>
-    
+
     <String Id="ProductName">Brackets</String>
     <String Id="ShortProductName">Brackets</String>
-  
+
     <String Id="LanguageID" Overridable="yes">1036</String>
-        
+
     <String Id="StandardDlg_Title" Overridable="yes">Programme d’installation de [ProductName]</String>
     <String Id="CancelDlg_Title" Overridable="yes">Programme d’installation de [ProductName]</String>
-    
+
+    <String Id="WixUICancel" Overridable="yes">Annuler</String>
+
     <String Id="InstallDirDlgTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Dossier de destination pour !(loc.ShortProductName)</String>
     <String Id="BrowseDlgTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Changement de dossier de destination pour !(loc.ShortProductName)</String>
     <String Id="VerifyReadyDlgInstallTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Installer !(loc.ShortProductName)</String>
-    
+
     <String Id="ProgressDlgTitleInstalling" Overridable="yes">{\WixUI_Font_BannerTitle}Installation de !(loc.ShortProductName)</String>
     <String Id="ProgressDlgTextInstalling" Overridable="yes">Veuillez patienter pendant l’installation de !(loc.ShortProductName).</String>
     <String Id="ProgressDlgTitleRemoving" Overridable="yes">{\WixUI_Font_BannerTitle}Désinstallation de !(loc.ShortProductName)</String>
     <String Id="ProgressDlgTextRemoving" Overridable="yes">Veuillez patienter pendant la désinstallation de !(loc.ShortProductName).</String>
-    
+
     <String Id="ProgressDlgStatusLabel" Overridable="yes">Progression :</String>
-    
+
     <String Id="ExitDialogTitleInstall" Overridable="yes">{\WixUI_Font_BannerTitle}Installation de !(loc.ShortProductName) terminée</String>
     <String Id="ExitDialogTitleUninstall" Overridable="yes">{\WixUI_Font_BannerTitle}Désinstallation de !(loc.ShortProductName) terminée</String>
-    
+
     <String Id="UserExitDescription1" Overridable="yes">Procédure d’installation interrompue. Votre système n’a pas été modifié.</String>
 
     <String Id="UserExitDescription2" Overridable="yes">Cliquez sur Terminer pour quitter.</String>
     <String Id="VerifyReadyDlgRemoveTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Désinstaller !(loc.ShortProductName)</String>
-    
+
     <String Id="MaintenanceTypeDlgTitle" Overridable="yes">Supprimer l’installation</String>
-    <String Id="XpNotSupported">Cette application n’est prise en charge que sous Windows Vista, Windows Server 2008 et versions ultérieures.</String>
+    <String Id="XpNotSupported">[ProductName] n’est prise en charge que sous Windows Vista, Windows Server 2008 et versions ultérieures.</String>
     <String Id="ExitDialogBonjour">Pour le couplage automatisé de périphériques, nous vous recommandons d’installer l’application Bonjour, qui se trouve dans le dossier !(loc.ShortProductName) sous [INSTALLDIR]BonjourPSSetup.exe.</String>
     <String Id="ExitDialogCheckInstallGuide">Reportez-vous au guide d’installation pour savoir comment installer l’extension Chrome.</String>
     <String Id="ShortcutDescription">Raccourci vers !(loc.ShortProductName)</String>
@@ -53,8 +55,8 @@
     <String Id="ExitDialogTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Procédure de l’assistant d’installation de [ProductName] terminée</String>
     <String Id="VerifyReadyDlgInstallText" Overridable="yes">Cliquez sur Installer pour lancer la procédure ou sur Annuler pour quitter.</String>
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Cliquez sur Supprimer pour désinstaller !(loc.ShortProductName) ou sur Annuler pour quitter.</String>
-    
-      
+
+
     <!-- these strings aren't necessarily used but they were modified by the adobe loc team after they reviewed the wix source fr-fr wxl file.
     Adding them here if it works to call multiple loc files with the light command that are part of the same culture -->
       <String Id="WixUIPrint" Overridable="yes">&amp;Imprimer</String>
