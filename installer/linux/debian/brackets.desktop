@@ -5,3 +5,4 @@ Categories=Development
 Exec=/opt/brackets/brackets %U
 Icon=brackets
 MimeType=text/html;
+Keywords=Text;Editor;Write;Web;Development;

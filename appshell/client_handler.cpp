@@ -353,8 +353,13 @@ void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const Cef
   std::string fileArrayStr(fileArray);
   // FIXME: Use SendJSCommand once it supports parameters
   std::string cmd = "require('command/CommandManager').execute('file.openDroppedFiles'," + fileArrayStr + ")";
-  browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
+
+  // if files are droppend and the Open Dialog is visible, then browser is NULL
+  // This fixes https://github.com/adobe/brackets/issues/7752
+  if (browser) {
+    browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
                                 browser->GetMainFrame()->GetURL(), 0);
+  }
 }
 
 void ClientHandler::DispatchCloseToNextBrowser()
