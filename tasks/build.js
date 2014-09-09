@@ -234,10 +234,10 @@ module.exports = function (grunt) {
         grunt.file.write("installer/linux/debian/package-root/DEBIAN/control", content);
         
         var done = this.async(),
-            sprint = semver.parse(grunt.config("pkg").version).minor;
+            release = semver.parse(grunt.config("pkg").version).minor;
         
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
-            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.deb");
+            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Release " + release + " " + common.arch() + "-bit.deb");
         }).then(function () {
             done();
         }, function (err) {
@@ -251,10 +251,10 @@ module.exports = function (grunt) {
         grunt.task.requires(["package"]);
 
         var done = this.async(),
-            sprint = semver.parse(grunt.config("pkg").version).minor;
+            release = semver.parse(grunt.config("pkg").version).minor;
 
         spawn(["bash build_archive.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
-            return common.rename("installer/linux/brackets.tar.gz", "installer/linux/Brackets Sprint " + sprint + " " + common.arch() + "-bit.tar.gz");
+            return common.rename("installer/linux/brackets.tar.gz", "installer/linux/Brackets Release " + release + " " + common.arch() + "-bit.tar.gz");
         }).then(function () {
             done();
         }, function (err) {
