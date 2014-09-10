@@ -92,7 +92,7 @@ module.exports = function (grunt) {
         );
         text = safeReplace(
             text,
-            /(Release )([0-9]+)/,
+            /(Release 0\.)([0-9]+)/,
             "$1" + release
         );
         grunt.file.write(versionRcPath, text);
