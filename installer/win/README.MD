@@ -35,8 +35,8 @@ brackets       > grunt set-release --release=NN
 brackets-shell > grunt set-release --release=NN
 
 ## To rev the Brackets release number manually
-1. Open brackets-win-install-build.xml and change `product.release.number`
-2. Open brackets-shell\installer\mac\buildInstaller.sh and change `releaseName`
+1. Open brackets-win-install-build.xml and change `product.release.number.minor`, and, for a major release, `product.release.number.major` as well
+2. Open brackets-shell\installer\mac\buildInstaller.sh and change `dmgName`
 3. Open Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
 4. Open brackets-shell\appshell\version.rc and change `FILEVERSION` and `"FileVersion"`
 5. Open brackets-shell\appshell\mac\Info.plist and change `CFBundleVersion` and `CFBundleShortVersionString`

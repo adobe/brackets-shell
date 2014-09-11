@@ -234,7 +234,8 @@ module.exports = function (grunt) {
         grunt.file.write("installer/linux/debian/package-root/DEBIAN/control", content);
         
         var done = this.async(),
-            release = semver.parse(grunt.config("pkg").version).minor;
+            version = semver.parse(grunt.config("pkg").version),
+            release = version.major + "." + version.minor;
         
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
             return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Release " + release + " " + common.arch() + "-bit.deb");
@@ -251,7 +252,8 @@ module.exports = function (grunt) {
         grunt.task.requires(["package"]);
 
         var done = this.async(),
-            release = semver.parse(grunt.config("pkg").version).minor;
+            version = semver.parse(grunt.config("pkg").version),
+            release = version.major + "." + version.minor;
 
         spawn(["bash build_archive.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
             return common.rename("installer/linux/brackets.tar.gz", "installer/linux/Brackets Release " + release + " " + common.arch() + "-bit.tar.gz");
