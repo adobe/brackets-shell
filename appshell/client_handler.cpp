@@ -104,13 +104,13 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	} else if (browser->IsPopup()) {
+  } else if (browser->IsPopup()) {
       // Remove the record for DevTools popup windows.
       std::set<std::string>::iterator it =
           m_OpenDevToolsURLs.find(browser->GetMainFrame()->GetURL());
       if (it != m_OpenDevToolsURLs.end())
         m_OpenDevToolsURLs.erase(it);
-	}
+  }
 
     browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
   }
@@ -118,6 +118,21 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   if (m_quitting) {
     DispatchCloseToNextBrowser();
   }
+}
+
+bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                                 CefRefPtr<CefFrame> frame,
+                                 const CefString& target_url,
+                                 const CefString& target_frame_name,
+                                 const CefPopupFeatures& popupFeatures,
+                                 CefWindowInfo& windowInfo,
+                                 CefRefPtr<CefClient>& client,
+                                 CefBrowserSettings& settings,
+                                 bool* no_javascript_access) {
+  windowInfo.width = popupFeatures.width;
+  windowInfo.height = popupFeatures.height;
+
+  return false;
 }
 
 std::vector<CefString> gDroppedFiles;
@@ -401,21 +416,21 @@ void ClientHandler::DispatchCloseToNextBrowser()
 
 void ClientHandler::AbortQuit()
 {
-	m_quitting = false;
+  m_quitting = false;
 
-	// Notify all browsers that quit was aborted
-	BrowserWindowMap::const_iterator i, last = browser_window_map_.end();
-	for (i = browser_window_map_.begin(); i != last; i++)
-	{
-		CefRefPtr<CefBrowser> browser = i->second;
-		SendJSCommand(browser, APP_ABORT_QUIT);
-	}
+  // Notify all browsers that quit was aborted
+  BrowserWindowMap::const_iterator i, last = browser_window_map_.end();
+  for (i = browser_window_map_.begin(); i != last; i++)
+  {
+    CefRefPtr<CefBrowser> browser = i->second;
+    SendJSCommand(browser, APP_ABORT_QUIT);
+  }
 }
 
 // static
 void ClientHandler::CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates) {
-	appshell_extensions::CreateProcessMessageDelegates(delegates);
+  appshell_extensions::CreateProcessMessageDelegates(delegates);
 }
 
 // static
