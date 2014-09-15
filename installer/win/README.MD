@@ -28,14 +28,14 @@ Normally, the installer scripts are run via Jenkins on the build machine http://
     * Copy these two files to _(wix-install-dir)_\bin
 9. You may need to locally edit `wix.base` in brackets-win-install-build.xml if the Wix install folder doesn't match what's hardcoded there
 
-## Update Sprint Number with Grunt
-To rev the Brackets sprint number with Grunt, both brackets-shell and brackets repositories must be updated. For the initial Grunt setup, see: https://github.com/adobe/brackets/wiki/Grunt-Setup.
+## Update Release Number with Grunt
+To rev the Brackets release number with Grunt, both brackets-shell and brackets repositories must be updated. For the initial Grunt setup, see: https://github.com/adobe/brackets/wiki/Grunt-Setup.
 
-brackets       > grunt set-sprint --sprint=NN
-brackets-shell > grunt set-sprint --sprint=NN
+brackets       > grunt set-release --release=NN
+brackets-shell > grunt set-release --release=NN
 
-## To rev the Brackets sprint number manually
-1. Open brackets-win-install-build.xml and change `product.sprint.number`
+## To rev the Brackets release number manually
+1. Open brackets-win-install-build.xml and change `product.release.number`
 2. Open brackets-shell\installer\mac\buildInstaller.sh and change `releaseName`
 3. Open Brackets.wxs and replace the `StartMenuShortcut` GUID property with a newly generated GUID
 4. Open brackets-shell\appshell\version.rc and change `FILEVERSION` and `"FileVersion"`
