@@ -69,16 +69,16 @@ module.exports = function (grunt) {
         text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
-            /<property name="product\.release\.number" value="([0-9]+)"\/>/,
-            '<property name="product.release.number" value="' + release + '"/>'
+            /<property name="product\.release\.number\.minor" value="([0-9]+)"\/>/,
+            '<property name="product.release.number.minor" value="' + release + '"/>'
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
         
-        // 3. Open installer/mac/buildInstaller.sh and change `releaseName`
+        // 3. Open installer/mac/buildInstaller.sh and change `dmgName`
         text = grunt.file.read(buildInstallerScriptPath);
         text = safeReplace(
             text,
-            /( Release )([0-9]+)/,
+            /( Release [0-9]+\.)([0-9]+)/,
             "$1" + release
         );
         grunt.file.write(buildInstallerScriptPath, text);
@@ -92,7 +92,7 @@ module.exports = function (grunt) {
         );
         text = safeReplace(
             text,
-            /(Release 0\.)([0-9]+)/,
+            /(Release [0-9]+\.)([0-9]+)/,
             "$1" + release
         );
         grunt.file.write(versionRcPath, text);
