@@ -181,7 +181,7 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
         "    console.error(msg);" <<
         "  </script>" <<
         "</head>" <<
-        "<body><a class='debug logo' onclick='brackets.app.showDeveloperTools()'>&nbsp;</a></body></html>";
+        "<body><a class='debug logo' onclick='brackets.app.showDeveloperTools()' title='Click to view loading error in Developer Tools'>&nbsp;</a></body></html>";
   frame->LoadString(ss.str(), failedUrl);
 }
 
