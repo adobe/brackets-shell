@@ -5,7 +5,7 @@ This readme describes how the .msi installer is created for Brackets on Windows.
 1. grunt installer
 
 ## System Setup
-Normally, the installer scripts are run via Jenkins on the build machine http://win-agent186.macromedia.com:8080/. These are instructions for setting up a _new_ build machine:
+Normally, the installer scripts are run via Jenkins on our build machine. These are instructions for setting up a _new_ build machine:
 
 1. Download Ant; unzip it into a path (ideally a path with no spaces -- see below)
 2. Download & install a JDK (the full SDK, _not_ just a JRE)
