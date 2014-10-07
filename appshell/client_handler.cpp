@@ -15,6 +15,11 @@
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
+#if OS_WIN
+#include "cef_main_window.h"
+extern cef_main_window* gMainWnd;
+#endif
+
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
@@ -66,6 +71,111 @@ bool ClientHandler::OnProcessMessageReceived(
   }
     
   return handled;
+}
+
+
+static void SetValue(const std::string& name, const std::string& value, CefWindowInfo& windowInfo) {
+    if (name == "height") {
+        windowInfo.height = ::atoi(value.c_str());
+    } else if (name == "width") {
+        windowInfo.width = ::atoi(value.c_str());
+    }
+ }
+
+static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
+    std::string name;
+    std::string value;
+    bool foundAssignmentToken = false;
+
+    for (unsigned i = 0; i < params.length(); i++) {
+        if (params[i] == '&') {
+            std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+            std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+            SetValue(name, value, windowInfo);
+            name.clear();
+            value.clear();
+            foundAssignmentToken = false;
+        } else if (params[i] == '=') {
+            foundAssignmentToken = true;
+        } else if (!foundAssignmentToken) {
+            name += params[i];
+        } else {
+            value+= params[i];
+        }
+    }
+
+    // set the last parsed value that didn't end with an &
+    SetValue(name, value, windowInfo);
+ }
+
+ static void ComputePopupPlacement(CefWindowInfo& windowInfo)
+ {
+#if OS_WIN
+     RECT rectMainWnd;
+     gMainWnd->GetWindowRect(&rectMainWnd);
+
+     int mW = ::RectWidth(rectMainWnd);
+     int mH = ::RectHeight(rectMainWnd);
+     int cW = windowInfo.width;
+     int cH = windowInfo.height;
+
+     windowInfo.x = (rectMainWnd.left + (mW /2)) - (cW / 2);
+     windowInfo.y = (rectMainWnd.top + (mH /2)) - (cH / 2);
+
+     // don't go offscreen
+     if (windowInfo.x < 0) windowInfo.x = 0;
+     if (windowInfo.y < 0) windowInfo.y = 0;
+
+     HMONITOR hm = ::MonitorFromWindow(gMainWnd->GetSafeWnd(), MONITOR_DEFAULTTONEAREST); 
+     MONITORINFO mi = {0};
+     mi.cbSize = sizeof (mi);
+
+     GetMonitorInfo(hm, &mi);
+
+     if (windowInfo.width > ::RectWidth(mi.rcWork)) {
+         windowInfo.x = mi.rcWork.left;
+         windowInfo.width = mi.rcWork.right - windowInfo.x;
+     }
+
+     if (windowInfo.height > ::RectHeight(mi.rcWork)) {
+         windowInfo.y = mi.rcWork.top;
+         windowInfo.height = mi.rcWork.bottom - windowInfo.y;
+     }
+#endif
+ }
+
+
+bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefFrame> frame,
+                             const CefString& target_url,
+                             const CefString& target_frame_name,
+                             const CefPopupFeatures& popupFeatures,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             bool* no_javascript_access) {
+
+    std::string address = target_url.ToString();
+    std::string url;
+    std::string params;
+    bool foundParamToken = false;
+
+    for (unsigned i = 0; i < address.length(); i++) {
+        if (address[i] == L'?') {
+            foundParamToken = true;
+        } else if (!foundParamToken) {
+            url += address[i];
+        } else {
+            params += address[i];
+        }
+    }
+
+    if (url == "about:blank") {
+        ParseParams(params, windowInfo);
+        ComputePopupPlacement(windowInfo);
+    }
+    
+    return false;
 }
 
 void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
