@@ -15,6 +15,7 @@
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
+
 #if OS_WIN
 #include "cef_main_window.h"
 extern cef_main_window* gMainWnd;
@@ -108,43 +109,6 @@ static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
     SetValue(name, value, windowInfo);
  }
 
- static void ComputePopupPlacement(CefWindowInfo& windowInfo)
- {
-#if OS_WIN
-     RECT rectMainWnd;
-     gMainWnd->GetWindowRect(&rectMainWnd);
-
-     int mW = ::RectWidth(rectMainWnd);
-     int mH = ::RectHeight(rectMainWnd);
-     int cW = windowInfo.width;
-     int cH = windowInfo.height;
-
-     windowInfo.x = (rectMainWnd.left + (mW /2)) - (cW / 2);
-     windowInfo.y = (rectMainWnd.top + (mH /2)) - (cH / 2);
-
-     // don't go offscreen
-     if (windowInfo.x < 0) windowInfo.x = 0;
-     if (windowInfo.y < 0) windowInfo.y = 0;
-
-     HMONITOR hm = ::MonitorFromWindow(gMainWnd->GetSafeWnd(), MONITOR_DEFAULTTONEAREST); 
-     MONITORINFO mi = {0};
-     mi.cbSize = sizeof (mi);
-
-     GetMonitorInfo(hm, &mi);
-
-     if (windowInfo.width > ::RectWidth(mi.rcWork)) {
-         windowInfo.x = mi.rcWork.left;
-         windowInfo.width = mi.rcWork.right - windowInfo.x;
-     }
-
-     if (windowInfo.height > ::RectHeight(mi.rcWork)) {
-         windowInfo.y = mi.rcWork.top;
-         windowInfo.height = mi.rcWork.bottom - windowInfo.y;
-     }
-#endif
- }
-
-
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefFrame> frame,
                              const CefString& target_url,
@@ -190,7 +154,7 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     // Call the platform-specific code to hook up popup windows
     PopupCreated(browser);
   }
-
+    
   browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
 }
 
