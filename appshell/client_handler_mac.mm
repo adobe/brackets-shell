@@ -408,22 +408,7 @@ static bool centerMe = false;
 
 void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
 {
-#if 0
-    NSWindow* mainWindow = [m_MainHwnd window];
-    NSRect rect = [mainWindow frame];
-    
-    float mW = rect.size.width;
-    float mH = rect.size.height;
-    float cW = windowInfo.width;
-    float cH = windowInfo.height;
-    
-    windowInfo.x = (rect.origin.x + (mW /2)) - (cW / 2);
-    windowInfo.y = ((rect.origin.y + (mH /2)) + (cH / 2));
-    
-    // don't go offscreen
-    if (windowInfo.x < 0) windowInfo.x = 0;
-    if (windowInfo.y < 0) windowInfo.y = 0;
-#endif
+    // Just set a flag to center the window after it has been created
     centerMe = true;
 }
 
@@ -455,21 +440,6 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
 
   if (centerMe) {
       [window center];
-#if 0
-      NSWindow* mainWindow = [m_MainHwnd window];
-      NSRect rect = [mainWindow frame];
-      NSRect frame = [window frame];
-      
-      float mW = rect.size.width;
-      float mH = rect.size.height;
-      float cW = frame.size.width;
-      float cH = frame.size.height;
-      
-      frame.origin.x = (rect.origin.x + (mW /2)) - (cW / 2);
-      frame.origin.y = ((rect.origin.y + (mH /2)) + (cH / 2));
-      
-      [window setFrame:frame display:true];
-#endif
       centerMe = false;
   }
 }
