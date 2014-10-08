@@ -74,6 +74,10 @@ bool ClientHandler::OnProcessMessageReceived(
   return handled;
 }
 
+#ifndef OS_LINUX
+
+// CefWIndowInfo.height/.width aren't impelemented on Linux for some reason
+//  we'll want to revisit this when we integrate the next version of CEF
 
 static void SetValue(const std::string& name, const std::string& value, CefWindowInfo& windowInfo) {
     if (name == "height") {
@@ -109,6 +113,8 @@ static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
     SetValue(name, value, windowInfo);
  }
 
+#endif
+
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefFrame> frame,
                              const CefString& target_url,
@@ -118,7 +124,7 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefClient>& client,
                              CefBrowserSettings& settings,
                              bool* no_javascript_access) {
-
+#ifndef OS_LINUX
     std::string address = target_url.ToString();
     std::string url;
     std::string params;
@@ -138,7 +144,7 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
         ParseParams(params, windowInfo);
         ComputePopupPlacement(windowInfo);
     }
-    
+#endif
     return false;
 }
 
