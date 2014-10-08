@@ -231,7 +231,7 @@ public:
   void SetNavState(bool canGoBack, bool canGoForward);
   void PopupCreated(CefRefPtr<CefBrowser> browser);
   void ComputePopupPlacement(CefWindowInfo& windowInfo);
-                         
+                        
   // Create all of ProcessMessageDelegate objects.
   static void CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates);
