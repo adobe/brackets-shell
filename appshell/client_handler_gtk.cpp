@@ -69,7 +69,7 @@ void ClientHandler::CloseMainWindow() {
   gtk_main_quit();
 }
 
-void ClientHandler:: ComputePopupPlacement(CefWindowInfo& windowInfo)
+void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
 {
   // TODO Finish this thing
 }
