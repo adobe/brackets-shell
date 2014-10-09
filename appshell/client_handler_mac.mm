@@ -408,7 +408,9 @@ static bool centerMe = false;
 
 void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
 {
-    // Just set a flag to center the window after it has been created
+    // CEF will transform the Y value returned here and use it to create
+    //  the window which ends up placing the window not where we want it
+    // Just set a flag to center the window using cocoa apis in PopupCreated
     centerMe = true;
 }
 
@@ -417,6 +419,31 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
     
   [window setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
+
+    
+  if (centerMe) {
+#ifdef _USE_COCOA_CENTERING
+      // Center on the display
+      [window center];
+#else
+      // Center within the main window
+      NSWindow* mainWindow = [m_MainHwnd window];
+      NSRect rect = [mainWindow frame];
+      NSRect windowRect = [window frame];
+      
+      float mW = rect.size.width;
+      float mH = rect.size.height;
+      float cW = windowRect.size.width;
+      float cH = windowRect.size.height;
+      
+      windowRect.origin.x = (rect.origin.x + (mW /2)) - (cW / 2);
+      windowRect.origin.y = (rect.origin.y + (mH /2)) - (cH / 2);
+
+      [window setFrame:windowRect display:YES];
+#endif
+      centerMe = false;
+  }
+
   
   // CEF3 is now using a window delegate with this revision http://code.google.com/p/chromiumembedded/source/detail?r=1149
   // And the declaration of the window delegate (CefWindowDelegate class) is in libcef/browser/browser_host_impl_mac.mm and
@@ -438,10 +465,6 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
       [delegate initUI];
   }
 
-  if (centerMe) {
-      [window center];
-      centerMe = false;
-  }
 }
 
 bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
