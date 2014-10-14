@@ -89,8 +89,6 @@ static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
 
     for (unsigned i = 0; i < params.length(); i++) {
         if (params[i] == '&') {
-            std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-            std::transform(value.begin(), value.end(), value.begin(), ::tolower);
             SetValue(name, value, windowInfo);
             name.clear();
             value.clear();
@@ -125,14 +123,19 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
     std::string params;
     bool foundParamToken = false;
 
+    // make the input lower-case (easier string matching)
+    std::transform(address.begin(), address.end(), address.begin(), ::tolower);
+
     for (unsigned i = 0; i < address.length(); i++) {
-        if (address[i] == L'?') {
-            foundParamToken = true;
-        } else if (!foundParamToken) {
-            url += address[i];
+        if (!foundParamToken) {
+            if (address[i] == L'?') {
+                foundParamToken = true;
+            } else {
+                url += address[i];
+            }
         } else {
             params += address[i];
-        }
+        }        
     }
 
     if (url == "about:blank") {
