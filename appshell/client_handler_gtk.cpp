@@ -69,6 +69,11 @@ void ClientHandler::CloseMainWindow() {
   gtk_main_quit();
 }
 
+void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
+{
+  // TODO Finish this thing
+}
+
 void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser)
 {
     // TODO Finish this thing
