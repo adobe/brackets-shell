@@ -106,7 +106,7 @@ namespace WindowsTaskBar
     const BYTE BOTTOM_EDGE = 0x04;
     const BYTE RIGHT_EDGE  = 0x08;
 
-    // Heler struct
+    // Helper struct
     struct EdgeMatch {
         BYTE flag;
         int  edge;
