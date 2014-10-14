@@ -137,6 +137,8 @@ namespace WindowsTaskBar
 
         HWND taskbar = (HWND)::SHAppBarMessage(ABM_GETAUTOHIDEBAR, &bar);
     
+        // There's no auto-hide bar on this edge so Short-circuit here 
+        // to prevent doing extra work that we don't need to. 
         if (!::IsWindow(taskbar)) {
             return false;
         }
