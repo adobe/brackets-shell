@@ -21,10 +21,16 @@
  */
 #include "cef_dark_aero_window.h"
 #include <stdio.h>
+#include <ShellAPI.h>
+#include <stdlib.h>
+
+
+
 // Constants
 static const int kWindowFrameSize = 8;
 static const int kSystemIconZoomFactorCX = kWindowFrameSize + 2;
 static const int kSystemIconZoomFactorCY = kWindowFrameSize + 4;
+static const int kAutoHideTaskBarSize = 9;
 
 // dll instance to dynamically load the Desktop Window Manager DLL
 static CDwmDLL gDesktopWindowManagerDLL;
@@ -93,6 +99,83 @@ HRESULT CDwmDLL::DwmIsCompositionEnabled(BOOL* pfEnabled)
 }
 
 
+namespace WindowsTaskBar
+{
+    // Constants
+    const BYTE TOP_EDGE    = 0x01;
+    const BYTE LEFT_EDGE   = 0x02;
+    const BYTE BOTTOM_EDGE = 0x04;
+    const BYTE RIGHT_EDGE  = 0x08;
+
+    // Heler struct
+    struct EdgeMatch {
+        BYTE flag;
+        int  edge;
+    };
+
+    // Helper array
+    const EdgeMatch matchers[] = 
+    {
+        {TOP_EDGE, ABE_TOP},
+        {LEFT_EDGE, ABE_LEFT},
+        {BOTTOM_EDGE, ABE_BOTTOM},
+        {RIGHT_EDGE, ABE_RIGHT}
+    };
+
+    // API
+    bool edgeHasAutoHideTaskBar(UINT edge, HMONITOR monitor) 
+    {
+        APPBARDATA bar = {0};
+        bar.cbSize = sizeof (bar);
+        bar.uEdge = edge;
+
+        MONITORINFO info = {0};
+        info.cbSize = sizeof(info);
+
+        // We'll use the monitor info that we're querying
+        //  to see if an auto-hide bar intersects that monitor
+        GetMonitorInfo(monitor, &info);
+
+        HWND taskbar = (HWND)(SHAppBarMessage(ABM_GETAUTOHIDEBAR, &bar));
+    
+        if (!::IsWindow(taskbar)) {
+            return false;
+        }
+
+        // Task bars are always on top so qualify 
+        //  bars that aren't task bars by checking thestyle
+        DWORD dwStyle = (DWORD)(GetWindowLong(taskbar, GWL_EXSTYLE));
+
+        // This will get the position of the task bar when it
+        //  isn't hidden so we can see if it intersects the monitor
+        //  we're working on.
+        SHAppBarMessage(ABM_GETTASKBARPOS, &bar);
+
+        // We could use MonitorFromWindow but, with multiple monitors and a collapsed auto hide task bar,
+        //  the system will think that a collapsed task bar on the right edge of the left monitor 
+        //  belongs on the left edge of the right monitor so querying monitor info will return the wrong thing.
+        RECT tbOther;
+        BOOL intersection = IntersectRect(&tbOther, &info.rcMonitor, &bar.rc);
+
+        return ((dwStyle & WS_EX_TOPMOST) && intersection);
+    }
+
+    // API
+    WORD GetAutoHideEdges(HWND wnd) 
+    {
+        WORD result = 0;
+        HMONITOR monitor = ::MonitorFromWindow(wnd, MONITOR_DEFAULTTOPRIMARY);
+    
+        for (int i = 0; i < _countof(matchers); i++) {
+            if (edgeHasAutoHideTaskBar(matchers[i].edge, monitor)) {
+                result |= matchers[i].flag;
+            }
+        }
+        return result;
+    }
+};
+
+// Dark Aero Window Implementation
 cef_dark_aero_window::cef_dark_aero_window() :
     mReady(false),
     mMenuHiliteIndex(-1),
@@ -342,9 +425,7 @@ BOOL cef_dark_aero_window::HandlePaint()
 {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
-
     DoPaintNonClientArea(hdc);
-
     EndPaint(&ps);
     return TRUE;
 }
@@ -541,10 +622,23 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 //  Basically tells the system that there is no non-client area
 BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* pncsp, LRESULT* lr)
 {
-    pncsp->rgrc[0].left   = pncsp->rgrc[0].left   + 0;
-    pncsp->rgrc[0].top    = pncsp->rgrc[0].top    + 0;
-    pncsp->rgrc[0].right  = pncsp->rgrc[0].right  - 0;
-    pncsp->rgrc[0].bottom = pncsp->rgrc[0].bottom - 0;
+    if (CanUseAeroGlass() && IsZoomed()) 
+    {
+        // adjust for auto-hide task bar
+        WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
+        if (edges & WindowsTaskBar::BOTTOM_EDGE) {
+            pncsp->rgrc[0].bottom -= kAutoHideTaskBarSize;
+        }
+        if (edges & WindowsTaskBar::TOP_EDGE) {
+            pncsp->rgrc[0].top += kAutoHideTaskBarSize;
+        }
+        if (edges & WindowsTaskBar::RIGHT_EDGE) {
+            pncsp->rgrc[0].right -= kAutoHideTaskBarSize;
+        }
+        if (edges & WindowsTaskBar::LEFT_EDGE) {
+            pncsp->rgrc[0].left += kAutoHideTaskBarSize;
+        }
+    }
 
     *lr = IsZoomed() ? WVR_REDRAW : 0;
     return TRUE;

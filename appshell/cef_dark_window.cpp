@@ -683,16 +683,19 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
 void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
+    {
+        cef_buffered_dc dc(this, hdc);
 
-    cef_buffered_dc dc(this, hdc);
+        InitDeviceContext(dc);
+        InitDeviceContext(dc.GetWindowDC());
+    
 
-    InitDeviceContext(dc);
-    InitDeviceContext(dc.GetWindowDC());
-    DoDrawFrame(dc);
-    DoDrawSystemMenuIcon(dc);
-    DoDrawTitlebarText(dc);
-    DoDrawSystemIcons(dc);
-    DoDrawMenuBar(dc);
+        DoDrawFrame(dc);
+        DoDrawSystemMenuIcon(dc);
+        DoDrawTitlebarText(dc);
+        DoDrawSystemIcons(dc);
+        DoDrawMenuBar(dc);
+    }
 }
 
 // Special case for derived classes to implement
