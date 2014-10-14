@@ -56,10 +56,9 @@ HINSTANCE CDwmDLL::LoadLibrary()
     if (mhDwmDll == NULL)
     {
         // dynamically load dwmapi.dll if running Windows Vista or later (ie. not on XP)
-        OSVERSIONINFO osvi;
-        ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+        ::OSVERSIONINFO osvi = {0};
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        GetVersionEx(&osvi);
+        ::GetVersionEx(&osvi);
         if ((osvi.dwMajorVersion > 5) || ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1) ))
         {
             mhDwmDll = ::LoadLibrary(TEXT("dwmapi.dll"));
@@ -125,37 +124,35 @@ namespace WindowsTaskBar
     // API
     bool edgeHasAutoHideTaskBar(UINT edge, HMONITOR monitor) 
     {
-        APPBARDATA bar = {0};
+        ::APPBARDATA bar = {0};
         bar.cbSize = sizeof (bar);
         bar.uEdge = edge;
 
-        MONITORINFO info = {0};
+        ::MONITORINFO info = {0};
         info.cbSize = sizeof(info);
 
         // We'll use the monitor info that we're querying
         //  to see if an auto-hide bar intersects that monitor
-        GetMonitorInfo(monitor, &info);
+        ::GetMonitorInfo(monitor, &info);
 
-        HWND taskbar = (HWND)(SHAppBarMessage(ABM_GETAUTOHIDEBAR, &bar));
+        HWND taskbar = (HWND)::SHAppBarMessage(ABM_GETAUTOHIDEBAR, &bar);
     
         if (!::IsWindow(taskbar)) {
             return false;
         }
 
-        // Task bars are always on top so qualify 
-        //  bars that aren't task bars by checking thestyle
-        DWORD dwStyle = (DWORD)(GetWindowLong(taskbar, GWL_EXSTYLE));
+        // Qualify task bars by checking for WS_EX_TOPMOST
+        DWORD dwStyle = (DWORD)::GetWindowLong(taskbar, GWL_EXSTYLE);
 
         // This will get the position of the task bar when it
         //  isn't hidden so we can see if it intersects the monitor
-        //  we're working on.
-        SHAppBarMessage(ABM_GETTASKBARPOS, &bar);
+        ::SHAppBarMessage(ABM_GETTASKBARPOS, &bar);
 
         // We could use MonitorFromWindow but, with multiple monitors and a collapsed auto hide task bar,
         //  the system will think that a collapsed task bar on the right edge of the left monitor 
         //  belongs on the left edge of the right monitor so querying monitor info will return the wrong thing.
         RECT tbOther;
-        BOOL intersection = IntersectRect(&tbOther, &info.rcMonitor, &bar.rc);
+        BOOL intersection = ::IntersectRect(&tbOther, &info.rcMonitor, &bar.rc);
 
         return ((dwStyle & WS_EX_TOPMOST) && intersection);
     }
