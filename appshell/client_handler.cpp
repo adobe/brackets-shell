@@ -135,7 +135,7 @@ bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
             }
         } else {
             params += address[i];
-        }        
+        }
     }
 
     if (url == "about:blank") {
