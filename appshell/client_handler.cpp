@@ -15,6 +15,7 @@
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
+
 // Custom menu command Ids.
 enum client_menu_ids {
   CLIENT_ID_SHOW_DEVTOOLS   = MENU_ID_USER_FIRST,
@@ -66,6 +67,83 @@ bool ClientHandler::OnProcessMessageReceived(
   }
     
   return handled;
+}
+
+#ifndef OS_LINUX
+
+// CefWIndowInfo.height/.width aren't impelemented on Linux for some reason
+//  we'll want to revisit this when we integrate the next version of CEF
+
+static void SetValue(const std::string& name, const std::string& value, CefWindowInfo& windowInfo) {
+    if (name == "height") {
+        windowInfo.height = ::atoi(value.c_str());
+    } else if (name == "width") {
+        windowInfo.width = ::atoi(value.c_str());
+    }
+ }
+
+static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
+    std::string name;
+    std::string value;
+    bool foundAssignmentToken = false;
+
+    for (unsigned i = 0; i < params.length(); i++) {
+        if (params[i] == '&') {
+            SetValue(name, value, windowInfo);
+            name.clear();
+            value.clear();
+            foundAssignmentToken = false;
+        } else if (params[i] == '=') {
+            foundAssignmentToken = true;
+        } else if (!foundAssignmentToken) {
+            name += params[i];
+        } else {
+            value+= params[i];
+        }
+    }
+
+    // set the last parsed value that didn't end with an &
+    SetValue(name, value, windowInfo);
+ }
+
+#endif
+
+bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefFrame> frame,
+                             const CefString& target_url,
+                             const CefString& target_frame_name,
+                             const CefPopupFeatures& popupFeatures,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             bool* no_javascript_access) {
+#ifndef OS_LINUX
+    std::string address = target_url.ToString();
+    std::string url;
+    std::string params;
+    bool foundParamToken = false;
+
+    // make the input lower-case (easier string matching)
+    std::transform(address.begin(), address.end(), address.begin(), ::tolower);
+
+    for (unsigned i = 0; i < address.length(); i++) {
+        if (!foundParamToken) {
+            if (address[i] == L'?') {
+                foundParamToken = true;
+            } else {
+                url += address[i];
+            }
+        } else {
+            params += address[i];
+        }
+    }
+
+    if (url == "about:blank") {
+        ParseParams(params, windowInfo);
+        ComputePopupPlacement(windowInfo);
+    }
+#endif
+    return false;
 }
 
 void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
