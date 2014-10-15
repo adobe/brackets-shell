@@ -550,19 +550,32 @@ int ShowFolderInOSWindow(ExtensionString pathname)
 {
     int error = NO_ERROR;
     GError *gerror = NULL;
-    gchar *uri = g_strdup_printf("file://%s", pathname.c_str());
+    GFile* file = g_file_new_for_path(pathname.c_str());
+    GFile* parent = NULL;
     
-    if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+    if (g_file_query_file_type(file, G_FILE_QUERY_INFO_NONE, NULL) == G_FILE_TYPE_REGULAR) {
+        parent = g_file_get_parent(file);
+    }
+
+    gchar *cmdline = g_strdup_printf("xdg-open file://%s",
+            parent ? g_file_get_path(parent) : g_file_get_path(file));
+
+    // run xdg-open and show the file in the default file browser
+    if (!g_spawn_command_line_async(cmdline, &gerror)) {
         error = ConvertGnomeErrorCode(gerror);
         g_warning("%s", gerror->message);
         g_error_free(gerror);
     }
-    
-    g_free(uri);
+
+    if (parent) {
+        g_object_unref(parent);
+    }
+
+    g_object_unref(file);
+    g_free(cmdline);
 
     return error;
 }
-
 
 int ConvertGnomeErrorCode(GError* gerror, bool isReading) 
 {
