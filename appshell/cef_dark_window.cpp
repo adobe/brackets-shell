@@ -41,6 +41,7 @@ extern HINSTANCE hInst;
 static ULONG_PTR gdiplusToken = NULL;
 
 // Constants
+static const int kMenuPadding = 4;
 static const int kWindowFrameZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCX = 2;
@@ -373,12 +374,12 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect) const
 {
     int top = mNcMetrics.iBorderWidth;
     int right = mNcMetrics.iBorderWidth;
-    
+
     if (IsZoomed()) {
         top = ::GetSystemMetrics (SM_CYFRAME);
         right = ::GetSystemMetrics (SM_CXFRAME);
     }
-    
+
     RECT wr;
     GetWindowRect(&wr);
 
@@ -400,7 +401,7 @@ void cef_dark_window::ComputeRequiredMenuRect(RECT& rect) const
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
-            itemRect.bottom += 4;
+            itemRect.bottom += ::kMenuPadding;
             AdjustMenuItemRect(itemRect);
 
             RECT dest;
@@ -628,9 +629,6 @@ void cef_dark_window::AdjustMenuItemRect(RECT &itemRect) const
 {
     if (CanUseAeroGlass() && IsZoomed()) {
         ScreenToClient(&itemRect);
-//        itemRect.top -= 16;
-//        itemRect.bottom -= 4;
-//        ::InflateRect(&itemRect, 0, -16);
     } else {
         ScreenToNonClient(&itemRect);
     }
