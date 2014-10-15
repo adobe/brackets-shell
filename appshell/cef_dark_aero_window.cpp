@@ -661,6 +661,7 @@ void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 		rect.left = left;
 		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
 		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+        
         AdjustRectForAutoHideBars(&rect);
 	} else {
 		cef_dark_window::ComputeWindowIconRect(rect);
