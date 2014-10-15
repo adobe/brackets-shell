@@ -373,12 +373,12 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect) const
 {
     int top = mNcMetrics.iBorderWidth;
     int right = mNcMetrics.iBorderWidth;
-
+    
     if (IsZoomed()) {
         top = ::GetSystemMetrics (SM_CYFRAME);
         right = ::GetSystemMetrics (SM_CXFRAME);
     }
-
+    
     RECT wr;
     GetWindowRect(&wr);
 
@@ -400,7 +400,9 @@ void cef_dark_window::ComputeRequiredMenuRect(RECT& rect) const
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
-            ScreenToNonClient(&itemRect);
+            itemRect.bottom += 4;
+            AdjustMenuItemRect(itemRect);
+
             RECT dest;
             if (::UnionRect(&dest, &rect, &itemRect)) {
                 ::CopyRect(&rect, &dest);
@@ -622,6 +624,18 @@ void cef_dark_window::InitDeviceContext(HDC hdc)
     ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
 }
 
+void cef_dark_window::AdjustMenuItemRect(RECT &itemRect) const
+{
+    if (CanUseAeroGlass() && IsZoomed()) {
+        ScreenToClient(&itemRect);
+//        itemRect.top -= 16;
+//        itemRect.bottom -= 4;
+//        ::InflateRect(&itemRect, 0, -16);
+    } else {
+        ScreenToNonClient(&itemRect);
+    }
+}
+
 // This Really just Draws the menu bar items since it assumes 
 //  that the background has already been drawn using DoDrawFrame
 void cef_dark_window::DoDrawMenuBar(HDC hdc)
@@ -643,7 +657,7 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         ::SetRectEmpty(&itemRect);
 
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
-            ScreenToNonClient(&itemRect);
+            AdjustMenuItemRect(itemRect);
             
             POINT ptTopLeftItem = {itemRect.left, itemRect.top}; 
 
@@ -687,7 +701,6 @@ void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 
     InitDeviceContext(dc);
     InitDeviceContext(dc.GetWindowDC());
-    
 
     DoDrawFrame(dc);
     DoDrawSystemMenuIcon(dc);
@@ -710,7 +723,13 @@ void cef_dark_window::DoRepaintClientArea()
 //  artifacts over top of us
 void cef_dark_window::UpdateNonClientArea()
 {
-    HDC hdc = GetWindowDC();
+    HDC hdc;
+	if (CanUseAeroGlass()) {
+        hdc = GetDC();
+    } else {
+        hdc = GetWindowDC();
+    }
+
     DoPaintNonClientArea(hdc);
     ReleaseDC(hdc);
 }
@@ -831,7 +850,13 @@ void cef_dark_window::UpdateNonClientButtons ()
 {
     // create a simple clipping region
     //  that only includes the system buttons (min/max/restore/close)
-    HDC hdc = GetWindowDC();
+    HDC hdc;
+
+    if (CanUseAeroGlass()) {
+        hdc = GetDC();
+    } else {
+        hdc = GetWindowDC();
+    }
 
     RECT rectCloseButton ;
     ComputeCloseButtonRect (rectCloseButton) ;

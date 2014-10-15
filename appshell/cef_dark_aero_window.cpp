@@ -239,50 +239,6 @@ BOOL cef_dark_aero_window::HandleActivate()
     return SUCCEEDED(hr);
 }
 
-// Computes the Rect where the System Icon is drawn in window coordinates
-void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
-{
-	if (CanUseAeroGlass()) {
-		int top = ::kWindowFrameSize;
-		int left = ::kWindowFrameSize;
-
-		if (IsZoomed()) {
-			top = ::kSystemIconZoomFactorCY;
-			left = ::kSystemIconZoomFactorCX;    
-		}
-
-		::SetRectEmpty(&rect);
-		rect.top =  top;
-		rect.left = left;
-		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
-		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
-	} else {
-		cef_dark_window::ComputeWindowIconRect(rect);
-	}
-}
-
-// Computes the Rect where the window caption is drawn in window coordinates
-void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect) const
-{
-	if (CanUseAeroGlass()) {
-		RECT wr;
-		GetWindowRect(&wr);
-
-		rect.top = ::kWindowFrameSize;
-		rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
-
-		RECT ir;
-		ComputeWindowIconRect(ir);
-
-		RECT mr;
-		ComputeMinimizeButtonRect(mr);
-
-		rect.left = ir.right + ::kWindowFrameSize;
-		rect.right = mr.left - ::kWindowFrameSize;
-	} else {
-		cef_dark_window::ComputeWindowCaptionRect(rect);
-	}
-}
 
 // WM_NCHITTEST handler
 int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
@@ -295,35 +251,35 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
     
     RECT rectCaption;
     ComputeWindowCaptionRect(rectCaption);
-    NonClientToScreen(&rectCaption);
+    ClientToScreen(&rectCaption);
 
     if (::PtInRect(&rectCaption, *ptHit)) 
         return HTCAPTION;
 
     RECT rectCloseButton;
     ComputeCloseButtonRect(rectCloseButton);
-    NonClientToScreen(&rectCloseButton);
+    ClientToScreen(&rectCloseButton);
 
     if (::PtInRect(&rectCloseButton, *ptHit)) 
         return HTCLOSE;
 
     RECT rectMaximizeButton;
     ComputeMaximizeButtonRect(rectMaximizeButton);
-    NonClientToScreen(&rectMaximizeButton);
+    ClientToScreen(&rectMaximizeButton);
 
     if (::PtInRect(&rectMaximizeButton, *ptHit)) 
         return HTMAXBUTTON;
 
     RECT rectMinimizeButton;
     ComputeMinimizeButtonRect(rectMinimizeButton);
-    NonClientToScreen(&rectMinimizeButton);
+    ClientToScreen(&rectMinimizeButton);
 
     if (::PtInRect(&rectMinimizeButton, *ptHit)) 
         return HTMINBUTTON;
 
     RECT rectSysIcon;
     ComputeWindowIconRect(rectSysIcon);
-    NonClientToScreen(&rectSysIcon);
+    ClientToScreen(&rectSysIcon);
 
     if (::PtInRect(&rectSysIcon, *ptHit)) 
         return HTSYSMENU;
@@ -368,7 +324,7 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
 
     RECT rectMenu;
     ComputeRequiredMenuRect(rectMenu);
-    NonClientToScreen(&rectMenu);
+    ClientToScreen(&rectMenu);
 
     if (::PtInRect(&rectMenu, *ptHit))
         return HTMENU;
@@ -377,7 +333,7 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
     //  on a menu item, then return caption so 
     //  the window can be dragged from the dead space 
     ComputeMenuBarRect(rectMenu);
-    NonClientToScreen(&rectMenu);
+    ClientToScreen(&rectMenu);
     if (::PtInRect(&rectMenu, *ptHit))
         return HTCAPTION;
 
@@ -400,22 +356,6 @@ void cef_dark_aero_window::InitDeviceContext(HDC hdc)
     }
 }
 
-// Force Drawing the non-client area.
-//  Normally WM_NCPAINT is used but there are times when you
-//  need to force drawing the entire non-client area when
-//  legacy windows message handlers start drawing non-client
-//  artifacts over top of us
-void cef_dark_aero_window::UpdateNonClientArea()
-{
-	if (CanUseAeroGlass()) {
-        HDC hdc = GetDC();
-        DoPaintNonClientArea(hdc);
-        ReleaseDC(hdc);
-    } else {
-        cef_dark_window::UpdateNonClientArea();
-    }
-}
-
 // WM_PAINT handler
 //  since we're extending the client area into the non-client
 //  area, we have to draw all of the non-clinet stuff during
@@ -427,26 +367,6 @@ BOOL cef_dark_aero_window::HandlePaint()
     DoPaintNonClientArea(hdc);
     EndPaint(&ps);
     return TRUE;
-}
-
-// Computes the Rect where the menu bar is drawn in window coordinates
-void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect) const
-{
-    if (CanUseAeroGlass()) {
-        RECT rectClient;
-        RECT rectCaption;
-
-        ComputeWindowCaptionRect(rectCaption);
-        GetRealClientRect(&rectClient);
-
-        rect.top = ::GetSystemMetrics(SM_CYFRAME) + mNcMetrics.iCaptionHeight + 1;
-        rect.bottom = rectClient.top - 1;
-
-        rect.left = rectClient.left;
-        rect.right = rectClient.right;
-    } else {
-        cef_dark_window::ComputeMenuBarRect(rect);
-    }
 }
 
 void cef_dark_aero_window::DrawMenuBar(HDC hdc)
@@ -529,7 +449,8 @@ void cef_dark_aero_window::HiliteMenuItemAt(LPPOINT pt)
                 dis.itemAction = ODA_DRAWENTIRE;
                 dis.hDC = hdc;
 
-               ScreenToNonClient(&itemRect);
+                AdjustMenuItemRect(itemRect);
+
                 ::CopyRect(&dis.rcItem, &itemRect);
 
                 if (mmi.fState & MFS_HILITE) {
@@ -594,6 +515,32 @@ BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
     return FALSE;
 }
 
+void cef_dark_aero_window::AdjustRectForAutoHideBars(LPRECT rect) const
+{
+    if (CanUseAeroGlass() && IsZoomed()) 
+    {
+        // adjust for auto-hide task bar
+        WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
+        if (edges & WindowsTaskBar::BOTTOM_EDGE) {
+            rect->bottom += ::kWindowFrameSize;
+            rect->top += ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::TOP_EDGE) {
+            rect->top -= ::kWindowFrameSize;
+            rect->bottom -= ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::RIGHT_EDGE) {
+            rect->right += ::kWindowFrameSize;
+            rect->left += ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::LEFT_EDGE) {
+            rect->left -= ::kWindowFrameSize;
+            rect->right -= ::kWindowFrameSize;
+        }
+    }
+}
+
+
 // This is a special version of GetClientRect for Aero Glass
 //  to give us the portion of the window that is not our custom
 //  non-client glass so we can:
@@ -614,6 +561,23 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
     rect->left += ::kWindowFrameSize;
     rect->right -= ::kWindowFrameSize;
 
+    if (CanUseAeroGlass() && IsZoomed()) 
+    {
+        // adjust for auto-hide task bar
+        WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
+        if (edges & WindowsTaskBar::BOTTOM_EDGE) {
+            rect->bottom += ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::TOP_EDGE) {
+            //rect->top -= ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::RIGHT_EDGE) {
+            rect->right += ::kWindowFrameSize;
+        }
+        if (edges & WindowsTaskBar::LEFT_EDGE) {
+            rect->left -= ::kWindowFrameSize;
+        }
+    }
     return TRUE;
 }
 
@@ -621,26 +585,119 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
 //  Basically tells the system that there is no non-client area
 BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* pncsp, LRESULT* lr)
 {
+    *lr = 0;
+
     if (CanUseAeroGlass() && IsZoomed()) 
     {
         // adjust for auto-hide task bar
         WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
         if (edges & WindowsTaskBar::BOTTOM_EDGE) {
             pncsp->rgrc[0].bottom -= kAutoHideTaskBarSize;
+            if (calcValidRects) {
+                pncsp->rgrc[1].bottom -= kAutoHideTaskBarSize;
+            }
         }
         if (edges & WindowsTaskBar::TOP_EDGE) {
             pncsp->rgrc[0].top += kAutoHideTaskBarSize;
+            if (calcValidRects) {
+                pncsp->rgrc[1].top += kAutoHideTaskBarSize;
+            }
         }
         if (edges & WindowsTaskBar::RIGHT_EDGE) {
             pncsp->rgrc[0].right -= kAutoHideTaskBarSize;
+            if (calcValidRects) {
+                pncsp->rgrc[1].right -= kAutoHideTaskBarSize;
+            }
         }
         if (edges & WindowsTaskBar::LEFT_EDGE) {
             pncsp->rgrc[0].left += kAutoHideTaskBarSize;
+            if (calcValidRects) {
+                pncsp->rgrc[1].left += kAutoHideTaskBarSize;
+            }
         }
     }
 
-    *lr = IsZoomed() ? WVR_REDRAW : 0;
+    *lr |= IsZoomed() ? WVR_REDRAW : 0;
     return TRUE;
+}
+
+
+// Computes the Rect where the System Icon is drawn in window coordinates
+void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
+{
+	if (CanUseAeroGlass()) {
+		int top = ::kWindowFrameSize;
+		int left = ::kWindowFrameSize;
+
+		if (IsZoomed()) {
+			top = ::kSystemIconZoomFactorCY;
+			left = ::kSystemIconZoomFactorCX;    
+		}
+
+		::SetRectEmpty(&rect);
+		rect.top =  top;
+		rect.left = left;
+		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
+		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+        AdjustRectForAutoHideBars(&rect);
+	} else {
+		cef_dark_window::ComputeWindowIconRect(rect);
+	}
+}
+
+// Computes the Rect where the window caption is drawn in window coordinates
+void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect) const
+{
+	if (CanUseAeroGlass()) {
+		RECT wr;
+		GetWindowRect(&wr);
+
+		rect.top = ::kWindowFrameSize;
+		rect.bottom = rect.top + mNcMetrics.iCaptionHeight;
+
+		RECT ir;
+		ComputeWindowIconRect(ir);
+
+		RECT mr;
+		ComputeMinimizeButtonRect(mr);
+
+		rect.left = ir.right + ::kWindowFrameSize;
+		rect.right = mr.left - ::kWindowFrameSize;
+
+        AdjustRectForAutoHideBars(&rect);
+	} else {
+		cef_dark_window::ComputeWindowCaptionRect(rect);
+	}
+}
+
+// Computes the Rect where the menu bar is drawn in window coordinates
+void cef_dark_aero_window::ComputeMenuBarRect(RECT& rect) const
+{
+    if (CanUseAeroGlass()) {
+        RECT rectClient;
+        RECT rectCaption;
+
+        GetRealClientRect(&rectClient);
+
+        if (IsZoomed()) {
+            ComputeWindowCaptionRect(rectCaption);
+            rect.top = rectCaption.bottom;
+        } else {
+            rect.top = ::GetSystemMetrics(SM_CYFRAME) + mNcMetrics.iCaptionHeight + 1;
+        }
+        rect.bottom = rectClient.top - 1;
+
+        rect.left = rectClient.left;
+        rect.right = rectClient.right;
+    } else {
+        cef_dark_window::ComputeMenuBarRect(rect);
+    }
+}
+
+void cef_dark_aero_window::ComputeCloseButtonRect(RECT& rect) const
+{
+    cef_dark_window::ComputeCloseButtonRect(rect);
+    AdjustRectForAutoHideBars(&rect);
 }
 
 // Helper to dispatch messages to the Desktop Window Manager for processing

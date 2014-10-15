@@ -92,7 +92,6 @@ protected:
     virtual void DrawMenuBar(HDC hdc);
     virtual void HiliteMenuItemAt(LPPOINT pt);
 
-    virtual void UpdateNonClientArea();
     virtual void UpdateMenuBar();
 
     virtual void InitDeviceContext(HDC hdc);
@@ -100,6 +99,9 @@ protected:
     virtual void ComputeMenuBarRect(RECT& rect) const;
     virtual void ComputeWindowCaptionRect(RECT& rect) const;
     virtual void ComputeWindowIconRect(RECT& rect) const;
+    virtual void ComputeCloseButtonRect(RECT& rect) const;
+
+    void AdjustRectForAutoHideBars(LPRECT rect) const;
 
     LRESULT DwpCustomFrameProc(UINT message, WPARAM wParam, LPARAM lParam, bool* pfCallDefWindowProc);
 
