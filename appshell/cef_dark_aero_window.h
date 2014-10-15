@@ -83,6 +83,8 @@ protected:
     BOOL HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARAMS* lpncsp, LRESULT* lr);
     BOOL HandleNcMouseMove(UINT uHitTest, LPPOINT pt);
     BOOL HandleNcLeftButtonDown(UINT uHitTest, LPPOINT pt);
+    BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
+    BOOL HandleSettingChange(UINT uFlags, LPCWSTR lpszSection);
 
     void HandleNcMouseLeave();
     int HandleNcHitTest(LPPOINT ptHit);

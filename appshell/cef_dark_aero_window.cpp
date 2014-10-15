@@ -24,13 +24,12 @@
 #include <ShellAPI.h>
 #include <stdlib.h>
 
-
-
 // Constants
 static const int kWindowFrameSize = 8;
 static const int kSystemIconZoomFactorCX = kWindowFrameSize + 2;
 static const int kSystemIconZoomFactorCY = kWindowFrameSize + 4;
-static const int kAutoHideTaskBarSize = 9;
+// add 1px to the window frame size to get the 1px edge for the task bar
+static const int kAutoHideTaskBarSize = kWindowFrameSize + 1; 
 
 // dll instance to dynamically load the Desktop Window Manager DLL
 static CDwmDLL gDesktopWindowManagerDLL;
@@ -515,23 +514,49 @@ BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
     return FALSE;
 }
 
+// WM_GETMINMAXINFO handler
+BOOL cef_dark_aero_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
+{
+    if (CanUseAeroGlass()) {
+        HMONITOR hm = ::MonitorFromWindow(mWnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi = {0};
+        mi.cbSize = sizeof (mi);
+
+        ::GetMonitorInfo(hm, &mi);
+
+        mmi->ptMaxSize.x = mi.rcWork.right + ::kWindowFrameSize;
+        mmi->ptMaxSize.y = mi.rcWork.bottom + ::kWindowFrameSize;
+        mmi->ptMaxPosition.x = -::kWindowFrameSize;
+        mmi->ptMaxPosition.y = -::kWindowFrameSize;
+    }
+
+    return TRUE;
+}
+
+BOOL cef_dark_aero_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
+{
+    if (uFlags == SPI_SETWORKAREA && CanUseAeroGlass() && IsZoomed() && WindowsTaskBar::GetAutoHideEdges(mWnd)) {
+        // HACK: Force the window to remaximize if the auto hide edges setting changed. 
+        //          This is a somewhat violent repositioning so we heavily qualify it to 
+        //          the app running on a monitor that has an autohide taskbar and 
+        //          the window is maximized. This ensures that window fills the work area 
+        //          after moving a taskbar to another edge
+        SendMessage(WM_SYSCOMMAND, SC_RESTORE, 0L);
+        SendMessage(WM_SYSCOMMAND, SC_MAXIMIZE, 0L);
+    }
+    return TRUE;
+}
+
+
 void cef_dark_aero_window::AdjustRectForAutoHideBars(LPRECT rect) const
 {
     if (CanUseAeroGlass() && IsZoomed()) 
     {
         // adjust for auto-hide task bar
         WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
-        if (edges & WindowsTaskBar::BOTTOM_EDGE) {
-            rect->bottom += ::kWindowFrameSize;
-            rect->top += ::kWindowFrameSize;
-        }
         if (edges & WindowsTaskBar::TOP_EDGE) {
             rect->top -= ::kWindowFrameSize;
             rect->bottom -= ::kWindowFrameSize;
-        }
-        if (edges & WindowsTaskBar::RIGHT_EDGE) {
-            rect->right += ::kWindowFrameSize;
-            rect->left += ::kWindowFrameSize;
         }
         if (edges & WindowsTaskBar::LEFT_EDGE) {
             rect->left -= ::kWindowFrameSize;
@@ -589,8 +614,8 @@ BOOL cef_dark_aero_window::HandleNcCalcSize(BOOL calcValidRects, NCCALCSIZE_PARA
 
     if (CanUseAeroGlass() && IsZoomed()) 
     {
-        // adjust for auto-hide task bar
         WORD edges = WindowsTaskBar::GetAutoHideEdges(mWnd);
+        // adjust for auto-hide task bar
         if (edges & WindowsTaskBar::BOTTOM_EDGE) {
             pncsp->rgrc[0].bottom -= kAutoHideTaskBarSize;
             if (calcValidRects) {
@@ -781,6 +806,10 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
     LRESULT lr = DwpCustomFrameProc(message, wParam, lParam, &callDefWindowProc);
 
     switch(message) {
+    case WM_SETTINGCHANGE:
+        HandleSettingChange((UINT)wParam, (LPCWSTR)lParam);
+        break;
+
     case WM_NCACTIVATE:
     case WM_ACTIVATE:
         if (mReady) {
@@ -833,6 +862,9 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
 
     switch (message)
     {
+    case WM_GETMINMAXINFO:
+        HandleGetMinMaxInfo((LPMINMAXINFO) lParam);
+        break;
     case WM_SETTEXT:
     case WM_WINDOWPOSCHANGING:
     case WM_WINDOWPOSCHANGED:

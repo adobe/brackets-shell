@@ -500,10 +500,6 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandlePaint())
             return 0L;
         break;
-    case WM_GETMINMAXINFO:
-        if (HandleGetMinMaxInfo((LPMINMAXINFO) lParam))
-            return 0L;
-        break;
     case WM_DESTROY:
         if (HandleDestroy())
             return 0L;
@@ -527,6 +523,13 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     LRESULT lr = cef_host_window::WindowProc(message, wParam, lParam);
+
+    switch (message) 
+    {
+    case WM_GETMINMAXINFO:
+        HandleGetMinMaxInfo((LPMINMAXINFO) lParam);
+        break;
+    }
 
     return lr;
 }
