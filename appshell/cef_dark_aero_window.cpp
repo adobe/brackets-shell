@@ -593,9 +593,6 @@ BOOL cef_dark_aero_window::GetRealClientRect(LPRECT rect) const
         if (edges & WindowsTaskBar::BOTTOM_EDGE) {
             rect->bottom += ::kWindowFrameSize;
         }
-        if (edges & WindowsTaskBar::TOP_EDGE) {
-            //rect->top -= ::kWindowFrameSize;
-        }
         if (edges & WindowsTaskBar::RIGHT_EDGE) {
             rect->right += ::kWindowFrameSize;
         }
