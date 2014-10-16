@@ -14,6 +14,10 @@
 
 #include "cef_popup_window.h"
 
+#include "cef_main_window.h"
+extern cef_main_window* gMainWnd;
+
+
 // Additional globals
 extern HACCEL hAccelTable;
 
@@ -115,3 +119,39 @@ bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
                                 CefEventHandle os_event) {
   return false;
 }
+
+
+ void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
+ {
+     RECT rectMainWnd;
+     gMainWnd->GetWindowRect(&rectMainWnd);
+
+     int mW = ::RectWidth(rectMainWnd);
+     int mH = ::RectHeight(rectMainWnd);
+     int cW = windowInfo.width;
+     int cH = windowInfo.height;
+
+     windowInfo.x = (rectMainWnd.left + (mW /2)) - (cW / 2);
+     windowInfo.y = (rectMainWnd.top + (mH /2)) - (cH / 2);
+
+     // don't go offscreen
+     if (windowInfo.x < 0) windowInfo.x = 0;
+     if (windowInfo.y < 0) windowInfo.y = 0;
+
+     HMONITOR hm = ::MonitorFromWindow(gMainWnd->GetSafeWnd(), MONITOR_DEFAULTTONEAREST); 
+     MONITORINFO mi = {0};
+     mi.cbSize = sizeof (mi);
+
+     GetMonitorInfo(hm, &mi);
+
+     if (windowInfo.width > ::RectWidth(mi.rcWork)) {
+         windowInfo.x = mi.rcWork.left;
+         windowInfo.width = mi.rcWork.right - windowInfo.x;
+     }
+
+     if (windowInfo.height > ::RectHeight(mi.rcWork)) {
+         windowInfo.y = mi.rcWork.top;
+         windowInfo.height = mi.rcWork.bottom - windowInfo.y;
+     }
+ }
+ 

@@ -37,8 +37,8 @@ module.exports = function (grunt) {
         return newContent;
     }
     
-    // task: set-sprint
-    grunt.registerTask("set-sprint", "Update occurrences of sprint number for all native installers and binaries", function () {
+    // task: set-release
+    grunt.registerTask("set-release", "Update occurrences of release number for all native installers and binaries", function () {
         var packageJsonPath             = "package.json",
             packageJSON                 = grunt.file.readJSON(packageJsonPath),
             winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
@@ -46,40 +46,40 @@ module.exports = function (grunt) {
             wxsPath                     = "installer/win/Brackets.wxs",
             versionRcPath               = "appshell/version.rc",
             infoPlistPath               = "appshell/mac/Info.plist",
-            sprint                      = grunt.option("sprint") || 0,
+            release                     = grunt.option("release") || 0,
             versionShort                = packageJSON.version.substr(0, packageJSON.version.indexOf("-")),
             text;
 
-        // replace sprint number in short version, e.g. N.<sprint>.N
-        versionShort = versionShort.replace(/([0-9]+\.)([0-9]+)(\.[0-9]+)/, "$1" + sprint + "$3");
+        // replace release number in short version, e.g. N.<release>.N
+        versionShort = versionShort.replace(/([0-9]+\.)([0-9]+)(\.[0-9]+)/, "$1" + release + "$3");
 
-        if (!sprint) {
-            grunt.fail.fatal("Please specify a sprint. e.g. grunt set-sprint --sprint=21");
+        if (!release) {
+            grunt.fail.fatal("Please specify a release. e.g. grunt set-release --release=21");
         }
         
         // 1. Update package.json
         packageJSON.version = safeReplace(
             packageJSON.version,
             /([0-9]+\.)([0-9]+)([\.\-a-zA-Z0-9]*)?/,
-            "$1" + sprint + "$3"
+            "$1" + release + "$3"
         );
         common.writeJSON(packageJsonPath, packageJSON);
         
-        // 2. Open installer/win/brackets-win-install-build.xml and change `product.sprint.number`
+        // 2. Open installer/win/brackets-win-install-build.xml and change `product.release.number`
         text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
-            /<property name="product\.sprint\.number" value="([0-9]+)"\/>/,
-            '<property name="product.sprint.number" value="' + sprint + '"/>'
+            /<property name="product\.release\.number\.minor" value="([0-9]+)"\/>/,
+            '<property name="product.release.number.minor" value="' + release + '"/>'
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
         
-        // 3. Open installer/mac/buildInstaller.sh and change `releaseName`
+        // 3. Open installer/mac/buildInstaller.sh and change `dmgName`
         text = grunt.file.read(buildInstallerScriptPath);
         text = safeReplace(
             text,
-            /( Sprint )([0-9]+)/,
-            "$1" + sprint
+            /( Release [0-9]+\.)([0-9]+)/,
+            "$1" + release
         );
         grunt.file.write(buildInstallerScriptPath, text);
         
@@ -88,12 +88,12 @@ module.exports = function (grunt) {
         text = safeReplace(
             text,
             /(FILEVERSION\s+[0-9]+,)([0-9]+)/,
-            "$1" + sprint
+            "$1" + release
         );
         text = safeReplace(
             text,
-            /(Sprint )([0-9]+)/,
-            "$1" + sprint
+            /(Release [0-9]+\.)([0-9]+)/,
+            "$1" + release
         );
         grunt.file.write(versionRcPath, text);
         

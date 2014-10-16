@@ -69,6 +69,83 @@ bool ClientHandler::OnProcessMessageReceived(
   return handled;
 }
 
+#ifndef OS_LINUX
+
+// CefWIndowInfo.height/.width aren't impelemented on Linux for some reason
+//  we'll want to revisit this when we integrate the next version of CEF
+
+static void SetValue(const std::string& name, const std::string& value, CefWindowInfo& windowInfo) {
+    if (name == "height") {
+        windowInfo.height = ::atoi(value.c_str());
+    } else if (name == "width") {
+        windowInfo.width = ::atoi(value.c_str());
+    }
+ }
+
+static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
+    std::string name;
+    std::string value;
+    bool foundAssignmentToken = false;
+
+    for (unsigned i = 0; i < params.length(); i++) {
+        if (params[i] == '&') {
+            SetValue(name, value, windowInfo);
+            name.clear();
+            value.clear();
+            foundAssignmentToken = false;
+        } else if (params[i] == '=') {
+            foundAssignmentToken = true;
+        } else if (!foundAssignmentToken) {
+            name += params[i];
+        } else {
+            value+= params[i];
+        }
+    }
+
+    // set the last parsed value that didn't end with an &
+    SetValue(name, value, windowInfo);
+ }
+
+#endif
+
+bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefFrame> frame,
+                             const CefString& target_url,
+                             const CefString& target_frame_name,
+                             const CefPopupFeatures& popupFeatures,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             bool* no_javascript_access) {
+#ifndef OS_LINUX
+    std::string address = target_url.ToString();
+    std::string url;
+    std::string params;
+    bool foundParamToken = false;
+
+    // make the input lower-case (easier string matching)
+    std::transform(address.begin(), address.end(), address.begin(), ::tolower);
+
+    for (unsigned i = 0; i < address.length(); i++) {
+        if (!foundParamToken) {
+            if (address[i] == L'?') {
+                foundParamToken = true;
+            } else {
+                url += address[i];
+            }
+        } else {
+            params += address[i];
+        }
+    }
+
+    if (url == "about:blank") {
+        ParseParams(params, windowInfo);
+        ComputePopupPlacement(windowInfo);
+    }
+#endif
+    return false;
+}
+
 void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
@@ -160,9 +237,23 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
   // Display a load error message.
   std::stringstream ss;
-  ss << "<html><body><h2>Failed to load URL " << std::string(failedUrl) <<
-        " with error " << std::string(errorText) << " (" << errorCode <<
-        ").</h2></body></html>";
+  
+  ss << "<html>" <<
+        "<head>" <<
+        "  <style type='text/css'>" <<
+        "    body { background: #3c3f41; width:100%; height:100%; margin: 0; padding: 0; }" <<
+        "    .logo { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAMdJREFUeNpi0Vz9SICBgWE9EDswkAYOAHEgE5maGaB61rPANGdr8QMxH1E6p177BMQfwYawwARBmv38/FAUbtq0CUxjE4cawMDEQCFgwSYIs5mQS8AG/P//nyybYfpYGP6T6fb/1HLB/39kGgDVx/L37z+yDIDpY/n35y+GJCy08YU+TB/L719/yXIBTB/L75+/wIyeky8x4h9XugCpheljFOw4vf8/eZmJgRGYI1l+/vgdCPTPemC0kGQIIyPjASYW5kCAAAMA5Oph7ZyIYMQAAAAASUVORK5CYII='); }"
+        "    .debug { cursor: hand; position: absolute; bottom: 16px; right: 16px; width: 16px; height: 16px; font-family: sans-serif; font-size: .75em; color: #999; }" <<
+        "  </style>" <<
+        "  <script type='text/javascript'>" <<
+        "    var url = '" << std::string(failedUrl) << "';" <<
+        "    var errorText = '" << std::string(errorText) << "';" <<
+        "    var errorCode = '" << errorCode << "';" <<
+        "    var msg = 'Failed to load URL ' + url + ' with error: ' + errorText + ' (' + errorCode + ')';" <<
+        "    console.error(msg);" <<
+        "  </script>" <<
+        "</head>" <<
+        "<body><a class='debug logo' onclick='brackets.app.showDeveloperTools()' title='Click to view loading error in Developer Tools'>&nbsp;</a></body></html>";
   frame->LoadString(ss.str(), failedUrl);
 }
 
@@ -341,8 +432,13 @@ void ClientHandler::SendOpenFileCommand(CefRefPtr<CefBrowser> browser, const Cef
   std::string fileArrayStr(fileArray);
   // FIXME: Use SendJSCommand once it supports parameters
   std::string cmd = "require('command/CommandManager').execute('file.openDroppedFiles'," + fileArrayStr + ")";
-  browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
+
+  // if files are droppend and the Open Dialog is visible, then browser is NULL
+  // This fixes https://github.com/adobe/brackets/issues/7752
+  if (browser) {
+    browser->GetMainFrame()->ExecuteJavaScript(CefString(cmd.c_str()),
                                 browser->GetMainFrame()->GetURL(), 0);
+  }
 }
 
 void ClientHandler::DispatchCloseToNextBrowser()

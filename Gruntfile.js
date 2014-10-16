@@ -118,8 +118,6 @@ module.exports = function (grunt) {
                     }
                 ]
             },
-            // FIXME: see stage-mac task issues with copying .app bundles
-            /*
             "mac": {
                 "files": [
                     {
@@ -128,9 +126,19 @@ module.exports = function (grunt) {
                         "src"       : ["**"],
                         "dest"      : "installer/mac/staging/<%= build.name %>.app/"
                     }
+                ],
+                options: {
+                    mode: true
+                }
+            },
+            "cefplist" : {
+                "files": [
+                    {
+                        "src"  : "CEF-Info.plist",
+                        "dest" : "installer/mac/staging/<%= build.name %>.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/Info.plist"
+                    }
                 ]
             },
-            */
             "linux": {
                 "files": [
                     {
