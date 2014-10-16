@@ -36,7 +36,9 @@ maxerr: 50, node: true */
     
     var fs                = require("fs"),
         http              = require("http"),
+        path              = require("path"),
         WebSocket         = require("./thirdparty/ws"),
+        connect           = require("./thirdparty/connect"),
         EventEmitter      = require("events").EventEmitter,
         Logger            = require("./Logger"),
         ConnectionManager = require("./ConnectionManager"),
@@ -97,29 +99,46 @@ maxerr: 50, node: true */
      * Starts the server.
      */
     function start() {
+        var app = connect(),
+            devPath = path.resolve(__dirname + "/../dev/src"),
+            installPath = path.resolve(__dirname + "/../www");
+        
+        function nodeApiHandler(req, res, next) {
+            var isGet = req.method === "GET",
+                isApiCall = (req.url === "/api" || req.url.indexOf("/api/") === 0);
+
+            if (isGet && isApiCall) {
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                    JSON.stringify(DomainManager.getDomainDescriptions(),
+                                    null,
+                                    4)
+                );
+            } else {
+                next();
+            }
+        }
+
+        // Legacy /api handler for DomainManager
+        app.use(nodeApiHandler);
+
+        // Static HTTP server for brackets core /www (or /dev/src)
+        // TODO detect file.exists(devPath)
+        // TODO native code still looks for /www or /dev/src
+        //      need to change native code hardcode a redirect:
+        // brackets.app.getNodeState(function (err, port) {
+        //   if (err) {
+        //     console.log("HTTP Server Failed");
+        //   } else {
+        //     window.location.href = "http://localhost:" + port + "/index.html";
+        //   }
+        // });
+        app.use(connect["static"](installPath));
+
         function sendCommandToParentProcess() {
             var cmd = "\n\n" + (_commandCount++) + "|"
                 + Array.prototype.join.call(arguments, "|") + "\n\n";
             process.stdout.write(cmd);
-        }
-        
-        function httpRequestHandler(req, res) {
-            if (req.method === "GET") {
-                if (req.url === "/api" || req.url.indexOf("/api/") === 0) {
-                    res.setHeader("Content-Type", "application/json");
-                    res.end(
-                        JSON.stringify(DomainManager.getDomainDescriptions(),
-                                        null,
-                                        4)
-                    );
-                } else {
-                    res.setHeader("Content-Type", "text/plain");
-                    res.end("Brackets-Shell Server\n");
-                }
-            } else { // Not a GET request
-                res.statusCode = 501;
-                res.end();
-            }
         }
         
         function setupStdin() {
@@ -180,7 +199,7 @@ maxerr: 50, node: true */
                 }, timeout);
             }
         
-            httpServer = http.createServer(httpRequestHandler);
+            httpServer = http.createServer(app);
             
             httpServer.on("error", function () {
                 if (callback) {
@@ -259,5 +278,4 @@ maxerr: 50, node: true */
     // Public interface
     Server.start                    = start;
     Server.stop                     = stop;
-    
 }());
