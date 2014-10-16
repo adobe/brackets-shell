@@ -662,7 +662,7 @@ void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
 		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
         
-        AdjustRectForAutoHideBars(&rect);
+        	AdjustRectForAutoHideBars(&rect);
 	} else {
 		cef_dark_window::ComputeWindowIconRect(rect);
 	}
@@ -687,7 +687,7 @@ void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect) const
 		rect.left = ir.right + ::kWindowFrameSize;
 		rect.right = mr.left - ::kWindowFrameSize;
 
-        AdjustRectForAutoHideBars(&rect);
+        	AdjustRectForAutoHideBars(&rect);
 	} else {
 		cef_dark_window::ComputeWindowCaptionRect(rect);
 	}
