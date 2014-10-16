@@ -315,7 +315,7 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
 
     if (IsZoomed()) {
         top += ::kSystemIconZoomFactorCY;
-		left += ::kSystemIconZoomFactorCX;
+        left += ::kSystemIconZoomFactorCX;
     }
     ::SetRectEmpty(&rect);
     rect.top =  top;
@@ -722,7 +722,7 @@ void cef_dark_window::DoRepaintClientArea()
 void cef_dark_window::UpdateNonClientArea()
 {
     HDC hdc;
-	if (CanUseAeroGlass()) {
+    if (CanUseAeroGlass()) {
         hdc = GetDC();
     } else {
         hdc = GetWindowDC();

@@ -343,7 +343,7 @@ int cef_dark_aero_window::HandleNcHitTest(LPPOINT ptHit)
 // Setup the device context for drawing
 void cef_dark_aero_window::InitDeviceContext(HDC hdc)
 {
-	if (CanUseAeroGlass()) {
+    if (CanUseAeroGlass()) {
         RECT rectClipClient;
         SetRectEmpty(&rectClipClient);
         GetRealClientRect(&rectClipClient);
@@ -386,8 +386,8 @@ void cef_dark_aero_window::DrawMenuBar(HDC hdc)
         HRGN hrgnUpdate = ::CreateRectRgnIndirect(&rectMenu);
 
         if (::SelectClipRgn(hdc, hrgnUpdate) != NULLREGION) {
-	        DoDrawFrame(hdc);   // Draw menu bar background
-	        DoDrawMenuBar(hdc); // DraW menu items
+            DoDrawFrame(hdc);   // Draw menu bar background
+            DoDrawMenuBar(hdc); // DraW menu items
         }
 
         ::DeleteObject(hrgnUpdate);
@@ -523,7 +523,7 @@ BOOL cef_dark_aero_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 		mi.cbSize = sizeof (mi);
 
 		::GetMonitorInfo(hm, &mi);
-		mmi->ptMaxSize.x = ::RectWidth(mi.rcWork) + ::kWindowFrameSize;	
+		mmi->ptMaxSize.x = ::RectWidth(mi.rcWork) + ::kWindowFrameSize;
 		mmi->ptMaxSize.y = ::RectHeight(mi.rcWork) + ::kWindowFrameSize;
 
 		mmi->ptMaxPosition.x = -::kWindowFrameSize;
@@ -653,7 +653,7 @@ void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 
 		if (IsZoomed()) {
 			top = ::kSystemIconZoomFactorCY;
-			left = ::kSystemIconZoomFactorCX;    
+			left = ::kSystemIconZoomFactorCX;
 		}
 
 		::SetRectEmpty(&rect);
@@ -661,8 +661,8 @@ void cef_dark_aero_window::ComputeWindowIconRect(RECT& rect) const
 		rect.left = left;
 		rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
 		rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
-        
-        	AdjustRectForAutoHideBars(&rect);
+		
+		AdjustRectForAutoHideBars(&rect);
 	} else {
 		cef_dark_window::ComputeWindowIconRect(rect);
 	}
@@ -687,7 +687,7 @@ void cef_dark_aero_window::ComputeWindowCaptionRect(RECT& rect) const
 		rect.left = ir.right + ::kWindowFrameSize;
 		rect.right = mr.left - ::kWindowFrameSize;
 
-        	AdjustRectForAutoHideBars(&rect);
+		AdjustRectForAutoHideBars(&rect);
 	} else {
 		cef_dark_window::ComputeWindowCaptionRect(rect);
 	}
