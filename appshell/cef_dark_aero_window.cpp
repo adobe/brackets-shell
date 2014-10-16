@@ -517,18 +517,18 @@ BOOL cef_dark_aero_window::HandleNcMouseMove(UINT uHitTest, LPPOINT pt)
 // WM_GETMINMAXINFO handler
 BOOL cef_dark_aero_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
 {
-    if (CanUseAeroGlass()) {
-        HMONITOR hm = ::MonitorFromWindow(mWnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi = {0};
-        mi.cbSize = sizeof (mi);
+	if (CanUseAeroGlass()) {
+		HMONITOR hm = ::MonitorFromWindow(mWnd, MONITOR_DEFAULTTONEAREST);
+		MONITORINFO mi = {0};
+		mi.cbSize = sizeof (mi);
 
-        ::GetMonitorInfo(hm, &mi);
+		::GetMonitorInfo(hm, &mi);
+		mmi->ptMaxSize.x = ::RectWidth(mi.rcWork) + ::kWindowFrameSize;	
+		mmi->ptMaxSize.y = ::RectHeight(mi.rcWork) + ::kWindowFrameSize;
 
-        mmi->ptMaxSize.x = mi.rcWork.right + ::kWindowFrameSize;
-        mmi->ptMaxSize.y = mi.rcWork.bottom + ::kWindowFrameSize;
-        mmi->ptMaxPosition.x = -::kWindowFrameSize;
-        mmi->ptMaxPosition.y = -::kWindowFrameSize;
-    }
+		mmi->ptMaxPosition.x = -::kWindowFrameSize;
+		mmi->ptMaxPosition.y = -::kWindowFrameSize;
+	}
 
     return TRUE;
 }
