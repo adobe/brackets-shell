@@ -123,6 +123,12 @@ bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
 
  void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
  {
+      // both must be set to work
+      if (windowInfo.width == CW_USEDEFAULT ||
+          windowInfo.height == CW_USEDEFAULT) {
+         return;
+     }
+	 
      RECT rectMainWnd;
      gMainWnd->GetWindowRect(&rectMainWnd);
 
