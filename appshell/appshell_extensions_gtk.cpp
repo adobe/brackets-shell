@@ -550,15 +550,61 @@ int ShowFolderInOSWindow(ExtensionString pathname)
 {
     int error = NO_ERROR;
     GError *gerror = NULL;
-    gchar *uri = g_strdup_printf("file://%s", pathname.c_str());
-    
-    if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
-        error = ConvertGnomeErrorCode(gerror);
-        g_warning("%s", gerror->message);
-        g_error_free(gerror);
+    gchar *uri = NULL, *cmd_line = NULL;
+    FILE *fp = NULL;
+    gchar line[256] = {0};
+    const gchar xdg_query[] = "xdg-mime query default inode/directory";
+    const gchar *fmanagers[] = {"nautilus", "nemo", "thunar", "caja", "dolphin", "konqueror", "krusader", "pcmanfm"};
+    static int fmanager_index = 0;
+    static gboolean fmanager_detected = FALSE;
+    static gboolean ShowInOs_FirstRun = TRUE;
+
+    if (ShowInOs_FirstRun == TRUE) {
+        if ((fp = popen(xdg_query, "r")) != NULL) {
+            if (fgets(line, sizeof(line), fp)) { // Caring about the first (and only) line read
+                // Convert to lowercase
+                g_utf8_strdown(line, g_utf8_strlen(line, -1));
+                
+                for(int i=0; i<(sizeof(fmanagers) / sizeof(fmanagers[0])); i++) {
+                    if (g_strstr_len(line, g_utf8_strlen(line, -1), fmanagers[i])) {
+                        fmanager_detected = TRUE;
+                        fmanager_index = i;
+                        break;
+                    }
+                }
+            }
+            pclose(fp);
+        }
+        else {
+            g_warning("popen failed");
+        }
+        if (fmanager_detected == FALSE) g_warning("Couldn't detect the default File Manager for this distro!");
+        ShowInOs_FirstRun = FALSE;
     }
-    
-    g_free(uri);
+
+    if (fmanager_detected == TRUE) {
+        cmd_line = g_strdup_printf("%s '%s'", fmanagers[fmanager_index], pathname.c_str());
+        if (!g_spawn_command_line_async(cmd_line, &gerror)) {
+            error = ConvertGnomeErrorCode(gerror);
+            g_warning("%s", gerror->message);
+            g_error_free(gerror);
+        }
+        g_free(cmd_line);
+    }
+    else { // Could not detect the file manager, so fall back to the original implementation
+        if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
+            uri = g_strdup_printf("file://%s", pathname.c_str());
+        } else {
+            // Extract the parent directory name (only for files)
+            uri = g_strdup_printf("file://%s", g_path_get_dirname(pathname.c_str()) );
+        }
+        if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+            error = ConvertGnomeErrorCode(gerror);
+            g_warning("%s", gerror->message);
+            g_error_free(gerror);
+        }
+        g_free(uri);
+    }
 
     return error;
 }
