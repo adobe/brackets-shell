@@ -119,21 +119,11 @@ maxerr: 50, node: true */
             }
         }
 
+        // TODO fs.exists(devPath) and fs.exists(installPath)
         // Legacy /api handler for DomainManager
         app.use(nodeApiHandler);
-
-        // Static HTTP server for brackets core /www (or /dev/src)
-        // TODO detect file.exists(devPath)
-        // TODO native code still looks for /www or /dev/src
-        //      need to change native code hardcode a redirect:
-        // brackets.app.getNodeState(function (err, port) {
-        //   if (err) {
-        //     console.log("HTTP Server Failed");
-        //   } else {
-        //     window.location.href = "http://localhost:" + port + "/index.html";
-        //   }
-        // });
-        app.use(connect["static"](installPath));
+        app.use(connect["static"](devPath));
+        app.use(connect.directory(devPath));
 
         function sendCommandToParentProcess() {
             var cmd = "\n\n" + (_commandCount++) + "|"
@@ -207,7 +197,7 @@ maxerr: 50, node: true */
                 }
             });
             
-            httpServer.listen(0, "127.0.0.1", function () {
+            httpServer.listen(59234, "127.0.0.1", function () {
                 var wsServer = null;
                 var address = httpServer.address();
                 if (address !== null) {
