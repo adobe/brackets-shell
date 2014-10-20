@@ -126,6 +126,11 @@ bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
       // both must be set to work
       if (windowInfo.width == CW_USEDEFAULT ||
           windowInfo.height == CW_USEDEFAULT) {
+            // force both vals to be CW_USEDEFAULT in this
+            //  case because Windows doesn't correctly handle 
+            //  only one value being is supplied on input
+            windowInfo.width = CW_USEDEFAULT;
+            windowInfo.height = CW_USEDEFAULT;
          return;
      }
 	 
