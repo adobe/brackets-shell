@@ -239,7 +239,7 @@
             }
           ],
           'cflags': [
-            '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+            '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0 dbus-glib-1)',
             '<(march)',
           ],
           'include_dirs': [
@@ -283,12 +283,12 @@
           ],
           'link_settings': {
             'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
+              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0 dbus-glib-1)',
               '-Wl,-rpath,\$$ORIGIN/lib',
               '<(march)'
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
+              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0 dbus-glib-1)',
               '$(BUILDTYPE)/libcef.so',
               'appshell_extensions_js.o',
             ],
@@ -328,7 +328,7 @@
       'conditions': [
         ['OS=="linux"', {
           'cflags': [
-          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0 dbus-glib-1)',
           '<(march)',
           ],
           'default_configuration': 'Release',

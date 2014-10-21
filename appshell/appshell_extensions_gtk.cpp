@@ -25,6 +25,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
+#include <dbus/dbus.h>                  //
+#include <dbus/dbus-glib.h>             // TODO: Ask permission to use libdbus-glib-1
+#include <dbus/dbus-glib-lowlevel.h>    //
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
@@ -546,64 +549,82 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
+gboolean OrgFreedesktopFileManager1ShowItems(const gchar *aPath) {
+    static gboolean org_freedesktop_FileManager1_exists = TRUE;
+    GError* error = NULL;
+
+    if (!org_freedesktop_FileManager1_exists) {
+        return FALSE;
+    }
+
+    DBusGConnection* dbusGConnection = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+
+    if (!dbusGConnection) {
+        if (error) {
+            g_printerr("Failed to open connection to session bus: %s\n", error->message);
+            g_error_free(error);
+        }
+        return FALSE;
+    }
+
+    gchar *uri = g_filename_to_uri(aPath, NULL, NULL);
+    if (uri == NULL) {
+        return FALSE;
+    }
+
+    DBusConnection* dbusConnection = dbus_g_connection_get_connection(dbusGConnection);
+    // Make sure we do not exit the entire program if DBus connection get lost.
+    dbus_connection_set_exit_on_disconnect(dbusConnection, FALSE);
+
+    DBusGProxy* dbusGProxy = dbus_g_proxy_new_for_name(dbusGConnection,
+                                                       "org.freedesktop.FileManager1",
+                                                       "/org/freedesktop/FileManager1",
+                                                       "org.freedesktop.FileManager1");
+
+    const gchar *uris[2] = { uri, NULL };
+    gboolean rv_dbus_call = dbus_g_proxy_call(dbusGProxy, "ShowItems", NULL, G_TYPE_STRV, uris,
+                                              G_TYPE_STRING, "", G_TYPE_INVALID, G_TYPE_INVALID);
+
+    g_object_unref(dbusGProxy);
+    dbus_g_connection_unref(dbusGConnection);
+    g_free(uri);
+
+    if (!rv_dbus_call) {
+        org_freedesktop_FileManager1_exists = FALSE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
     int error = NO_ERROR;
     GError *gerror = NULL;
-    gchar *uri = NULL, *cmd_line = NULL;
-    FILE *fp = NULL;
-    gchar line[256] = {0};
-    const gchar xdg_query[] = "xdg-mime query default inode/directory";
-    const gchar *fmanagers[] = {"nautilus", "nemo", "thunar", "caja", "dolphin", "konqueror", "krusader", "pcmanfm"};
-    static int fmanager_index = 0;
-    static gboolean fmanager_detected = FALSE;
-    static gboolean ShowInOs_FirstRun = TRUE;
+    gchar *uri = NULL, *parentdir = NULL;
 
-    if (ShowInOs_FirstRun == TRUE) {
-        if ((fp = popen(xdg_query, "r")) != NULL) {
-            if (fgets(line, sizeof(line), fp)) { // Caring about the first (and only) line read
-                // Convert to lowercase
-                g_utf8_strdown(line, g_utf8_strlen(line, -1));
-                
-                for(int i=0; i<(sizeof(fmanagers) / sizeof(fmanagers[0])); i++) {
-                    if (g_strstr_len(line, g_utf8_strlen(line, -1), fmanagers[i])) {
-                        fmanager_detected = TRUE;
-                        fmanager_index = i;
-                        break;
-                    }
-                }
-            }
-            pclose(fp);
-        }
-        else {
-            g_warning("popen failed");
-        }
-        if (fmanager_detected == FALSE) g_warning("Couldn't detect the default File Manager for this distro!");
-        ShowInOs_FirstRun = FALSE;
-    }
-
-    if (fmanager_detected == TRUE) {
-        cmd_line = g_strdup_printf("%s '%s'", fmanagers[fmanager_index], pathname.c_str());
-        if (!g_spawn_command_line_async(cmd_line, &gerror)) {
-            error = ConvertGnomeErrorCode(gerror);
-            g_warning("%s", gerror->message);
-            g_error_free(gerror);
-        }
-        g_free(cmd_line);
-    }
-    else { // Could not detect the file manager, so fall back to the original implementation
-        if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
-            uri = g_strdup_printf("file://%s", pathname.c_str());
-        } else {
-            // Extract the parent directory name (only for files)
-            uri = g_strdup_printf("file://%s", g_path_get_dirname(pathname.c_str()) );
-        }
+    if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
+        uri = g_filename_to_uri(pathname.c_str(), NULL, NULL);
         if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
             error = ConvertGnomeErrorCode(gerror);
             g_warning("%s", gerror->message);
             g_error_free(gerror);
         }
         g_free(uri);
+    }
+    else {
+        if (!OrgFreedesktopFileManager1ShowItems(pathname.c_str())) {
+            // Fall back to using gtk_show_uri on the dirname (without highlighting the file)
+            parentdir = g_path_get_dirname(pathname.c_str());
+            uri = g_filename_to_uri(parentdir, NULL, NULL);
+            if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+                error = ConvertGnomeErrorCode(gerror);
+                g_warning("%s", gerror->message);
+                g_error_free(gerror);
+            }
+            g_free(parentdir);
+            g_free(uri);
+        }
     }
 
     return error;
