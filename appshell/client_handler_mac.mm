@@ -165,17 +165,37 @@ void ClientHandler::CloseMainWindow() {
   isReallyClosing = true;
 }
 
-- (BOOL)isFullScreenSupported {
-  SInt32 version;
-  Gestalt(gestaltSystemVersion, &version);
-  return (version >= 0x1070);
+//
+-(BOOL)isRunningOnYosemite {
+    NSDictionary * dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    NSString *version =  [dict objectForKey:@"ProductVersion"];
+    return ([version hasPrefix:@"10.10"]);
 }
 
 
+- (BOOL)isFullScreenSupported {
+    // Return False on Yosemite so we
+    //  don't draw our own full screen button
+    //  and handle full screen mode
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1070);
+    }
+    return false;
+}
+
 -(BOOL)needsFullScreenActivateHack {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1090);
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1090);
+    }
+    return false;
+}
+
+-(BOOL)useSystemTrafficLights {
+    return [self isRunningOnYosemite];
 }
 
 -(void)setFullScreenButtonView:(NSView *)view {
@@ -185,6 +205,8 @@ void ClientHandler::CloseMainWindow() {
 -(void)setTrafficLightsView:(NSView *)view {
   trafficLightsView = view;
 }
+
+
 
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
@@ -237,7 +259,7 @@ void ClientHandler::CloseMainWindow() {
     NSButton* windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    if (!trafficLightsView) {
+    if (![self useSystemTrafficLights] && !trafficLightsView) {
         windowButton = [theWin standardWindowButton:NSWindowCloseButton];
         [windowButton setHidden:YES];
         windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
