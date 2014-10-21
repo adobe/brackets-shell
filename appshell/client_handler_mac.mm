@@ -165,13 +165,11 @@ void ClientHandler::CloseMainWindow() {
   isReallyClosing = true;
 }
 
-//
 -(BOOL)isRunningOnYosemite {
+    // this API returns nil prior to Yosemite
     NSDictionary * dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    NSString *version =  [dict objectForKey:@"ProductVersion"];
-    return ([version hasPrefix:@"10.10"]);
+    return dict != nil;
 }
-
 
 - (BOOL)isFullScreenSupported {
     // Return False on Yosemite so we
