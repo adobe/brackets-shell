@@ -222,9 +222,9 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)isRunningOnYosemite {
-    // this API returns nil prior to Yosemite
-    NSDictionary * dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    return dict != nil;
+    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    NSString* version =  [dict objectForKey:@"ProductVersion"];
+    return [version hasPrefix:@"10.10"];
 }
 
 - (BOOL)isFullScreenSupported {
