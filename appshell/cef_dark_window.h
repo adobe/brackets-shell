@@ -128,7 +128,8 @@ protected:
     virtual void ComputeMenuBarRect(RECT& rect) const;
     virtual void ComputeRequiredMenuRect(RECT& rect) const;
   
-    
+    virtual void AdjustMenuItemRect(RECT& itemRect) const;
+
     // Drawing Initializers
     void InitDrawingResources();
     void LoadSysButtonImages();
