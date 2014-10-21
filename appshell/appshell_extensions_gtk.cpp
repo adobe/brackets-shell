@@ -25,9 +25,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
-#include <dbus/dbus.h>                  //
-#include <dbus/dbus-glib.h>             // TODO: Ask permission to use libdbus-glib-1
-#include <dbus/dbus-glib-lowlevel.h>    //
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
