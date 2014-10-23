@@ -748,6 +748,28 @@ if (!appshell.app) {
     });
  
     /**
+     * Return the user's keyboard layout language.
+     */
+    native function GetCurrentKeyboardLayout();
+    Object.defineProperty(appshell.app, "keyboard", {
+        writeable: false,
+        get : function() { return GetCurrentKeyboardLayout(); },
+        enumerable : true,
+        configurable : false
+    });
+ 
+    /**
+     * Return the user's keyboard layout device type.
+     */
+    native function GetKeyboardType();
+    Object.defineProperty(appshell.app, "keyboardType", {
+        writeable: false,
+        get : function() { return GetKeyboardType(); },
+        enumerable : true,
+        configurable : false
+    });
+ 
+    /**
      * Returns the full path of the application support directory.
      * On the Mac, it's /Users/<user>/Library/Application Support[/GROUP_NAME]/APP_NAME
      * On Windows, it's C:\Users\<user>\AppData\Roaming[\GROUP_NAME]\APP_NAME

@@ -153,6 +153,10 @@ class AppShellExtensionHandler : public CefV8Handler {
           retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
       } else if (name == "GetCurrentLanguage") {
           retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
+      } else if (name == "GetCurrentKeyboardLayout") {
+          retval = CefV8Value::CreateString(client_app_->GetCurrentKeyboardLayout());
+      } else if (name == "GetKeyboardType") {
+          retval = CefV8Value::CreateString(client_app_->GetKeyboardType());
       } else if (name == "GetApplicationSupportDirectory") {
           retval = CefV8Value::CreateString(ClientApp::AppGetSupportDirectory());
       } else if (name == "GetUserDocumentsDirectory") {

@@ -49,6 +49,19 @@ CefString ClientApp::GetCurrentLanguage()
     return CefString(loc);
 }
 
+CefString ClientApp::GetCurrentKeyboardLayout()
+{
+	// TODO: Get the user's active keyboard layout language
+	//       Returning the UI language for now
+    return GetCurrentLanguage();
+}
+
+CefString ClientApp::GetKeyboardType()
+{
+	// This API may not be needed for Linux. So just return an empty string for now.
+	return CefString("");
+}
+
 std::string ClientApp::GetExtensionJSSource()
 {
     //# We objcopy the appshell/appshell_extensions.js file, and link it directly into the binary.

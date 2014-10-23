@@ -30,15 +30,12 @@
 #include <MMSystem.h>
 #include <ShlObj.h>
 #include <string>
+#include <stdio.h>
 
 extern DWORD g_appStartupTime;
 
-CefString ClientApp::GetCurrentLanguage()
+CefString GetLanguageFromId(LANGID langID)
 {
-	// Get the user's selected language
-	// Defaults to the system installed language if not using MUI.
-	LANGID langID = GetUserDefaultUILanguage();
-
 	// Convert LANGID to a RFC 4646 language tag (per navigator.language)
 	int langSize = GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, NULL, 0);
 	int countrySize = GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, NULL, 0);
@@ -57,6 +54,35 @@ CefString ClientApp::GetCurrentLanguage()
 	delete [] country;
 
 	return CefString(locale);
+}
+
+CefString ClientApp::GetCurrentLanguage()
+{
+	// Get the user's selected language
+	// Defaults to the system installed language if not using MUI.
+	LANGID langID = GetUserDefaultUILanguage();
+    return GetLanguageFromId(langID);
+}
+
+
+CefString ClientApp::GetCurrentKeyboardLayout()
+{
+    // Get the user's active keyboard layout language
+	int kbd = (int)GetKeyboardLayout(0);
+    LANGID langID = MAKELANGID(kbd & 0xFFFF, kbd & 0xFFFF0000);
+    return GetLanguageFromId(langID);
+}
+
+CefString ClientApp::GetKeyboardType()
+{
+    // Get the user's active keyboard device type
+    int keyboardLayout = ((int)GetKeyboardLayout(0) & 0xFFFF0000) >> 16;
+    wchar_t *type = new wchar_t[10];
+    int len = swprintf_s(type, 10, L"%d", keyboardLayout);
+    std::wstring keyboardType(type);
+
+    delete [] type;
+    return CefString(keyboardType);
 }
 
 std::string ClientApp::GetExtensionJSSource()
