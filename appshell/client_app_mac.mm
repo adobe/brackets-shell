@@ -57,15 +57,15 @@ CefString ClientApp::GetCurrentLanguage()
 
 CefString ClientApp::GetCurrentKeyboardLayout()
 {
-	// TODO: Get the user's active keyboard layout language
-	//       Returning the UI language for now
+    // TODO: Get the user's active keyboard layout language
+    //       Returning the UI language for now
     return GetCurrentLanguage();
 }
 
 CefString ClientApp::GetKeyboardType()
 {
-	// This API is used for Windows only. So just return an empty string on Mac.
-	return CefString("");
+    // This API is used for Windows only. So just return an empty string on Mac.
+    return CefString("");
 }
 
 std::string ClientApp::GetExtensionJSSource()

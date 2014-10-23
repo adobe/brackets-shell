@@ -36,31 +36,31 @@ extern DWORD g_appStartupTime;
 
 CefString GetLanguageFromId(LANGID langID)
 {
-	// Convert LANGID to a RFC 4646 language tag (per navigator.language)
-	int langSize = GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, NULL, 0);
-	int countrySize = GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, NULL, 0);
+    // Convert LANGID to a RFC 4646 language tag (per navigator.language)
+    int langSize = GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, NULL, 0);
+    int countrySize = GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, NULL, 0);
 
-	wchar_t *lang = new wchar_t[langSize + countrySize + 1];
-	wchar_t *country = new wchar_t[countrySize];
-	
-	GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, lang, langSize);
-	GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, country, countrySize);
+    wchar_t *lang = new wchar_t[langSize + countrySize + 1];
+    wchar_t *country = new wchar_t[countrySize];
 
-	// add hyphen
-	wcscat(wcscat(lang, L"-"), country);
-	std::wstring locale(lang);
+    GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, lang, langSize);
+    GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, country, countrySize);
 
-	delete [] lang;
-	delete [] country;
+    // add hyphen
+    wcscat(wcscat(lang, L"-"), country);
+    std::wstring locale(lang);
 
-	return CefString(locale);
+    delete [] lang;
+    delete [] country;
+
+    return CefString(locale);
 }
 
 CefString ClientApp::GetCurrentLanguage()
 {
-	// Get the user's selected language
-	// Defaults to the system installed language if not using MUI.
-	LANGID langID = GetUserDefaultUILanguage();
+    // Get the user's selected language
+    // Defaults to the system installed language if not using MUI.
+    LANGID langID = GetUserDefaultUILanguage();
     return GetLanguageFromId(langID);
 }
 
@@ -68,7 +68,7 @@ CefString ClientApp::GetCurrentLanguage()
 CefString ClientApp::GetCurrentKeyboardLayout()
 {
     // Get the user's active keyboard layout language
-	int kbd = (int)GetKeyboardLayout(0);
+    int kbd = (int)GetKeyboardLayout(0);
     LANGID langID = MAKELANGID(kbd & 0xFFFF, kbd & 0xFFFF0000);
     return GetLanguageFromId(langID);
 }
