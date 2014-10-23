@@ -24,10 +24,8 @@
 #include "client_app.h"
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <gio/gio.h>
 #include <gtk/gtk.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
 #include "client_handler.h"
@@ -549,48 +547,63 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
-gboolean OrgFreedesktopFileManager1ShowItems(const gchar *aPath) {
-    static gboolean org_freedesktop_FileManager1_exists = TRUE;
-    GError* error = NULL;
+gboolean FileManager1_ShowItems(const gchar *path) {
+    static gboolean FileManager1_exists = TRUE;
+    GDBusProxy *proxy = NULL;
+    GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE;
+    gchar *uri = NULL;
+    GVariant *call_result = NULL;
+    GError *error = NULL;
 
-    if (!org_freedesktop_FileManager1_exists) {
+    if (!FileManager1_exists) {
         return FALSE;
     }
 
-    DBusGConnection* dbusGConnection = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+                                          flags,
+                                          NULL,
+                                          "org.freedesktop.FileManager1",  // name
+                                          "/org/freedesktop/FileManager1", // path
+                                          "org.freedesktop.FileManager1",  // iface
+                                          NULL,
+                                          &error);
 
-    if (!dbusGConnection) {
-        if (error) {
-            g_printerr("Failed to open connection to session bus: %s\n", error->message);
-            g_error_free(error);
-        }
+    if (proxy == NULL) {
+        g_printerr("Error creating proxy: %s\n", error->message);
+        g_error_free(error);
         return FALSE;
     }
 
-    gchar *uri = g_filename_to_uri(aPath, NULL, NULL);
+    uri = g_filename_to_uri(path, NULL, NULL);
     if (uri == NULL) {
         return FALSE;
     }
 
-    DBusConnection* dbusConnection = dbus_g_connection_get_connection(dbusGConnection);
-    // Make sure we do not exit the entire program if DBus connection get lost.
-    dbus_connection_set_exit_on_disconnect(dbusConnection, FALSE);
-
-    DBusGProxy* dbusGProxy = dbus_g_proxy_new_for_name(dbusGConnection,
-                                                       "org.freedesktop.FileManager1",
-                                                       "/org/freedesktop/FileManager1",
-                                                       "org.freedesktop.FileManager1");
-
+    // The "ShowItems" method requires two parameters
+    // 1. An array of URI strings, the files to show
+    // 2. The DESKTOP_STARTUP_ID environment variable, used to prevent focus stealing
+    // (Reference: http://www.freedesktop.org/wiki/Specifications/file-manager-interface/)
     const gchar *uris[2] = { uri, NULL };
-    gboolean rv_dbus_call = dbus_g_proxy_call(dbusGProxy, "ShowItems", NULL, G_TYPE_STRV, uris,
-                                              G_TYPE_STRING, "", G_TYPE_INVALID, G_TYPE_INVALID);
+    const gchar *startup_id = "dontstealmyfocus";
 
-    g_object_unref(dbusGProxy);
-    dbus_g_connection_unref(dbusGConnection);
+    call_result = g_dbus_proxy_call_sync(proxy,
+                                         "ShowItems", // method
+                                         g_variant_new("(^ass)", uris, startup_id), // parameters
+                                         G_DBUS_CALL_FLAGS_NONE,
+                                         -1,
+                                         NULL,
+                                         &error);
+
+    g_object_unref(proxy);
     g_free(uri);
 
-    if (!rv_dbus_call) {
-        org_freedesktop_FileManager1_exists = FALSE;
+    if (call_result != NULL) {
+        g_variant_unref(call_result);
+    }
+    else {
+        g_printerr("Error calling the 'ShowItems' method: %s\n", error->message);
+        g_error_free(error);
+        FileManager1_exists = FALSE;
         return FALSE;
     }
 
@@ -613,7 +626,7 @@ int ShowFolderInOSWindow(ExtensionString pathname)
         g_free(uri);
     }
     else {
-        if (!OrgFreedesktopFileManager1ShowItems(pathname.c_str())) {
+        if (!FileManager1_ShowItems(pathname.c_str())) {
             // Fall back to using gtk_show_uri on the dirname (without highlighting the file)
             parentdir = g_path_get_dirname(pathname.c_str());
             uri = g_filename_to_uri(parentdir, NULL, NULL);
