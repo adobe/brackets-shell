@@ -65,7 +65,7 @@ CefString ClientApp::GetCurrentKeyboardLayout()
 CefString ClientApp::GetKeyboardType()
 {
 	// This API is used for Windows only. So just return an empty string on Mac.
-	return CefString(@"");
+	return CefString("");
 }
 
 std::string ClientApp::GetExtensionJSSource()
