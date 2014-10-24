@@ -155,7 +155,10 @@ namespace WindowsTaskBar
         RECT tbOther;
         BOOL intersection = ::IntersectRect(&tbOther, &info.rcMonitor, &bar.rc);
 
-        return ((dwStyle & WS_EX_TOPMOST) && intersection);
+        // Short-circuit if there's only 1 monitor and assume it intersects
+        bool singleMonitor = (::GetSystemMetrics(SM_CMONITORS) == 1);
+
+        return ((dwStyle & WS_EX_TOPMOST) && (singleMonitor || intersection));
     }
 
     // API
