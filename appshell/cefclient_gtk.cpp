@@ -195,14 +195,18 @@ int main(int argc, char* argv[]) {
   // Set window icon
   std::vector<std::string> icons(APPICONS, APPICONS + sizeof(APPICONS) / sizeof(APPICONS[0]) );
   GList *list = NULL;
-  for (int i = 0; i < icons.size(); ++i) {
-    std::string path = icons[i];
-    
-    GdkPixbuf *icon = gdk_pixbuf_new_from_file(path.c_str(), NULL);
-    if (!icon)
-       continue;
-    
-    list = g_list_append(list, icon);
+  for(int i = 0; i < icons.size(); ++i) {
+      GError *error = NULL;
+      std::string running_dir = AppGetRunningDirectory();
+      gchar *iconpath = g_strdup_printf("%s/%s", running_dir.c_str(), icons[i].c_str());
+      GdkPixbuf *icon = gdk_pixbuf_new_from_file(iconpath, &error);
+      g_free(iconpath);
+      if (!icon) {
+          g_printerr("Unable to create GdkPixbuf object. Reason: %s\n", error->message);
+          g_error_free(error);
+          continue;
+      }
+      list = g_list_append(list, icon);
   }
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
