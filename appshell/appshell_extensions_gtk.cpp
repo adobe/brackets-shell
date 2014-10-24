@@ -24,6 +24,7 @@
 #include "client_app.h"
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <gio/gio.h>
 #include <gtk/gtk.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
@@ -546,19 +547,98 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
+gboolean FileManager1_ShowItems(const gchar *path) {
+    static gboolean FileManager1_exists = TRUE;
+    GDBusProxy *proxy = NULL;
+    GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE;
+    gchar *uri = NULL;
+    GVariant *call_result = NULL;
+    GError *error = NULL;
+
+    if (!FileManager1_exists) {
+        return FALSE;
+    }
+
+    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+                                          flags,
+                                          NULL,
+                                          "org.freedesktop.FileManager1",  // name
+                                          "/org/freedesktop/FileManager1", // path
+                                          "org.freedesktop.FileManager1",  // iface
+                                          NULL,
+                                          &error);
+
+    if (proxy == NULL) {
+        g_printerr("Error creating proxy: %s\n", error->message);
+        g_error_free(error);
+        return FALSE;
+    }
+
+    uri = g_filename_to_uri(path, NULL, NULL);
+    if (uri == NULL) {
+        return FALSE;
+    }
+
+    // The "ShowItems" method requires two parameters
+    // 1. An array of URI strings, the files to show
+    // 2. The DESKTOP_STARTUP_ID environment variable, used to prevent focus stealing
+    // (Reference: http://www.freedesktop.org/wiki/Specifications/file-manager-interface/)
+    const gchar *uris[2] = { uri, NULL };
+    const gchar *startup_id = "dontstealmyfocus";
+
+    call_result = g_dbus_proxy_call_sync(proxy,
+                                         "ShowItems", // method
+                                         g_variant_new("(^ass)", uris, startup_id), // parameters
+                                         G_DBUS_CALL_FLAGS_NONE,
+                                         -1,
+                                         NULL,
+                                         &error);
+
+    g_object_unref(proxy);
+    g_free(uri);
+
+    if (call_result != NULL) {
+        g_variant_unref(call_result);
+    }
+    else {
+        g_printerr("Error calling the 'ShowItems' method: %s\n", error->message);
+        g_error_free(error);
+        FileManager1_exists = FALSE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
     int error = NO_ERROR;
     GError *gerror = NULL;
-    gchar *uri = g_strdup_printf("file://%s", pathname.c_str());
-    
-    if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
-        error = ConvertGnomeErrorCode(gerror);
-        g_warning("%s", gerror->message);
-        g_error_free(gerror);
+    gchar *uri = NULL, *parentdir = NULL;
+
+    if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
+        uri = g_filename_to_uri(pathname.c_str(), NULL, NULL);
+        if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+            error = ConvertGnomeErrorCode(gerror);
+            g_warning("%s", gerror->message);
+            g_error_free(gerror);
+        }
+        g_free(uri);
     }
-    
-    g_free(uri);
+    else {
+        if (!FileManager1_ShowItems(pathname.c_str())) {
+            // Fall back to using gtk_show_uri on the dirname (without highlighting the file)
+            parentdir = g_path_get_dirname(pathname.c_str());
+            uri = g_filename_to_uri(parentdir, NULL, NULL);
+            if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+                error = ConvertGnomeErrorCode(gerror);
+                g_warning("%s", gerror->message);
+                g_error_free(gerror);
+            }
+            g_free(parentdir);
+            g_free(uri);
+        }
+    }
 
     return error;
 }
