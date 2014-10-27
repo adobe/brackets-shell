@@ -625,6 +625,7 @@ extern NSMutableArray* pendingOpenFiles;
   CefBrowserSettings settings;
 
   settings.web_security = STATE_DISABLED;
+  settings.accelerated_compositing = STATE_DISABLED;
 
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
