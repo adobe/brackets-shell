@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         var newContent = content.replace(regexp, replacement);
 
         if (newContent === content) {
-            grunt.log.warn("Buildnumber hasn't been updated, because it's already set.");
+            grunt.log.warn("Buildnumber for ", regexp, "hasn't been updated, because it's already set.");
         }
 
         return newContent;
@@ -68,8 +68,18 @@ module.exports = function (grunt) {
         text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
-            /<property name="product\.release\.number" value="(.*)"\/>/,
-            '<property name="product.release.number" value="' + newVersion.version + '"/>'
+            /<property name="product\.release\.number\.major" value="([0-9]+)"\/>/,
+            '<property name="product.release.number.major" value="' + newVersion.major + '"/>'
+        );
+        text = safeReplace(
+            text,
+            /<property name="product\.release\.number\.minor" value="([0-9]+)"\/>/,
+            '<property name="product.release.number.minor" value="' + newVersion.minor + '"/>'
+        );
+        text = safeReplace(
+            text,
+            /<property name="product\.release\.number\.patch" value="([0-9]+)"\/>/,
+            '<property name="product.release.number.patch" value="' + newVersion.patch + '"/>'
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
 

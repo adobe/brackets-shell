@@ -11,9 +11,11 @@ default="build.mul">
   <!-- Product & version labeling -->
   <!-- See also: product name definitions in Brackets_<locale>.wxl -->
   <property name="product.shortname" value="Brackets"/>
-  <property name="product.release.number" value="44"/>
-  <property name="product.version.number" value="${product.release.number}"/>
-  <property name="product.version.name" value="Release ${product.release.number}"/>
+  <property name="product.release.number.major" value="1"/>
+  <property name="product.release.number.minor" value="0"/>
+  <property name="product.release.number.patch" value="0"/>
+  <property name="product.version.number" value="${product.release.number.major}.${product.release.number.minor}.${product.release.number.patch}"/>
+  <property name="product.version.name" value="Release ${product.version.number}"/>
   <property name="product.fullname" value="Brackets ${product.version.name}"/>
   <property name="product.manufacturer" value="brackets.io"/>
   <property name="product.registry.root" value="${product.shortname}"/>

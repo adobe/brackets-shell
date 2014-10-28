@@ -28,15 +28,46 @@ class cef_window;
 class cef_menu;
 
 // RECT helpers
-static __inline int RectWidth(const RECT &r) { return r.right - r.left; }
-static __inline int RectHeight(const RECT &r) { return r.bottom - r.top; }
-
 static __inline void RectSwapLeftRight(RECT &r) 
 {
     LONG temp = r.left;
     r.left = r.right;
     r.right = temp;
 }
+
+static __inline void NormalizeRect(RECT& r) 
+{
+	int nTemp;
+	if (r.left > r.right)
+	{
+		nTemp = r.left;
+		r.left = r.right;
+		r.right = nTemp;
+	}
+	if (r.top > r.bottom)
+	{
+		nTemp = r.top;
+		r.top = r.bottom;
+		r.bottom = nTemp;
+	}
+}
+
+static __inline int RectWidth(const RECT &rIn) 
+{ 
+	RECT r;
+	::CopyRect(&r, &rIn);
+	::NormalizeRect(r);
+	return r.right - r.left; 
+}
+
+static __inline int RectHeight(const RECT &rIn) 
+{ 
+	RECT r;
+	::CopyRect(&r, &rIn);
+	::NormalizeRect(r);
+	return r.bottom - r.top; 
+}
+
 
 // Undocumented Flags for GetDCEx()
 #ifndef DCX_USESTYLE
