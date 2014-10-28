@@ -29,10 +29,14 @@ module.exports = function (grunt) {
         semver = require("semver");
 
     function safeReplace(content, regexp, replacement) {
+        if (! regexp.test(content)) {
+            grunt.fail.fatal("Regexp " + regexp + " did not match");
+        }
+
         var newContent = content.replace(regexp, replacement);
 
         if (newContent === content) {
-            grunt.fail.fatal("Regexp " + regexp + " did not match");
+            grunt.log.warn("Buildnumber hasn't been updated, because it's already set.");
         }
 
         return newContent;
@@ -55,17 +59,9 @@ module.exports = function (grunt) {
         }
 
         var newVersion = semver.parse(release);
-        newVersion.prerelease.push(0);
-        // create a version a.b.c-build for comparison
-        newVersion.format();
 
-        if (semver.cmp(semver.parse(packageJSON.version), '===', newVersion, true)) {
-            grunt.fail.warn("Version is already set to " + packageJSON.version + ". Nothing to do");
-        }
-
-        var majorMinorPatchVersion = newVersion.major + "." + newVersion.minor + "." + newVersion.patch;
         // 1. Update package.json
-        packageJSON.version = newVersion.version;
+        packageJSON.version = newVersion.version + "-0";
         common.writeJSON(packageJsonPath, packageJSON);
 
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.release.number`
@@ -73,7 +69,7 @@ module.exports = function (grunt) {
         text = safeReplace(
             text,
             /<property name="product\.release\.number" value="(.*)"\/>/,
-            '<property name="product.release.number" value="' + majorMinorPatchVersion + '"/>'
+            '<property name="product.release.number" value="' + newVersion.version + '"/>'
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
 
@@ -82,7 +78,7 @@ module.exports = function (grunt) {
         text = safeReplace(
             text,
             /(version)=".*"/,
-            "$1" + "=\"" + majorMinorPatchVersion + "\""
+            "$1" + "=\"" + newVersion.version + "\""
         );
         grunt.file.write(buildInstallerScriptPath, text);
 
@@ -96,7 +92,7 @@ module.exports = function (grunt) {
         text = safeReplace(
             text,
             /(Release )([\d+.]+)/,
-            "$1" + majorMinorPatchVersion
+            "$1" + newVersion.version
         );
         grunt.file.write(versionRcPath, text);
 
@@ -104,13 +100,13 @@ module.exports = function (grunt) {
         text = grunt.file.read(infoPlistPath);
         text = safeReplace(
             text,
-            /(<key>CFBundleVersion<\/key>\s*<string>)(.*?)(<\/string>)/,
-            "$1" + majorMinorPatchVersion + "$3"
+            /(<key>CFBundleVersion<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            "$1" + newVersion.version + "$3"
         );
         text = safeReplace(
             text,
-            /(<key>CFBundleShortVersionString<\/key>\s*<string>)(.*?)(<\/string>)/,
-            "$1" + majorMinorPatchVersion + "$3"
+            /(<key>CFBundleShortVersionString<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            "$1" + newVersion.version + "$3"
         );
         grunt.file.write(infoPlistPath, text);
     });
