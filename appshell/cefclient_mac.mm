@@ -221,16 +221,35 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
+-(BOOL)isRunningOnYosemite {
+    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    NSString* version =  [dict objectForKey:@"ProductVersion"];
+    return [version hasPrefix:@"10.10"];
+}
+
 - (BOOL)isFullScreenSupported {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1070);
+    // Return False on Yosemite so we
+    //  don't draw our own full screen button
+    //  and handle full screen mode
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1070);
+    }
+    return false;
 }
 
 -(BOOL)needsFullScreenActivateHack {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1090);
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1090);
+    }
+    return false;
+}
+
+-(BOOL)useSystemTrafficLights {
+    return [self isRunningOnYosemite];
 }
 
 -(void)windowDidResize:(NSNotification *)notification
@@ -299,7 +318,7 @@ extern NSMutableArray* pendingOpenFiles;
     NSButton *windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    if (!trafficLightsView) {
+    if (![self useSystemTrafficLights] && !trafficLightsView) {
         windowButton = [mainWindow standardWindowButton:NSWindowCloseButton];
         [windowButton setHidden:YES];
         windowButton = [mainWindow standardWindowButton:NSWindowMiniaturizeButton];
@@ -606,6 +625,11 @@ extern NSMutableArray* pendingOpenFiles;
   CefBrowserSettings settings;
 
   settings.web_security = STATE_DISABLED;
+
+  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+  if (cmdLine->HasSwitch(cefclient::kAcceleratedCompositingDisabled)) {
+    settings.accelerated_compositing = STATE_DISABLED;
+  }
 
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default

@@ -1,8 +1,9 @@
-#!/bin/bash 
+#!/bin/bash
 
 # config
 releaseName="Brackets"
-dmgName="${releaseName} Release 0.45"
+version="1.0"
+dmgName="${releaseName} Release ${version}"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"
