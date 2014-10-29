@@ -29,7 +29,7 @@ module.exports = function (grunt) {
         semver = require("semver");
 
     function safeReplace(content, regexp, replacement) {
-        if (! regexp.test(content)) {
+        if (!regexp.test(content)) {
             grunt.fail.fatal("Regexp " + regexp + " did not match");
         }
 
@@ -52,13 +52,14 @@ module.exports = function (grunt) {
             versionRcPath               = "appshell/version.rc",
             infoPlistPath               = "appshell/mac/Info.plist",
             release                     = grunt.option("release") || "",
-            text;
+            text,
+            newVersion;
 
         if (!release || !semver.valid(release)) {
             grunt.fail.fatal("Please specify a release. e.g. grunt set-release --release=1.0.0");
         }
 
-        var newVersion = semver.parse(release);
+        newVersion = semver.parse(release);
 
         // 1. Update package.json
         packageJSON.version = newVersion.version + "-0";
@@ -68,18 +69,13 @@ module.exports = function (grunt) {
         text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
-            /<property name="product\.release\.number\.major" value="([0-9]+)"\/>/,
+            /<property name="product\.release\.number\.major" value="(\d+)"\/>/,
             '<property name="product.release.number.major" value="' + newVersion.major + '"/>'
         );
         text = safeReplace(
             text,
-            /<property name="product\.release\.number\.minor" value="([0-9]+)"\/>/,
+            /<property name="product\.release\.number\.minor" value="(\d+)"\/>/,
             '<property name="product.release.number.minor" value="' + newVersion.minor + '"/>'
-        );
-        text = safeReplace(
-            text,
-            /<property name="product\.release\.number\.patch" value="([0-9]+)"\/>/,
-            '<property name="product.release.number.patch" value="' + newVersion.patch + '"/>'
         );
         grunt.file.write(winInstallerBuildXmlPath, text);
 
@@ -87,8 +83,8 @@ module.exports = function (grunt) {
         text = grunt.file.read(buildInstallerScriptPath);
         text = safeReplace(
             text,
-            /(version)=".*"/,
-            "$1" + "=\"" + newVersion.version + "\""
+            /version="\d+\.\d+"/,
+            "version=\"" + newVersion.major + "." + newVersion.minor + "\""
         );
         grunt.file.write(buildInstallerScriptPath, text);
 
@@ -96,7 +92,7 @@ module.exports = function (grunt) {
         text = grunt.file.read(versionRcPath);
         text = safeReplace(
             text,
-            /(FILEVERSION\s+).*/,
+            /(FILEVERSION\s+)\d+,\d+,\d+,\d+/,
             "$1" + newVersion.major + "," + newVersion.minor + "," + newVersion.patch + "," + (newVersion.build.length ? newVersion.build : "0")
         );
         text = safeReplace(
@@ -110,12 +106,12 @@ module.exports = function (grunt) {
         text = grunt.file.read(infoPlistPath);
         text = safeReplace(
             text,
-            /(<key>CFBundleVersion<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            /(<key>CFBundleVersion<\/key>\s*<string>)(\d+\.\d+\.\d+)(<\/string>)/,
             "$1" + newVersion.version + "$3"
         );
         text = safeReplace(
             text,
-            /(<key>CFBundleShortVersionString<\/key>\s*<string>)([0-9]+\.[0-9]+\.[0-9]+)(<\/string>)/,
+            /(<key>CFBundleShortVersionString<\/key>\s*<string>)(\d+\.\d+\.\d+)(<\/string>)/,
             "$1" + newVersion.version + "$3"
         );
         grunt.file.write(infoPlistPath, text);
