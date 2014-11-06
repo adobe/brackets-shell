@@ -203,8 +203,6 @@ module.exports = function (grunt) {
 
     // task: build-installer-linux
     grunt.registerTask("build-installer-linux", "Build linux installer", function () {
-        grunt.task.requires(["package"]);
-
         var template = grunt.file.read("installer/linux/debian/control"),
             templateData = {},
             content;
@@ -240,8 +238,6 @@ module.exports = function (grunt) {
 
     // task: build-linux-archive
     grunt.registerTask("build-linux-archive", "Build portable Linux .tar.gz", function () {
-        grunt.task.requires(["package"]);
-
         var done = this.async(),
             version = semver.parse(grunt.config("pkg").version),
             release = version.major + "." + version.minor;
