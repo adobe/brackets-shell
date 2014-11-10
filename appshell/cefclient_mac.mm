@@ -97,7 +97,7 @@ extern NSMutableArray* pendingOpenFiles;
         theSelector = NSSelectorFromString(@"selectAll:");
       } else if (keyChar == 'z'){
         theSelector = NSSelectorFromString(@"undo:");
-      } else if (keyChar == 'y'){
+      } else if (keyChar == 'Z'){
         theSelector = NSSelectorFromString(@"redo:");
       }
       if (theSelector != nil) {
