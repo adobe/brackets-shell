@@ -78,9 +78,12 @@ extern NSMutableArray* pendingOpenFiles;
 
 - (void)sendEvent:(NSEvent*)event {
   if ([event type] == NSKeyDown) {
-    // We've removed cut, copy, paste from the edit menu,
-    // so we handle those shortcuts explicitly.
-    if ([event modifierFlags] & NSCommandKeyMask) {
+    // If mainWindow is the first responder then cef isn't the target
+    // so let the application event chain handle it intrinsically
+    if ([[self mainWindow] firstResponder] == [self mainWindow] && 
+	  [event modifierFlags] & NSCommandKeyMask) {
+      // We've removed cut, copy, paste from the edit menu,
+      // so we handle those shortcuts explicitly.
       SEL theSelector = nil;
       NSString *keyStr = [event charactersIgnoringModifiers];
       unichar keyChar = [keyStr characterAtIndex:0];
@@ -91,11 +94,7 @@ extern NSMutableArray* pendingOpenFiles;
       } else if (keyChar == 'x'){
         theSelector = NSSelectorFromString(@"cut:");
       } else if (keyChar == 'a'){
-        // If mainWindow is the first responder then cef isn't the target
-        //  so let the application event chain handle it intrinsically
-        if ([[self mainWindow] firstResponder] == [self mainWindow]) {
-          theSelector = NSSelectorFromString(@"selectAll:");
-        }
+        theSelector = NSSelectorFromString(@"selectAll:");
       }
       if (theSelector != nil) {
         [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
