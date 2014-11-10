@@ -95,6 +95,10 @@ extern NSMutableArray* pendingOpenFiles;
         theSelector = NSSelectorFromString(@"cut:");
       } else if (keyChar == 'a'){
         theSelector = NSSelectorFromString(@"selectAll:");
+      } else if (keyChar == 'z'){
+        theSelector = NSSelectorFromString(@"undo:");
+      } else if (keyChar == 'y'){
+        theSelector = NSSelectorFromString(@"redo:");
       }
       if (theSelector != nil) {
         [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
