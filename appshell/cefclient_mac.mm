@@ -77,6 +77,34 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 - (void)sendEvent:(NSEvent*)event {
+  if ([event type] == NSKeyDown) {
+    // If mainWindow is the first responder then cef isn't the target
+    // so let the application event chain handle it intrinsically
+    if ([[self mainWindow] firstResponder] == [self mainWindow] && 
+	  [event modifierFlags] & NSCommandKeyMask) {
+      // We've removed cut, copy, paste from the edit menu,
+      // so we handle those shortcuts explicitly.
+      SEL theSelector = nil;
+      NSString *keyStr = [event charactersIgnoringModifiers];
+      unichar keyChar = [keyStr characterAtIndex:0];
+      if ( keyChar == 'c') {
+        theSelector = NSSelectorFromString(@"copy:");
+      } else if (keyChar == 'v'){
+        theSelector = NSSelectorFromString(@"paste:");
+      } else if (keyChar == 'x'){
+        theSelector = NSSelectorFromString(@"cut:");
+      } else if (keyChar == 'a'){
+        theSelector = NSSelectorFromString(@"selectAll:");
+      } else if (keyChar == 'z'){
+        theSelector = NSSelectorFromString(@"undo:");
+      } else if (keyChar == 'Z'){
+        theSelector = NSSelectorFromString(@"redo:");
+      }
+      if (theSelector != nil) {
+        [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
+      }
+    }
+  }
   CefScopedSendingEvent sendingEventScoper;
   [super sendEvent:event];
 }
