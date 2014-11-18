@@ -167,7 +167,7 @@ bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 
   if (m_BrowserId == browser->GetIdentifier()) {
     // Notify the parent window that it will be closed.
-    browser->GetHost()->ParentWindowWillClose();
+//    browser->GetHost()->ParentWindowWillClose();
   }
 
   // A popup browser window is not contained in another window, so we can let
@@ -328,13 +328,15 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
   return false;
 }
 
-void ClientHandler::OnRequestGeolocationPermission(
+bool ClientHandler::OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
       const CefString& requesting_url,
       int request_id,
       CefRefPtr<CefGeolocationCallback> callback) {
   // Allow geolocation access from all websites.
+  // TODO: What does ref app do?
   callback->Continue(true);
+  return true;
 }
 
 void ClientHandler::OnBeforeContextMenu(
@@ -406,12 +408,12 @@ std::string ClientHandler::GetLastDownloadFile() {
 void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
     CefWindowInfo wi;
     CefBrowserSettings settings;
-    
+
 #if defined(OS_WIN)
     wi.SetAsPopup(NULL, "DevTools");
 #endif
+    browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings, CefPoint());
 
-    browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings);
 }
 
 bool ClientHandler::SendJSCommand(CefRefPtr<CefBrowser> browser, const CefString& commandName, CefRefPtr<CommandCallback> callback)

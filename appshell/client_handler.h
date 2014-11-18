@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include "include/base/cef_lock.h"
 #include "include/cef_client.h"
 #include "util.h"
 #include "command_callbacks.h"
@@ -157,7 +158,7 @@ public:
                                 int line) OVERRIDE;
 
   // CefGeolocationHandler methods
-  virtual void OnRequestGeolocationPermission(
+  virtual bool OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
       const CefString& requesting_url,
       int request_id,

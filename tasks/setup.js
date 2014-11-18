@@ -459,7 +459,7 @@ module.exports = function (grunt) {
                 // FIXME port to JavaScript?
                 return exec("bash scripts/fix-xcode.sh");
             });
-        }
+        } 
 
         promise.then(function () {
             done();
