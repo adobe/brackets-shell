@@ -64,6 +64,13 @@
       },
       'conditions': [
         ['OS=="win"', {
+          'configurations': {
+            'Common_Base': {
+              'msvs_configuration_attributes': {
+                'OutputDirectory': '$(ConfigurationName)',
+              },
+            },
+          },
           'variables': {
             'win_exe_compatibility_manifest': 'compatibility.manifest',
             'xparams': "/efy",
@@ -79,32 +86,6 @@
               'action': [
                 'xcopy <(xparams)',
                 'Resources\*',
-                '$(OutDir)',
-              ],
-            },
-            {
-              'action_name': 'copy_executables',
-              'msvs_cygwin_shell': 0,
-              'inputs': [],
-              'outputs': [
-                '<(PRODUCT_DIR)/copy_executables.stamp',
-              ],
-              'action': [
-                'xcopy <(xparams)',
-                '$(ConfigurationName)\*.exe',
-                '$(OutDir)',
-              ],
-            },
-            {
-              'action_name': 'copy_libraries',
-              'msvs_cygwin_shell': 0,
-              'inputs': [],
-              'outputs': [
-                '<(PRODUCT_DIR)/copy_libraries.stamp',
-              ],
-              'action': [
-                'xcopy <(xparams)',
-                '$(ConfigurationName)\*.dll',
                 '$(OutDir)',
               ],
             },
@@ -373,6 +354,11 @@
       'conditions': [
         [ 'OS=="win" and multi_threaded_dll', {
           'configurations': {
+            'Common_Base': {
+              'msvs_configuration_attributes': {
+                'OutputDirectory': '$(ConfigurationName)',
+              },
+            },
             'Debug': {
               'msvs_settings': {
                 'VCCLCompilerTool': {
