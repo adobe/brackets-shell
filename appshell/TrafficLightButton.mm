@@ -28,6 +28,7 @@ static const int MINIMIZE_BUTTON_TAG = 1001;
 static const int ZOOM_BUTTON_TAG = 1002;
 
 @implementation TrafficLightButton {
+#if 0
     NSImage *inactive;
     NSImage *active;
     NSImage *hover;
@@ -41,6 +42,7 @@ static const int ZOOM_BUTTON_TAG = 1002;
     BOOL pressedState;
     BOOL dirtyState;
     BOOL closeButton;
+#endif
 }
 
 -(id)initWithCoder:(NSCoder *)aDecoder {

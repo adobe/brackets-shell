@@ -973,8 +973,8 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
         relativeId = "window";
     }
     
-    NSInteger positionIdx = -1;
-    int32 errCode = getNewMenuPosition(browser, nil, position, relativeId, positionIdx);
+    int32 positionIdx = -1;
+    int32 errCode = ::getNewMenuPosition(browser, nil, position, relativeId, positionIdx);
 
     // Another position hack. If position is "first" we will change positionIdx to 1
     // since we can't allow user to put anything before the Mac OS default application menu.
@@ -1101,8 +1101,8 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
                 }
                 NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)newItem);
                 
-                NSInteger positionIdx = -1;
-                int32 errCode = getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
+                int32 positionIdx = -1;
+                int32 errCode = ::getNewMenuPosition(browser, subMenu, position, relativeId, positionIdx);
                 if (positionIdx > -1) {
                     [subMenu insertItem:newItem atIndex:positionIdx];
                 } else {

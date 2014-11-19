@@ -61,6 +61,7 @@
         # Target build path.
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
         ['OS=="win"', {
@@ -350,6 +351,8 @@
       'xcode_settings': {
         # Target build path.
         'SYMROOT': 'xcodebuild',
+        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
         [ 'OS=="win" and multi_threaded_dll', {
@@ -384,10 +387,10 @@
     ['OS=="mac"', {
       'targets': [
         {
-          'target_name': 'cefclient_helper_app',
+          'target_name': 'appshell_helper_app',
           'type': 'executable',
           'variables': { 'enable_wexit_time_destructors': 1, },
-          'product_name': 'cefclient Helper',
+          'product_name': '<(appname) Helper',
           'mac_bundle': 1,
           'dependencies': [
             'libcef_dll_wrapper',
@@ -421,7 +424,12 @@
           ],
           'xcode_settings': {
             'INFOPLIST_FILE': 'appshell/mac/helper-Info.plist',
-          },
+             # Necessary to avoid an "install_name_tool: changing install names or
+             # rpaths can't be redone" error.
+             'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
+             'SYMROOT': 'xcodebuild',
+             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+             'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',          },
           'postbuilds': [
             {
               # The framework defines its load-time path
@@ -438,7 +446,7 @@
               ],
             },
           ],
-        },   # target appshell_helper_app
+        },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
     [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
