@@ -174,7 +174,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings);
+        ::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }
@@ -238,6 +238,10 @@ BOOL cef_main_window::HandleClose()
         BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
         if (closing) 
         {
+            if (!g_handler->CanCloseBrowser(GetBrowser())) {
+                PostMessage(WM_CLOSE, 0 ,0);
+                return TRUE;
+            }
             ::RemoveProp(hwnd, ::kCefWindowClosingPropName);
         } 
         else 

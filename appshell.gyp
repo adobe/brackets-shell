@@ -1,18 +1,25 @@
- # Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
+# Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 
 {
   'variables': {
-    'pkg-config': 'pkg-config',
-    'target_arch%': 'environment',
     'chromium_code': 1,
+    'framework_name': 'Chromium Embedded Framework',
+    'linux_use_gold_binary': 0,
+    'linux_use_gold_flags': 0,
+    # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
+    'clang': 0,
     'conditions': [
-      [ 'OS=="mac"', {
-        # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
-        'clang': 0,
-      }]
-    ]
+      ['sysroot!=""', {
+        'pkg-config': './pkg-config-wrapper "<(sysroot)" "<(target_arch)"',
+      }, {
+        'pkg-config': 'pkg-config'
+      }],
+      [ 'OS=="win"', {
+        'multi_threaded_dll%': 0,
+      }],
+    ],
   },
   'includes': [
     # Bring in the configuration vars
@@ -20,16 +27,6 @@
     # Bring in the source file lists for appshell.
     'appshell_paths.gypi',
   ],
-  'target_defaults':
-  {
-    'xcode_settings':
-      {
-        'SDKROOT': '',
-        'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
-        'COMBINE_HIDPI_IMAGES': 'YES',
-        'ARCHS': "$(ARCHS_STANDARD_32_BIT)"
-      },
-  },
   'targets': [
     {
       'target_name': '<(appname)',
@@ -61,13 +58,9 @@
       ],
       'xcode_settings': {
         'INFOPLIST_FILE': 'appshell/mac/Info.plist',
-        # Necessary to avoid an "install_name_tool: changing install names or
-        # rpaths can't be redone" error.
-        'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
         # Target build path.
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
-        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
         ['OS=="win"', {
@@ -78,11 +71,34 @@
               },
             },
           },
+          'variables': {
+            'win_exe_compatibility_manifest': 'compatibility.manifest',
+            'xparams': "/efy",
+          },
+          'actions': [
+            {
+              'action_name': 'copy_resources',
+              'msvs_cygwin_shell': 0,
+              'inputs': [],
+              'outputs': [
+                '<(PRODUCT_DIR)/copy_resources.stamp',
+              ],
+              'action': [
+                'xcopy <(xparams)',
+                'Resources\*',
+                '$(OutDir)',
+              ],
+            },
+          ],
           'msvs_settings': {
             'VCLinkerTool': {
               # Set /SUBSYSTEM:WINDOWS.
               'SubSystem': '2',
-              'EntryPointSymbol' : 'wWinMainCRTStartup',
+            },
+            'VCManifestTool': {
+              'AdditionalManifestFiles': [
+                'appshell.exe.manifest',
+              ],
             },
           },
           'link_settings': {
@@ -92,9 +108,13 @@
               '-lrpcrt4.lib',
               '-lopengl32.lib',
               '-lglu32.lib',
-              '-l$(ConfigurationName)/libcef.lib'
+              '-l$(ConfigurationName)/libcef.lib',
             ],
           },
+          'library_dirs': [
+            # Needed to find cef_sandbox.lib using #pragma comment(lib, ...).
+            '$(ConfigurationName)',
+          ],
           'sources': [
             '<@(includes_win)',
             '<@(appshell_sources_win)',
@@ -125,6 +145,26 @@
             }
           ],
         }],
+        [ 'OS=="win" and multi_threaded_dll', {
+          'configurations': {
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
+        }],
         [ 'OS=="mac"', {
           'product_name': '<(appname)',
           'dependencies': [
@@ -133,20 +173,6 @@
           'copies': [
             {
               # Add library dependencies to the bundle.
-              'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries/',
-              'files': [
-                '$(CONFIGURATION)/libcef.dylib',
-              ],
-            },
-            {
-              # Add other resources to the bundle.
-              'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks/Chromium Embedded Framework.framework/',
-              'files': [
-                'Resources/',
-              ],
-            },
-            {
-              # Add the helper app.
               'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks',
               'files': [
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
@@ -155,12 +181,21 @@
           ],
           'postbuilds': [
             {
+              'postbuild_name': 'Add framework',
+              'action': [
+                'cp',
+                '-Rf',
+                '${CONFIGURATION}/<(framework_name).framework',
+                '${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/Frameworks/'
+              ],
+            },
+            {
               'postbuild_name': 'Fix Framework Link',
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+                '@executable_path/<(framework_name)',
+                '@executable_path/../Frameworks/<(framework_name).framework/<(framework_name)',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
@@ -204,9 +239,8 @@
           'link_settings': {
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
-              '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
-              '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(SDKROOT)/System/Library/Frameworks/OpenGL.framework',
+              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
             ],
           },
           'sources': [
@@ -214,8 +248,8 @@
             '<@(appshell_sources_mac)',
           ],
         }],
-        ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
-          'actions': [
+        [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+            'actions': [
             {
               'action_name': 'appshell_extensions_js',
               'inputs': [
@@ -238,29 +272,26 @@
               'message': 'compiling js resource'
             }
           ],
-          'cflags': [
-            '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0 glib-2.0)',
-            '<(march)',
-          ],
-          'include_dirs': [
-            '.',
-          ],
-          'default_configuration': 'Release',
-          'configurations': {
-            'Release': {},
-            'Debug': {},
-          },
           'copies': [
             {
-              'destination': '<(PRODUCT_DIR)/lib',
+              'destination': '<(PRODUCT_DIR)/files',
               'files': [
-                '<@(appshell_bundle_libraries_linux)',
+                '<@(cefclient_bundle_resources_linux)',
               ],
             },
             {
-              'destination': '<(PRODUCT_DIR)',
+              'destination': '<(PRODUCT_DIR)/',
               'files': [
-                '<@(appshell_bundle_resources_linux)'
+                'Resources/cef.pak',
+                'Resources/cef_100_percent.pak',
+                'Resources/cef_200_percent.pak',
+                'Resources/devtools_resources.pak',
+                'Resources/icudtl.dat',
+                'Resources/locales/',
+                '$(BUILDTYPE)/chrome-sandbox',
+                '$(BUILDTYPE)/libcef.so',
+                '$(BUILDTYPE)/libffmpegsumo.so',
+                '$(BUILDTYPE)/libpdf.so',
               ],
             },
             {
@@ -277,25 +308,29 @@
               'files': ['appshell/node-core/'],
             },
           ],
+          'dependencies': [
+            'gtk',
+            'gtkglext',
+          ],
+          'link_settings': {
+            'ldflags': [
+              # Look for libcef.so in the current directory. Path can also be
+              # specified using the LD_LIBRARY_PATH environment variable.
+              '-Wl,-rpath,.',
+            ],
+            'libraries': [
+              "$(BUILDTYPE)/libcef.so",
+              "-lX11",
+            ],
+          },
           'sources': [
             '<@(includes_linux)',
             '<@(appshell_sources_linux)',
           ],
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0 glib-2.0)',
-              '-Wl,-rpath,\$$ORIGIN/lib',
-              '<(march)'
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0 glib-2.0)',
-              '$(BUILDTYPE)/libcef.so',
-              'appshell_extensions_js.o',
-            ],
-          },
         }],
       ],
     },
+    
     {
       'target_name': 'libcef_dll_wrapper',
       'type': 'static_library',
@@ -303,13 +338,6 @@
       'defines': [
         'USING_CEF_SHARED',
       ],
-      'configurations': {
-        'Common_Base': {
-          'msvs_configuration_attributes': {
-            'OutputDirectory': '$(ConfigurationName)',
-          },
-        },
-      },
       'include_dirs': [
         '.',
       ],
@@ -322,32 +350,44 @@
       'xcode_settings': {
         # Target build path.
         'SYMROOT': 'xcodebuild',
-        'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
-        'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
-        ['OS=="linux"', {
-          'cflags': [
-          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0 glib-2.0)',
-          '<(march)',
-          ],
-          'default_configuration': 'Release',
+        [ 'OS=="win" and multi_threaded_dll', {
           'configurations': {
-            'Release': {},
-            'Debug': {},
-          },
-        }]
-      ]
+            'Common_Base': {
+              'msvs_configuration_attributes': {
+                'OutputDirectory': '$(ConfigurationName)',
+              },
+            },
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
+        }],
+      ],
     },
   ],
   'conditions': [
     ['OS=="mac"', {
       'targets': [
         {
-          'target_name': 'appshell_helper_app',
+          'target_name': 'cefclient_helper_app',
           'type': 'executable',
           'variables': { 'enable_wexit_time_destructors': 1, },
-          'product_name': '<(appname) Helper',
+          'product_name': 'cefclient Helper',
           'mac_bundle': 1,
           'dependencies': [
             'libcef_dll_wrapper',
@@ -361,9 +401,7 @@
           'link_settings': {
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
-              '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
-              '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
-              '$(CONFIGURATION)/libcef.dylib',
+              '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
             ],
           },
           'sources': [
@@ -383,12 +421,6 @@
           ],
           'xcode_settings': {
             'INFOPLIST_FILE': 'appshell/mac/helper-Info.plist',
-            # Necessary to avoid an "install_name_tool: changing install names or
-            # rpaths can't be redone" error.
-            'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
-            'SYMROOT': 'xcodebuild',
-            'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
-            'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
           },
           'postbuilds': [
             {
@@ -400,32 +432,61 @@
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/libcef.dylib',
-                '@executable_path/../../../../Frameworks/Chromium Embedded Framework.framework/Libraries/libcef.dylib',
+                '@executable_path/<(framework_name)',
+                '@executable_path/../../../../Frameworks/<(framework_name).framework/<(framework_name)',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],
             },
           ],
-        },  # target appshell_helper_app
+        },   # target appshell_helper_app
       ],
     }],  # OS=="mac"
-    ['target_arch=="ia32"', {
-      'variables': {
-        'output_bfd': 'elf32-i386',
-        'march': '-m32',
-      },
-    }],
-    ['target_arch=="x64"', {
-      'variables': {
-        'output_bfd': 'elf64-x86-64',
-        'march': '-m64',
-      },
-    }],
-    ['target_arch=="environment"', {
-      'variables': {
-        'output_bfd': '<!(uname -m | sed "s/x86_64/elf64-x86-64/;s/i.86/elf32-i386/")',
-        'march': ' ',
-      },
-    }],
+    [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0 gtk+-unix-print-2.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+            ],
+          },
+        },
+        {
+          'target_name': 'gtkglext',
+          'type': 'none',
+          'variables': {
+            # gtkglext is required by the cefclient OSR example.
+            'gtk_packages': 'gtkglext-1.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+            ],
+          },
+        },
+      ],
+    }],  # OS=="linux" or OS=="freebsd" or OS=="openbsd"
   ],
 }
