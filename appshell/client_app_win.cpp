@@ -68,21 +68,18 @@ CefString ClientApp::GetCurrentLanguage()
 CefString ClientApp::GetCurrentKeyboardLayout()
 {
     // Get the user's active keyboard layout language
-    int kbd = (int)GetKeyboardLayout(0);
-    LANGID langID = MAKELANGID(kbd & 0xFFFF, kbd & 0xFFFF0000);
-    return GetLanguageFromId(langID);
+    return GetLanguageFromId(LOWORD(GetKeyboardLayout(0)));
 }
 
 CefString ClientApp::GetKeyboardType()
 {
-    // Get the user's active keyboard device type
-    int keyboardLayout = ((int)GetKeyboardLayout(0) & 0xFFFF0000) >> 16;
-    wchar_t *type = new wchar_t[10];
-    int len = swprintf_s(type, 10, L"%d", keyboardLayout);
-    std::wstring keyboardType(type);
+    wchar_t layoutName[10];
 
-    delete [] type;
-    return CefString(keyboardType);
+    if (GetKeyboardLayoutName(layoutName)) {
+        return CefString(layoutName);
+    }
+
+    return "";
 }
 
 std::string ClientApp::GetExtensionJSSource()
