@@ -238,6 +238,26 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
   RenderDelegateSet::iterator it = render_delegates_.begin();
   for (; it != render_delegates_.end(); ++it)
     (*it)->OnContextReleased(this, browser, frame, context);
+ 
+  // This is to fix the crash on quit(Issue#7683) after
+  // integrating CEF 2171.
+
+  // On Destruction, callback_map_ was getting destroyed
+  // in the ClientApp::~ClientApp(). However while removing
+  // all the elements, it was trying to destroy some stale
+  // objects which were already deleted. So to fix this, we
+  // are now explicitly clearing the map here.
+
+  if (!callback_map_.empty()) {
+	  CallbackMap::iterator it = callback_map_.begin();
+	  for (; it != callback_map_.end();) {
+		  if (it->second.first->IsSame(context))
+			  callback_map_.erase(it++);
+		  else
+			  ++it;
+	  }
+  }
+    
 }
 
 //Simple stack class to ensure calls to Enter and Exit are balanced
