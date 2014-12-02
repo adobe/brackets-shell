@@ -239,8 +239,8 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
   for (; it != render_delegates_.end(); ++it)
     (*it)->OnContextReleased(this, browser, frame, context);
  
-  // This is to fix the crash on quit(Issue#7683) after
-  // integrating CEF 2171.
+  // This is to fix the crash on quit(https://github.com/adobe/brackets/issues/7683) 
+  // after integrating CEF 2171.
 
   // On Destruction, callback_map_ was getting destroyed
   // in the ClientApp::~ClientApp(). However while removing
@@ -248,14 +248,12 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
   // objects which were already deleted. So to fix this, we
   // are now explicitly clearing the map here.
 
-  if (!callback_map_.empty()) {
-	  CallbackMap::iterator it = callback_map_.begin();
-	  for (; it != callback_map_.end();) {
-		  if (it->second.first->IsSame(context))
-			  callback_map_.erase(it++);
-		  else
-			  ++it;
-	  }
+  CallbackMap::iterator iCallBack = callback_map_.begin();
+  for (; iCallBack != callback_map_.end();) {
+  if (iCallBack->second.first->IsSame(context))
+    callback_map_.erase(iCallBack++);
+  else
+    ++iCallBack;
   }
     
 }
