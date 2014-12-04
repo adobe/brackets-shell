@@ -1,4 +1,4 @@
- # Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
+# Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 
@@ -14,7 +14,10 @@
       [ 'OS=="mac"', {
         # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
         'clang': 0,
-      }]
+      }],
+      [ 'OS=="win"', {
+        'multi_threaded_dll%': 0,
+      }],
     ]
   },
   'includes': [
@@ -85,11 +88,34 @@
               },
             },
           },
+          'variables': {
+            'win_exe_compatibility_manifest': 'compatibility.manifest',
+            'xparams': "/efy",
+          },
+          'actions': [
+            {
+              'action_name': 'copy_resources',
+              'msvs_cygwin_shell': 0,
+              'inputs': [],
+              'outputs': [
+                '<(PRODUCT_DIR)/copy_resources.stamp',
+              ],
+              'action': [
+                'xcopy <(xparams)',
+                'Resources\*',
+                '$(OutDir)',
+              ],
+            },
+          ],
           'msvs_settings': {
             'VCLinkerTool': {
               # Set /SUBSYSTEM:WINDOWS.
               'SubSystem': '2',
-              'EntryPointSymbol' : 'wWinMainCRTStartup',
+            },
+            'VCManifestTool': {
+              'AdditionalManifestFiles': [
+                'appshell.exe.manifest',
+              ],
             },
           },
           'link_settings': {
@@ -99,7 +125,7 @@
               '-lrpcrt4.lib',
               '-lopengl32.lib',
               '-lglu32.lib',
-              '-l$(ConfigurationName)/libcef.lib'
+              '-l$(ConfigurationName)/libcef.lib',
             ],
           },
           'library_dirs': [
@@ -135,6 +161,26 @@
               'files': ['Resources/locales/'],
             }
           ],
+        }],
+        [ 'OS=="win" and multi_threaded_dll', {
+          'configurations': {
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
         }],
         [ 'OS=="mac"', {
           'product_name': '<(appname)',
@@ -342,6 +388,31 @@
             'Release': {},
             'Debug': {},
           },
+        }],
+        ['OS=="win" and multi_threaded_dll', {
+          'configurations': {
+            'Common_Base': {
+              'msvs_configuration_attributes': {
+                'OutputDirectory': '$(ConfigurationName)',
+              },
+            },
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
         }]
       ]
     },
