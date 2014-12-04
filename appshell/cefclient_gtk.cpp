@@ -2,6 +2,8 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#include <gdk/gdkx.h>
+
 #include "cefclient.h"
 #include <gtk/gtk.h>
 #include <stdlib.h>
@@ -54,7 +56,7 @@ void HandleAdd(GtkContainer *container,
 static gboolean HandleQuit(int signatl) {
   if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
-    
+
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
     return TRUE;
   }
@@ -76,7 +78,7 @@ int GetInitialUrl() {
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                           GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                           NULL);
-     
+
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
       {
         szInitialUrl = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
@@ -171,19 +173,19 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
   }
-  
+
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  
+
   if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
     szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupPath);
   } else {
     szInitialUrl = AppGetRunningDirectory();
     szInitialUrl.append("/dev/src/index.html");
-  
+
     if (!FileExists(szInitialUrl)) {
       szInitialUrl = AppGetRunningDirectory();
       szInitialUrl.append("/www/index.html");
-  
+
       if (!FileExists(szInitialUrl)) {
         if (GetInitialUrl() < 0)
           return 0;
@@ -193,17 +195,17 @@ int main(int argc, char* argv[]) {
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
-  
+
   // Set window icon
   std::vector<std::string> icons(APPICONS, APPICONS + sizeof(APPICONS) / sizeof(APPICONS[0]) );
   GList *list = NULL;
   for (int i = 0; i < icons.size(); ++i) {
     std::string path = icons[i];
-    
+
     GdkPixbuf *icon = gdk_pixbuf_new_from_file(path.c_str(), NULL);
     if (!icon)
        continue;
-    
+
     list = g_list_append(list, icon);
   }
 
@@ -211,7 +213,7 @@ int main(int argc, char* argv[]) {
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
 
   gtk_window_set_icon_list(GTK_WINDOW(window), list);
-  
+
   // Free icon list
   g_list_foreach(list, (GFunc) g_object_unref, NULL);
   g_list_free(list);
@@ -244,7 +246,7 @@ int main(int argc, char* argv[]) {
 
   browserSettings.web_security = STATE_DISABLED;
 
-  window_info.SetAsChild(vbox);
+  window_info.SetAsChild(GDK_WINDOW_XID(gtk_widget_get_window(vbox)), CefRect(0, 0, 800, 600));
 
   CefBrowserHost::CreateBrowser(
       window_info,
@@ -257,7 +259,7 @@ int main(int argc, char* argv[]) {
   // Install an signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
   signal(SIGTERM, TerminationSignalHandler);
-    
+
   // Start the node server process
   startNodeProcess();
 
