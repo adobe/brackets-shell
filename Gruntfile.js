@@ -29,7 +29,7 @@ module.exports = function (grunt) {
         resolve = common.resolve,
         platform = common.platform(),
         staging;
-
+    
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
     } else if (platform === "win") {
@@ -63,7 +63,7 @@ module.exports = function (grunt) {
             /* mac */
             "cef-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32.zip"
             },
             "cef-mac-symbols": {
                 "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32_release_symbols.zip",
@@ -76,7 +76,7 @@ module.exports = function (grunt) {
             /* win */
             "cef-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows32.zip"
             },
             "cef-win-symbols": {
                 "src"  : ["<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_debug_symbols.zip", "<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_release_symbols.zip"],
@@ -218,7 +218,7 @@ module.exports = function (grunt) {
         },
         "cef": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
-            "version"       : "3.1547.1459"
+            "version"       : "3.1750.1738"
         },
         "node": {
             "version"       : "0.10.24"

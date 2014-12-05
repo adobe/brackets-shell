@@ -126,7 +126,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -180,7 +180,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
