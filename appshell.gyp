@@ -340,7 +340,7 @@
             'ldflags': [
               # Look for libcef.so in the current directory. Path can also be
               # specified using the LD_LIBRARY_PATH environment variable.
-              '-Wl,-rpath,.',
+              '-Wl,-rpath,\$$ORIGIN/lib',
             ],
             'libraries': [
               "$(BUILDTYPE)/libcef.so",
