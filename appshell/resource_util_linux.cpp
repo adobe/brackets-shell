@@ -6,6 +6,7 @@
 #include "resource_util.h"
 #include <stdio.h>
 #include <string>
+#include <unistd.h>
 #include "include/cef_stream.h"
 #include "util.h"
 
