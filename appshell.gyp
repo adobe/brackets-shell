@@ -344,6 +344,7 @@
             ],
             'libraries': [
               "$(BUILDTYPE)/libcef.so",
+              "appshell_extensions_js.o",
               "-lX11",
             ],
           },
