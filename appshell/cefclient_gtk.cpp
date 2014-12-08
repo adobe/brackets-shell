@@ -172,21 +172,26 @@ int main(int argc, char* argv[]) {
   
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-    szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+  if (cmdLine->HasSwitch(cefclient::kStartupUrl)) {
+    szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupUrl);
   } else {
-    szInitialUrl = AppGetRunningDirectory();
-    szInitialUrl.append("/dev/src/index.html");
-  
-    if (!FileExists(szInitialUrl)) {
+    if(cmdLine->HasSwitch(cefclient::kStartupPath)) {
+      szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+    } else {
       szInitialUrl = AppGetRunningDirectory();
-      szInitialUrl.append("/www/index.html");
-  
+      szInitialUrl.append("/dev/src/index.html");
+    
       if (!FileExists(szInitialUrl)) {
-        if (GetInitialUrl() < 0)
-          return 0;
+        szInitialUrl = AppGetRunningDirectory();
+        szInitialUrl.append("/www/index.html");
+    
+        if (!FileExists(szInitialUrl)) {
+          if (GetInitialUrl() < 0)
+            return 0;
+        }
       }
     }
+    szInitialUrl = "file://" + szInitialUrl;
   }
 
   // Initialize CEF.
@@ -247,7 +252,7 @@ int main(int argc, char* argv[]) {
   CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://"+szInitialUrl, browserSettings);
+      szInitialUrl, browserSettings);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
