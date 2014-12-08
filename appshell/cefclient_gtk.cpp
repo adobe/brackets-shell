@@ -140,6 +140,24 @@ gboolean GetSourceActivated(GtkWidget* widget) {
   return FALSE;
 }
 
+gboolean WindowConfigure(GtkWindow* window, 
+                         GdkEvent* event,
+                         gpointer data) {
+  // Called when size, position or stack order changes.
+  if (g_handler) {
+    CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
+    if (browser) {
+      // Notify the browser of move/resize events so that:
+      // - Popup windows are displayed in the correct location and dismissed
+      //   when the window moves.
+      // - Drag&drop areas are updated accordingly.
+      browser->GetHost()->NotifyMoveOrResizeStarted();
+    }
+  }
+
+  return FALSE;  // Don't stop this message.
+}
+
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
 
@@ -156,8 +174,6 @@ int main(int argc, char* argv[]) {
   //Retrieve the current working directory
   if (!getcwd(szWorkingDir, sizeof (szWorkingDir)))
     return -1;
-
-  GtkWidget* window;
 
   // Parse command line arguments.
   AppInitCommandLine(argc, argv);
@@ -209,7 +225,7 @@ int main(int argc, char* argv[]) {
     list = g_list_append(list, icon);
   }
 
-  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
 
   gtk_window_set_icon_list(GTK_WINDOW(window), list);
@@ -226,6 +242,9 @@ int main(int argc, char* argv[]) {
   //              G_CALLBACK(GetSourceActivated));
 
   gtk_box_pack_start(GTK_BOX(vbox), menuBar, FALSE, FALSE, 0);
+
+  g_signal_connect(G_OBJECT(window), "configure-event",
+                   G_CALLBACK(WindowConfigure), NULL);
 
   g_signal_connect(G_OBJECT(window), "delete_event",
                    G_CALLBACK(HandleQuit), NULL);
@@ -246,15 +265,15 @@ int main(int argc, char* argv[]) {
 
   browserSettings.web_security = STATE_DISABLED;
 
-  window_info.SetAsChild(GDK_WINDOW_XID(gtk_widget_get_window(vbox)), CefRect(0, 0, 800, 600));
-
-  CefBrowserHost::CreateBrowser(
-      window_info,
-      static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://"+szInitialUrl, browserSettings, NULL);
-
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));
+
+  window_info.SetAsChild(GDK_WINDOW_XID(gtk_widget_get_window(window)), CefRect(0, 0, 800, 600));
+
+  CefBrowserHost::CreateBrowser(
+    window_info,
+    g_handler.get(),
+    "file://" + szInitialUrl, browserSettings, NULL);
 
   // Install an signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
