@@ -188,16 +188,12 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   }
   
   if (m_quitting) {
-  // Changed the logic to call CefQuitMesaageLoop()
-  // for windows as it was crashing with 2171 CEF.
-#if defined(OS_WIN)
-    if(HasWindows())
+    // Changed the logic to call CefQuitMesaageLoop()
+    // for windows as it was crashing with 2171 CEF.
+    if (HasWindows())
       DispatchCloseToNextBrowser();
     else
       CefQuitMessageLoop();
-#else
-    DispatchCloseToNextBrowser();
-#endif
   }
 }
 
