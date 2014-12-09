@@ -40,6 +40,9 @@
 
 GtkWidget* _menuWidget;
 
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
+
 // Supported browsers (order matters):
 //   - google-chorme 
 //   - chromium-browser - chromium executable name (in ubuntu)
@@ -541,7 +544,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
-        GtkWindow* hwnd = GTK_WINDOW(browser->GetHost()->GetWindowHandle());
+        GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
         if (hwnd) 
             gtk_window_present(hwnd);
     }
