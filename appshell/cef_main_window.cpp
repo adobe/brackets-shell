@@ -220,13 +220,6 @@ BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
     return TRUE;
 }
 
-// WM_DESTROY handler
-BOOL cef_main_window::HandleDestroy()
-{
-    ::PostQuitMessage(0);
-    return TRUE;
-}
-
 // WM_CLOSE handler
 BOOL cef_main_window::HandleClose()
 {
@@ -505,8 +498,7 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
             return 0L;
         break;
     case WM_DESTROY:
-        if (HandleDestroy())
-            return 0L;
+        return 0L; // Do not handle the destroy here.
         break;
     case WM_CLOSE:
         if (HandleClose())
