@@ -58,7 +58,6 @@ static gboolean HandleQuit(int signatl) {
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
     return TRUE;
   }
-  destroy();
 }
 
 bool FileExists(std::string path) {
