@@ -5,12 +5,17 @@
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <string>
+#include <gtk-2.0/gtk/gtksignal.h>
+#include <glib-2.0/gobject/gsignal.h>
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/cef_app.h"
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+extern bool isReallyClosing;
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
@@ -65,7 +70,6 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   // is Compound Text. This shouldn't matter 90% of the time since this is the
   // fallback to the UTF8 property above.
   XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
-
 }
 
 void ClientHandler::SendNotification(NotificationType type) {
@@ -95,9 +99,26 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 #endif // SHOW_TOOLBAR_UI
 }
 
-void ClientHandler::CloseMainWindow() {
-  // TODO(port): Check if this is enough
-  gtk_main_quit();
+bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+  g_message("DoClose called");
+  if (m_BrowserId == browser->GetIdentifier()) {
+    // Notify the parent window that it will be closed.
+//    browser->GetHost()->ParentWindowWillClose();
+    isReallyClosing = false;
+    g_message("isReallyClosing set to false");
+  }
+  
+//  isReallyClosing = true;
+  //GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+//  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+
+  // A popup browser window is not contained in another window, so we can let
+  // these windows close by themselves.
+  return false;
+}
+
+void ClientHandler::AfterClose() {
+  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
 }
 
 void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)

@@ -54,39 +54,67 @@ int XIOErrorHandlerImpl(Display *display) {
 }
 
 void destroy(void) {
-  CefQuitMessageLoop();
-}
+  g_message("destroy called");
 
-void TerminationSignalHandler(int signatl) {
-  destroy();
-}
-
-void HandleAdd(GtkContainer *container,
-        GtkWidget *widget,
-        gpointer user_data) {
-  g_signal_handler_disconnect(container, add_handler_id);
-  if (gtk_widget_get_can_focus(widget)) {
-    gtk_widget_grab_focus(widget);
-  } else {
-    add_handler_id = g_signal_connect(G_OBJECT(widget), "add",
-            G_CALLBACK(HandleAdd), NULL);
+  if (isReallyClosing) {
+    CefQuitMessageLoop();
   }
 }
 
-gboolean HandleQuit(GtkWidget* widget, GdkEvent* event, GtkWindow* window) {
-  if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
+void TerminationSignalHandler(int signal) {
+  isReallyClosing = true;
+  destroy();
+}
+
+//void HandleAdd(GtkContainer *container,
+//        GtkWidget *widget,
+//        gpointer user_data) {
+//  g_signal_handler_disconnect(container, add_handler_id);
+//  if (gtk_widget_get_can_focus(widget)) {
+//    gtk_widget_grab_focus(widget);
+//  } else {
+//    add_handler_id = g_signal_connect(G_OBJECT(widget), "add",
+//            G_CALLBACK(HandleAdd), NULL);
+//  }
+//}
+
+gboolean HandleQuit2(GtkWidget* widget, GdkEvent* event, GtkWindow* window) {
+  g_message("HandleQuit called");
+
+  if (g_handler.get()) {
+    g_handler->QuittingApp(true);
+    g_handler->DispatchCloseToNextBrowser();
+  }
+  else 
+  {
+    destroy();
+  }
+  
+  return TRUE;
+}
+
+// TODO: this is not yet called to shutdown Brackets
+gboolean HandleQuit() {
+  g_message("HandleQuit called");
+  
+  g_message("isReallyClosing %s", (isReallyClosing ? "True" : "False"));
+  if (!isReallyClosing && g_handler.get()) {
     CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
+  
+    //CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
 
-    if (browser.get()) {
-      CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-
-      g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
-
-      browser->GetHost()->CloseBrowser(false);
-      return TRUE;
-    }
+    //g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+    g_message("Close the browser");
+    
+    browser->GetHost()->CloseBrowser(false);
+    // Cancel the close
+    return TRUE;
   }
-  destroy();
+
+  if (isReallyClosing) 
+    destroy();
+  
+  return FALSE;
 }
 
 bool FileExists(std::string path) {
@@ -326,13 +354,15 @@ int main(int argc, char* argv[]) {
   g_signal_connect(G_OBJECT(window), "delete_event",
           G_CALLBACK(HandleQuit), NULL);
   g_signal_connect(G_OBJECT(window), "destroy",
-          G_CALLBACK(gtk_widget_destroyed), &window);
-  add_handler_id = g_signal_connect(G_OBJECT(window), "add",
-          G_CALLBACK(HandleAdd), NULL);
+          G_CALLBACK(destroy), window);
+  
+//  add_handler_id = g_signal_connect(G_OBJECT(window), "add",
+//          G_CALLBACK(HandleAdd), NULL);
 
   // Create the handler.
   g_handler = new ClientHandler();
   g_handler->SetMainHwnd(vbox);
+//  g_handler->SetMainHwnd(window);
 
   // Create the browser view.
   CefWindowInfo window_info;
@@ -361,6 +391,7 @@ int main(int argc, char* argv[]) {
 
   CefRunMessageLoop();
 
+  g_message("Shutdown CEF");
   CefShutdown();
 
   return 0;

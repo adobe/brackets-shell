@@ -165,11 +165,12 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+  g_message("OnBeforeClose called");
   if (CanCloseBrowser(browser)) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	}
+    }
 
     browser_window_map_.erase((ClientWindowHandle)browser->GetHost()->GetWindowHandle());
   }
