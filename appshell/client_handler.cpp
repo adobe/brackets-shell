@@ -162,33 +162,24 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   browser_window_map_[(ClientWindowHandle)browser->GetHost()->GetWindowHandle()] = browser;
 }
 
-bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
-  REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier()) {
-    // Notify the parent window that it will be closed.
-//    browser->GetHost()->ParentWindowWillClose();
-  }
-
-  // A popup browser window is not contained in another window, so we can let
-  // these windows close by themselves.
-  return false;
-}
-
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+  g_message("OnBeforeClose called");
   if (CanCloseBrowser(browser)) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	}
+    }
 
     browser_window_map_.erase((ClientWindowHandle)browser->GetHost()->GetWindowHandle());
   }
 
   if (m_quitting) {
+    g_message("Call DispatchCloseToNextBrowser()");
     DispatchCloseToNextBrowser();
+    
+    AfterClose();
   }
 }
 
