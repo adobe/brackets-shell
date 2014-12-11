@@ -162,11 +162,6 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
 }
 
-bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
-  REQUIRE_UI_THREAD();
-  return false;
-}
-
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
