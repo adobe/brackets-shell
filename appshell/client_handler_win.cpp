@@ -106,8 +106,8 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     if (!GetMenu(frameHwnd)) {
         return false;
     }
-
-    if (::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
+    
+    if (os_event && ::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
         return true;
     }
 

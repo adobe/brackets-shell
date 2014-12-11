@@ -655,9 +655,6 @@ extern NSMutableArray* pendingOpenFiles;
   settings.web_security = STATE_DISABLED;
 
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kAcceleratedCompositingDisabled)) {
-    settings.accelerated_compositing = STATE_DISABLED;
-  }
 
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
@@ -673,7 +670,7 @@ extern NSMutableArray* pendingOpenFiles;
     
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
-                                [str UTF8String], settings);
+                                [str UTF8String], settings, nil);
  
   [self.delegate initUI:mainWnd];
     
@@ -788,7 +785,7 @@ int main(int argc, char* argv[]) {
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -805,16 +802,18 @@ int main(int argc, char* argv[]) {
 
   CefSettings settings;
 
-  // Populate the settings based on command line arguments.
+ // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  settings.no_sandbox = YES;
+    
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   // Load the startup path from prefs
   CGEventRef event = CGEventCreate(NULL);
