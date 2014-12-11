@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include "include/base/cef_lock.h"
 #include "include/cef_client.h"
 #include "util.h"
 #include "command_callbacks.h"
@@ -157,7 +158,7 @@ public:
                                 int line) OVERRIDE;
 
   // CefGeolocationHandler methods
-  virtual void OnRequestGeolocationPermission(
+  virtual bool OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
       const CefString& requesting_url,
       int request_id,
@@ -279,8 +280,6 @@ public:
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
 
-  std::set<std::string> m_OpenDevToolsURLs;
-  
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;
                         
