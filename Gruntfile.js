@@ -29,7 +29,7 @@ module.exports = function (grunt) {
         resolve = common.resolve,
         platform = common.platform(),
         staging;
-    
+
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
     } else if (platform === "win") {
@@ -125,7 +125,10 @@ module.exports = function (grunt) {
                     {
                         "expand"    : true,
                         "cwd"       : "xcodebuild/Release/<%= build.name %>.app/",
-                        "src"       : ["**"],
+                        "src"       : [
+                            "**",
+                            "!**/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries/**"
+                        ],
                         "dest"      : "installer/mac/staging/<%= build.name %>.app/"
                     }
                 ],
