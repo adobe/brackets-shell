@@ -549,8 +549,12 @@ int32 Rename(ExtensionString oldName, ExtensionString newName)
             tmpPathStr = [NSString stringWithUTF8String:tmpName.c_str()];
         } while ([[NSFileManager defaultManager] fileExistsAtPath:tmpPathStr]);
         
-        [[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:tmpPathStr error:&error];
-        [[NSFileManager defaultManager] moveItemAtPath:tmpPathStr toPath:newPathStr error:&error];
+        if ([[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:tmpPathStr error:&error]) {
+            if (![[NSFileManager defaultManager] moveItemAtPath:tmpPathStr toPath:newPathStr error:&error]) {
+                // recover if can't move to final destination
+                [[NSFileManager defaultManager] moveItemAtPath:tmpPathStr toPath:oldPathStr error:&error];
+            }
+        }
     }
   
     return ConvertNSErrorCode(error, false);
