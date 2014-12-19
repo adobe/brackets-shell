@@ -174,7 +174,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings);
+        ::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }
@@ -220,13 +220,6 @@ BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
     return TRUE;
 }
 
-// WM_DESTROY handler
-BOOL cef_main_window::HandleDestroy()
-{
-    ::PostQuitMessage(0);
-    return TRUE;
-}
-
 // WM_CLOSE handler
 BOOL cef_main_window::HandleClose()
 {
@@ -238,6 +231,10 @@ BOOL cef_main_window::HandleClose()
         BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
         if (closing) 
         {
+            if (!g_handler->CanCloseBrowser(GetBrowser())) {
+                PostMessage(WM_CLOSE, 0 ,0);
+                return TRUE;
+            }
             ::RemoveProp(hwnd, ::kCefWindowClosingPropName);
         } 
         else 
@@ -500,13 +497,8 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandlePaint())
             return 0L;
         break;
-    case WM_GETMINMAXINFO:
-        if (HandleGetMinMaxInfo((LPMINMAXINFO) lParam))
-            return 0L;
-        break;
     case WM_DESTROY:
-        if (HandleDestroy())
-            return 0L;
+        return 0L; // Do not handle the destroy here.
         break;
     case WM_CLOSE:
         if (HandleClose())
@@ -527,6 +519,13 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     LRESULT lr = cef_host_window::WindowProc(message, wParam, lParam);
+
+    switch (message) 
+    {
+    case WM_GETMINMAXINFO:
+        HandleGetMinMaxInfo((LPMINMAXINFO) lParam);
+        break;
+    }
 
     return lr;
 }

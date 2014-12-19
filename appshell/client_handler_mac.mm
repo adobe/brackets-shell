@@ -1,6 +1,7 @@
 // Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
+#define OS_MAC
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
@@ -165,17 +166,35 @@ void ClientHandler::CloseMainWindow() {
   isReallyClosing = true;
 }
 
-- (BOOL)isFullScreenSupported {
-  SInt32 version;
-  Gestalt(gestaltSystemVersion, &version);
-  return (version >= 0x1070);
+-(BOOL)isRunningOnYosemite {
+    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    NSString* version =  [dict objectForKey:@"ProductVersion"];
+    return [version hasPrefix:@"10.10"];
 }
 
+- (BOOL)isFullScreenSupported {
+    // Return False on Yosemite so we
+    //  don't draw our own full screen button
+    //  and handle full screen mode
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1070);
+    }
+    return false;
+}
 
 -(BOOL)needsFullScreenActivateHack {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1090);
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1090);
+    }
+    return false;
+}
+
+-(BOOL)useSystemTrafficLights {
+    return [self isRunningOnYosemite];
 }
 
 -(void)setFullScreenButtonView:(NSView *)view {
@@ -185,6 +204,8 @@ void ClientHandler::CloseMainWindow() {
 -(void)setTrafficLightsView:(NSView *)view {
   trafficLightsView = view;
 }
+
+
 
 -(void)windowTitleDidChange:(NSString*)title {
 #ifdef DARK_UI
@@ -237,7 +258,7 @@ void ClientHandler::CloseMainWindow() {
     NSButton* windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    if (!trafficLightsView) {
+    if (![self useSystemTrafficLights] && !trafficLightsView) {
         windowButton = [theWin standardWindowButton:NSWindowCloseButton];
         [windowButton setHidden:YES];
         windowButton = [theWin standardWindowButton:NSWindowMiniaturizeButton];
@@ -404,9 +425,46 @@ void ClientHandler::CloseMainWindow() {
 }
 @end
 
+static bool centerMe = false;
+
+void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
+{
+    // CEF will transform the Y value returned here and use it to create
+    //  the window which ends up placing the window not where we want it
+    // Just set a flag to center the window using cocoa apis in PopupCreated
+    centerMe = true;
+}
+
+
 void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
   NSWindow* window = [browser->GetHost()->GetWindowHandle() window];
+    
   [window setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
+
+    
+  if (centerMe) {
+#ifdef _USE_COCOA_CENTERING
+      // Center on the display
+      [window center];
+#else
+      // Center within the main window
+      NSWindow* mainWindow = [m_MainHwnd window];
+      NSRect rect = [mainWindow frame];
+      NSRect windowRect = [window frame];
+      
+      float mW = rect.size.width;
+      float mH = rect.size.height;
+      float cW = windowRect.size.width;
+      float cH = windowRect.size.height;
+      
+      windowRect.origin.x = (rect.origin.x + (mW /2)) - (cW / 2);
+      windowRect.origin.y = (rect.origin.y + (mH /2)) - (cH / 2);
+
+      [window setFrame:windowRect display:YES];
+#endif
+      centerMe = false;
+  }
+
   
   // CEF3 is now using a window delegate with this revision http://code.google.com/p/chromiumembedded/source/detail?r=1149
   // And the declaration of the window delegate (CefWindowDelegate class) is in libcef/browser/browser_host_impl_mac.mm and
@@ -427,6 +485,7 @@ void ClientHandler::PopupCreated(CefRefPtr<CefBrowser> browser) {
       [window setDelegate:delegate];
       [delegate initUI];
   }
+
 }
 
 bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
@@ -446,6 +505,12 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     //+ In this fuction, the browser passed won't return a V8 Context so you can't get any access there
     //+ Communicating between the shell and JS is async, so there's no easy way for the JS to decided what to do
     //    in the middle of the key event, unless we introduce promises there, but that is a lot of work now
+    
+    
+    // CEF 1750 -- We need to not handle keys for the DevTools Window.
+    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/devtools.html") {
+        return false;
+    }
     
     if([[NSApp mainMenu] performKeyEquivalent: os_event]) {
         return true;
@@ -474,6 +539,8 @@ CefRefPtr<CefBrowser> ClientHandler::GetBrowserForNativeWindow(void* window) {
   }
   return browser;
 }
+
+
 
 bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
   return true;

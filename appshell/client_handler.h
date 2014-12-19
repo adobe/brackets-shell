@@ -9,9 +9,14 @@
 #include <map>
 #include <set>
 #include <string>
+#include "include/base/cef_lock.h"
 #include "include/cef_client.h"
 #include "util.h"
 #include "command_callbacks.h"
+
+#include <algorithm> 
+
+
 
 // Define this value to redirect all popup URLs to the main application browser
 // window.
@@ -27,6 +32,7 @@ class ClientHandler : public CefClient,
                       public CefKeyboardHandler,
                       public CefGeolocationHandler,
                       public CefContextMenuHandler {
+ 
 public:
   // Interface for process message delegates. Do not perform work in the
   // RenderDelegate constructor.
@@ -100,8 +106,16 @@ public:
   } 
 
   // CefLifeSpanHandler methods
+  virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefFrame> frame,
+                             const CefString& target_url,
+                             const CefString& target_frame_name,
+                             const CefPopupFeatures& popupFeatures,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             bool* no_javascript_access) OVERRIDE;
   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
-  virtual bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   
   // CefDragHandler methods
@@ -143,7 +157,7 @@ public:
                                 int line) OVERRIDE;
 
   // CefGeolocationHandler methods
-  virtual void OnRequestGeolocationPermission(
+  virtual bool OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
       const CefString& requesting_url,
       int request_id,
@@ -216,6 +230,7 @@ public:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
   void PopupCreated(CefRefPtr<CefBrowser> browser);
+  void ComputePopupPlacement(CefWindowInfo& windowInfo);
                         
   // Create all of ProcessMessageDelegate objects.
   static void CreateProcessMessageDelegates(
@@ -264,8 +279,6 @@ public:
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
 
-  std::set<std::string> m_OpenDevToolsURLs;
-  
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;
                         
