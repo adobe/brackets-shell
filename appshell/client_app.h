@@ -97,7 +97,7 @@ class ClientApp : public CefApp,
                                          std::wstring& filename
 #else
                                          std::string& filename
-#endif //OS_WIN
+#endif
                                          );
   static CefString AppGetAppDirectory();
   static CefString AppGetSupportDirectory();

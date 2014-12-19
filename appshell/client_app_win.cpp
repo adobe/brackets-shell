@@ -168,7 +168,7 @@ bool ClientApp::IsPortableInstall()
 	    isPortableInstall = (INVALID_HANDLE_VALUE != hFile) ? ISPORTABLE : ISNOTPORTABLE;
 	    ::CloseHandle(hFile);
     }
-	return (isPortableInstall == ISPORTABLE) ? true : false;
+	return (isPortableInstall == ISPORTABLE);
 }
 
 // return the name of the portable install data file
