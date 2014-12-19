@@ -459,6 +459,11 @@ module.exports = function (grunt) {
                 // FIXME port to JavaScript?
                 return exec("bash scripts/fix-xcode.sh");
             });
+        } else if (platform === "win") {
+            promise = promise.then(function () {
+                // FIXME port to JavaScript?
+                return exec("bash scripts/fix-msvc.sh");
+            });
         }
 
         promise.then(function () {

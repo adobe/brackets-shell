@@ -80,8 +80,6 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
         settings.log_severity = LOGSEVERITY_WARNING;
       else if (str == cefclient::kLogSeverity_Error)
         settings.log_severity = LOGSEVERITY_ERROR;
-      else if (str == cefclient::kLogSeverity_ErrorReport)
-        settings.log_severity = LOGSEVERITY_ERROR_REPORT;
       else if (str == cefclient::kLogSeverity_Disable)
         settings.log_severity = LOGSEVERITY_DISABLE;
     }

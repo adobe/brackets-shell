@@ -52,7 +52,6 @@ protected:
     BOOL HandleEraseBackground(HDC hdc);
     BOOL HandleCreate();
     BOOL HandleSetFocus(HWND hLosingFocus);
-    BOOL HandleDestroy();
     BOOL HandleClose();
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
     BOOL HandleCommand(UINT commandId);

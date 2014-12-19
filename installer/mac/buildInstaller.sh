@@ -1,8 +1,9 @@
-#!/bin/bash 
+#!/bin/bash
 
 # config
 releaseName="Brackets"
-dmgName="${releaseName} Sprint 43"
+version="1.2"
+dmgName="${releaseName} Release ${version}"
 format="bzip2"
 encryption="none"
 tmpLayout="./dropDmgConfig/layouts/tempLayout"

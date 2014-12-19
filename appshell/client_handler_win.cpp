@@ -14,6 +14,10 @@
 
 #include "cef_popup_window.h"
 
+#include "cef_main_window.h"
+extern cef_main_window* gMainWnd;
+
+
 // Additional globals
 extern HACCEL hAccelTable;
 
@@ -102,8 +106,8 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     if (!GetMenu(frameHwnd)) {
         return false;
     }
-
-    if (::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
+    
+    if (os_event && ::TranslateAccelerator(frameHwnd, hAccelTable, os_event)) {
         return true;
     }
 
@@ -115,3 +119,50 @@ bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
                                 CefEventHandle os_event) {
   return false;
 }
+
+
+ void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
+ {
+      // both must be set to work
+      if (windowInfo.width == CW_USEDEFAULT ||
+          windowInfo.height == CW_USEDEFAULT) {
+            // force both vals to be CW_USEDEFAULT in this
+            //  case because Windows doesn't correctly handle 
+            //  only one value being is supplied on input
+            windowInfo.width = CW_USEDEFAULT;
+            windowInfo.height = CW_USEDEFAULT;
+         return;
+     }
+	 
+     RECT rectMainWnd;
+     gMainWnd->GetWindowRect(&rectMainWnd);
+
+     int mW = ::RectWidth(rectMainWnd);
+     int mH = ::RectHeight(rectMainWnd);
+     int cW = windowInfo.width;
+     int cH = windowInfo.height;
+
+     windowInfo.x = (rectMainWnd.left + (mW /2)) - (cW / 2);
+     windowInfo.y = (rectMainWnd.top + (mH /2)) - (cH / 2);
+
+     // don't go offscreen
+     if (windowInfo.x < 0) windowInfo.x = 0;
+     if (windowInfo.y < 0) windowInfo.y = 0;
+
+     HMONITOR hm = ::MonitorFromWindow(gMainWnd->GetSafeWnd(), MONITOR_DEFAULTTONEAREST); 
+     MONITORINFO mi = {0};
+     mi.cbSize = sizeof (mi);
+
+     GetMonitorInfo(hm, &mi);
+
+     if (windowInfo.width > ::RectWidth(mi.rcWork)) {
+         windowInfo.x = mi.rcWork.left;
+         windowInfo.width = mi.rcWork.right - windowInfo.x;
+     }
+
+     if (windowInfo.height > ::RectHeight(mi.rcWork)) {
+         windowInfo.y = mi.rcWork.top;
+         windowInfo.height = mi.rcWork.bottom - windowInfo.y;
+     }
+ }
+ 

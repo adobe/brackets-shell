@@ -21,11 +21,8 @@
  *
  */
 #import "FullScreenButton.h"
-//#define FS_HOT_TO_COLD
 
 //these are defined in MainMainu.xib file
-static const int FULLSCREEN_BUTTON_TAG = 1004;
-
 @implementation FullScreenButton {
     NSImage *inactive;
     NSImage *active;
@@ -57,12 +54,6 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     active = [NSImage imageNamed:@"window-fullscreen-active"];
     hover = [NSImage imageNamed:@"window-fullscreen-hover"];
     pressed = [NSImage imageNamed:@"window-fullscreen-pressed"];
-
-#ifdef FS_HOT_TO_COLD
-    NSImage* saved = active;
-    active = pressed;
-    pressed = saved;
-#endif
 
     // assume active
     activeState = YES;
