@@ -1013,12 +1013,29 @@ NSUInteger processKeyString(ExtensionString& key)
         appshell_extensions::fixupKey(key, "Opt-", "")) {
         mask |= NSAlternateKeyMask;
     }
-    //replace special keys with ones expected by keyEquivalent
-    const ExtensionString del = (ExtensionString() += NSDeleteCharacter);
-    const ExtensionString backspace = (ExtensionString() += NSBackspaceCharacter);
-    const ExtensionString tab = (ExtensionString() += NSTabCharacter);
-    const ExtensionString enter = (ExtensionString() += NSEnterCharacter);
+
+    unichar pageUpChar   = NSPageUpFunctionKey;
+    unichar pageDownChar = NSPageDownFunctionKey;
+    unichar homeChar     = NSHomeFunctionKey;
+    unichar endChar      = NSEndFunctionKey;
+    unichar insertChar   = NSHelpFunctionKey;
     
+    //replace special keys with ones expected by keyEquivalent
+    const ExtensionString pageUp    = (ExtensionString() += [[NSString stringWithCharacters: &pageUpChar length: 1] UTF8String]);
+    const ExtensionString pageDown  = (ExtensionString() += [[NSString stringWithCharacters: &pageDownChar length: 1] UTF8String]);
+    const ExtensionString home      = (ExtensionString() += [[NSString stringWithCharacters: &homeChar length: 1] UTF8String]);
+    const ExtensionString end       = (ExtensionString() += [[NSString stringWithCharacters: &endChar length: 1] UTF8String]);
+    const ExtensionString ins       = (ExtensionString() += [[NSString stringWithCharacters: &insertChar length: 1] UTF8String]);
+    const ExtensionString del       = (ExtensionString() += NSDeleteCharacter);
+    const ExtensionString backspace = (ExtensionString() += NSBackspaceCharacter);
+    const ExtensionString tab       = (ExtensionString() += NSTabCharacter);
+    const ExtensionString enter     = (ExtensionString() += NSEnterCharacter);
+    
+    appshell_extensions::fixupKey(key, "PageUp", pageUp);
+    appshell_extensions::fixupKey(key, "PageDown", pageDown);
+    appshell_extensions::fixupKey(key, "Home", home);
+    appshell_extensions::fixupKey(key, "End", end);
+    appshell_extensions::fixupKey(key, "Insert", ins);
     appshell_extensions::fixupKey(key, "Delete", del);
     appshell_extensions::fixupKey(key, "Backspace", backspace);
     appshell_extensions::fixupKey(key, "Space", " ");
