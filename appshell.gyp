@@ -514,6 +514,7 @@
             ],
             'libraries': [
               '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+              '-lpthread',
             ],
           },
         },
