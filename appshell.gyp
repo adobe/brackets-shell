@@ -1,4 +1,4 @@
- # Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
+# Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 
@@ -14,7 +14,10 @@
       [ 'OS=="mac"', {
         # Don't use clang with CEF binary releases due to Chromium tree structure dependency.
         'clang': 0,
-      }]
+      }],
+      [ 'OS=="win"', {
+        'multi_threaded_dll%': 0,
+      }],
     ]
   },
   'includes': [
@@ -85,11 +88,34 @@
               },
             },
           },
+          'variables': {
+            'win_exe_compatibility_manifest': 'compatibility.manifest',
+            'xparams': "/efy",
+          },
+          'actions': [
+            {
+              'action_name': 'copy_resources',
+              'msvs_cygwin_shell': 0,
+              'inputs': [],
+              'outputs': [
+                '<(PRODUCT_DIR)/copy_resources.stamp',
+              ],
+              'action': [
+                'xcopy <(xparams)',
+                'Resources\*',
+                '$(OutDir)',
+              ],
+            },
+          ],
           'msvs_settings': {
             'VCLinkerTool': {
               # Set /SUBSYSTEM:WINDOWS.
               'SubSystem': '2',
-              'EntryPointSymbol' : 'wWinMainCRTStartup',
+            },
+            'VCManifestTool': {
+              'AdditionalManifestFiles': [
+                'appshell.exe.manifest',
+              ],
             },
           },
           'link_settings': {
@@ -99,7 +125,7 @@
               '-lrpcrt4.lib',
               '-lopengl32.lib',
               '-lglu32.lib',
-              '-l$(ConfigurationName)/libcef.lib'
+              '-l$(ConfigurationName)/libcef.lib',
             ],
           },
           'library_dirs': [
@@ -135,6 +161,26 @@
               'files': ['Resources/locales/'],
             }
           ],
+        }],
+        [ 'OS=="win" and multi_threaded_dll', {
+          'configurations': {
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
         }],
         [ 'OS=="mac"', {
           'product_name': '<(appname)',
@@ -287,16 +333,19 @@
             '<@(includes_linux)',
             '<@(appshell_sources_linux)',
           ],
+          'dependencies': [
+            'gtk'
+          ],
           'link_settings': {
             'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
+              # Look for libcef.so in the current directory. Path can also be
+              # specified using the LD_LIBRARY_PATH environment variable.
               '-Wl,-rpath,\$$ORIGIN/lib',
-              '<(march)'
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
-              '$(BUILDTYPE)/libcef.so',
-              'appshell_extensions_js.o',
+              "$(BUILDTYPE)/libcef.so",
+              "appshell_extensions_js.o",
+              "-lX11",
             ],
           },
         }],
@@ -342,6 +391,31 @@
             'Release': {},
             'Debug': {},
           },
+        }],
+        ['OS=="win" and multi_threaded_dll', {
+          'configurations': {
+            'Common_Base': {
+              'msvs_configuration_attributes': {
+                'OutputDirectory': '$(ConfigurationName)',
+              },
+            },
+            'Debug': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 3,
+                  'WarnAsError': 'false',
+                },
+              },
+            },
+            'Release': {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'RuntimeLibrary': 2,
+                  'WarnAsError': 'false',
+                },
+              },
+            }
+          }
         }]
       ]
     },
@@ -419,6 +493,33 @@
         },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
+    [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+              '-lpthread',
+            ],
+          },
+        },
+      ],
+    }],  # OS=="linux" or OS=="freebsd" or OS=="openbsd"
     ['target_arch=="ia32"', {
       'variables': {
         'output_bfd': 'elf32-i386',

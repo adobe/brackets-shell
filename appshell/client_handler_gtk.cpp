@@ -5,12 +5,17 @@
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <string>
+#include <gtk-2.0/gtk/gtksignal.h>
+#include <glib-2.0/gobject/gsignal.h>
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/cef_app.h"
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+extern bool isReallyClosing;
 
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
@@ -29,12 +34,42 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
   REQUIRE_UI_THREAD();
-
-  GtkWidget* window = gtk_widget_get_ancestor(
-      GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
-      GTK_TYPE_WINDOW);
   std::string titleStr(title);
-  gtk_window_set_title(GTK_WINDOW(window), titleStr.c_str());
+
+  // Retrieve the X11 display shared with Chromium.
+  ::Display* display = cef_get_xdisplay();
+  DCHECK(display);
+
+  // Retrieve the X11 window handle for the browser.
+  ::Window window = browser->GetHost()->GetWindowHandle();
+  DCHECK(window != kNullWindowHandle);
+
+  // Retrieve the atoms required by the below XChangeProperty call.
+  const char* kAtoms[] = {
+    "_NET_WM_NAME",
+    "UTF8_STRING"
+  };
+  Atom atoms[2];
+  int result = XInternAtoms(display, const_cast<char**>(kAtoms), 2, false,
+                            atoms);
+  if (!result)
+    NOTREACHED();
+
+  // Set the window title.
+  XChangeProperty(display,
+                  window,
+                  atoms[0],
+                  atoms[1],
+                  8,
+                  PropModeReplace,
+                  reinterpret_cast<const unsigned char*>(titleStr.c_str()),
+                  titleStr.size());
+
+  // TODO(erg): This is technically wrong. So XStoreName and friends expect
+  // this in Host Portable Character Encoding instead of UTF-8, which I believe
+  // is Compound Text. This shouldn't matter 90% of the time since this is the
+  // fallback to the UTF8 property above.
+  XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
 }
 
 void ClientHandler::SendNotification(NotificationType type) {
@@ -64,9 +99,26 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 #endif // SHOW_TOOLBAR_UI
 }
 
-void ClientHandler::CloseMainWindow() {
-  // TODO(port): Check if this is enough
-  gtk_main_quit();
+bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+  g_message("DoClose called");
+  if (m_BrowserId == browser->GetIdentifier()) {
+    // Notify the parent window that it will be closed.
+//    browser->GetHost()->ParentWindowWillClose();
+    isReallyClosing = false;
+    g_message("isReallyClosing set to false");
+  }
+  
+//  isReallyClosing = true;
+  //GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+//  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+
+  // A popup browser window is not contained in another window, so we can let
+  // these windows close by themselves.
+  return false;
+}
+
+void ClientHandler::AfterClose() {
+  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
 }
 
 void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)

@@ -40,6 +40,9 @@
 
 GtkWidget* _menuWidget;
 
+// The global ClientHandler reference.
+extern CefRefPtr<ClientHandler> g_handler;
+
 // Supported browsers (order matters):
 //   - google-chorme 
 //   - chromium-browser - chromium executable name (in ubuntu)
@@ -527,21 +530,27 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-    if (browser.get()) {
-        isReallyClosing = true;
-        // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
-        // GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
-        // if(gtk_widget_is_toplevel (hwnd))
-        //     gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
-        // else
-            browser->GetHost()->CloseBrowser(true);
-    }
+  g_message("CloseWindow called");
+  if (browser.get()) {
+    isReallyClosing = true;
+    g_message("CloseWindow::isReallyClosing = true");
+    browser->GetHost()->CloseBrowser(false);
+
+    // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
+    //GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
+    //GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+//        if(gtk_widget_is_toplevel (hwnd))
+    //g_message("Called destroy");
+    //gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
+    //gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
+    // else
+  }
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
-        GtkWindow* hwnd = GTK_WINDOW(browser->GetHost()->GetWindowHandle());
+        GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
         if (hwnd) 
             gtk_window_present(hwnd);
     }

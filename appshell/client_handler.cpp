@@ -46,26 +46,26 @@ bool ClientHandler::OnProcessMessageReceived(
     CefProcessId source_process,
     CefRefPtr<CefProcessMessage> message) {
   bool handled = false;
-  
+
   // Check for callbacks first
   if (message->GetName() == "executeCommandCallback") {
     int32 commandId = message->GetArgumentList()->GetInt(0);
     bool result = message->GetArgumentList()->GetBool(1);
-    
+
     CefRefPtr<CommandCallback> callback = command_callback_map_[commandId];
     callback->CommandComplete(result);
     command_callback_map_.erase(commandId);
-    
+
     handled = true;
   }
-  
+
   // Execute delegate callbacks.
   ProcessMessageDelegateSet::iterator it = process_message_delegates_.begin();
   for (; it != process_message_delegates_.end() && !handled; ++it) {
     handled = (*it)->OnProcessMessageReceived(this, browser, source_process,
                                               message);
   }
-    
+
   return handled;
 }
 
@@ -159,36 +159,27 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     PopupCreated(browser);
   }
 
-  browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
-}
-
-bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
-  REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier()) {
-    // Notify the parent window that it will be closed.
-//    browser->GetHost()->ParentWindowWillClose();
-  }
-
-  // A popup browser window is not contained in another window, so we can let
-  // these windows close by themselves.
-  return false;
+  browser_window_map_[(ClientWindowHandle)browser->GetHost()->GetWindowHandle()] = browser;
 }
 
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_UI_THREAD();
 
+  g_message("OnBeforeClose called");
   if (CanCloseBrowser(browser)) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-	}
+    }
 
-    browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
+    browser_window_map_.erase((ClientWindowHandle)browser->GetHost()->GetWindowHandle());
   }
-  
+
   if (m_quitting) {
+    g_message("Call DispatchCloseToNextBrowser()");
     DispatchCloseToNextBrowser();
+    
+    AfterClose();
   }
 }
 
@@ -198,7 +189,7 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDragData> dragData,
                                 DragOperationsMask mask) {
     REQUIRE_UI_THREAD();
-    
+
     if (dragData->IsFile()) {
         gDroppedFiles.clear();
         // Store the dragged files in a vector for later use
@@ -237,7 +228,7 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 
   // Display a load error message.
   std::stringstream ss;
-  
+
   ss << "<html>" <<
         "<head>" <<
         "  <style type='text/css'>" <<
@@ -287,7 +278,7 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
   // Don't write the message to a console.log file. Instead, we'll just
   // return false here so the message gets written to the console (output window
   // in xcode, or console window in dev tools)
-  
+
 /*
   REQUIRE_UI_THREAD();
 
@@ -369,20 +360,20 @@ bool ClientHandler::OnContextMenuCommand(
   }
 }
 
-void ClientHandler::SetMainHwnd(CefWindowHandle hwnd) {
+void ClientHandler::SetMainHwnd(ClientWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_MainHwnd = hwnd;
 }
 
-void ClientHandler::SetEditHwnd(CefWindowHandle hwnd) {
+void ClientHandler::SetEditHwnd(ClientWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_EditHwnd = hwnd;
 }
 
-void ClientHandler::SetButtonHwnds(CefWindowHandle backHwnd,
-                                   CefWindowHandle forwardHwnd,
-                                   CefWindowHandle reloadHwnd,
-                                   CefWindowHandle stopHwnd) {
+void ClientHandler::SetButtonHwnds(ClientWindowHandle backHwnd,
+                                   ClientWindowHandle forwardHwnd,
+                                   ClientWindowHandle reloadHwnd,
+                                   ClientWindowHandle stopHwnd) {
   AutoLock lock_scope(this);
   m_BackHwnd = backHwnd;
   m_ForwardHwnd = forwardHwnd;
@@ -463,7 +454,7 @@ void ClientHandler::DispatchCloseToNextBrowser()
 
       // Bring the window to the front before sending the command
       BringBrowserWindowToFront(browser);
-    
+
       // This call initiates a quit sequence. We will continue to close browser windows
       // unless AbortQuit() is called.
       m_quitting = true;
