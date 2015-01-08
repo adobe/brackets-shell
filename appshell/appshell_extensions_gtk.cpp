@@ -164,7 +164,6 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
     GtkWidget *dialog;
-    // const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
     GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
     dialog = gtk_file_chooser_dialog_new (title.c_str(),
                   NULL,
