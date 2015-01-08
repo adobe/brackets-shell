@@ -164,15 +164,20 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
     GtkWidget *dialog;
-    const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
     GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
-    dialog = gtk_file_chooser_dialog_new (dialog_title,
+    dialog = gtk_file_chooser_dialog_new (title.c_str(),
                   NULL,
                   file_or_directory,
                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                   GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                   NULL);
     
+    if (!initialDirectory.empty())
+    {
+        ExtensionString folderURI = std::string("file:///") + initialDirectory;
+        gtk_file_chooser_set_current_folder_uri (GTK_FILE_CHOOSER (dialog), folderURI.c_str());
+    }
+
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         char *filename;
