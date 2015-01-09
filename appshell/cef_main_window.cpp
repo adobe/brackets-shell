@@ -99,6 +99,42 @@ LPCWSTR cef_main_window::GetBracketsWindowTitleText()
     return szTitle;
 }
 
+void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width, int& height)
+{
+    // don't check if we're already letting
+    //  Windows determine the window placement
+    if (left   == CW_USEDEFAULT &&
+        top    == CW_USEDEFAULT &&
+        width  == CW_USEDEFAULT &&
+        height == CW_USEDEFAULT) {
+            return;
+    }
+
+    // The virtual display is the bounding rect of all monitors
+    // see http://msdn.microsoft.com/en-us/library/dd162729(v=vs.85).aspx
+
+    int xScreen = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int yScreen = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int cxScreen = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int cyScreen = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+    // Make sure the window fits inside the virtual screen.
+    // If it doesn't then we let windows decide the window placement
+    if (left < xScreen ||
+        top < yScreen ||
+        left + width > xScreen + cxScreen ||
+        top + height > yScreen + cyScreen) {
+
+        // something was off-screen so reposition
+        //  to the default window placement 
+        left   = CW_USEDEFAULT;
+        top    = CW_USEDEFAULT;
+        width  = CW_USEDEFAULT;
+        height = CW_USEDEFAULT;
+    }
+}
+
+
 // Create Method.  Call this to create a cef_main_window instance 
 BOOL cef_main_window::Create() 
 {
@@ -108,9 +144,13 @@ BOOL cef_main_window::Create()
     int top    = CW_USEDEFAULT;
     int width  = CW_USEDEFAULT;
     int height = CW_USEDEFAULT;
+
     int showCmd = SW_SHOW;
 
     LoadWindowRestoreRect(left, top, width, height, showCmd);
+
+    // make sure the window is visible 
+    EnsureWindowRectVisibility(left, top, width, height);
 
     DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
 

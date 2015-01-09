@@ -168,7 +168,20 @@ BOOL cef_host_window::HandleSize(BOOL bMinimize)
     }
     SetProp(L"WasMinimized", (HANDLE)bMinimize);
 #endif
+    NotifyWindowMovedOrResized();
+    return FALSE;
+}
 
+void cef_host_window::NotifyWindowMovedOrResized()
+{
+    if (GetBrowser() && GetBrowser()->GetHost()) {
+        GetBrowser()->GetHost()->NotifyMoveOrResizeStarted();
+    }
+}
+
+BOOL cef_host_window::HandleMoveOrMoving() 
+{
+    NotifyWindowMovedOrResized();
     return FALSE;
 }
 
@@ -196,6 +209,11 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_INITMENUPOPUP:
         if (HandleInitMenuPopup((HMENU)wParam))
+            return 0L;
+        break;
+    case WM_MOVING:
+    case WM_MOVE:
+        if (HandleMoveOrMoving())
             return 0L;
         break;
     }
