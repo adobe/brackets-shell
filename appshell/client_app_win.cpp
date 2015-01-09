@@ -90,12 +90,46 @@ double ClientApp::GetElapsedMilliseconds()
     return (timeGetTime() - g_appStartupTime);
 }
 
+// returns the directory to which the app has been installed
+CefString ClientApp::AppGetAppDirectory()
+{
+    // find the full pathname of the app .exe
+    std::wstring appPath;
+    HMODULE hModule = ::GetModuleHandle(NULL);
+    if (hModule)
+    {
+        WCHAR filename[MAX_PATH+1] = {0};
+        ::GetModuleFileName(hModule, filename, MAX_PATH);
+        appPath = filename;
+
+        // strip off the filename and extension
+        int idx = appPath.rfind('\\');
+        if (idx >= 0)
+            appPath = appPath.substr(0, idx);
+    }
+
+    // Convert '\\' to '/'
+    replace(appPath.begin(), appPath.end(), '\\', '/');
+
+    return CefString(appPath);
+}
+
 CefString ClientApp::AppGetSupportDirectory() 
 {
-    wchar_t dataPath[MAX_UNC_PATH];
-    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
-  
-    std::wstring appSupportPath = dataPath;
+    std::wstring appSupportPath;
+    if (!IsPortableInstall())
+    {
+        // for normal installations, use the user's APPDATA folder
+        wchar_t dataPath[MAX_UNC_PATH];
+        SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+        appSupportPath = dataPath;
+    }
+    else
+    {
+        // for portable installations, use the app's installed folder
+        appSupportPath = ClientApp::AppGetAppDirectory();
+    }
+
     appSupportPath +=  L"\\" GROUP_NAME APP_NAME;
 
     // Convert '\\' to '/'
@@ -115,4 +149,34 @@ CefString ClientApp::AppGetDocumentsDirectory()
     replace(appUserDocuments.begin(), appUserDocuments.end(), '\\', '/');
 
     return CefString(appUserDocuments);
+}
+
+
+// check if this is a portable installation
+//   to be a portable installation, the installer should write the empty file to the app folder
+bool ClientApp::IsPortableInstall()
+{
+    typedef enum { UNINITIALIZED = -1, ISNOTPORTABLE, ISPORTABLE } ePortableFlag;
+    static ePortableFlag isPortableInstall = UNINITIALIZED;
+
+    if (isPortableInstall == UNINITIALIZED)
+    {
+	    std::wstring filename;
+		GetPortableInstallFilename(filename);
+	    HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
+		    FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	    isPortableInstall = (INVALID_HANDLE_VALUE != hFile) ? ISPORTABLE : ISNOTPORTABLE;
+	    ::CloseHandle(hFile);
+    }
+	return (isPortableInstall == ISPORTABLE);
+}
+
+// return the name of the portable install data file
+void ClientApp::GetPortableInstallFilename(std::wstring& filename)
+{
+	// the existence of this file in the same folder as the Brackets application will
+	//   cause the application to be run in a "portable" state
+	filename = ClientApp::AppGetAppDirectory();
+	filename += L"/";
+	filename += MAKEPORTABLE_BRACKETS_FILENAME;
 }

@@ -26,10 +26,20 @@
 #include "resource.h"
 #include "native_menu_model.h"
 #include "config.h"
+#include <sstream>
 
 // external
 extern HINSTANCE                hInst;
 extern CefRefPtr<ClientHandler> g_handler;
+
+// portable build file structure
+typedef struct {
+	char szSignature[18];		// MAKEPORTABLE_BRACKETS_SIGNATURE_STRING
+	unsigned short uVersion;	// current file version
+	RECT rcWindow;
+	RECT rcRestored;
+	UINT showCmd;
+} sCefMainWindowData;
 
 // constants
 static const wchar_t        kWindowClassname[] = L"CEFCLIENT";
@@ -104,21 +114,17 @@ BOOL cef_main_window::Create()
 {
     RegisterWndClass();
 
-    int left   = CW_USEDEFAULT;
-    int top    = CW_USEDEFAULT;
-    int width  = CW_USEDEFAULT;
-    int height = CW_USEDEFAULT;
     int showCmd = SW_SHOW;
 
-    LoadWindowRestoreRect(left, top, width, height, showCmd);
+    LoadWindowRestoreRect(showCmd);
 
     DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
 
     if (showCmd == SW_MAXIMIZE)
       styles |= WS_MAXIMIZE;
 
-    if (!cef_host_window::Create(::kWindowClassname, GetBracketsWindowTitleText(),
-                                styles, left, top, width, height))
+    if (!cef_host_window::Create(::kWindowClassname, GetBracketsWindowTitleText(), styles,
+        mWindowRect.left, mWindowRect.top, mWindowRect.right, mWindowRect.bottom))
     {
         return FALSE;
     }
@@ -293,36 +299,117 @@ void cef_main_window::SaveWindowRestoreRect()
             RECT rect;
             if (GetWindowRect(&rect))
             {
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefLeft,   rect.left);
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefTop,    rect.top);
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefWidth,  ::RectWidth(rect));
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefHeight, ::RectHeight(rect));
+                mWindowRect.left    = rect.left;
+                mWindowRect.top     = rect.top;
+                mWindowRect.right   = ::RectWidth(rect);
+                mWindowRect.bottom  = ::RectHeight(rect);
             }
 
             if (wp.showCmd == SW_MAXIMIZE)
             {
                 // When window is maximized, we also store the "restore" size
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   wp.rcNormalPosition.left);
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    wp.rcNormalPosition.top);
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  wp.rcNormalPosition.right);
-                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, wp.rcNormalPosition.bottom);
+                mRestoredRect.left = wp.rcNormalPosition.left;
+                mRestoredRect.top = wp.rcNormalPosition.top;
+                mRestoredRect.right = wp.rcNormalPosition.right;
+                mRestoredRect.bottom = wp.rcNormalPosition.bottom;
             }
 
-            // Maximize is the only special case we handle
-            ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefShowState, (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
+            if (!ClientApp::IsPortableInstall())
+            {
+        		// for normal installations, serialize to the Registry
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefLeft,   mWindowRect.left);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefTop,    mWindowRect.top);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefWidth,  mWindowRect.right);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefHeight, mWindowRect.bottom);
+
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   mRestoredRect.left);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    mRestoredRect.top);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  mRestoredRect.right);
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, mRestoredRect.bottom);
+
+                ::WriteRegistryInt(::kWindowPostionFolder, ::kPrefShowState, (wp.showCmd == SW_MAXIMIZE) ? SW_MAXIMIZE : SW_SHOW);
+            }
+            else
+            {
+                // for portable installations, serialize to a file in the app folder
+				sCefMainWindowData data;
+				memset(&data, 0, sizeof(sCefMainWindowData));
+				strcpy(data.szSignature, MAKEPORTABLE_BRACKETS_SIGNATURE_STRING);
+				data.uVersion = MAKEPORTABLE_BRACKETS_VERSION_CURRENT;
+				data.rcWindow = mWindowRect;
+				data.rcRestored = mRestoredRect;
+				data.showCmd = wp.showCmd;
+
+                std::wstring filename;
+				ClientApp::GetPortableInstallFilename(filename);
+                HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_WRITE,
+                    FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (INVALID_HANDLE_VALUE != hFile)
+                {
+                    DWORD dwBytesWritten = 0L;
+					::WriteFile(hFile, (LPVOID)&data, sizeof(data), &dwBytesWritten, NULL);
+                    ::CloseHandle(hFile);
+                }
+           }
         }
     }
 }
 
 // Initialization helper -- 
 //  Loads the restore window placement data from the registry
-void cef_main_window::LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd)
+void cef_main_window::LoadWindowRestoreRect(int& showCmd)
 {
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,      NULL, left);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefTop,       NULL, top);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefWidth,     NULL, width);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefHeight,    NULL, height);
-    ::GetRegistryInt(::kWindowPostionFolder, ::kPrefShowState, NULL, showCmd);
+    // set defaults
+	::SetRect(&mWindowRect, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+	showCmd = SW_SHOW;
+	::SetRect(&mRestoredRect, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT);
+
+    if (!ClientApp::IsPortableInstall())
+    {
+ 		// for normal installations, serialize to the Registry
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefLeft,      NULL, (int&)mWindowRect.left);
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefTop,       NULL, (int&)mWindowRect.top);
+        // stuff the width and height into the right and bottom fields
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefWidth,     NULL, (int&)mWindowRect.right);
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefHeight,    NULL, (int&)mWindowRect.bottom);
+
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefShowState, NULL, showCmd);
+
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   NULL, (int&)mRestoredRect.left);
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    NULL, (int&)mRestoredRect.top);
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)mRestoredRect.right);
+        ::GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)mRestoredRect.bottom);
+    }
+    else
+    {
+		// for portable installations, serialize to a file in the app folder
+		std::wstring filename;
+		ClientApp::GetPortableInstallFilename(filename);
+		HANDLE hFile = ::CreateFile(filename.c_str(), GENERIC_READ,
+			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (INVALID_HANDLE_VALUE != hFile)
+		{
+			DWORD dwFileSize = ::GetFileSize(hFile, NULL);
+			DWORD dwBytesRead;
+			sCefMainWindowData data;
+			if ((sizeof(sCefMainWindowData) == dwFileSize)
+				&& ::ReadFile(hFile, (LPVOID)&data, sizeof(sCefMainWindowData), &dwBytesRead, NULL)
+				&& (dwBytesRead == sizeof(sCefMainWindowData))
+				&& (strcmp(data.szSignature, MAKEPORTABLE_BRACKETS_SIGNATURE_STRING) == 0))
+			{
+				if (data.uVersion <= MAKEPORTABLE_BRACKETS_VERSION_1)
+				{
+					mWindowRect = data.rcWindow;
+					mRestoredRect = data.rcRestored;
+					showCmd = data.showCmd;
+				}
+
+				// future version struct additions go here...
+				// if (data.uVersion <= MAKEPORTABLE_BRACKETS_VERSION_xx) { }
+			}
+			::CloseHandle(hFile);
+		}
+    }
 }
 
 // Initialization helper -- 
@@ -343,15 +430,7 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
         wp.ptMaxPosition.x  = -1;
         wp.ptMaxPosition.y  = -1;
 
-        wp.rcNormalPosition.left   = CW_USEDEFAULT;
-        wp.rcNormalPosition.top    = CW_USEDEFAULT;
-        wp.rcNormalPosition.right  = CW_USEDEFAULT;
-        wp.rcNormalPosition.bottom = CW_USEDEFAULT;
-
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreLeft,   NULL, (int&)wp.rcNormalPosition.left);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreTop,    NULL, (int&)wp.rcNormalPosition.top);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)wp.rcNormalPosition.right);
-        GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)wp.rcNormalPosition.bottom);
+        wp.rcNormalPosition = mRestoredRect;
 
         // This returns FALSE on failure but not sure what we could do in that case
         SetWindowPlacement(&wp);

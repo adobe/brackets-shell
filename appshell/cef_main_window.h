@@ -45,7 +45,7 @@ public:
 protected:
     // Initalization - Protected Members
     void SaveWindowRestoreRect();
-    void LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd);
+    void LoadWindowRestoreRect(int& showCmd);
     void RestoreWindowPlacement(int showCmd);
 
     // Message Handlers
@@ -72,5 +72,8 @@ protected:
 private:
     // Initialization - Private Members
     static ATOM RegisterWndClass();
+
+    RECT mWindowRect;   // persisted size of normal window
+    RECT mRestoredRect; // persisted restored size of maximized window
 };
 
