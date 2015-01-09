@@ -29,6 +29,7 @@
 
 #include <Cocoa/Cocoa.h>
 #include <sys/sysctl.h>
+#include <sys/mount.h>
 
 NSMutableArray* pendingOpenFiles;
 
@@ -450,30 +451,56 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
     isRemote = false;
-    
+
     if ([pathStr length] == 0) {
         return ERR_INVALID_PARAMS;
     }
 
-    // Detect remote drive
-    NSString *testPath = [[pathStr copy] autorelease];
-    NSNumber *isVolumeKey;
-    NSError *error = nil;
+    if ([pathStr hasPrefix:@"/Volume"]) {
+        // Detect remote drive
+        struct statfs* mounts;
+        int num_mounts = getmntinfo(&mounts, MNT_WAIT);
 
-    while (![testPath isEqualToString:@"/"]) {
-        NSURL *testUrl = [NSURL fileURLWithPath:testPath];
+        // create an array with the same size as we found mount points. It's a safe bet
+        NSMutableArray* mountPoints = [NSMutableArray arrayWithCapacity:num_mounts];
 
-        if (![testUrl getResourceValue:&isVolumeKey forKey:NSURLIsVolumeKey error:&error]) {
+        for (int i = 0; i < num_mounts; i++) {
+            bool isLocal = (mounts[i].f_flags & MNT_LOCAL) == MNT_LOCAL;
+            NSLog(@"Disk type '%s' mounted at: %s and type '%@'", mounts[i].f_fstypename, mounts[i].f_mntonname, (isLocal ? @"Local" : @"Remote"));
+
+            // filter for local mounts
+            if (isLocal) {
+                [mountPoints addObject: [NSString stringWithUTF8String: mounts[i].f_mntonname]];
+            }
+        }
+
+        NSLog(@"local moint points '%@'", mountPoints);
+
+        // order the mount points ascending length
+        [mountPoints sortUsingComparator:^NSComparisonResult(id a, id b) {
+            NSNumber *alength = [NSNumber numberWithInt:((NSString*)a).length];
+            NSNumber *blength = [NSNumber numberWithInt:((NSString*)b).length];
+            return [blength compare:alength];
+        }];
+
+        // match local mountpoints with path
+        for(NSUInteger i = 0; i < [mountPoints count]; i++) {
+            if ([pathStr hasPrefix: mountPoints[i]]) {
+                isRemote = false;
+                break;
+            }
+        }
+
+        return NO_ERROR;
+    } else {
+        if (! [[NSFileManager defaultManager] fileExistsAtPath:pathStr]) {
             return ERR_NOT_FOUND;
+        } else {
+            // isRemote = false
         }
-        if ([isVolumeKey boolValue]) {
-            isRemote = true;
-            break;
-        }
-        testPath = [testPath stringByDeletingLastPathComponent];
-    }
 
-    return NO_ERROR;
+        return NO_ERROR;
+    }
 }
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
