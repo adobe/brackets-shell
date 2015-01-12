@@ -99,8 +99,10 @@ LPCWSTR cef_main_window::GetBracketsWindowTitleText()
     return szTitle;
 }
 
-void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width, int& height)
+void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width, int& height, int showCmd)
 {
+    static const int kWindowFrameSize = 8;
+
     // don't check if we're already letting
     //  Windows determine the window placement
     if (left   == CW_USEDEFAULT &&
@@ -118,12 +120,28 @@ void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width
     int cxScreen = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
     int cyScreen = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
+    // make a copy, we need to adjust the comparison
+    //  if it's a maximized window because the OS move the 
+    //  origin of the window by 8 pixes to releive the borders 
+    //  from the monitor for legacy apps
+    int xLeft = left;
+    int xTop = top;
+    int xWidth = width;
+    int xHeight = height;
+
+    if (showCmd == SW_MAXIMIZE) {
+        xLeft += kWindowFrameSize;
+        xTop += kWindowFrameSize;
+        xWidth -= kWindowFrameSize * 2;
+        xHeight -= kWindowFrameSize * 2;
+    }
+
     // Make sure the window fits inside the virtual screen.
     // If it doesn't then we let windows decide the window placement
-    if (left < xScreen ||
-        top < yScreen ||
-        left + width > xScreen + cxScreen ||
-        top + height > yScreen + cyScreen) {
+    if (xLeft < xScreen ||
+        xTop  < yScreen ||
+        xLeft + xWidth > xScreen + cxScreen ||
+        xTop + xHeight > yScreen + cyScreen) {
 
         // something was off-screen so reposition
         //  to the default window placement 
@@ -150,7 +168,7 @@ BOOL cef_main_window::Create()
     LoadWindowRestoreRect(left, top, width, height, showCmd);
 
     // make sure the window is visible 
-    EnsureWindowRectVisibility(left, top, width, height);
+    EnsureWindowRectVisibility(left, top, width, height, showCmd);
 
     DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
 
@@ -393,6 +411,30 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)wp.rcNormalPosition.right);
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)wp.rcNormalPosition.bottom);
 
+        ::NormalizeRect(wp.rcNormalPosition);
+
+        int left   = wp.rcNormalPosition.left;
+        int top    = wp.rcNormalPosition.top;
+        int width  = wp.rcNormalPosition.right - left; 
+        int height = wp.rcNormalPosition.bottom - top;
+
+        EnsureWindowRectVisibility(left, top, width, height, SW_SHOWNORMAL);
+
+        wp.rcNormalPosition.left = left;
+        wp.rcNormalPosition.top = top;
+
+        if (width != CW_USEDEFAULT) {
+            wp.rcNormalPosition.right = wp.rcNormalPosition.left + width;
+        } else {
+            wp.rcNormalPosition.right = CW_USEDEFAULT;
+        }
+
+        if (height != CW_USEDEFAULT) {
+            wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + height;
+        } else {
+            wp.rcNormalPosition.bottom = CW_USEDEFAULT;
+        }
+        
         // This returns FALSE on failure but not sure what we could do in that case
         SetWindowPlacement(&wp);
     }
