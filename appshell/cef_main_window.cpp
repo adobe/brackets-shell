@@ -420,23 +420,23 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
 
         EnsureWindowRectVisibility(left, top, width, height, SW_SHOWNORMAL);
 
-        wp.rcNormalPosition.left = left;
-        wp.rcNormalPosition.top = top;
+        // presumably they would all be set to CW_USEDEFAULT
+        //  but we check for any out-of-bounds value and
+        //  bypass the restore rect as to let Windows decide
+        if (left != CW_USEDEFAULT &&
+            top != CW_USEDEFAULT && 
+            height != CW_USEDEFAULT && 
+            width != CW_USEDEFAULT) {
 
-        if (width != CW_USEDEFAULT) {
+            wp.rcNormalPosition.left = left;
+            wp.rcNormalPosition.top = top;
+
             wp.rcNormalPosition.right = wp.rcNormalPosition.left + width;
-        } else {
-            wp.rcNormalPosition.right = CW_USEDEFAULT;
-        }
-
-        if (height != CW_USEDEFAULT) {
             wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + height;
-        } else {
-            wp.rcNormalPosition.bottom = CW_USEDEFAULT;
-        }
         
-        // This returns FALSE on failure but not sure what we could do in that case
-        SetWindowPlacement(&wp);
+            // This returns FALSE on failure but not sure what we could do in that case
+            SetWindowPlacement(&wp);
+        }
     }
 
     ShowWindow(showCmd);
