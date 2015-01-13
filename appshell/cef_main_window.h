@@ -47,6 +47,7 @@ protected:
     void SaveWindowRestoreRect();
     void LoadWindowRestoreRect(int& left, int& top, int& width, int& height, int& showCmd);
     void RestoreWindowPlacement(int showCmd);
+    void EnsureWindowRectVisibility(int& left, int& top, int& width, int& height, int showCmd);
 
     // Message Handlers
     BOOL HandleEraseBackground(HDC hdc);

@@ -99,6 +99,60 @@ LPCWSTR cef_main_window::GetBracketsWindowTitleText()
     return szTitle;
 }
 
+void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width, int& height, int showCmd)
+{
+    static const int kWindowFrameSize = 8;
+
+    // don't check if we're already letting
+    //  Windows determine the window placement
+    if (left   == CW_USEDEFAULT &&
+        top    == CW_USEDEFAULT &&
+        width  == CW_USEDEFAULT &&
+        height == CW_USEDEFAULT) {
+            return;
+    }
+
+    // The virtual display is the bounding rect of all monitors
+    // see http://msdn.microsoft.com/en-us/library/dd162729(v=vs.85).aspx
+
+    int xScreen = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int yScreen = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int cxScreen = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int cyScreen = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+    // make a copy, we need to adjust the comparison
+    //  if it's a maximized window because the OS move the 
+    //  origin of the window by 8 pixes to releive the borders 
+    //  from the monitor for legacy apps
+    int xLeft = left;
+    int xTop = top;
+    int xWidth = width;
+    int xHeight = height;
+
+    if (showCmd == SW_MAXIMIZE) {
+        xLeft += kWindowFrameSize;
+        xTop += kWindowFrameSize;
+        xWidth -= kWindowFrameSize * 2;
+        xHeight -= kWindowFrameSize * 2;
+    }
+
+    // Make sure the window fits inside the virtual screen.
+    // If it doesn't then we let windows decide the window placement
+    if (xLeft < xScreen ||
+        xTop  < yScreen ||
+        xLeft + xWidth > xScreen + cxScreen ||
+        xTop + xHeight > yScreen + cyScreen) {
+
+        // something was off-screen so reposition
+        //  to the default window placement 
+        left   = CW_USEDEFAULT;
+        top    = CW_USEDEFAULT;
+        width  = CW_USEDEFAULT;
+        height = CW_USEDEFAULT;
+    }
+}
+
+
 // Create Method.  Call this to create a cef_main_window instance 
 BOOL cef_main_window::Create() 
 {
@@ -108,9 +162,13 @@ BOOL cef_main_window::Create()
     int top    = CW_USEDEFAULT;
     int width  = CW_USEDEFAULT;
     int height = CW_USEDEFAULT;
+
     int showCmd = SW_SHOW;
 
     LoadWindowRestoreRect(left, top, width, height, showCmd);
+
+    // make sure the window is visible 
+    EnsureWindowRectVisibility(left, top, width, height, showCmd);
 
     DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
 
@@ -353,8 +411,32 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)wp.rcNormalPosition.right);
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)wp.rcNormalPosition.bottom);
 
-        // This returns FALSE on failure but not sure what we could do in that case
-        SetWindowPlacement(&wp);
+        ::NormalizeRect(wp.rcNormalPosition);
+
+        int left   = wp.rcNormalPosition.left;
+        int top    = wp.rcNormalPosition.top;
+        int width  = wp.rcNormalPosition.right - left; 
+        int height = wp.rcNormalPosition.bottom - top;
+
+        EnsureWindowRectVisibility(left, top, width, height, SW_SHOWNORMAL);
+
+        // presumably they would all be set to CW_USEDEFAULT
+        //  but we check for any out-of-bounds value and
+        //  bypass the restore rect as to let Windows decide
+        if (left != CW_USEDEFAULT &&
+            top != CW_USEDEFAULT && 
+            height != CW_USEDEFAULT && 
+            width != CW_USEDEFAULT) {
+
+            wp.rcNormalPosition.left = left;
+            wp.rcNormalPosition.top = top;
+
+            wp.rcNormalPosition.right = wp.rcNormalPosition.left + width;
+            wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + height;
+        
+            // This returns FALSE on failure but not sure what we could do in that case
+            SetWindowPlacement(&wp);
+        }
     }
 
     ShowWindow(showCmd);
