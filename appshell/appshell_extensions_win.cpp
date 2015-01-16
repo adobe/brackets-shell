@@ -1487,6 +1487,10 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             lpaccelNew[newItem].key = VK_TAB;
         } else if (keyStr.find(L"ENTER")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_RETURN;
+        }  else if (keyStr.find(L"PAGEUP")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_PRIOR;
+        }  else if (keyStr.find(L"PAGEDOWN")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_NEXT;
         }  else if (keyStr.find(L"UP")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_UP;
         }  else if (keyStr.find(L"DOWN")  != ExtensionString::npos) {
