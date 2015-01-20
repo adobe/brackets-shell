@@ -21,11 +21,8 @@
  *
  */
 #import "FullScreenButton.h"
-//#define FS_HOT_TO_COLD
 
 //these are defined in MainMainu.xib file
-static const int FULLSCREEN_BUTTON_TAG = 1004;
-
 @implementation FullScreenButton {
     NSImage *inactive;
     NSImage *active;
@@ -58,12 +55,6 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     hover = [NSImage imageNamed:@"window-fullscreen-hover"];
     pressed = [NSImage imageNamed:@"window-fullscreen-pressed"];
 
-#ifdef FS_HOT_TO_COLD
-    NSImage* saved = active;
-    active = pressed;
-    pressed = saved;
-#endif
-
     // assume active
     activeState = YES;
     [self updateButtonStates];
@@ -91,6 +82,7 @@ static const int FULLSCREEN_BUTTON_TAG = 1004;
     NSTrackingArea *focusTrackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
                                                                          options:focusTrackingAreaOptions owner:self userInfo:nil];
     [self addTrackingArea:focusTrackingArea];
+    [focusTrackingArea release];
 }
 
 - (void)mouseDown:(NSEvent *)theEvent {

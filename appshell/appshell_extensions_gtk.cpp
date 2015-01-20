@@ -24,6 +24,7 @@
 #include "client_app.h"
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <gio/gio.h>
 #include <gtk/gtk.h>
 #include "appshell_extensions.h"
 #include "appshell_extensions_platform.h"
@@ -163,15 +164,20 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                      CefRefPtr<CefListValue>& selectedFiles)
 {
     GtkWidget *dialog;
-    const char* dialog_title = chooseDirectory ? "Open Directory" : "Open File";
     GtkFileChooserAction file_or_directory = chooseDirectory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN ;
-    dialog = gtk_file_chooser_dialog_new (dialog_title,
+    dialog = gtk_file_chooser_dialog_new (title.c_str(),
                   NULL,
                   file_or_directory,
                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                   GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
                   NULL);
     
+    if (!initialDirectory.empty())
+    {
+        ExtensionString folderURI = std::string("file:///") + initialDirectory;
+        gtk_file_chooser_set_current_folder_uri (GTK_FILE_CHOOSER (dialog), folderURI.c_str());
+    }
+
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         char *filename;
@@ -334,6 +340,50 @@ int GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& 
     return NO_ERROR;
 }
 
+const int utf8_BOM_Len = 3;
+const int utf16_BOM_Len = 2;
+const int utf32_BOM_Len = 4;
+
+bool has_utf8_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf8_BOM_Len) &&
+                (data[0] == (gchar)0xEF) && (data[1] == (gchar)0xBB) && (data[2] == (gchar)0xBF));
+}
+
+bool has_utf16be_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFE) && (data[1] == (gchar)0xFF));
+}
+
+bool has_utf16le_BOM(gchar* data, gsize length)
+{
+    return ((length >= utf16_BOM_Len) && (data[0] == (gchar)0xFF) && (data[1] == (gchar)0xFE));
+}
+
+bool has_utf32be_BOM(gchar* data, gsize length)
+{
+    return ((length >=  utf32_BOM_Len) &&
+             (data[0] == (gchar)0x00) && (data[1] == (gchar)0x00) &&
+             (data[2] == (gchar)0xFE) && (data[3] == (gchar)0xFF));
+}
+
+bool has_utf32le_BOM(gchar* data, gsize length)
+{
+   return ((length >=  utf32_BOM_Len) &&
+             (data[0] == (gchar)0xFE) && (data[1] == (gchar)0xFF) &&
+             (data[2] == (gchar)0x00) && (data[3] == (gchar)0x00));
+}
+
+
+bool has_utf16_32_BOM(gchar* data, gsize length) 
+{
+    return (has_utf32be_BOM(data ,length) ||
+            has_utf32le_BOM(data ,length) ||
+            has_utf16be_BOM(data ,length) ||
+            has_utf16le_BOM(data ,length) );
+}
+
+
 int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != "utf8") {
@@ -347,17 +397,25 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
     
     if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
         error = GErrorToErrorCode(gerror);
-
         if (error == ERR_NOT_FILE) {
             error = ERR_CANT_READ;
         }
     } else {
-        contents.assign(file_get_contents, len);
+        if (has_utf16_32_BOM(file_get_contents, len)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else  if (has_utf8_BOM(file_get_contents, len)) {
+            contents.assign(file_get_contents + utf8_BOM_Len, len);        
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else {
+            contents.assign(file_get_contents, len);
+        }
         g_free(file_get_contents);
     }
 
     return error;
 }
+
 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
@@ -494,19 +552,98 @@ void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)
     }
 }
 
+gboolean FileManager1_ShowItems(const gchar *path) {
+    static gboolean FileManager1_exists = TRUE;
+    GDBusProxy *proxy = NULL;
+    GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_NONE;
+    gchar *uri = NULL;
+    GVariant *call_result = NULL;
+    GError *error = NULL;
+
+    if (!FileManager1_exists) {
+        return FALSE;
+    }
+
+    proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+                                          flags,
+                                          NULL,
+                                          "org.freedesktop.FileManager1",  // name
+                                          "/org/freedesktop/FileManager1", // path
+                                          "org.freedesktop.FileManager1",  // iface
+                                          NULL,
+                                          &error);
+
+    if (proxy == NULL) {
+        g_printerr("Error creating proxy: %s\n", error->message);
+        g_error_free(error);
+        return FALSE;
+    }
+
+    uri = g_filename_to_uri(path, NULL, NULL);
+    if (uri == NULL) {
+        return FALSE;
+    }
+
+    // The "ShowItems" method requires two parameters
+    // 1. An array of URI strings, the files to show
+    // 2. The DESKTOP_STARTUP_ID environment variable, used to prevent focus stealing
+    // (Reference: http://www.freedesktop.org/wiki/Specifications/file-manager-interface/)
+    const gchar *uris[2] = { uri, NULL };
+    const gchar *startup_id = "dontstealmyfocus";
+
+    call_result = g_dbus_proxy_call_sync(proxy,
+                                         "ShowItems", // method
+                                         g_variant_new("(^ass)", uris, startup_id), // parameters
+                                         G_DBUS_CALL_FLAGS_NONE,
+                                         -1,
+                                         NULL,
+                                         &error);
+
+    g_object_unref(proxy);
+    g_free(uri);
+
+    if (call_result != NULL) {
+        g_variant_unref(call_result);
+    }
+    else {
+        g_printerr("Error calling the 'ShowItems' method: %s\n", error->message);
+        g_error_free(error);
+        FileManager1_exists = FALSE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int ShowFolderInOSWindow(ExtensionString pathname)
 {
     int error = NO_ERROR;
     GError *gerror = NULL;
-    gchar *uri = g_strdup_printf("file://%s", pathname.c_str());
-    
-    if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
-        error = ConvertGnomeErrorCode(gerror);
-        g_warning("%s", gerror->message);
-        g_error_free(gerror);
+    gchar *uri = NULL, *parentdir = NULL;
+
+    if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
+        uri = g_filename_to_uri(pathname.c_str(), NULL, NULL);
+        if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+            error = ConvertGnomeErrorCode(gerror);
+            g_warning("%s", gerror->message);
+            g_error_free(gerror);
+        }
+        g_free(uri);
     }
-    
-    g_free(uri);
+    else {
+        if (!FileManager1_ShowItems(pathname.c_str())) {
+            // Fall back to using gtk_show_uri on the dirname (without highlighting the file)
+            parentdir = g_path_get_dirname(pathname.c_str());
+            uri = g_filename_to_uri(parentdir, NULL, NULL);
+            if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
+                error = ConvertGnomeErrorCode(gerror);
+                g_warning("%s", gerror->message);
+                g_error_free(gerror);
+            }
+            g_free(parentdir);
+            g_free(uri);
+        }
+    }
 
     return error;
 }
@@ -610,7 +747,7 @@ GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_CONTAINER(widget))
+        if (GTK_IS_MENU_BAR(widget))
             return widget;
     }
 
@@ -632,6 +769,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionStr
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
     gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    gtk_widget_show(menuHeader);
 
     // FIXME add lookup for menu widgets
     _menuWidget = menuWidget;
@@ -650,6 +788,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     g_signal_connect(entry, "activate", FakeCallback, NULL);
     // FIXME add lookup for menu widgets
     gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    gtk_widget_show(entry);
 
     return NO_ERROR;
 }

@@ -64,6 +64,7 @@ ATOM cef_main_window::RegisterWndClass()
         ::ZeroMemory (&wcex, sizeof (wcex));
         wcex.cbSize = sizeof(WNDCLASSEX);
 
+        wcex.style         = CS_SAVEBITS;
         wcex.lpfnWndProc   = ::DefWindowProc;
         wcex.hInstance     = ::hInst;
         wcex.hIcon         = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_CEFCLIENT));
@@ -98,6 +99,60 @@ LPCWSTR cef_main_window::GetBracketsWindowTitleText()
     return szTitle;
 }
 
+void cef_main_window::EnsureWindowRectVisibility(int& left, int& top, int& width, int& height, int showCmd)
+{
+    static const int kWindowFrameSize = 8;
+
+    // don't check if we're already letting
+    //  Windows determine the window placement
+    if (left   == CW_USEDEFAULT &&
+        top    == CW_USEDEFAULT &&
+        width  == CW_USEDEFAULT &&
+        height == CW_USEDEFAULT) {
+            return;
+    }
+
+    // The virtual display is the bounding rect of all monitors
+    // see http://msdn.microsoft.com/en-us/library/dd162729(v=vs.85).aspx
+
+    int xScreen = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int yScreen = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int cxScreen = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int cyScreen = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+    // make a copy, we need to adjust the comparison
+    //  if it's a maximized window because the OS move the 
+    //  origin of the window by 8 pixes to releive the borders 
+    //  from the monitor for legacy apps
+    int xLeft = left;
+    int xTop = top;
+    int xWidth = width;
+    int xHeight = height;
+
+    if (showCmd == SW_MAXIMIZE) {
+        xLeft += kWindowFrameSize;
+        xTop += kWindowFrameSize;
+        xWidth -= kWindowFrameSize * 2;
+        xHeight -= kWindowFrameSize * 2;
+    }
+
+    // Make sure the window fits inside the virtual screen.
+    // If it doesn't then we let windows decide the window placement
+    if (xLeft < xScreen ||
+        xTop  < yScreen ||
+        xLeft + xWidth > xScreen + cxScreen ||
+        xTop + xHeight > yScreen + cyScreen) {
+
+        // something was off-screen so reposition
+        //  to the default window placement 
+        left   = CW_USEDEFAULT;
+        top    = CW_USEDEFAULT;
+        width  = CW_USEDEFAULT;
+        height = CW_USEDEFAULT;
+    }
+}
+
+
 // Create Method.  Call this to create a cef_main_window instance 
 BOOL cef_main_window::Create() 
 {
@@ -107,9 +162,13 @@ BOOL cef_main_window::Create()
     int top    = CW_USEDEFAULT;
     int width  = CW_USEDEFAULT;
     int height = CW_USEDEFAULT;
+
     int showCmd = SW_SHOW;
 
     LoadWindowRestoreRect(left, top, width, height, showCmd);
+
+    // make sure the window is visible 
+    EnsureWindowRectVisibility(left, top, width, height, showCmd);
 
     DWORD styles =  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_EX_COMPOSITED;
 
@@ -173,7 +232,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings);
+        ::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }
@@ -181,9 +240,6 @@ BOOL cef_main_window::HandleCreate()
 // WM_ERASEBKGND handler
 BOOL cef_main_window::HandleEraseBackground(HDC hdc)
 {
-#if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DrawMenuBar(hdc);
-#endif
     return (SafeGetCefBrowserHwnd() != NULL);
 }
 
@@ -207,7 +263,7 @@ BOOL cef_main_window::HandlePaint()
     HDC hdc = BeginPaint(&ps);
 
 #if defined(DARK_AERO_GLASS) && defined (DARK_UI)
-    DoPaintClientArea(hdc);
+    DoPaintNonClientArea(hdc);
 #endif
 
     EndPaint(&ps);
@@ -222,13 +278,6 @@ BOOL cef_main_window::HandleGetMinMaxInfo(LPMINMAXINFO mmi)
     return TRUE;
 }
 
-// WM_DESTROY handler
-BOOL cef_main_window::HandleDestroy()
-{
-    ::PostQuitMessage(0);
-    return TRUE;
-}
-
 // WM_CLOSE handler
 BOOL cef_main_window::HandleClose()
 {
@@ -240,6 +289,10 @@ BOOL cef_main_window::HandleClose()
         BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
         if (closing) 
         {
+            if (!g_handler->CanCloseBrowser(GetBrowser())) {
+                PostMessage(WM_CLOSE, 0 ,0);
+                return TRUE;
+            }
             ::RemoveProp(hwnd, ::kCefWindowClosingPropName);
         } 
         else 
@@ -358,8 +411,32 @@ void cef_main_window::RestoreWindowPlacement(int showCmd)
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreRight,  NULL, (int&)wp.rcNormalPosition.right);
         GetRegistryInt(::kWindowPostionFolder, ::kPrefRestoreBottom, NULL, (int&)wp.rcNormalPosition.bottom);
 
-        // This returns FALSE on failure but not sure what we could do in that case
-        SetWindowPlacement(&wp);
+        ::NormalizeRect(wp.rcNormalPosition);
+
+        int left   = wp.rcNormalPosition.left;
+        int top    = wp.rcNormalPosition.top;
+        int width  = wp.rcNormalPosition.right - left; 
+        int height = wp.rcNormalPosition.bottom - top;
+
+        EnsureWindowRectVisibility(left, top, width, height, SW_SHOWNORMAL);
+
+        // presumably they would all be set to CW_USEDEFAULT
+        //  but we check for any out-of-bounds value and
+        //  bypass the restore rect as to let Windows decide
+        if (left != CW_USEDEFAULT &&
+            top != CW_USEDEFAULT && 
+            height != CW_USEDEFAULT && 
+            width != CW_USEDEFAULT) {
+
+            wp.rcNormalPosition.left = left;
+            wp.rcNormalPosition.top = top;
+
+            wp.rcNormalPosition.right = wp.rcNormalPosition.left + width;
+            wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + height;
+        
+            // This returns FALSE on failure but not sure what we could do in that case
+            SetWindowPlacement(&wp);
+        }
     }
 
     ShowWindow(showCmd);
@@ -502,13 +579,8 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandlePaint())
             return 0L;
         break;
-    case WM_GETMINMAXINFO:
-        if (HandleGetMinMaxInfo((LPMINMAXINFO) lParam))
-            return 0L;
-        break;
     case WM_DESTROY:
-        if (HandleDestroy())
-            return 0L;
+        return 0L; // Do not handle the destroy here.
         break;
     case WM_CLOSE:
         if (HandleClose())
@@ -529,6 +601,13 @@ LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     LRESULT lr = cef_host_window::WindowProc(message, wParam, lParam);
+
+    switch (message) 
+    {
+    case WM_GETMINMAXINFO:
+        HandleGetMinMaxInfo((LPMINMAXINFO) lParam);
+        break;
+    }
 
     return lr;
 }

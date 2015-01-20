@@ -77,6 +77,34 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 - (void)sendEvent:(NSEvent*)event {
+  if ([event type] == NSKeyDown) {
+    // If mainWindow is the first responder then cef isn't the target
+    // so let the application event chain handle it intrinsically
+    if ([[self mainWindow] firstResponder] == [self mainWindow] && 
+	  [event modifierFlags] & NSCommandKeyMask) {
+      // We've removed cut, copy, paste from the edit menu,
+      // so we handle those shortcuts explicitly.
+      SEL theSelector = nil;
+      NSString *keyStr = [event charactersIgnoringModifiers];
+      unichar keyChar = [keyStr characterAtIndex:0];
+      if ( keyChar == 'c') {
+        theSelector = NSSelectorFromString(@"copy:");
+      } else if (keyChar == 'v'){
+        theSelector = NSSelectorFromString(@"paste:");
+      } else if (keyChar == 'x'){
+        theSelector = NSSelectorFromString(@"cut:");
+      } else if (keyChar == 'a'){
+        theSelector = NSSelectorFromString(@"selectAll:");
+      } else if (keyChar == 'z'){
+        theSelector = NSSelectorFromString(@"undo:");
+      } else if (keyChar == 'Z'){
+        theSelector = NSSelectorFromString(@"redo:");
+      }
+      if (theSelector != nil) {
+        [[NSApplication sharedApplication] sendAction:theSelector to:nil from:nil];
+      }
+    }
+  }
   CefScopedSendingEvent sendingEventScoper;
   [super sendEvent:event];
 }
@@ -153,7 +181,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 @implementation ClientWindowDelegate
 - (id) init {
-    [super init];
+    self = [super init];
     isReallyClosing = NO;
     isReentering = NO;
     customTitlebar = nil;
@@ -221,16 +249,35 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
+-(BOOL)isRunningOnYosemite {
+    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    NSString* version =  [dict objectForKey:@"ProductVersion"];
+    return [version hasPrefix:@"10.10"];
+}
+
 - (BOOL)isFullScreenSupported {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1070);
+    // Return False on Yosemite so we
+    //  don't draw our own full screen button
+    //  and handle full screen mode
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1070);
+    }
+    return false;
 }
 
 -(BOOL)needsFullScreenActivateHack {
-    SInt32 version;
-    Gestalt(gestaltSystemVersion, &version);
-    return (version >= 0x1090);
+    if (![self isRunningOnYosemite]) {
+        SInt32 version;
+        Gestalt(gestaltSystemVersion, &version);
+        return (version >= 0x1090);
+    }
+    return false;
+}
+
+-(BOOL)useSystemTrafficLights {
+    return [self isRunningOnYosemite];
 }
 
 -(void)windowDidResize:(NSNotification *)notification
@@ -299,7 +346,7 @@ extern NSMutableArray* pendingOpenFiles;
     NSButton *windowButton = nil;
     
 #ifdef CUSTOM_TRAFFIC_LIGHTS
-    if (!trafficLightsView) {
+    if (![self useSystemTrafficLights] && !trafficLightsView) {
         windowButton = [mainWindow standardWindowButton:NSWindowCloseButton];
         [windowButton setHidden:YES];
         windowButton = [mainWindow standardWindowButton:NSWindowMiniaturizeButton];
@@ -307,7 +354,7 @@ extern NSMutableArray* pendingOpenFiles;
         windowButton = [mainWindow standardWindowButton:NSWindowZoomButton];
         [windowButton setHidden:YES];
         
-        TrafficLightsViewController     *tvController = [[TrafficLightsViewController alloc] init];
+        TrafficLightsViewController     *tvController = [[[TrafficLightsViewController alloc] init] autorelease];
         if ([NSBundle loadNibNamed: @"TrafficLights" owner: tvController])
         {
             NSRect oldFrame = [tvController.view frame];
@@ -327,7 +374,7 @@ extern NSMutableArray* pendingOpenFiles;
         windowButton = [mainWindow standardWindowButton:NSWindowFullScreenButton];
         [windowButton setHidden:YES];
         
-        FullScreenViewController     *fsController = [[FullScreenViewController alloc] init];
+        FullScreenViewController     *fsController = [[[FullScreenViewController alloc] init] autorelease];
         if ([NSBundle loadNibNamed: @"FullScreen" owner: fsController])
         {
             NSRect oldFrame = [fsController.view frame];
@@ -479,6 +526,14 @@ extern NSMutableArray* pendingOpenFiles;
 // BOBNOTE: Consider moving the AppDelegate interface into its own .h file
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject
+{
+    ClientWindowDelegate *delegate;
+    ClientMenuDelegate *menuDelegate;
+}
+
+@property (nonatomic, retain) ClientWindowDelegate *delegate;
+@property (nonatomic, retain) ClientMenuDelegate *menuDelegate;
+
 - (void)createApp:(id)object;
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename;
 - (BOOL)application:(NSApplication *)theApplication openFiles:(NSArray *)filenames;
@@ -487,15 +542,22 @@ extern NSMutableArray* pendingOpenFiles;
 
 // BOBNOTE: Consider moving the AppDelegate implementation into its own .m file
 @implementation ClientAppDelegate
+@synthesize delegate, menuDelegate;
 
 - (id) init {
-  [super init];  
+  self = [super init];
   // Register our handler for the "handleOpenFileEvent" (a.k.a. OpFl) apple event.
   [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
                                                      andSelector:@selector(handleOpenFileEvent:withReplyEvent:)
                                                    forEventClass:'aevt'
                                                       andEventID:'OpFl'];
   return self;
+}
+
+- (void)dealloc {
+    [self.delegate release];
+    [self.menuDelegate release];
+    [super dealloc];
 }
 
 // Create the application on the UI thread.
@@ -507,14 +569,14 @@ extern NSMutableArray* pendingOpenFiles;
   [NSApp setDelegate:self];
   
   // Create the delegate for control and browser window events.
-  ClientWindowDelegate* delegate = [[ClientWindowDelegate alloc] init];
+  [self setDelegate:[[ClientWindowDelegate alloc] init]];
 
   // Create the delegate for menu events.
-  ClientMenuDelegate* menuDelegate = [[ClientMenuDelegate alloc] init];
+  [self setMenuDelegate:[[ClientMenuDelegate alloc] init]];
 
-  [[NSApp mainMenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:menuDelegate];
-  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:menuDelegate];
+  [[NSApp mainMenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: BRACKETS_MENUITEMTAG] submenu] setDelegate:self.menuDelegate];
+  [[[[NSApp mainMenu] itemWithTag: WINDOW_MENUITEMTAG]   submenu] setDelegate:self.menuDelegate];
 
   // Create the main application window.
   NSUInteger styleMask = (NSTitledWindowMask |
@@ -571,7 +633,7 @@ extern NSMutableArray* pendingOpenFiles;
 
   // Configure the rest of the window
   [mainWnd setTitle:WINDOW_TITLE];
-  [mainWnd setDelegate:delegate];
+  [mainWnd setDelegate:self.delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
   // Rely on the window delegate to clean us up rather than immediately
@@ -592,6 +654,8 @@ extern NSMutableArray* pendingOpenFiles;
 
   settings.web_security = STATE_DISABLED;
 
+  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
   // CSS.
@@ -606,9 +670,9 @@ extern NSMutableArray* pendingOpenFiles;
     
   NSString* str = [[startupUrl absoluteString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   CefBrowserHost::CreateBrowserSync(window_info, g_handler.get(),
-                                [str UTF8String], settings);
+                                [str UTF8String], settings, nil);
  
-  [delegate initUI:mainWnd];
+  [self.delegate initUI:mainWnd];
     
   // Show the window.
   [mainWnd display];
@@ -721,7 +785,7 @@ int main(int argc, char* argv[]) {
   CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get());
+  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -738,16 +802,18 @@ int main(int argc, char* argv[]) {
 
   CefSettings settings;
 
-  // Populate the settings based on command line arguments.
+ // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
+  settings.no_sandbox = YES;
+    
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get());
+  CefInitialize(main_args, settings, app.get(), NULL);
 
   // Load the startup path from prefs
   CGEventRef event = CGEventCreate(NULL);

@@ -543,7 +543,9 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
 
             } else {
                 // If multiple files are not allowed, add the single file
-                selectedFiles->SetString(0, szFile);
+                std::wstring filePath(szFile);
+                ConvertToUnixPath(filePath);
+                selectedFiles->SetString(0, filePath);
             }
         }
     }
@@ -602,6 +604,10 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
         path += '/';
 
     path += '*';
+
+    // Convert to native path to ensure that FindFirstFile and FindNextFile
+    // function correctly for all paths including paths to a network drive.
+    ConvertToNativePath(path);
 
     WIN32_FIND_DATA ffd;
     HANDLE hFind = FindFirstFile(path.c_str(), &ffd);
@@ -720,6 +726,126 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return NO_ERROR;
 }
 
+const int BOMLength = 3;
+
+typedef enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
+
+typedef struct UTFValidationState {
+
+    UTFValidationState () {
+        data        = NULL;
+        dataLen     = 0;
+        utf1632     = CS_UNKNOWN;
+        preserveBOM = true;
+    }
+
+    char*            data;
+    DWORD            dataLen;
+    CheckedState     utf1632;
+    bool             preserveBOM;
+} UTFValidationState;
+
+bool hasBOM(UTFValidationState& validationState)
+{
+    return ((validationState.dataLen >= BOMLength) && (validationState.data[0] == (char)0xEF) && (validationState.data[1] == (char)0xBB) && (validationState.data[2] == (char)0xBF));
+}
+
+bool hasUTF16_32(UTFValidationState& validationState)
+{
+    if (validationState.utf1632 == CS_UNKNOWN) {
+        int flags = IS_TEXT_UNICODE_UNICODE_MASK|IS_TEXT_UNICODE_REVERSE_MASK;
+
+        // Check to see if buffer is UTF-16 or UTF-32 with or without a BOM
+        BOOL test = IsTextUnicode(validationState.data, validationState.dataLen, &flags);
+
+        validationState.utf1632 = (test ? CS_YES : CS_NO);
+    }
+
+    return (validationState.utf1632 == CS_YES);
+}
+
+void RemoveBOM(UTFValidationState& validationState)
+{
+    if (!validationState.preserveBOM) {
+        validationState.dataLen -= BOMLength;
+        CopyMemory (validationState.data, validationState.data+3, validationState.dataLen);
+    }
+}
+
+bool GetBufferAsUTF8(UTFValidationState& validationState)
+{
+    if (validationState.dataLen == 0) {
+        return true;
+    }    
+    
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(validationState)) {
+        return false;
+    }
+
+    // See if we can convert the data to UNICODE from UTF-8
+    //  if the data isn't UTF-8, this will fail and the result will be 0
+    int outBuffSize = (validationState.dataLen + 1) * 2;
+    wchar_t* outBuffer = new wchar_t[outBuffSize];
+    int result = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, validationState.data, validationState.dataLen, outBuffer, outBuffSize);
+    delete []outBuffer;
+
+    if ((result > 0) && hasBOM(validationState)) {
+        RemoveBOM(validationState);
+    }
+
+    return (result > 0);
+}
+
+bool IsUTFLeadByte(char data)
+{
+   return (((data & 0xF8) == 0xF0) || // 4 BYTE
+           ((data & 0xF0) == 0xE0) || // 3 BYTE
+           ((data & 0xE0) == 0xC0));  // 2 BYTE
+}
+
+// we can't validate something that's smaller than 12 bytes 
+const int kMinValidationLength = 12;
+
+bool quickTestBufferForUTF8(UTFValidationState& validationState)
+{
+    if (validationState.dataLen < kMinValidationLength) {
+        // we really don't know so just assume it's valid
+        return true;
+    }
+
+    // if we know it's UTF-16 or UTF-32 then bail
+    if (hasUTF16_32(validationState)) {
+        return false;
+    }
+
+    // If it has a UTF-8 BOM, then 
+    //  assume it's UTF8
+    if (hasBOM(validationState)) {
+        return true;
+    }
+
+    // find the last lead byte and truncate 
+    //  the buffer beforehand and check that to avoid 
+    //  checking a malformed data stream
+    for (int i = 1; i < 4; i++) {
+        int index = (validationState.dataLen - i);
+
+        if ((index > 0) && (IsUTFLeadByte(validationState.data[index]))){
+            validationState.dataLen = index;
+            break;
+        }
+
+    }
+
+    // this will check to see if the we have valid
+    //  UTF8 data in the sample data.  This should tell
+    //  us if it's binary or not but doesn't necessarily
+    //  tell us if the file is valid UTF8
+    return (GetBufferAsUTF8(validationState));
+}
+
+
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != L"utf8")
@@ -740,22 +866,88 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     if (INVALID_HANDLE_VALUE == hFile)
         return ConvertWinErrorCode(GetLastError()); 
 
+    char* buffer = NULL;
     DWORD dwFileSize = GetFileSize(hFile, NULL);
-    DWORD dwBytesRead;
-    char* buffer = (char*)malloc(dwFileSize);
-    if (buffer && ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-        contents = std::string(buffer, dwFileSize);
-    }
-    else {
-        if (!buffer)
-            error = ERR_UNKNOWN;
-        else
-            error = ConvertWinErrorCode(GetLastError());
+
+    if (dwFileSize == 0) {
+        contents = "";
+    } else {
+        DWORD dwBytesRead;
+        
+        // first just read a few bytes of the file
+        //  to check for a binary or text format 
+        //  that we can't handle
+
+        // we just want to read enough to satisfy the
+        //  UTF-16 or UTF-32 test with or without a BOM
+        // the UTF-8 test could result in a false-positive
+        //  but we'll check again with all bits if we 
+        //  think it's UTF-8 based on just a few characters
+        
+        // if we're going to read fewer bytes than our
+        //  quick test then we skip the quick test and just
+        //  do the full test below since it will be fewer reads
+
+        // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
+        //  but with enough that we can test for true UTF data to test against 
+        //  without reading partial character streams roughly 1000 characters 
+        //  at UTF32 should do it:
+        // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
+        // 1001 chars without BOM  (UTF-32) = 4004 bytes 
+        // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
+        // 2002 chars without BOM  (UTF-16) = 4004 bytes 
+        const DWORD quickTestSize = 4004; 
+        static char quickTestBuffer[quickTestSize+1];
+
+        UTFValidationState validationState;
+
+        validationState.data = quickTestBuffer;
+        validationState.dataLen = quickTestSize;
+
+        if (dwFileSize > quickTestSize) {
+            ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
+            if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
+                if (!quickTestBufferForUTF8(validationState)) {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+                else {
+                    // reset the file pointer back to beginning
+                    //  since we're going to re-read the file wi
+                    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+                }
+            }
+        }
+
+        if (error == NO_ERROR) {
+            // either we did a quick test and we think it's UTF-8 or 
+            //  the file is small enough that we didn't spend the time
+            //  to do a quick test so alloc the memory to read the entire
+            //  file into memory and test it again...
+            buffer = (char*)malloc(dwFileSize);
+            if (buffer) {
+
+                validationState.data = buffer;
+                validationState.dataLen = dwFileSize;
+                validationState.preserveBOM = false;
+
+                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+                    if (!GetBufferAsUTF8(validationState)) {
+                        error = ERR_UNSUPPORTED_ENCODING;
+                    } else {
+                        contents = std::string(buffer, validationState.dataLen);
+                    }        
+                } else {
+                    error = ConvertWinErrorCode(GetLastError(), false);
+                }
+                free(buffer);
+
+            }
+            else { 
+                error = ERR_UNKNOWN;
+            }
+        }
     }
     CloseHandle(hFile);
-    if (buffer)
-        free(buffer);
-
     return error; 
 }
 
@@ -1295,6 +1487,10 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             lpaccelNew[newItem].key = VK_TAB;
         } else if (keyStr.find(L"ENTER")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_RETURN;
+        }  else if (keyStr.find(L"PAGEUP")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_PRIOR;
+        }  else if (keyStr.find(L"PAGEDOWN")  != ExtensionString::npos) {
+            lpaccelNew[newItem].key = VK_NEXT;
         }  else if (keyStr.find(L"UP")  != ExtensionString::npos) {
             lpaccelNew[newItem].key = VK_UP;
         }  else if (keyStr.find(L"DOWN")  != ExtensionString::npos) {
@@ -1334,20 +1530,28 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
                     lpaccelNew[newItem].key = ascii;
                 } else {
                     // Get the virtual key code for non-alpha-numeric characters.
-                    int keyCode = ::VkKeyScan(ascii);
-                    WORD vKey = (short)(keyCode & 0x000000FF);
+                    SHORT keyCode = ::VkKeyScan(ascii);
+                    WORD vKey = (WORD)(keyCode & 0xFF);
+                    bool isAltGr = ((keyCode & 0x600) == 0x600);
 
                     // Get unshifted key from keyCode so that we can determine whether the 
                     // key is a shifted one or not.
-                    UINT unshiftedChar = ::MapVirtualKey(vKey, 2);    
+                    UINT unshiftedChar = ::MapVirtualKey(vKey, MAPVK_VK_TO_CHAR);    
                     bool isDeadKey = ((unshiftedChar & 0x80000000) == 0x80000000);
   
-                    // If key code is -1 or unshiftedChar is 0 or the key is a shifted key sharing with
-                    // one of the number keys on the keyboard, then we don't have a functionable shortcut. 
+                    // If one of the following is found, then the shortcut is not available for the
+                    // current keyboard layout. 
+                    //
+                    //     * keyCode is -1 -- meaning the key is not available on the current keyboard layout
+                    //     * is a dead key -- a key used to attach a specific diacritic to a base letter. 
+                    //     * is altGr character -- the character is only available when Ctrl and Alt keys are also pressed together.
+                    //     * unshiftedChar is 0 -- meaning the key is not available on the current keyboard layout
+                    //     * The key is a shifted character sharing with one of the number keys on the keyboard. An example 
+                    //       of this is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
+                    // 
                     // So don't update the accelerator table. Just return false here so that the
-                    // caller can remove the shortcut string from the menu title. An example of this 
-                    // is the '/' key on German keyboard layout. It is a shifted key on number key '7'.
-                    if (keyCode == -1 || isDeadKey || unshiftedChar == 0 ||
+                    // caller can remove the shortcut string from the menu title. 
+                    if (keyCode == -1 || isDeadKey || isAltGr || unshiftedChar == 0 ||
                         (unshiftedChar >= '0' && unshiftedChar <= '9')) {
                         LocalFree(lpaccelNew);
                         return false;
@@ -1358,10 +1562,20 @@ bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
             }
         }
 
-        // Create the new accelerator table, and 
-        // destroy the old one.
-        DestroyAcceleratorTable(haccelOld); 
-        hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        bool existingOne = false;
+        for (int i = 0; i < numAccelerators - 1; i++) {
+            if (memcmp(&lpaccelNew[i], &lpaccelNew[newItem], sizeof(ACCEL)) == 0) {
+                existingOne = true;
+                break;
+            }
+        }
+
+        if (!existingOne) {
+            // Create the new accelerator table, and 
+            // destroy the old one.
+            DestroyAcceleratorTable(haccelOld); 
+            hAccelTable = CreateAcceleratorTable(lpaccelNew, numAccelerators);
+        }
         LocalFree(lpaccelNew);
     }
 
@@ -1472,6 +1686,13 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (displayKeyStr.length() > 0) {
         title = title + L"\t" + displayKeyStr;
     }
+
+    // Add shortcut to the accelerator table first. If the shortcut cannot 
+    // be added, then don't show it in the menu title.
+    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
+        title = title.substr(0, title.find('\t'));
+    }
+
     int32 positionIdx;
     int32 errCode = getNewMenuPosition(browser, parentCommand, position, relativeId, positionIdx);
     bool inserted = false;
@@ -1521,11 +1742,6 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     }
     
     NativeMenuModel::getInstance(getMenuParent(browser)).setOsItem(tag, (void*)submenu);
-
-    if (!isSeparator && !UpdateAcceleratorTable(tag, keyStr)) {
-        title = title.substr(0, title.find('\t'));
-        SetMenuTitle(browser, command, title);
-    }
 
     return errCode;
 }

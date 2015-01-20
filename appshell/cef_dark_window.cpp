@@ -41,6 +41,7 @@ extern HINSTANCE hInst;
 static ULONG_PTR gdiplusToken = NULL;
 
 // Constants
+static const int kMenuPadding = 4;
 static const int kWindowFrameZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCX = 2;
@@ -87,25 +88,28 @@ namespace ResourceImage
  * cef_dark_window
  */
 cef_dark_window::cef_dark_window() :
-    mSysCloseButton(0),
-    mSysRestoreButton(0),
-    mSysMinimizeButton(0),
-    mSysMaximizeButton(0),
-    mHoverSysCloseButton(0),
-    mHoverSysRestoreButton(0),
-    mHoverSysMinimizeButton(0),
-    mHoverSysMaximizeButton(0),
-    mPressedSysCloseButton(0),
-    mPressedSysRestoreButton(0),
-    mPressedSysMinimizeButton(0),
-    mPressedSysMaximizeButton(0),
-    mWindowIcon(0),
-    mBackgroundBrush(0),
-    mFrameOutlinePen(0),
-    mCaptionFont(0),
-    mMenuFont(0),
-    mHighlightBrush(0),
-    mHoverBrush(0)
+    mSysCloseButton(NULL),
+    mSysRestoreButton(NULL),
+    mSysMinimizeButton(NULL),
+    mSysMaximizeButton(NULL),
+    mHoverSysCloseButton(NULL),
+    mHoverSysRestoreButton(NULL),
+    mHoverSysMinimizeButton(NULL),
+    mHoverSysMaximizeButton(NULL),
+    mPressedSysCloseButton(NULL),
+    mPressedSysRestoreButton(NULL),
+    mPressedSysMinimizeButton(NULL),
+    mPressedSysMaximizeButton(NULL),
+    mWindowIcon(NULL),
+    mBackgroundActiveBrush(NULL),
+    mBackgroundInactiveBrush(NULL),
+    mFrameOutlineActivePen(NULL),
+    mFrameOutlineInactivePen(NULL),
+    mCaptionFont(NULL),
+    mMenuFont(NULL),
+    mHighlightBrush(NULL),
+    mHoverBrush(NULL),
+    mIsActive(TRUE)
 {
     ::ZeroMemory(&mNcMetrics, sizeof(mNcMetrics));
 }
@@ -148,13 +152,14 @@ void cef_dark_window::InitDrawingResources()
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
     }
     LoadSysButtonImages();
+  
 
     // Create Brushes and Pens 
-    if (mBackgroundBrush == NULL) {                            
-        mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
+    if (mBackgroundActiveBrush == NULL) {                            
+        mBackgroundActiveBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND_ACTIVE);
     }
-    if (mBackgroundBrush == NULL) {                            
-        mBackgroundBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND);
+    if (mBackgroundInactiveBrush == NULL) {                            
+        mBackgroundInactiveBrush = ::CreateSolidBrush(CEF_COLOR_BACKGROUND_INACTIVE);
     }
     if (mHighlightBrush == NULL) {                            
         mHighlightBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HILITE_BACKGROUND);
@@ -162,8 +167,11 @@ void cef_dark_window::InitDrawingResources()
     if (mHoverBrush == NULL) {                            
         mHoverBrush = ::CreateSolidBrush(CEF_COLOR_MENU_HOVER_BACKGROUND);
     }
-    if (mFrameOutlinePen == NULL) {
-        mFrameOutlinePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE);
+    if (mFrameOutlineActivePen == NULL) {
+        mFrameOutlineActivePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE_ACTIVE);
+    }
+    if (mFrameOutlineInactivePen == NULL) {
+        mFrameOutlineInactivePen = ::CreatePen(PS_SOLID, 1, CEF_COLOR_FRAME_OUTLINE_INACTIVE);
     }
 }
 
@@ -258,12 +266,14 @@ BOOL cef_dark_window::HandleNcDestroy()
     delete mPressedSysMinimizeButton;
     delete mPressedSysMaximizeButton;
 
-    ::DeleteObject(mBackgroundBrush);
+    ::DeleteObject(mBackgroundActiveBrush);
+    ::DeleteObject(mBackgroundInactiveBrush);
     ::DeleteObject(mCaptionFont);
     ::DeleteObject(mMenuFont);
     ::DeleteObject(mHighlightBrush);
     ::DeleteObject(mHoverBrush);
-    ::DeleteObject(mFrameOutlinePen);
+    ::DeleteObject(mFrameOutlineActivePen);
+    ::DeleteObject(mFrameOutlineInactivePen);
 
     return cef_window::HandleNcDestroy();
 }
@@ -305,7 +315,7 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
 
     if (IsZoomed()) {
         top += ::kSystemIconZoomFactorCY;
-		left += ::kSystemIconZoomFactorCX;
+        left += ::kSystemIconZoomFactorCX;
     }
     ::SetRectEmpty(&rect);
     rect.top =  top;
@@ -391,7 +401,9 @@ void cef_dark_window::ComputeRequiredMenuRect(RECT& rect) const
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
-            ScreenToNonClient(&itemRect);
+            itemRect.bottom += ::kMenuPadding;
+            AdjustMenuItemRect(itemRect);
+
             RECT dest;
             if (::UnionRect(&dest, &rect, &itemRect)) {
                 ::CopyRect(&rect, &dest);
@@ -429,9 +441,9 @@ void cef_dark_window::DoDrawFrame(HDC hdc)
     rectFrame.right = ::RectWidth(rectWindow);
 
     // Paint the entire thing with the background brush
-    ::FillRect(hdc, &rectFrame, mBackgroundBrush);
+    ::FillRect(hdc, &rectFrame, (mIsActive) ? mBackgroundActiveBrush : mBackgroundInactiveBrush);
 
-    HGDIOBJ oldPen = ::SelectObject(hdc, mFrameOutlinePen);
+    HGDIOBJ oldPen = (mIsActive) ? ::SelectObject(hdc, mFrameOutlineActivePen) : ::SelectObject(hdc, mFrameOutlineInactivePen);
     HGDIOBJ oldbRush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
 
     // Now draw a PX tuxedo border around the edge
@@ -589,9 +601,16 @@ void cef_dark_window::EnforceMenuBackground()
 
     ::GetMenuInfo(mbi.hMenu, &mi);
     
-    if (mi.hbrBack != mBackgroundBrush) {
-        mi.hbrBack = mBackgroundBrush;
-        ::SetMenuInfo(mbi.hMenu, &mi);
+    if (mIsActive) {
+        if (mi.hbrBack != mBackgroundActiveBrush) {
+            mi.hbrBack = mBackgroundActiveBrush;
+            ::SetMenuInfo(mbi.hMenu, &mi);
+        }
+    } else {
+        if (mi.hbrBack != mBackgroundInactiveBrush) {
+            mi.hbrBack = mBackgroundInactiveBrush;
+            ::SetMenuInfo(mbi.hMenu, &mi);
+        }
     }
 }
 
@@ -604,6 +623,15 @@ void cef_dark_window::InitDeviceContext(HDC hdc)
 
     // exclude the client area to reduce flicker
     ::ExcludeClipRect(hdc, rectClipClient.left, rectClipClient.top, rectClipClient.right, rectClipClient.bottom);
+}
+
+void cef_dark_window::AdjustMenuItemRect(RECT &itemRect) const
+{
+    if (CanUseAeroGlass() && IsZoomed()) {
+        ScreenToClient(&itemRect);
+    } else {
+        ScreenToNonClient(&itemRect);
+    }
 }
 
 // This Really just Draws the menu bar items since it assumes 
@@ -622,43 +650,42 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
         mmi.cbSize = sizeof (mmi);
         mmi.fMask = MIIM_STATE|MIIM_ID;
         ::GetMenuItemInfo (menu, i, TRUE, &mmi);
-        
-        // Drawitem only works on ID
-        MEASUREITEMSTRUCT mis = {0};
-        mis.CtlType = ODT_MENU;
-        mis.itemID = mmi.wID;
 
         RECT itemRect;
         ::SetRectEmpty(&itemRect);
 
         if (::GetMenuItemRect(mWnd, menu, (UINT)i, &itemRect)) {
-            ScreenToNonClient(&itemRect);
+            AdjustMenuItemRect(itemRect);
             
-            // Check to make sure it's actually in the 
-            //  the correct location (fixes aero drawing issue)
-            POINT pt = {itemRect.left, itemRect.top};
-            if (!CanUseAeroGlass() || ::PtInRect(&menuBarRect, pt)) {
-            
-                // Draw the menu item
-                DRAWITEMSTRUCT dis = {0};
-                dis.CtlType = ODT_MENU;
-                dis.itemID = mmi.wID;
-                dis.hwndItem = (HWND)menu;
-                dis.itemAction = ODA_DRAWENTIRE;
-                dis.hDC = hdc;
-                ::CopyRect(&dis.rcItem, &itemRect);
+            POINT ptTopLeftItem = {itemRect.left, itemRect.top}; 
 
-                if (mmi.fState & MFS_HILITE) {
-                    dis.itemState |= ODS_SELECTED;
-                } 
-                if (mmi.fState & MFS_GRAYED) {
-                    dis.itemState |= ODS_GRAYED;
-                } 
-
-                dis.itemState |= ODS_NOACCEL;
-
-                HandleDrawItem(&dis);
+            if (CanUseAeroGlass() && !::PtInRect(&menuBarRect, ptTopLeftItem)) {
+                // Check to make sure it's actually in the 
+                //  the correct location (fixes aero drawing issue)
+                int itemHeight = ::RectHeight(itemRect);
+                itemRect.top = menuBarRect.top;
+                itemRect.bottom = itemRect.top + itemHeight;
             }
+
+            // Draw the menu item
+            DRAWITEMSTRUCT dis = {0};
+            dis.CtlType = ODT_MENU;
+            dis.itemID = mmi.wID;
+            dis.hwndItem = (HWND)menu;
+            dis.itemAction = ODA_DRAWENTIRE;
+            dis.hDC = hdc;
+            ::CopyRect(&dis.rcItem, &itemRect);
+
+            if (mmi.fState & MFS_HILITE) {
+                dis.itemState |= ODS_SELECTED;
+            } 
+            if (mmi.fState & MFS_GRAYED) {
+                dis.itemState |= ODS_GRAYED;
+            } 
+
+            dis.itemState |= ODS_NOACCEL;
+
+            HandleDrawItem(&dis);
         }
     }
 }
@@ -668,33 +695,16 @@ void cef_dark_window::DoDrawMenuBar(HDC hdc)
 void cef_dark_window::DoPaintNonClientArea(HDC hdc)
 {
     EnforceMenuBackground();
+    cef_buffered_dc dc(this, hdc);
 
-    HDC hdcOrig = hdc;
-    RECT rectWindow;
-    GetWindowRect(&rectWindow);
+    InitDeviceContext(dc);
+    InitDeviceContext(dc.GetWindowDC());
 
-    int Width = ::RectWidth(rectWindow);
-    int Height = ::RectHeight(rectWindow);
-
-    HDC dcMem = ::CreateCompatibleDC(hdc);
-    HBITMAP bm = ::CreateCompatibleBitmap(hdc, Width, Height);
-    HGDIOBJ bmOld = ::SelectObject(dcMem, bm);
-
-    hdc = dcMem;
-
-    InitDeviceContext(hdc);
-    InitDeviceContext(hdcOrig);
-    DoDrawFrame(hdc);
-    DoDrawSystemMenuIcon(hdc);
-    DoDrawTitlebarText(hdc);
-    DoDrawSystemIcons(hdc);
-    DoDrawMenuBar(hdc);
-
-    ::BitBlt(hdcOrig, 0, 0, Width, Height, dcMem, 0, 0, SRCCOPY);
-
-    ::SelectObject(dcMem, bmOld);
-    ::DeleteObject(bm);
-    ::DeleteDC(dcMem);
+    DoDrawFrame(dc);
+    DoDrawSystemMenuIcon(dc);
+    DoDrawTitlebarText(dc);
+    DoDrawSystemIcons(dc);
+    DoDrawMenuBar(dc);
 }
 
 // Special case for derived classes to implement
@@ -711,7 +721,13 @@ void cef_dark_window::DoRepaintClientArea()
 //  artifacts over top of us
 void cef_dark_window::UpdateNonClientArea()
 {
-    HDC hdc = GetWindowDC();
+    HDC hdc;
+    if (CanUseAeroGlass()) {
+        hdc = GetDC();
+    } else {
+        hdc = GetWindowDC();
+    }
+
     DoPaintNonClientArea(hdc);
     ReleaseDC(hdc);
 }
@@ -832,7 +848,13 @@ void cef_dark_window::UpdateNonClientButtons ()
 {
     // create a simple clipping region
     //  that only includes the system buttons (min/max/restore/close)
-    HDC hdc = GetWindowDC();
+    HDC hdc;
+
+    if (CanUseAeroGlass()) {
+        hdc = GetDC();
+    } else {
+        hdc = GetWindowDC();
+    }
 
     RECT rectCloseButton ;
     ComputeCloseButtonRect (rectCloseButton) ;
@@ -922,7 +944,7 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
         if (lpDIS->itemState & ODS_SELECTED || lpDIS->itemState & ODS_HOTLIGHT) {
             ::FillRect(lpDIS->hDC, &rectBG, mHoverBrush);
         } else {
-            ::FillRect(lpDIS->hDC, &rectBG, mBackgroundBrush);
+            ::FillRect(lpDIS->hDC, &rectBG, (mIsActive) ? mBackgroundActiveBrush : mBackgroundInactiveBrush);
         }
         
         if (lpDIS->itemState & ODS_GRAYED) {
@@ -1203,6 +1225,10 @@ LRESULT cef_dark_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
                 DoRepaintClientArea();
             }
         }
+        break;
+    case WM_ACTIVATEAPP:
+        mIsActive = (BOOL)wParam;
+        UpdateNonClientArea();
         break;
     }
     return lr;

@@ -58,7 +58,6 @@
                                Value="!(loc.ProductName) FileExt" Name=".$(var.filetype)" Type="string" />
 
                 <!-- associate each supported filetype with application -->
-                <RegistryValue Root="HKCR" Key=".$(var.filetype)" Value="text" Name="PerceivedType" Type="string" />
                 <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value=""
                                Name="!(loc.ProductName) FileExt" Type="string" />
             <?endforeach?>

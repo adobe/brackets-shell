@@ -63,6 +63,7 @@ protected:
     // Message Handlers 
     BOOL HandleInitMenuPopup(HMENU hMenuPopup);
     BOOL HandleSize(BOOL bMinimize);
+    BOOL HandleMoveOrMoving();
 
     // Command Implementation
     BOOL DoCommand(UINT commandId, CefRefPtr<CommandCallback> callback = 0);
@@ -70,6 +71,7 @@ protected:
 
     // Implementation
     virtual void DoRepaintClientArea();
+    void NotifyWindowMovedOrResized();
 
     // Helper to get a command string from command id
     CefString GetCommandString(UINT commandId);
