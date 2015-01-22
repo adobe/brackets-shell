@@ -309,6 +309,9 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // Start the node server process
+  startNodeProcess();
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 
@@ -385,9 +388,6 @@ int main(int argc, char* argv[]) {
   // Install an signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
   signal(SIGTERM, TerminationSignalHandler);
-
-  // Start the node server process
-  startNodeProcess();
 
   CefRunMessageLoop();
 

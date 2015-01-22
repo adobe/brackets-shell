@@ -99,24 +99,6 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 #endif // SHOW_TOOLBAR_UI
 }
 
-bool ClientHandler::DoClose(CefRefPtr<CefBrowser> browser) {
-  g_message("DoClose called");
-  if (m_BrowserId == browser->GetIdentifier()) {
-    // Notify the parent window that it will be closed.
-//    browser->GetHost()->ParentWindowWillClose();
-    isReallyClosing = false;
-    g_message("isReallyClosing set to false");
-  }
-  
-//  isReallyClosing = true;
-  //GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
-//  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
-
-  // A popup browser window is not contained in another window, so we can let
-  // these windows close by themselves.
-  return false;
-}
-
 void ClientHandler::AfterClose() {
   gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
 }
