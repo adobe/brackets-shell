@@ -153,11 +153,14 @@ module.exports = function (grunt) {
                             "lib/**",
                             "locales/**",
                             "node-core/**",
+                            "cef.pak",
+                            "cef_100_percent.pak",
+                            "cef_200_percent.pak",
+                            "devtools_resources.pak",
+                            "icudtl.dat",
                             "appshell*.png",
                             "Brackets",
                             "Brackets-node",
-                            "cef.pak",
-                            "devtools_resources.pak"
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
