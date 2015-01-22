@@ -802,7 +802,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         break;
     }
 
-    // First let the DesktopWindowManager handler the message and tell us if 
+    // First let the DesktopWindowManager handle the message and tell us if 
     //  we should pass the message to the default window proc
     LRESULT lr = DwpCustomFrameProc(message, wParam, lParam, &callDefWindowProc);
 

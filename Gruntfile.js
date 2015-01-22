@@ -110,6 +110,8 @@ module.exports = function (grunt) {
                             "Brackets.exe",
                             "node.exe",
                             "cef.pak",
+                            "cef_100_percent.pak",
+                            "cef_200_percent.pak",
                             "devtools_resources.pak",
                             "icudtl.dat",
                             "libcef.dll"
@@ -123,7 +125,10 @@ module.exports = function (grunt) {
                     {
                         "expand"    : true,
                         "cwd"       : "xcodebuild/Release/<%= build.name %>.app/",
-                        "src"       : ["**"],
+                        "src"       : [
+                            "**",
+                            "!**/Contents/Frameworks/Chromium Embedded Framework.framework/Libraries/**"
+                        ],
                         "dest"      : "installer/mac/staging/<%= build.name %>.app/"
                     }
                 ],

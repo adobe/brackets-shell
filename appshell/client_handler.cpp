@@ -170,16 +170,18 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     if (m_BrowserId == browser->GetIdentifier()) {
       // Free the browser pointer so that the browser can be destroyed
       m_Browser = NULL;
-    }
+	}
 
     browser_window_map_.erase((ClientWindowHandle)browser->GetHost()->GetWindowHandle());
   }
 
   if (m_quitting) {
-    g_message("Call DispatchCloseToNextBrowser()");
-    DispatchCloseToNextBrowser();
-    
-    AfterClose();
+    // Changed the logic to call CefQuitMesaageLoop()
+    // for windows as it was crashing with 2171 CEF.
+    if (HasWindows())
+      DispatchCloseToNextBrowser();
+    else
+      CefQuitMessageLoop();
   }
 }
 
