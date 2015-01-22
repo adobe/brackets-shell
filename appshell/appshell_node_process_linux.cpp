@@ -40,7 +40,7 @@
 #include "config.h"
 
 #define BRACKETS_NODE_BUFFER_SIZE 4096
-#define MAX_PATH 128
+#define MAX_PATH 256
 
 // init mutex
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -82,10 +82,10 @@ void* nodeThread(void* unused) {
     
     // TODO nodeStartTime = get time();
     
-    char executablePath[MAX_PATH];
-    char bracketsDirPath[MAX_PATH];
-    char nodeExecutablePath[MAX_PATH];
-    char nodecorePath[MAX_PATH];
+    char executablePath[MAX_PATH] = {0};
+    char bracketsDirPath[MAX_PATH] = {0};
+    char nodeExecutablePath[MAX_PATH] = {0};
+    char nodecorePath[MAX_PATH] = {0};
 
     // get path to Brackets
     if (readlink("/proc/self/exe", executablePath, MAX_PATH) == -1) {
