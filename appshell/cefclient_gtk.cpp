@@ -54,8 +54,6 @@ int XIOErrorHandlerImpl(Display *display) {
 }
 
 void destroy(void) {
-  g_message("destroy called");
-
   if (isReallyClosing) {
     CefQuitMessageLoop();
   }
@@ -78,43 +76,22 @@ void TerminationSignalHandler(int signal) {
 //  }
 //}
 
-gboolean HandleQuit2(GtkWidget* widget, GdkEvent* event, GtkWindow* window) {
-  g_message("HandleQuit called");
-
-  if (g_handler.get()) {
-    g_handler->QuittingApp(true);
+// TODO: this is not yet called to shutdown Brackets
+gboolean HandleQuit() {
+  
+  if (!isReallyClosing && g_handler.get()) {
     g_handler->DispatchCloseToNextBrowser();
   }
   else 
   {
-    destroy();
+    if(!g_handler.get() || g_handler->HasWindows()) {
+      CefQuitMessageLoop();
+      return FALSE;
+    }
   }
   
   return TRUE;
-}
-
-// TODO: this is not yet called to shutdown Brackets
-gboolean HandleQuit() {
-  g_message("HandleQuit called");
-  
-  g_message("isReallyClosing %s", (isReallyClosing ? "True" : "False"));
-  if (!isReallyClosing && g_handler.get()) {
-    CefRefPtr<CefBrowser> browser = g_handler->GetBrowser();
-  
-    //CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-
-    //g_handler->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
-    g_message("Close the browser");
     
-    browser->GetHost()->CloseBrowser(false);
-    // Cancel the close
-    return TRUE;
-  }
-
-  if (isReallyClosing) 
-    destroy();
-  
-  return FALSE;
 }
 
 bool FileExists(std::string path) {
@@ -391,7 +368,6 @@ int main(int argc, char* argv[]) {
 
   CefRunMessageLoop();
 
-  g_message("Shutdown CEF");
   CefShutdown();
 
   return 0;

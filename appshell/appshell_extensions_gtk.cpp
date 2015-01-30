@@ -535,11 +535,9 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-  g_message("CloseWindow called");
   if (browser.get()) {
     isReallyClosing = true;
-    g_message("CloseWindow::isReallyClosing = true");
-    browser->GetHost()->CloseBrowser(false);
+    browser->GetHost()->CloseBrowser(true);
 
     // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
     //GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
@@ -549,6 +547,13 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
     //gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
     //gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
     // else
+    
+    // pass this message onto the window
+    if (g_handler && g_handler->GetMainHwnd()) {
+        GtkWidget* hwnd = gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd()));
+        if(gtk_widget_is_toplevel (hwnd))
+            gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
+    }
   }
 }
 
