@@ -84,7 +84,7 @@ gboolean HandleQuit() {
   }
   else 
   {
-    if(!g_handler.get() || g_handler->HasWindows()) {
+    if(!g_handler.get() || !g_handler->HasWindows()) {
       CefQuitMessageLoop();
       return FALSE;
     }
