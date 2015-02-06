@@ -160,7 +160,7 @@ module.exports = function (grunt) {
                             "icudtl.dat",
                             "appshell*.png",
                             "Brackets",
-                            "Brackets-node",
+                            "Brackets-node"
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
