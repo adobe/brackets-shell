@@ -99,10 +99,6 @@ void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 #endif // SHOW_TOOLBAR_UI
 }
 
-void ClientHandler::AfterClose() {
-  gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
-}
-
 void ClientHandler::ComputePopupPlacement(CefWindowInfo& windowInfo)
 {
   // TODO Finish this thing

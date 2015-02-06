@@ -231,7 +231,6 @@ public:
   void QuittingApp(bool quitting) { m_quitting = quitting; }
   bool AppIsQuitting() { return m_quitting; }
   bool HasWindows() const { return !browser_window_map_.empty(); }
-  virtual void AfterClose() OVERRIDE;
   
  protected:
   void SetLoading(bool isLoading);
