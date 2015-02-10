@@ -74,8 +74,6 @@ static __inline int RectHeight(const RECT &rIn)
 #define DCX_USESTYLE 0x00010000
 #endif
 
-//HiDPI The default logical DPI when scaling is applied in windows. see. https://msdn.microsoft.com/en-us/library/ms701681(v=vs.85).aspx
-#define DEFAULT_WINDOWS_DPI 96  
 
 // cef_window is a basic HWND wrapper
 //  that can be used to wrap any HWND 
