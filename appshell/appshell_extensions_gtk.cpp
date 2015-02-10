@@ -537,23 +537,10 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
   if (browser.get()) {
     isReallyClosing = true;
-    browser->GetHost()->CloseBrowser(true);
 
-    // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
-    //GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
-    //GtkWindow* hwnd = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
-//        if(gtk_widget_is_toplevel (hwnd))
-    //g_message("Called destroy");
-    //gtk_widget_destroy(gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd())));
-    //gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
-    // else
-    
-    // pass this message onto the window
-    if (g_handler && g_handler->GetMainHwnd()) {
-        GtkWidget* hwnd = gtk_widget_get_toplevel(GTK_WIDGET(g_handler->GetMainHwnd()));
-        if(gtk_widget_is_toplevel (hwnd))
-            gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
-    }
+    GtkWidget* hwnd = gtk_widget_get_toplevel (GTK_WIDGET(g_handler->GetMainHwnd() ));
+    browser->GetHost()->CloseBrowser(true);
+    gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
   }
 }
 
