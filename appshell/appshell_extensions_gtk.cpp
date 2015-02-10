@@ -535,12 +535,12 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
-    if (browser.get()) {
-        isReallyClosing = true;
-        GtkWidget* widget = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle());
-        browser->GetHost()->CloseBrowser(true);
-        gtk_signal_emit_by_name(GTK_OBJECT(widget), "delete_event"); 
-    }
+  if (browser.get()) {
+    isReallyClosing = true;
+
+    GtkWidget* hwnd = gtk_widget_get_toplevel (GTK_WIDGET(g_handler->GetMainHwnd() ));
+    browser->GetHost()->CloseBrowser(true);
+    gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
   }
 }
 
