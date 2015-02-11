@@ -170,7 +170,7 @@ public:
     HDC GetWindowDC()
     { return ::GetWindowDC(mWnd); }
 
-    HDC GetDC()
+    HDC GetDC() const
     { return ::GetDC(mWnd); }
 
     int ReleaseDC(HDC dc)

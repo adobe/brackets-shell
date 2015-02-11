@@ -234,7 +234,7 @@ void cef_dark_window::LoadSysButtonImages()
 
     if(scaleFactor>=250)
     {
-        BUTTON_RESOURCES(250X)
+        BUTTON_RESOURCES(2_5X)
     }
     else if(scaleFactor>=200)
     {
@@ -242,11 +242,11 @@ void cef_dark_window::LoadSysButtonImages()
     }
     else if(scaleFactor>=150)
     {
-        BUTTON_RESOURCES(150X)
+        BUTTON_RESOURCES(1_5X)
     }
     else if(scaleFactor>=125)
     {
-        BUTTON_RESOURCES(125X)
+        BUTTON_RESOURCES(1_25X)
     }
     else
     {
