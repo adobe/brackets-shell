@@ -70,15 +70,15 @@ static const int ZOOM_BUTTON_TAG = 1002;
     } else if ([self tag] == ZOOM_BUTTON_TAG){
         buttonName = @"zoom";
     }
-    active = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-active",buttonName]];
-    inactive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-inactive",buttonName]];
-    hover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-hover",buttonName]];
-    pressed = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-pressed",buttonName]];
+    active = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-active",buttonName]] retain];
+    inactive = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-inactive",buttonName]] retain];
+    hover = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-hover",buttonName]] retain];
+    pressed = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-pressed",buttonName]] retain];
     if (closeButton) {
-        dirtyActive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-active",buttonName]];
-        dirtyInactive = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-inactive",buttonName]];
-        dirtyHover = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-hover",buttonName]];
-        dirtyPressed = [NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]];
+        dirtyActive = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-active",buttonName]] retain];
+        dirtyInactive = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-inactive",buttonName]] retain];
+        dirtyHover = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-hover",buttonName]] retain];
+        dirtyPressed = [[NSImage imageNamed:[NSString stringWithFormat:@"window-%@-dirty-pressed",buttonName]] retain];
     }
 
     // assume active
@@ -162,29 +162,29 @@ static const int ZOOM_BUTTON_TAG = 1002;
     if (self == nil)
         return;
     if (pressedState) {
-        if (closeButton && dirtyState) {
+        if (closeButton && dirtyState && dirtyPressed) {
             [self setImage:dirtyPressed];
-        } else {
+        } else if (pressed) {
             [self setImage:pressed];
         }
     } else if (activeState) {
         if (hoverState) {
-            if (closeButton && dirtyState) {
+            if (closeButton && dirtyState && dirtyHover) {
                 [self setImage:dirtyHover];
-            } else {
+            } else if (hover) {
                 [self setImage:hover];
             }
         } else {
-            if (closeButton && dirtyState) {
+            if (closeButton && dirtyState && dirtyActive) {
                 [self setImage:dirtyActive];
-            } else {
+            } else if (active) {
                 [self setImage:active];
             }
         }
     } else {
-        if (closeButton && dirtyState) {
+        if (closeButton && dirtyState && dirtyInactive) {
             [self setImage:dirtyInactive];
-        } else {
+        } else if (inactive) {
             [self setImage:inactive];
         }
     }
@@ -194,9 +194,9 @@ static const int ZOOM_BUTTON_TAG = 1002;
 
     if ([[notification object] isEqual:[self superview]]) {
         hoverState = YES;
-        if (closeButton && dirtyState) {
+        if (closeButton && dirtyState && dirtyHover) {
             [self setImage:dirtyHover];
-        } else {
+        } else if (hover) {
             [self setImage:hover];
         }
     }
@@ -205,15 +205,15 @@ static const int ZOOM_BUTTON_TAG = 1002;
 - (void)hoverOut {
     hoverState = NO;
     if (activeState) {
-        if (closeButton && dirtyState) {
+        if (closeButton && dirtyState && dirtyActive) {
             [self setImage:dirtyActive];
-        } else {
+        } else if (active) {
             [self setImage:active];
         }
     } else {
-        if (closeButton && dirtyState) {
+        if (closeButton && dirtyState && dirtyInactive) {
             [self setImage:dirtyInactive];
-        } else {
+        } else if (inactive) {
             [self setImage:inactive];
         }
     }
