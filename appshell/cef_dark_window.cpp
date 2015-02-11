@@ -30,6 +30,46 @@
 #define OS_WIN
 #include "config.h"
 
+//win HiDPI - Macro for loading button resources for scale factors start 
+#define BUTTON_RESOURCES(scale)\
+    if (mSysCloseButton == NULL) {\
+	mSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_BUTTON_ ## scale));\
+    }\
+    if (mSysMaximizeButton == NULL) {\
+        mSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_BUTTON_ ## scale));\
+    }\
+    if (mSysMinimizeButton == NULL) {\
+        mSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_BUTTON_ ## scale));\
+    }\
+    if (mSysRestoreButton == NULL) {\
+        mSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_BUTTON_ ## scale));\
+    }\
+    if (mHoverSysCloseButton == NULL) {\
+        mHoverSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_HOVER_BUTTON_ ## scale));\
+    }\
+    if (mHoverSysRestoreButton == NULL) {\
+        mHoverSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_HOVER_BUTTON_ ## scale));\
+    }\
+    if (mHoverSysMinimizeButton == NULL) {\
+        mHoverSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_HOVER_BUTTON_ ## scale));\
+    }\
+    if (mHoverSysMaximizeButton == NULL) {\
+        mHoverSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_HOVER_BUTTON_ ## scale));\
+    }\
+    if (mPressedSysCloseButton == NULL) {\
+        mPressedSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_PRESSED_BUTTON_ ## scale));\
+    }\
+    if (mPressedSysRestoreButton == NULL) {\
+        mPressedSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_PRESSED_BUTTON_ ## scale));\
+    }\
+    if (mPressedSysMinimizeButton == NULL) {\
+        mPressedSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_PRESSED_BUTTON_ ## scale));\
+    }\
+    if (mPressedSysMaximizeButton == NULL) {\
+        mPressedSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_PRESSED_BUTTON_ ## scale));\
+    }
+//Macro for loading button resources end
+
 // Libraries
 #pragma comment(lib, "gdiplus")
 #pragma comment(lib, "UxTheme")
@@ -190,41 +230,27 @@ void cef_dark_window::InitMenuFont()
  */
 void cef_dark_window::LoadSysButtonImages()
 {
-    if (mSysCloseButton == NULL) {
-        mSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_BUTTON));
+	UINT scaleFactor = GetDPIScalingX();
+
+    if(scaleFactor>=250)
+    {
+        BUTTON_RESOURCES(2_5X)
     }
-    if (mSysMaximizeButton == NULL) {
-        mSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_BUTTON));
+    else if(scaleFactor>=200)
+    {
+        BUTTON_RESOURCES(2X)
     }
-    if (mSysMinimizeButton == NULL) {
-        mSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_BUTTON));
+    else if(scaleFactor>=150)
+    {
+        BUTTON_RESOURCES(1_5X)
     }
-    if (mSysRestoreButton == NULL) {
-        mSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_BUTTON));
+    else if(scaleFactor>=125)
+    {
+        BUTTON_RESOURCES(1_25X)
     }
-    if (mHoverSysCloseButton == NULL) {
-        mHoverSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_HOVER_BUTTON));
-    }
-    if (mHoverSysRestoreButton == NULL) {
-        mHoverSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_HOVER_BUTTON));
-    }
-    if (mHoverSysMinimizeButton == NULL) {
-        mHoverSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_HOVER_BUTTON));
-    }
-    if (mHoverSysMaximizeButton == NULL) {
-        mHoverSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_HOVER_BUTTON));
-    }
-    if (mPressedSysCloseButton == NULL) {
-        mPressedSysCloseButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_CLOSE_PRESSED_BUTTON));
-    }
-    if (mPressedSysRestoreButton == NULL) {
-        mPressedSysRestoreButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_RESTORE_PRESSED_BUTTON));
-    }
-    if (mPressedSysMinimizeButton == NULL) {
-        mPressedSysMinimizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MIN_PRESSED_BUTTON));
-    }
-    if (mPressedSysMaximizeButton == NULL) {
-        mPressedSysMaximizeButton = ResourceImage::FromResource(MAKEINTRESOURCE(IDB_MAX_PRESSED_BUTTON));
+    else
+    {
+        BUTTON_RESOURCES(1X)
     }
 }
 

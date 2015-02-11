@@ -74,6 +74,7 @@ static __inline int RectHeight(const RECT &rIn)
 #define DCX_USESTYLE 0x00010000
 #endif
 
+
 // cef_window is a basic HWND wrapper
 //  that can be used to wrap any HWND 
 class cef_window
@@ -169,7 +170,7 @@ public:
     HDC GetWindowDC()
     { return ::GetWindowDC(mWnd); }
 
-    HDC GetDC()
+    HDC GetDC() const
     { return ::GetDC(mWnd); }
 
     int ReleaseDC(HDC dc)
@@ -228,6 +229,8 @@ public:
 
     HWND GetWindow(UINT uCmd) 
     { return ::GetWindow(mWnd, uCmd); }
+
+	UINT GetDPIScalingX() const;
 
 protected:
     // Attributes - Protected Members
