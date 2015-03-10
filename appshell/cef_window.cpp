@@ -359,5 +359,6 @@ UINT cef_window::GetDPIScalingX() const
     float lpx = dc ? GetDeviceCaps(dc,LOGPIXELSX):DEFAULT_WINDOWS_DPI ;
     //scale factor as it would look in a default(96dpi) screen. the default will be always 96 logical DPI when scaling is applied in windows.
     //see. https://msdn.microsoft.com/en-us/library/ms701681(v=vs.85).aspx 
+	ReleaseDC(dc);
     return (lpx/DEFAULT_WINDOWS_DPI)*100; 
 }
