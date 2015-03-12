@@ -173,7 +173,7 @@ public:
     HDC GetDC() const
     { return ::GetDC(mWnd); }
 
-    int ReleaseDC(HDC dc)
+    int ReleaseDC(HDC dc) const
     { return ::ReleaseDC(mWnd, dc); }
 
     BOOL SetWindowPos(cef_window* insertAfter, int x, int y, int cx, int cy, UINT uFlags) 
