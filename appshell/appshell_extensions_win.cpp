@@ -349,15 +349,16 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 
     // Args must be mutable
     int argsBufSize = args.length() +1;
-    std::auto_ptr<WCHAR> argsBuf( new WCHAR[argsBufSize]);
-    wcscpy(argsBuf.get(), args.c_str());
+    std::vector<WCHAR> argsBuf;
+    argsBuf.resize(argsBufSize);
+    wcscpy(&argsBuf[0], args.c_str());
 
     STARTUPINFO si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
 
     // Launch cmd.exe and pass in the arguments
-    if (!CreateProcess(NULL, argsBuf.get(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+    if (!CreateProcess(NULL, &argsBuf[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
         return ConvertWinErrorCode(GetLastError());
     }
         
