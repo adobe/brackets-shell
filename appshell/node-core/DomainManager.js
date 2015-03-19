@@ -148,7 +148,8 @@ maxerr: 50, node: true */
      * @param {string} domainName The domain name.
      * @param {string} commandName The command name.
      * @param {Array} parameters The parameters to pass to the command function. If
-     *    the command is asynchronous, will be augmented with a callback function.
+     *    the command is asynchronous, will be augmented with a callback function
+     *    and progressCallback function
      *    (see description in registerCommand documentation)
      */
     function executeCommand(connection, id, domainName,
@@ -164,7 +165,10 @@ maxerr: 50, node: true */
                         connection.sendCommandResponse(id, result);
                     }
                 };
-                parameters.push(callback);
+                var progressCallback = function (msg) {
+                    connection.sendCommandProgress(id, msg);
+                };
+                parameters.push(callback, progressCallback);
                 command.commandFunction.apply(connection, parameters);
             } else { // synchronous command
                 try {
