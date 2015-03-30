@@ -582,6 +582,21 @@ int32 ShowSaveDialog(ExtensionString title,
     return NO_ERROR;
 }
 
+int32 GetOSInstallLocation(ExtensionString &osInstallPath)
+{
+	// TODO: implement
+
+	TCHAR pf[MAX_PATH];
+	SHGetSpecialFolderPath(
+		0,
+		pf, 
+		CSIDL_PROGRAM_FILES, 
+		FALSE ); 
+
+	osInstallPath = &pf[0];
+	return NO_ERROR;
+}
+
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     if (path.length() == 0) {

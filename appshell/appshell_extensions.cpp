@@ -137,7 +137,14 @@ public:
 
             // Set response args for this function
             responseArgs->SetList(2, selectedFiles);
-        } else if (message_name == "ShowSaveDialog") {
+        } else if (message_name == "GetOSInstallLocation") {
+			ExtensionString osInstallPath;
+
+			error = GetOSInstallLocation(osInstallPath);
+
+			// Set response args for this function
+            responseArgs->SetString(2, osInstallPath);
+		} else if (message_name == "ShowSaveDialog") {
             // Parameters:
             //  0: int32 - callback id
             //  1: string - title

@@ -161,6 +161,13 @@ if (!appshell.app) {
                              fileTypes ? fileTypes.join(' ') : '');
         }, 10);
     };
+
+    native function GetOSInstallLocation();
+    appshell.fs.getOSInstallLocation = function (callback) {
+        setTimeout(function () {
+            GetOSInstallLocation(callback);
+        }, 10);
+    };
     
     /**
       * Display the OS Save dialog, allowing the user to provide a path and name to save a file.
