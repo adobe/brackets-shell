@@ -83,30 +83,60 @@ bool IsFilename(const std::wstring& str) {
     return (GetFileAttributes(temp.c_str()) != INVALID_FILE_ATTRIBUTES);
 }
 
+bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
+{
+
+  DWORD retval;
+  TCHAR  buffer[MAX_UNC_PATH] = TEXT(""); 
+  TCHAR  buf[MAX_UNC_PATH]    = TEXT(""); 
+ 
+  // Retrieve the full path name for a file. 
+  // The file does not need to exist.
+  retval = GetFullPathName( path.c_str(),
+                            MAX_UNC_PATH,
+                            buffer,
+                            NULL );
+
+  if (retval == 0)  {
+    return false;
+  }
+  else{
+    oFullPath = buffer;
+    return true;
+  }
+
+}
+
 std::wstring GetFilenamesFromCommandLine() {
-    std::wstring result = L"[]";
+  std::wstring result = L"[]";
 
-    if (AppGetCommandLine()->HasArguments()) {
-        bool firstEntry = true;
-        std::vector<CefString> args;
-        AppGetCommandLine()->GetArguments(args);
-        std::vector<CefString>::iterator iterator;
-
-        result = L"[";
-        for (iterator = args.begin(); iterator != args.end(); iterator++) {
-            std::wstring argument = (*iterator).ToWString();
-            if (IsFilename(argument)) {
-                if (!firstEntry) {
-                    result += L",";
-                }
-                firstEntry = false;
-                result += L"\"" + argument + L"\"";
-            }
+  if (AppGetCommandLine()->HasArguments()) {
+    bool firstEntry = true;
+    std::vector<CefString> args;
+    AppGetCommandLine()->GetArguments(args);
+    std::vector<CefString>::iterator iterator;
+    result = L"[";
+    for (iterator = args.begin(); iterator != args.end(); iterator++) {
+      std::wstring argument = (*iterator).ToWString();
+      if (IsFilename(argument)) {
+        std::wstring fullPath;
+        // We check if this is a valid file path. If not just ignore this parameter.
+        if( !GetFullPath(argument, fullPath) )
+          continue;
+  
+        if (!firstEntry) {
+          result += L",";
         }
-        result += L"]";
+  
+        firstEntry = false;
+  
+        result += L"\"" + fullPath + L"\"";
+      }
     }
+    result += L"]";
+  }
 
-    return result;
+  return result;
 }
 
 // forward declaration; implemented in appshell_extensions_win.cpp
@@ -140,28 +170,31 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
   if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
-	  // for subsequent instances, re-use an already running instance if we're being called to
-	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
-	  HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
-	  if (hFirstInstanceWnd != NULL) {
-		  ::SetForegroundWindow(hFirstInstanceWnd);
-		  if (::IsIconic(hFirstInstanceWnd))
-			  ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
-		  
-		  // message the other Brackets instance to actually open the given filename
-		  std::wstring wstrFilename = lpCmdLine;
-		  ConvertToUnixPath(wstrFilename);
-		  // note: WM_COPYDATA will manage passing the string across process space
-		  COPYDATASTRUCT data;
-		  data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-		  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
-		  data.lpData = (LPVOID)wstrFilename.c_str();
-		  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+   // for subsequent instances, re-use an already running instance if we're being called to
+   //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
+   HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
+   if (hFirstInstanceWnd != NULL) {
+     ::SetForegroundWindow(hFirstInstanceWnd);
+    if (::IsIconic(hFirstInstanceWnd))
+      ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
 
-		  // exit this instance
-		  return 0;
-	  }
-	  // otherwise, fall thru and launch a new instance
+      // message the other Brackets instance to actually open the given filename
+      std::wstring filename = lpCmdLine;
+      std::wstring wstrFilename;
+      // We check if this is a valid file path. If not just ignore this parameter.
+      if (GetFullPath(filename, wstrFilename)) {
+        ConvertToUnixPath(wstrFilename);
+        // note: WM_COPYDATA will manage passing the string across process space
+        COPYDATASTRUCT data;
+        data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
+        data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+        data.lpData = (LPVOID)wstrFilename.c_str();
+        ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+        // exit this instance
+        return 0;
+      }
+    }
+    // otherwise, fall thru and launch a new instance
   }
 
   if (hMutex == NULL) {

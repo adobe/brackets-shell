@@ -71,6 +71,11 @@
                            Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
         </Component>
         
+        <!-- Update the system PATH variable  -->
+        <Component Id="UpdatePath" Guid="FD30DF6D-B6D2-4A66-9C26-37F3C1A1E921">
+            <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
+        </Component>
+        
         <!-- Start Menu Shortcuts-->
         <UIRef Id="WixUI_MyInstallDir" />
         <UIRef Id="WixUI_ErrorProgressText" />
