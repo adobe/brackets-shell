@@ -71,11 +71,6 @@
                            Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
         </Component>
         
-        <!-- Update the system PATH variable  -->
-        <Component Id="UpdatePath" Guid="FD30DF6D-B6D2-4A66-9C26-37F3C1A1E921">
-            <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
-        </Component>
-        
         <!-- Start Menu Shortcuts-->
         <UIRef Id="WixUI_MyInstallDir" />
         <UIRef Id="WixUI_ErrorProgressText" />
@@ -101,7 +96,19 @@
         <!--Setup Folder Structure -->
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder'>
-                <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'/>
+                <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'>
+                  <Component Id="UpdatePath"
+                             Guid="1781A625-8ACB-45E7-A8BA-219D81760B2E">
+                    <CreateFolder />
+                    <Environment Id="PATH"
+                                 Action="set"
+                                 Part="last"
+                                 Name="PATH"
+                                 Permanent="no"
+                                 System="yes"
+                                 Value="[INSTALLDIR]" />
+                  </Component>
+                </Directory>
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
         </Directory>
@@ -116,6 +123,7 @@
             <ComponentRef  Id='StartMenuShortcut' />
 
             <ComponentRef  Id='FileAssociations' />
+            <ComponentRef  Id="UpdatePath" />
         </Feature>                  
 
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
