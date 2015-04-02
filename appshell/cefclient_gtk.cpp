@@ -6,6 +6,7 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sstream>
 #include <string>
 #include <sys/stat.h>
 #include "cefclient.h"
@@ -15,8 +16,11 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
+#include "config.h"
 #include "client_switches.h"
 #include "appshell_node_process.h"
+
+#include "version_linux.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 char szWorkingDir[512];  // The current working directory
@@ -267,11 +271,17 @@ int main(int argc, char* argv[]) {
 }
 
 CefString AppGetProductVersionString() {
-  // TODO
-  return CefString("");
+  std::string s = APP_NAME "/" APP_VERSION;
+  CefString ret;
+  ret.FromString(s);
+  return ret;
 }
 
 CefString AppGetChromiumVersionString() {
-  // TODO
-  return CefString("");
+  std::wostringstream versionStream(L"");
+  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
+                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
+
+  return CefString(versionStream.str());
 }
+
