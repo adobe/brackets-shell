@@ -160,6 +160,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (exit_code >= 0)
     return exit_code;
 
+  bool isShiftKeyDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? true: false;
+
   // Retrieve the current working directory.
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
@@ -221,7 +223,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   }
   else {
 	// If the shift key is not pressed, look for the index.html file 
-	if (GetAsyncKeyState(VK_SHIFT) == 0) {
+	if (!isShiftKeyDown) {
 	// Get the full pathname for the app. We look for the index.html
 	// file relative to this location.
 	wchar_t appPath[MAX_UNC_PATH];
