@@ -168,6 +168,13 @@ if (!appshell.app) {
             GetOSInstallLocation(callback);
         }, 10);
     };
+
+    native function BringBracketsToFront();
+        appshell.fs.bringBracketsToFront = function (callback) {
+            setTimeout(function () {
+                BringBracketsToFront(callback);
+            }, 10);
+        };
     
     /**
       * Display the OS Save dialog, allowing the user to provide a path and name to save a file.

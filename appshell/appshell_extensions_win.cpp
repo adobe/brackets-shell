@@ -582,6 +582,10 @@ int32 ShowSaveDialog(ExtensionString title,
     return NO_ERROR;
 }
 
+void BringBracketsToFront() {
+	SetForegroundWindow(GetActiveWindow());
+}
+
 int32 GetOSInstallLocation(ExtensionString &osInstallPath)
 {
 	// TODO: implement

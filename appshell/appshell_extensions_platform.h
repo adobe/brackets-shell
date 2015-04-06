@@ -92,6 +92,8 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote);
 
 int32 GetOSInstallLocation(ExtensionString &path);
 
+void BringBracketsToFront();
+
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 
 int32 MakeDir(ExtensionString path, int32 mode);
