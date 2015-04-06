@@ -61,7 +61,15 @@
                 <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value=""
                                Name="!(loc.ProductName) FileExt" Type="string" />
             <?endforeach?>
-
+            
+            <!-- Add Open With Brackets to explorer's file context menu -->
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+            
+            <!-- Add Open With Brackets to explorer's folder context menu -->
+            <RegistryValue Root="HKCR" Key="Folder\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+            
             <!-- create ProgId entry -->
             <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open\command"
                            Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />

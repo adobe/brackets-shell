@@ -89,21 +89,43 @@ bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
   DWORD retval;
   TCHAR  buffer[MAX_UNC_PATH] = TEXT(""); 
   TCHAR  buf[MAX_UNC_PATH]    = TEXT(""); 
- 
-  // Retrieve the full path name for a file. 
-  // The file does not need to exist.
-  retval = GetFullPathName( path.c_str(),
-                            MAX_UNC_PATH,
-                            buffer,
-                            NULL );
 
-  if (retval == 0)  {
+  if(path.length() <= 0) {
     return false;
   }
-  else{
-    oFullPath = buffer;
-    return true;
+
+  if(path[0] == L'"' && path[path.length() -1] == L'"') {
+    // This is a special case where arguments are sent
+    // as quotes(e.g.:file names having spaces). In this
+    // case we first strip the quotes, get the path 
+    // and finally append the quotes to the result.
+    std::wstring normalizedPath = path;
+    normalizedPath.erase (std::remove(normalizedPath.begin(), normalizedPath.end(), L'"'), normalizedPath.end());
+
+    retval = GetFullPathName( normalizedPath.c_str(),
+                              MAX_UNC_PATH,
+                              buffer,
+                              NULL );
+    // Now add the quotes to the final string.
+    if(retval) {
+       oFullPath = L'"';
+       oFullPath = oFullPath + buffer + L'"';
+    }
+
   }
+  else {
+  
+    // Retrieve the full path name for a file. 
+    // The file does not need to exist.
+    retval = GetFullPathName( path.c_str(),
+                              MAX_UNC_PATH,
+                              buffer,
+                              NULL );
+    if(retval)
+      oFullPath = buffer;
+  }
+
+  return (retval == 0) ? false : true;
 
 }
 
