@@ -55,15 +55,18 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     }
     return NULL;
 }
+int32 InstallCLI() { return 0; }
 #elif defined(OS_MACOSX)
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac uses a shared menu bar
+int32 InstallCLI();
 #else
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
         GTK_TYPE_VBOX);
+int32 InstallCLI() { return 0; }
 }
 #endif
 

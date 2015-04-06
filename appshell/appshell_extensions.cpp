@@ -712,6 +712,13 @@ public:
 
                 browser->GetHost()->SetZoomLevel(zoomLevel);
             }
+        }
+        else if (message_name == "InstallCLI") {
+            // Parameters:
+            //  0: int32 - callback id
+                InstallCLI();
+                responseArgs->SetInt(2, 1);
+
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
