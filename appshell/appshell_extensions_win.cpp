@@ -582,8 +582,47 @@ int32 ShowSaveDialog(ExtensionString title,
     return NO_ERROR;
 }
 
-void BringBracketsToFront() {
-	SetForegroundWindow(GetActiveWindow());
+void SetForegroundWindowInternal(HWND hWnd)
+{
+	if(!::IsWindow(hWnd)) return;
+
+	//relation time of SetForegroundWindow lock
+	DWORD lockTimeOut = 0;
+	HWND  hCurrWnd = ::GetForegroundWindow();
+	DWORD dwThisTID = ::GetCurrentThreadId(),
+		dwCurrTID = ::GetWindowThreadProcessId(hCurrWnd,0);
+
+	//we need to bypass some limitations from Microsoft :)
+	if(dwThisTID != dwCurrTID)
+	{
+		::AttachThreadInput(dwThisTID, dwCurrTID, TRUE);
+
+		::SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT,0,&lockTimeOut,0);
+		::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT,0,0,SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+
+		::AllowSetForegroundWindow(ASFW_ANY);
+	}
+
+	::SetForegroundWindow(hWnd);
+
+	if(dwThisTID != dwCurrTID)
+	{
+		::SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT,0,(PVOID)lockTimeOut,SPIF_SENDWININICHANGE | SPIF_UPDATEINIFILE);
+		::AttachThreadInput(dwThisTID, dwCurrTID, FALSE);
+	}
+}
+
+void BringBracketsToFront(CefRefPtr<CefBrowser> browser) {
+	//SwitchToThisWindow(GetActiveWindow(), TRUE);
+	HWND hwnd = GetActiveWindow();
+	//SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+	//SwitchToThisWindow(hwnd, false);
+	SetForegroundWindowInternal(hwnd);
+	/*if (browser.get()) {
+		HWND hwnd = browser->GetHost()->GetWindowHandle();
+		if (hwnd) 
+			::BringWindowToTop(hwnd);
+	}*/
 }
 
 int32 GetOSInstallLocation(ExtensionString &osInstallPath)

@@ -92,7 +92,7 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote);
 
 int32 GetOSInstallLocation(ExtensionString &path);
 
-void BringBracketsToFront();
+void BringBracketsToFront(CefRefPtr<CefBrowser> browser);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 

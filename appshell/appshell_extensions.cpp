@@ -145,7 +145,8 @@ public:
 			// Set response args for this function
             responseArgs->SetString(2, osInstallPath);
 		} else if (message_name == "BringBracketsToFront") {
-			BringBracketsToFront();
+			BringBracketsToFront(handler->GetBrowser());
+			error = NO_ERROR;
 		} else if (message_name == "ShowSaveDialog") {
             // Parameters:
             //  0: int32 - callback id
