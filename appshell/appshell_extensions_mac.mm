@@ -1175,78 +1175,148 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     return NO_ERROR;
 }
 
-int32 InstallCLI()
+OSStatus _RunToolWithAdminPrivileges( AuthorizationRef authorizationRef, const char * tool, std::vector<char *> args)
 {
-    // Create authorization reference
-    OSStatus status;
-    AuthorizationRef authorizationRef;
-    
-    // AuthorizationCreate and pass NULL as the initial
-    // AuthorizationRights set so that the AuthorizationRef gets created
-    // successfully, and then later call AuthorizationCopyRights to
-    // determine or extend the allowable rights.
-    // http://developer.apple.com/qa/qa2001/qa1172.html
-    status = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
-                                 kAuthorizationFlagDefaults, &authorizationRef);
-    if (status != errAuthorizationSuccess)
-    NSLog(@"Error Creating Initial Authorization: %d", status);
-    
-    // kAuthorizationRightExecute == "system.privilege.admin"
-    AuthorizationItem right = {kAuthorizationRightExecute, 0, NULL, 0};
-    AuthorizationRights rights = {1, &right};
-    AuthorizationFlags flags = kAuthorizationFlagDefaults |
-    kAuthorizationFlagInteractionAllowed |
-    kAuthorizationFlagPreAuthorize |
-    kAuthorizationFlagExtendRights;
-    
-    // Call AuthorizationCopyRights to determine or extend the allowable rights.
-    status = AuthorizationCopyRights(authorizationRef, &rights, NULL, flags, NULL);
-    if (status != errAuthorizationSuccess)
-    NSLog(@"Copy Rights Unsuccessful: %d", status);
-    
-    // Determine the
-    NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
-    NSString* sourcePath;
-    NSRange range = [bundlePath rangeOfString: @"/Frameworks/"];
-    
-    if (range.location == NSNotFound) {
-        sourcePath = [[NSBundle mainBundle] pathForResource: @"Brackets" ofType: @"sh"];
-    } else {
-        sourcePath = [bundlePath substringToIndex:range.location];
-        sourcePath = [sourcePath stringByAppendingString:@"/Resources/Brackets.sh"];
-    }
-    
-    std::string pathStr = [sourcePath UTF8String];
-    char *cstr = new char[pathStr.length() + 1];
-    strcpy(cstr, pathStr.c_str());
-    
-    NSLog(@"\n\n** %@ **\n\n", @"This command should work.");
-    
-    char *tool = "/bin/ln";
-    char *symlink = "-s";
-    char *dest = "/usr/local/bin";
-
-    //char *args[] = {NULL};
-    std::vector<char *> args;
-    args.push_back(symlink);
-    args.push_back(cstr);
-    args.push_back(dest);
+    OSStatus status = 0;
+    if(!authorizationRef || !tool || args.size() == 0)
+        return errAuthorizationInvalidSet;
     
     FILE *pipe = NULL;
     
+    // This is a deprecated API. Apple recommends a dedicated helper to
+    // fix this issue. This ideally should be replaced by SMBless API.
     status = AuthorizationExecuteWithPrivileges(authorizationRef, tool,
                                                 kAuthorizationFlagDefaults, &args[0], &pipe);
-    if (status != errAuthorizationSuccess)
-    NSLog(@"Error: %d", status);
     
-    // The only way to guarantee that a credential acquired when you
-    // request a right is not shared with other authorization instances is
-    // to destroy the credential.  To do so, call the AuthorizationFree
-    // function with the flag kAuthorizationFlagDestroyRights.
-    // http://developer.apple.com/documentation/Security/Conceptual/authorization_concepts/02authconcepts/chapter_2_section_7.html
-    status = AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
+    if(pipe){
+        fclose(pipe);
+    }
     
-    return NO_ERROR;
+    return status;
+    
+}
+
+int32 InstallCommandLineTools()
+{
+    // Create authorization reference
+    OSStatus authStatus  = 0;
+    OSStatus toolStatus  = 0;
+    int32    errorCode   = NO_ERROR;
+
+    char destFile  []   = "/usr/local/bin/Brackets";
+    char destFolder[]   = "/usr/local/bin";
+
+    char rmTool    []   = "/bin/rm";
+    char rmArgs    []   = "-f";
+
+    char mkDirTool []   = "/bin/mkdir";
+    char mkDirArgs []   = "-p";
+
+    char lnTool    []   = "/bin/ln";
+    char lnArgs    []   = "-s";
+
+    
+    AuthorizationRef authorizationRef = NULL;
+    
+    // AuthorizationCreate and pass NULL as the initial
+    // AuthorizationRights set so that the AuthorizationRef gets created
+    // successfully.
+    // http://developer.apple.com/qa/qa2001/qa1172.html
+    
+    authStatus = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
+                                 kAuthorizationFlagDefaults, &authorizationRef);
+    
+    if(authStatus == errAuthorizationSuccess) {
+        
+        try {
+            // Determine the location of the create the launch script.
+            // We have this file, Brackets.sh, present inside resource folder.
+            
+            NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+            NSString* sourcePath;
+            NSRange range = [bundlePath rangeOfString: @"/Frameworks/"];
+            
+            if (range.location == NSNotFound) {
+                sourcePath = [[NSBundle mainBundle] pathForResource: @"Brackets" ofType: @"sh"];
+            } else {
+                sourcePath = [bundlePath substringToIndex:range.location];
+                sourcePath = [sourcePath stringByAppendingString:@"/Resources/Brackets.sh"];
+            }
+            
+            std::string pathStr = [sourcePath UTF8String];
+            char *sourceFile    = new char[pathStr.length() + 1];
+            
+            strcpy(sourceFile, pathStr.c_str());
+            
+            std::vector<char *> args;
+            
+            // Now execute all these steps one by one
+            //  1. Remove existing symlink
+            //  2. Check for existence of the directory and create one if required.
+            //  3  Create symlink at /usr/local/bin.
+            
+            // *** Removing the existing symlink ***
+            
+            args.push_back(rmArgs);
+            args.push_back(destFile);
+            
+            toolStatus = _RunToolWithAdminPrivileges(authorizationRef, rmTool, args);
+            
+            if( toolStatus == errAuthorizationSuccess) {
+                
+                // *** Check and create if the directory is not present ***
+                
+                args.clear();
+                
+                args.push_back(mkDirArgs);
+                args.push_back(destFolder);
+                
+                toolStatus = _RunToolWithAdminPrivileges(authorizationRef, mkDirTool, args);
+                
+                if( toolStatus == errAuthorizationSuccess) {
+                    
+                    // *** Go ahead and create the symlink now ***
+                    
+                    args.clear();
+                    
+                    args.push_back(lnArgs);
+                    args.push_back(sourceFile);
+                    args.push_back(destFile);
+                    
+                    toolStatus = _RunToolWithAdminPrivileges(authorizationRef, lnTool, args);
+
+                    if( toolStatus != errAuthorizationSuccess)
+                        errorCode = ERR_CL_TOOLS_SYMLINKFAILED;
+                    
+                }
+                else {
+                    errorCode = ERR_CL_TOOLS_MKDIRFAILED;
+                }
+            }
+            else{
+                if(toolStatus == errAuthorizationCanceled)
+                    errorCode = ERR_CL_TOOLS_CANCELLED;
+                else
+                    errorCode = ERR_CL_TOOLS_RMFAILED;
+            }
+
+        } catch (...) {
+            // This is empty as the below statements will take care of
+            // releasing authorizationRef.
+            errorCode = ERR_CL_TOOLS_SERVFAILED;
+        }
+        
+        if(authorizationRef) {
+            AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
+        }
+
+    }
+    else {
+        errorCode = ERR_CL_TOOLS_SERVFAILED;
+    }
+    
+    return errorCode;
+
 }
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& title)

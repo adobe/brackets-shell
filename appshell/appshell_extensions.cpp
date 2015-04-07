@@ -713,11 +713,10 @@ public:
                 browser->GetHost()->SetZoomLevel(zoomLevel);
             }
         }
-        else if (message_name == "InstallCLI") {
+        else if (message_name == "InstallCommandLineTools") {
             // Parameters:
             //  0: int32 - callback id
-                InstallCLI();
-                responseArgs->SetInt(2, 1);
+            error = InstallCommandLineTools();
 
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
