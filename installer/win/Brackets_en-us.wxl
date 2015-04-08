@@ -54,4 +54,5 @@
     <String Id="ExitDialogTitle" Overridable="yes">{\WixUI_Font_BannerTitle}Completed the [ProductName] Setup Wizard</String>
     <String Id="VerifyReadyDlgInstallText" Overridable="yes">Click Install to begin, or Cancel to exit.</String>
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Click Remove to uninstall !(loc.ShortProductName), or Cancel to exit.</String>
+    <String Id="OpenWithText" Overridable="yes">Open With !(loc.ShortProductName)</String>
 </WixLocalization>

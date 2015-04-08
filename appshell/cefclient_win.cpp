@@ -83,30 +83,82 @@ bool IsFilename(const std::wstring& str) {
     return (GetFileAttributes(temp.c_str()) != INVALID_FILE_ATTRIBUTES);
 }
 
-std::wstring GetFilenamesFromCommandLine() {
-    std::wstring result = L"[]";
+bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
+{
 
-    if (AppGetCommandLine()->HasArguments()) {
-        bool firstEntry = true;
-        std::vector<CefString> args;
-        AppGetCommandLine()->GetArguments(args);
-        std::vector<CefString>::iterator iterator;
+  DWORD retval;
+  TCHAR  buffer[MAX_UNC_PATH] = TEXT(""); 
+  TCHAR  buf[MAX_UNC_PATH]    = TEXT(""); 
 
-        result = L"[";
-        for (iterator = args.begin(); iterator != args.end(); iterator++) {
-            std::wstring argument = (*iterator).ToWString();
-            if (IsFilename(argument)) {
-                if (!firstEntry) {
-                    result += L",";
-                }
-                firstEntry = false;
-                result += L"\"" + argument + L"\"";
-            }
-        }
-        result += L"]";
+  if(path.length() <= 0) {
+    return false;
+  }
+
+  if(path[0] == L'"' && path[path.length() -1] == L'"') {
+    // This is a special case where arguments are sent
+    // as quotes(e.g.:file names having spaces). In this
+    // case we first strip the quotes, get the path 
+    // and finally append the quotes to the result.
+    std::wstring normalizedPath = path;
+    normalizedPath.erase (std::remove(normalizedPath.begin(), normalizedPath.end(), L'"'), normalizedPath.end());
+
+    retval = GetFullPathName( normalizedPath.c_str(),
+                              MAX_UNC_PATH,
+                              buffer,
+                              NULL );
+    // Now add the quotes to the final string.
+    if(retval) {
+       oFullPath = L'"';
+       oFullPath = oFullPath + buffer + L'"';
     }
 
-    return result;
+  }
+  else {
+  
+    // Retrieve the full path name for a file. 
+    // The file does not need to exist.
+    retval = GetFullPathName( path.c_str(),
+                              MAX_UNC_PATH,
+                              buffer,
+                              NULL );
+    if(retval)
+      oFullPath = buffer;
+  }
+
+  return (retval == 0) ? false : true;
+
+}
+
+std::wstring GetFilenamesFromCommandLine() {
+  std::wstring result = L"[]";
+
+  if (AppGetCommandLine()->HasArguments()) {
+    bool firstEntry = true;
+    std::vector<CefString> args;
+    AppGetCommandLine()->GetArguments(args);
+    std::vector<CefString>::iterator iterator;
+    result = L"[";
+    for (iterator = args.begin(); iterator != args.end(); iterator++) {
+      std::wstring argument = (*iterator).ToWString();
+      if (IsFilename(argument)) {
+        std::wstring fullPath;
+        // We check if this is a valid file path. If not just ignore this parameter.
+        if( !GetFullPath(argument, fullPath) )
+          continue;
+  
+        if (!firstEntry) {
+          result += L",";
+        }
+  
+        firstEntry = false;
+  
+        result += L"\"" + fullPath + L"\"";
+      }
+    }
+    result += L"]";
+  }
+
+  return result;
 }
 
 // forward declaration; implemented in appshell_extensions_win.cpp
@@ -130,6 +182,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (exit_code >= 0)
     return exit_code;
 
+  bool isShiftKeyDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? true: false;
+
   // Retrieve the current working directory.
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
@@ -140,28 +194,31 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
   if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
-	  // for subsequent instances, re-use an already running instance if we're being called to
-	  //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
-	  HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
-	  if (hFirstInstanceWnd != NULL) {
-		  ::SetForegroundWindow(hFirstInstanceWnd);
-		  if (::IsIconic(hFirstInstanceWnd))
-			  ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
-		  
-		  // message the other Brackets instance to actually open the given filename
-		  std::wstring wstrFilename = lpCmdLine;
-		  ConvertToUnixPath(wstrFilename);
-		  // note: WM_COPYDATA will manage passing the string across process space
-		  COPYDATASTRUCT data;
-		  data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-		  data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
-		  data.lpData = (LPVOID)wstrFilename.c_str();
-		  ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+   // for subsequent instances, re-use an already running instance if we're being called to
+   //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
+   HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
+   if (hFirstInstanceWnd != NULL) {
+     ::SetForegroundWindow(hFirstInstanceWnd);
+    if (::IsIconic(hFirstInstanceWnd))
+      ::ShowWindow(hFirstInstanceWnd, SW_RESTORE);
 
-		  // exit this instance
-		  return 0;
-	  }
-	  // otherwise, fall thru and launch a new instance
+      // message the other Brackets instance to actually open the given filename
+      std::wstring filename = lpCmdLine;
+      std::wstring wstrFilename;
+      // We check if this is a valid file path. If not just ignore this parameter.
+      if (GetFullPath(filename, wstrFilename)) {
+        ConvertToUnixPath(wstrFilename);
+        // note: WM_COPYDATA will manage passing the string across process space
+        COPYDATASTRUCT data;
+        data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
+        data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+        data.lpData = (LPVOID)wstrFilename.c_str();
+        ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
+        // exit this instance
+        return 0;
+      }
+    }
+    // otherwise, fall thru and launch a new instance
   }
 
   if (hMutex == NULL) {
@@ -188,7 +245,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   }
   else {
 	// If the shift key is not pressed, look for the index.html file 
-	if (GetAsyncKeyState(VK_SHIFT) == 0) {
+	if (!isShiftKeyDown) {
 	// Get the full pathname for the app. We look for the index.html
 	// file relative to this location.
 	wchar_t appPath[MAX_UNC_PATH];

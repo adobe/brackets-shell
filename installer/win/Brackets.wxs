@@ -61,7 +61,15 @@
                 <RegistryValue Root="HKCR" Key=".$(var.filetype)\OpenWithProgids" Value=""
                                Name="!(loc.ProductName) FileExt" Type="string" />
             <?endforeach?>
-
+            
+            <!-- Add Open With Brackets to explorer's file context menu -->
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+            
+            <!-- Add Open With Brackets to explorer's folder context menu -->
+            <RegistryValue Root="HKCR" Key="Folder\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+            
             <!-- create ProgId entry -->
             <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open\command"
                            Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
@@ -96,7 +104,19 @@
         <!--Setup Folder Structure -->
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='ProgramFilesFolder'>
-                <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'/>
+                <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'>
+                  <Component Id="UpdatePath"
+                             Guid="1781A625-8ACB-45E7-A8BA-219D81760B2E">
+                    <CreateFolder />
+                    <Environment Id="PATH"
+                                 Action="set"
+                                 Part="last"
+                                 Name="PATH"
+                                 Permanent="no"
+                                 System="yes"
+                                 Value="[INSTALLDIR]" />
+                  </Component>
+                </Directory>
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
         </Directory>
@@ -111,6 +131,7 @@
             <ComponentRef  Id='StartMenuShortcut' />
 
             <ComponentRef  Id='FileAssociations' />
+            <ComponentRef  Id="UpdatePath" />
         </Feature>                  
 
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
