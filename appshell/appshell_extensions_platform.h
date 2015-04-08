@@ -49,6 +49,7 @@ static const int ERR_CL_TOOLS_RMFAILED      = 13;
 static const int ERR_CL_TOOLS_MKDIRFAILED   = 14;
 static const int ERR_CL_TOOLS_SYMLINKFAILED = 15;
 static const int ERR_CL_TOOLS_SERVFAILED    = 16;
+static const int ERR_CL_TOOLS_NOTSUPPORTED  = 17;
 
 static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
@@ -61,7 +62,7 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     }
     return NULL;
 }
-int32 InstallCommandLineTools() { return 0; }
+int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #elif defined(OS_MACOSX)
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac uses a shared menu bar
@@ -72,7 +73,7 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
         GTK_TYPE_VBOX);
-int32 InstallCommandLineTools() { return 0; }
+int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 }
 #endif
 

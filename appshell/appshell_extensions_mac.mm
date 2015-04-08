@@ -1175,18 +1175,24 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     return NO_ERROR;
 }
 
-OSStatus _RunToolWithAdminPrivileges( AuthorizationRef authorizationRef, const char * tool, std::vector<char *> args)
+OSStatus _RunToolWithAdminPrivileges( AuthorizationRef authorizationRef, const std::string& tool, const std::vector<std::string> &args)
 {
     OSStatus status = 0;
-    if(!authorizationRef || !tool || args.size() == 0)
+    if(!authorizationRef || tool.length() ==  0 || args.size() == 0)
         return errAuthorizationInvalidSet;
     
     FILE *pipe = NULL;
+
+    // convert to std::vector<char *> array.
+    std::vector<char*> argv(1 + args.size(), NULL);
+
+    for (size_t i = 0; i < args.size(); ++i)
+        argv[i] = const_cast<char*>(args[i].c_str());
     
     // This is a deprecated API. Apple recommends a dedicated helper to
     // fix this issue. This ideally should be replaced by SMBless API.
-    status = AuthorizationExecuteWithPrivileges(authorizationRef, tool,
-                                                kAuthorizationFlagDefaults, &args[0], &pipe);
+    status = AuthorizationExecuteWithPrivileges(authorizationRef, tool.c_str(),
+                                                kAuthorizationFlagDefaults, &argv[0], &pipe);
     
     if(pipe){
         fclose(pipe);
@@ -1203,19 +1209,20 @@ int32 InstallCommandLineTools()
     OSStatus toolStatus  = 0;
     int32    errorCode   = NO_ERROR;
 
-    char destFile  []   = "/usr/local/bin/Brackets";
-    char destFolder[]   = "/usr/local/bin";
 
-    char rmTool    []   = "/bin/rm";
-    char rmArgs    []   = "-f";
+    std::string destFile   = "/usr/local/bin/Brackets";
+    std::string destFolder = "/usr/local/bin";
 
-    char mkDirTool []   = "/bin/mkdir";
-    char mkDirArgs []   = "-p";
+    std::string rmTool     = "/bin/rm";
+    std::string rmArgs     = "-f";
 
-    char lnTool    []   = "/bin/ln";
-    char lnArgs    []   = "-s";
+    std::string mkDirTool  = "/bin/mkdir";
+    std::string mkDirArgs  = "-p";
 
-    
+    std::string lnTool     = "/bin/ln";
+    std::string lnArgs     = "-s";
+
+
     AuthorizationRef authorizationRef = NULL;
     
     // AuthorizationCreate and pass NULL as the initial
@@ -1242,14 +1249,11 @@ int32 InstallCommandLineTools()
                 sourcePath = [bundlePath substringToIndex:range.location];
                 sourcePath = [sourcePath stringByAppendingString:@"/Resources/Brackets.sh"];
             }
-            
-            std::string pathStr = [sourcePath UTF8String];
-            char *sourceFile    = new char[pathStr.length() + 1];
-            
-            strcpy(sourceFile, pathStr.c_str());
-            
-            std::vector<char *> args;
-            
+
+            std::string sourceFile = [sourcePath UTF8String];
+
+            std::vector<std::string> args;
+
             // Now execute all these steps one by one
             //  1. Remove existing symlink
             //  2. Check for existence of the directory and create one if required.

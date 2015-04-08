@@ -130,6 +130,11 @@ if (!appshell.app) {
     appshell.app.ERR_CL_TOOLS_SERVFAILED    = 16;
 
     /**
+    * @constant Command Line Installation not supported on the specific platform
+    */
+    appshell.app.ERR_CL_TOOLS_NOTSUPPORTED  = 17;
+ 
+    /**
      * @constant No error.
      */
     appshell.app.NO_ERROR                   = 0;
