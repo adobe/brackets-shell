@@ -62,7 +62,7 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     }
     return NULL;
 }
-int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
+inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #elif defined(OS_MACOSX)
 typedef std::string ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac uses a shared menu bar
@@ -73,7 +73,7 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
     return gtk_widget_get_ancestor(
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
         GTK_TYPE_VBOX);
-int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
+inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 }
 #endif
 
