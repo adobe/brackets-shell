@@ -1225,17 +1225,17 @@ int32 InstallCommandLineTools()
 
     AuthorizationRef authorizationRef = NULL;
     
-    // AuthorizationCreate and pass NULL as the initial
-    // AuthorizationRights set so that the AuthorizationRef gets created
-    // successfully.
-    // http://developer.apple.com/qa/qa2001/qa1172.html
-    
-    authStatus = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
-                                 kAuthorizationFlagDefaults, &authorizationRef);
-    
-    if(authStatus == errAuthorizationSuccess) {
+    try {
+        // AuthorizationCreate and pass NULL as the initial
+        // AuthorizationRights set so that the AuthorizationRef gets created
+        // successfully.
+        // http://developer.apple.com/qa/qa2001/qa1172.html
         
-        try {
+        authStatus = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
+                                     kAuthorizationFlagDefaults, &authorizationRef);
+        
+        if(authStatus == errAuthorizationSuccess) {
+            
             // Determine the location of the create the launch script.
             // We have this file, Brackets.sh, present inside resource folder.
             
@@ -1304,21 +1304,19 @@ int32 InstallCommandLineTools()
                     errorCode = ERR_CL_TOOLS_RMFAILED;
             }
 
-        } catch (...) {
-            // This is empty as the below statements will take care of
-            // releasing authorizationRef.
-            errorCode = ERR_CL_TOOLS_SERVFAILED;
         }
-        
-        if(authorizationRef) {
-            AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
-        }
-
+    
     }
-    else {
+    catch (...) {
+        // This is empty as the below statements will take care of
+        // releasing authorizationRef.
         errorCode = ERR_CL_TOOLS_SERVFAILED;
     }
     
+    if(authorizationRef) {
+        AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
+    }
+
     return errorCode;
 
 }
