@@ -103,7 +103,37 @@ if (!appshell.app) {
      * @constant The required browser is not installed
      */
     appshell.fs.ERR_BROWSER_NOT_INSTALLED   = 11;
+ 
+    /**
+     * @constant User cancelled the password dialog while installing command line tools.
+     */
+    appshell.app.ERR_CL_TOOLS_CANCELLED     = 12;
+    
+    /**
+     * @constant Removing and existing sysmlink failed
+     */
+    appshell.app.ERR_CL_TOOLS_RMFAILED      = 13;
+    
+    /**
+     * @constant Directory, into which symlink needs to be copied, creation failed
+     */
+    appshell.app.ERR_CL_TOOLS_MKDIRFAILED   = 14;
+    
+    /**
+     * @constant The required browser is not installed
+     */
+    appshell.app.ERR_CL_TOOLS_SYMLINKFAILED = 15;
+    
+    /**
+     * @constant Brackets could not create an Authorization object
+     */
+    appshell.app.ERR_CL_TOOLS_SERVFAILED    = 16;
 
+    /**
+    * @constant Command Line Installation not supported on the specific platform
+    */
+    appshell.app.ERR_CL_TOOLS_NOTSUPPORTED  = 17;
+ 
     /**
      * @constant No error.
      */
@@ -829,6 +859,20 @@ if (!appshell.app) {
     appshell.app.setZoomLevel = function (zoomLevel, callback) {
         SetZoomLevel(callback || _dummyCallback, zoomLevel);
     };
+
+    /**
+     * Install command line scripts to make Brackets launchable from command line.
+     * Right now usage is restricted to MAC only.
+     *
+     * @param {number}
+     *
+     * @return int. The remote debugging port used by the appshell.
+     */
+     native function InstallCommandLineTools();
+     appshell.app.installCommandLine = function (callback) {
+        InstallCommandLineTools(callback);
+     };
+ 
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;

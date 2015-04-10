@@ -1175,6 +1175,152 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     return NO_ERROR;
 }
 
+OSStatus _RunToolWithAdminPrivileges( AuthorizationRef authorizationRef, const std::string& tool, const std::vector<std::string> &args)
+{
+    OSStatus status = 0;
+    if(!authorizationRef || tool.length() ==  0 || args.size() == 0)
+        return errAuthorizationInvalidSet;
+    
+    FILE *pipe = NULL;
+
+    // convert to std::vector<char *> array.
+    std::vector<char*> argv(1 + args.size(), NULL);
+
+    for (size_t i = 0; i < args.size(); ++i)
+        argv[i] = const_cast<char*>(args[i].c_str());
+    
+    // This is a deprecated API. Apple recommends a dedicated helper to
+    // fix this issue. This ideally should be replaced by SMBless API.
+    status = AuthorizationExecuteWithPrivileges(authorizationRef, tool.c_str(),
+                                                kAuthorizationFlagDefaults, &argv[0], &pipe);
+    
+    if(pipe){
+        fclose(pipe);
+    }
+    
+    return status;
+    
+}
+
+int32 InstallCommandLineTools()
+{
+    // Create authorization reference
+    OSStatus authStatus  = 0;
+    OSStatus toolStatus  = 0;
+    int32    errorCode   = NO_ERROR;
+
+
+    std::string destFile   = "/usr/local/bin/Brackets";
+    std::string destFolder = "/usr/local/bin";
+
+    std::string rmTool     = "/bin/rm";
+    std::string rmArgs     = "-f";
+
+    std::string mkDirTool  = "/bin/mkdir";
+    std::string mkDirArgs  = "-p";
+
+    std::string lnTool     = "/bin/ln";
+    std::string lnArgs     = "-s";
+
+
+    AuthorizationRef authorizationRef = NULL;
+    
+    try {
+        // AuthorizationCreate and pass NULL as the initial
+        // AuthorizationRights set so that the AuthorizationRef gets created
+        // successfully.
+        // http://developer.apple.com/qa/qa2001/qa1172.html
+        
+        authStatus = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment,
+                                     kAuthorizationFlagDefaults, &authorizationRef);
+        
+        if(authStatus == errAuthorizationSuccess) {
+            
+            // Determine the location of the create the launch script.
+            // We have this file, Brackets.sh, present inside resource folder.
+            
+            NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+            NSString* sourcePath;
+            NSRange range = [bundlePath rangeOfString: @"/Frameworks/"];
+            
+            if (range.location == NSNotFound) {
+                sourcePath = [[NSBundle mainBundle] pathForResource: @"Brackets" ofType: @"sh"];
+            } else {
+                sourcePath = [bundlePath substringToIndex:range.location];
+                sourcePath = [sourcePath stringByAppendingString:@"/Resources/Brackets.sh"];
+            }
+
+            std::string sourceFile = [sourcePath UTF8String];
+
+            std::vector<std::string> args;
+
+            // Now execute all these steps one by one
+            //  1. Remove existing symlink
+            //  2. Check for existence of the directory and create one if required.
+            //  3  Create symlink at /usr/local/bin.
+            
+            // *** Removing the existing symlink ***
+            
+            args.push_back(rmArgs);
+            args.push_back(destFile);
+            
+            toolStatus = _RunToolWithAdminPrivileges(authorizationRef, rmTool, args);
+            
+            if( toolStatus == errAuthorizationSuccess) {
+                
+                // *** Check and create if the directory is not present ***
+                
+                args.clear();
+                
+                args.push_back(mkDirArgs);
+                args.push_back(destFolder);
+                
+                toolStatus = _RunToolWithAdminPrivileges(authorizationRef, mkDirTool, args);
+                
+                if( toolStatus == errAuthorizationSuccess) {
+                    
+                    // *** Go ahead and create the symlink now ***
+                    
+                    args.clear();
+                    
+                    args.push_back(lnArgs);
+                    args.push_back(sourceFile);
+                    args.push_back(destFile);
+                    
+                    toolStatus = _RunToolWithAdminPrivileges(authorizationRef, lnTool, args);
+
+                    if( toolStatus != errAuthorizationSuccess)
+                        errorCode = ERR_CL_TOOLS_SYMLINKFAILED;
+                    
+                }
+                else {
+                    errorCode = ERR_CL_TOOLS_MKDIRFAILED;
+                }
+            }
+            else{
+                if(toolStatus == errAuthorizationCanceled)
+                    errorCode = ERR_CL_TOOLS_CANCELLED;
+                else
+                    errorCode = ERR_CL_TOOLS_RMFAILED;
+            }
+
+        }
+    
+    }
+    catch (...) {
+        // This is empty as the below statements will take care of
+        // releasing authorizationRef.
+        errorCode = ERR_CL_TOOLS_SERVFAILED;
+    }
+    
+    if(authorizationRef) {
+        AuthorizationFree(authorizationRef, kAuthorizationFlagDestroyRights);
+    }
+
+    return errorCode;
+
+}
+
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& title)
 {
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(commandId);

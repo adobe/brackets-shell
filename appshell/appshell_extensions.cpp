@@ -712,6 +712,18 @@ public:
 
                 browser->GetHost()->SetZoomLevel(zoomLevel);
             }
+        }
+        else if (message_name == "InstallCommandLineTools") {
+            // Parameters:
+            //  0: int32 - callback id
+            if (argList->GetSize() != 1) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                error = InstallCommandLineTools();
+            }
+
         } else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
