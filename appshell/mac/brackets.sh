@@ -3,14 +3,10 @@
 TARGET_FILE=$0
 BRACKETS_APP_NAME="Brackets.app"
 
-# These are to check for any instances of there are thete
-BASE_APP_NAME="Brackets"
-BASE_APP_EXT=".app"
-
 TARGET_PATH="$(readlink "$TARGET_FILE")"
 TARGET_DIR="$(dirname "$TARGET_PATH")"
 
-FINAL_APP_PATH=TARGET_DIR
+FINAL_APP_PATH="$TARGET_DIR"
 if [ ! -z "$TARGET_PATH" -a ! -z "$TARGET_DIR" ]; then
     BASE_PATH_NAME="$(basename "$TARGET_DIR")"
 
@@ -25,7 +21,7 @@ if [ ! -z "$TARGET_PATH" -a ! -z "$TARGET_DIR" ]; then
             break;
         fi
     done
-    FINAL_APP_PATH=TARGET_DIR
+    FINAL_APP_PATH="$TARGET_DIR"
 else
     FINAL_APP_PATH="";
 fi
