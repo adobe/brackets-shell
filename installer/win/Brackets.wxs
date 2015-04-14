@@ -62,14 +62,6 @@
                                Name="!(loc.ProductName) FileExt" Type="string" />
             <?endforeach?>
             
-            <!-- Add Open With Brackets to explorer's file context menu -->
-            <RegistryValue Root="HKCR" Key="*\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
-                               Type="string" />
-            
-            <!-- Add Open With Brackets to explorer's folder context menu -->
-            <RegistryValue Root="HKCR" Key="Folder\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
-                               Type="string" />
-            
             <!-- create ProgId entry -->
             <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open\command"
                            Value="&quot;[INSTALLDIR]$(var.ExeName).exe&quot; &quot;%1&quot;" Type="string" />
@@ -77,6 +69,22 @@
                            Value="[INSTALLDIR]$(var.ExeName).exe,0" Type="string" />
             <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\!(loc.ProductName) FileExt\shell\open"
                            Name="FriendlyAppName" Value="!(loc.ProductName)" Type="string" />
+
+            <!-- Add an entry to make sure it is runnable via Run Command  -->
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Brackets.exe" Value="[INSTALLDIR]$(var.ExeName).exe"
+                               Type="string" />
+        </Component>
+
+        <Component Id="AddContextMenu"
+                         Guid="5E95F75D-91C4-44B6-B8A3-83005388B4BF" Directory="INSTALLDIR" KeyPath="yes">
+
+            <!-- Add Open With Brackets to explorer's file context menu -->
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+
+            <!-- Add Open With Brackets to explorer's folder context menu -->
+            <RegistryValue Root="HKCR" Key="Folder\shell\!(loc.OpenWithText)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
         </Component>
         
         <!-- Start Menu Shortcuts-->
@@ -114,7 +122,7 @@
                                  Name="PATH"
                                  Permanent="no"
                                  System="yes"
-                                 Value="[INSTALLDIR]" />
+                                 Value="[INSTALLDIR]command" />
                   </Component>
                 </Directory>
             </Directory>
@@ -131,8 +139,15 @@
             <ComponentRef  Id='StartMenuShortcut' />
 
             <ComponentRef  Id='FileAssociations' />
+        </Feature>
+
+        <Feature Id="UpdatePath" Title="Updating Path Variable" Level="1">
             <ComponentRef  Id="UpdatePath" />
-        </Feature>                  
+        </Feature>
+        
+        <Feature Id="AddContextMenu" Title="Adding Context Menus" Level="1">
+            <ComponentRef  Id="AddContextMenu" />
+        </Feature>
 
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
     </Product>

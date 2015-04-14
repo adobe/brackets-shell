@@ -54,6 +54,8 @@
     <String Id="VerifyReadyDlgInstallText" Overridable="yes">Cliquez sur Installer pour lancer la procédure ou sur Annuler pour quitter.</String>
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Cliquez sur Supprimer pour désinstaller !(loc.ShortProductName) ou sur Annuler pour quitter.</String>
     <String Id="OpenWithText" Overridable="yes">Open With !(loc.ShortProductName)</String>
+    <String Id="AddBracketsToPath" Overridable="yes">Update PATH environment variable with !(loc.ShortProductName) install location (in order to launch !(loc.ShortProductName) from command line)</String>
+    <String Id="AddContextMenu" Overridable="yes">Add &quot;Open With !(loc.ShortProductName) &quot; menu to file and folder context menus</String>
       
     <!-- these strings aren't necessarily used but they were modified by the adobe loc team after they reviewed the wix source fr-fr wxl file.
     Adding them here if it works to call multiple loc files with the light command that are part of the same culture -->
