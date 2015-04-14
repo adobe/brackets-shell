@@ -282,7 +282,7 @@
       'appshell/mac/Japanese.lproj/MainMenu.xib',
       'appshell/mac/Info.plist',
       'appshell/appshell_extensions.js',
-      'appshell/mac/Brackets.sh',
+      'appshell/mac/brackets.sh',
       'appshell/mac/window-close-active.png',
       'appshell/mac/window-close-active@2x.png',
       'appshell/mac/window-close-dirty-active.png',
