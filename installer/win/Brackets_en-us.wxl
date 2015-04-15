@@ -57,5 +57,5 @@
     <String Id="ExplorerFileOpenContextMenu" Overridable="yes">Open with !(loc.ShortProductName)</String>
     <String Id="ExplorerFolderOpenContextMenu" Overridable="yes">Open as !(loc.ShortProductName) project</String>
     <String Id="AddBracketsToPath" Overridable="yes">Add &quot;!(loc.smallProductName)&quot; launcher to PATH for command line use</String>
-    <String Id="AddContextMenu" Overridable="yes">Add &quot;Open With !(loc.ShortProductName)&quot; to Explorer context menus for all files and folders</String>
+    <String Id="AddContextMenu" Overridable="yes">Add &quot;Open with !(loc.ShortProductName)&quot; to Explorer context menus for all files and folders</String>
 </WixLocalization>
