@@ -154,15 +154,15 @@
         <!-- Include the Custom Actions library - currently just to send notification of Environment changes. -->
         <Binary Id="CustomEnvAction.dll" SourceFile="CustomEnvAction.dll" />
 
-        <!-- Define the custom action to Refresh Environment Variables. -->
-        <CustomAction Id="RefreshEnvironmentVariables"
+        <!-- Define the custom action to broadcast Environment Variables change. -->
+        <CustomAction Id="BroadcastEnvironmentVariablesChange"
                       Return="check"
                       Execute="immediate"
                       BinaryKey="CustomEnvAction.dll"
-                      DllEntry="RefreshEnvironmentVariables" />
+                      DllEntry="BroadcastEnvironmentVariablesChange" />
         
         <InstallExecuteSequence>
-            <Custom Action="RefreshEnvironmentVariables" After="InstallFinalize"/>
+            <Custom Action="BroadcastEnvironmentVariablesChange" After="InstallFinalize"/>
         </InstallExecuteSequence>
         
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
