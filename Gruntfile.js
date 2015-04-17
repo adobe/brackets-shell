@@ -114,7 +114,8 @@ module.exports = function (grunt) {
                             "cef_200_percent.pak",
                             "devtools_resources.pak",
                             "icudtl.dat",
-                            "libcef.dll"
+                            "libcef.dll",
+                            "command/**"
                         ],
                         "dest"      : "installer/win/staging/"
                     }
