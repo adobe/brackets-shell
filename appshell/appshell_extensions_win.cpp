@@ -1732,7 +1732,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
         if (isSeparator) 
         {
-            res = AppendMenu(submenu, MF_SEPARATOR, NULL, NULL);
+            res = AppendMenu(submenu, MF_SEPARATOR, tag, NULL);
         } else {
             res = AppendMenu(submenu, MF_STRING, tag, title.c_str());
         }
