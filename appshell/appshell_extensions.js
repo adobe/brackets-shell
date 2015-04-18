@@ -120,7 +120,7 @@ if (!appshell.app) {
     appshell.app.ERR_CL_TOOLS_MKDIRFAILED   = 14;
     
     /**
-     * @constant The required browser is not installed
+     * @constant Symlink creation failed
      */
     appshell.app.ERR_CL_TOOLS_SYMLINKFAILED = 15;
     

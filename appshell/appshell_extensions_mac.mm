@@ -1210,7 +1210,7 @@ int32 InstallCommandLineTools()
     int32    errorCode   = NO_ERROR;
 
 
-    std::string destFile   = "/usr/local/bin/Brackets";
+    std::string destFile   = "/usr/local/bin/brackets";
     std::string destFolder = "/usr/local/bin";
 
     std::string rmTool     = "/bin/rm";
@@ -1226,6 +1226,25 @@ int32 InstallCommandLineTools()
     AuthorizationRef authorizationRef = NULL;
     
     try {
+        
+        // Determine the location of the launch script.
+        // We have this file, brackets.sh, present inside resource folder.
+        
+
+        NSString* sourcePath;
+        
+        sourcePath = [[NSBundle mainBundle] pathForResource: @"brackets" ofType: @"sh"];
+        if(!sourcePath) {
+            // If we have not found this in the bundle try the hard path.
+            NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
+            sourcePath = [bundlePath stringByAppendingString:@"/Contents/Resources/brackets.sh"];
+        }
+        
+        if(!sourcePath)
+            return ERR_FILE_NOT_FOUND;
+        
+        std::string sourceFile = [sourcePath UTF8String];
+        
         // AuthorizationCreate and pass NULL as the initial
         // AuthorizationRights set so that the AuthorizationRef gets created
         // successfully.
@@ -1236,21 +1255,6 @@ int32 InstallCommandLineTools()
         
         if(authStatus == errAuthorizationSuccess) {
             
-            // Determine the location of the create the launch script.
-            // We have this file, Brackets.sh, present inside resource folder.
-            
-            NSString* bundlePath = [[NSBundle mainBundle] bundlePath];
-            NSString* sourcePath;
-            NSRange range = [bundlePath rangeOfString: @"/Frameworks/"];
-            
-            if (range.location == NSNotFound) {
-                sourcePath = [[NSBundle mainBundle] pathForResource: @"Brackets" ofType: @"sh"];
-            } else {
-                sourcePath = [bundlePath substringToIndex:range.location];
-                sourcePath = [sourcePath stringByAppendingString:@"/Resources/Brackets.sh"];
-            }
-
-            std::string sourceFile = [sourcePath UTF8String];
 
             std::vector<std::string> args;
 
