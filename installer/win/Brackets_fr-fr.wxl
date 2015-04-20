@@ -18,7 +18,7 @@
     
     <String Id="ProductName">Brackets</String>
     <String Id="ShortProductName">Brackets</String>
-    <String Id="smallProductName">brackets</String>
+    <String Id="SmallProductName">brackets</String>
     <String Id="LanguageID" Overridable="yes">1036</String>
         
     <String Id="StandardDlg_Title" Overridable="yes">Programme d’installation de [ProductName]</String>
@@ -55,7 +55,7 @@
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Cliquez sur Supprimer pour désinstaller !(loc.ShortProductName) ou sur Annuler pour quitter.</String>
     <String Id="ExplorerFileOpenContextMenu" Overridable="yes">Open with !(loc.ShortProductName)</String>
     <String Id="ExplorerFolderOpenContextMenu" Overridable="yes">Open as !(loc.ShortProductName) project</String>
-    <String Id="AddBracketsToPath" Overridable="yes">Add &quot;!(loc.smallProductName)&quot; launcher to PATH for command line use</String>
+    <String Id="AddBracketsToPath" Overridable="yes">Add &quot;!(loc.SmallProductName)&quot; launcher to PATH for command line use</String>
     <String Id="AddContextMenu" Overridable="yes">Add &quot;Open with !(loc.ShortProductName)&quot; to Explorer context menus for all files and folders</String>
       
     <!-- these strings aren't necessarily used but they were modified by the adobe loc team after they reviewed the wix source fr-fr wxl file.
