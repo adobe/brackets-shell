@@ -19,7 +19,7 @@
     <!-- See also: product name definitions in brackets-win-install-build.xml -->
     <String Id="ProductName">Brackets</String>
     <String Id="ShortProductName">Brackets</String>
-    <String Id="smallProductName">brackets</String>
+    <String Id="SmallProductName">brackets</String>
     <String Id="LanguageID" Overridable="yes">1033</String>
         
     <String Id="StandardDlg_Title" Overridable="yes">[ProductName] Installer</String>
@@ -56,6 +56,6 @@
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Click Remove to uninstall !(loc.ShortProductName), or Cancel to exit.</String>
     <String Id="ExplorerFileOpenContextMenu" Overridable="yes">Open with !(loc.ShortProductName)</String>
     <String Id="ExplorerFolderOpenContextMenu" Overridable="yes">Open as !(loc.ShortProductName) project</String>
-    <String Id="AddBracketsToPath" Overridable="yes">Add &quot;!(loc.smallProductName)&quot; launcher to PATH for command line use</String>
+    <String Id="AddBracketsToPath" Overridable="yes">Add &quot;!(loc.SmallProductName)&quot; launcher to PATH for command line use</String>
     <String Id="AddContextMenu" Overridable="yes">Add &quot;Open with !(loc.ShortProductName)&quot; to Explorer context menus for all files and folders</String>
 </WixLocalization>
