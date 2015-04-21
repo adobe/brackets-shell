@@ -79,12 +79,25 @@
                          Guid="5E95F75D-91C4-44B6-B8A3-83005388B4BF" Directory="INSTALLDIR" KeyPath="yes">
 
             <!-- Add Open With Brackets to explorer's file context menu -->
-            <RegistryValue Root="HKCR" Key="*\shell\!(loc.ExplorerFileOpenContextMenu)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.ProductName)" Value="!(loc.ExplorerFileOpenContextMenu)"
+                               Type="string" />
+
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.ProductName)" Name="Icon" Value="[INSTALLDIR]$(var.ExeName).exe"
+                               Type="string" />
+
+            <RegistryValue Root="HKCR" Key="*\shell\!(loc.ProductName)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
                                Type="string" />
 
             <!-- Add Open With Brackets to explorer's folder context menu -->
-            <RegistryValue Root="HKCR" Key="Folder\shell\!(loc.ExplorerFolderOpenContextMenu)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+            <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)" Value="!(loc.ExplorerFolderOpenContextMenu)"
                                Type="string" />
+
+            <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)" Name="Icon" Value="[INSTALLDIR]$(var.ExeName).exe"
+                               Type="string" />
+
+            <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
+                               Type="string" />
+
         </Component>
         
         <!-- Start Menu Shortcuts-->
