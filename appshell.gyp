@@ -163,7 +163,7 @@
             {
               # Copy windows command line script
               'destination': '<(PRODUCT_DIR)command',
-              'files': ['scripts/brackets.bat'],
+              'files': ['scripts/brackets.bat', 'scripts/brackets'],
             }
           ],
         }],

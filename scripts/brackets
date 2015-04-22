@@ -1,0 +1,33 @@
+#!/bin/sh
+(set -o igncr) 2>/dev/null && set -o igncr; # cygwin encoding fix
+
+# Run through the current and parent directories for Brackets.exe
+# and execute when found. $0 is the path to this script.
+
+TARGET_PATH="$(dirname "$0")"
+
+case `uname` in
+    *CYGWIN*) OS_NAME="CYGWIN";;
+esac
+
+if [ "$OS_NAME" == "CYGWIN" ]; then
+    TARGET_PATH=`cygpath -w "$TARGET_PATH"`
+fi
+
+while [ ! -z "$TARGET_PATH"  -a "$TARGET_PATH" != "/" ]
+do
+    if [ -x "$TARGET_PATH/Brackets.exe" ]; then
+        break;
+    fi
+
+    TARGET_PATH="$(dirname "$TARGET_PATH")"
+    if [ OS_NAME == 'CYGWIN' ]; then
+        TARGET_PATH=`cygpath -w "$TARGET_PATH"`
+    fi
+done
+
+if [ ! -z "$TARGET_PATH" -a -x "$TARGET_PATH/Brackets.exe" ]; then
+    "$TARGET_PATH/Brackets.exe" "$@"
+else
+    echo "Unable to launch Brackets as Brackets.exe could not be located. Try re-installing Brackets."
+fi
