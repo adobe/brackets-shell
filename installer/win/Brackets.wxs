@@ -89,7 +89,7 @@
                                Type="string" />
 
             <!-- Add Open With Brackets to explorer's folder context menu -->
-            <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)" Value="!(loc.ExplorerFolderOpenContextMenu)"
+            <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)" Value="!(loc.ExplorerDirectoryOpenContextMenu)"
                                Type="string" />
 
             <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)" Name="Icon" Value="[INSTALLDIR]$(var.ExeName).exe"

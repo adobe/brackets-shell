@@ -54,7 +54,7 @@
     <String Id="VerifyReadyDlgInstallText" Overridable="yes">Cliquez sur Installer pour lancer la procédure ou sur Annuler pour quitter.</String>
     <String Id="VerifyReadyDlgRemoveText" Overridable="yes">Cliquez sur Supprimer pour désinstaller !(loc.ShortProductName) ou sur Annuler pour quitter.</String>
     <String Id="ExplorerFileOpenContextMenu" Overridable="yes">Ouvrir avec !(loc.ShortProductName)</String>
-    <String Id="ExplorerFolderOpenContextMenu" Overridable="yes">Ouvrir en tant que projet !(loc.ShortProductName)</String>
+    <String Id="ExplorerDirectoryOpenContextMenu" Overridable="yes">Ouvrir en tant que projet !(loc.ShortProductName)</String>
     <String Id="AddBracketsToPath" Overridable="yes">Ajouter le lanceur &quot;!(loc.SmallProductName)&quot; sous PATH pour l’utilisation de la ligne de commande</String>
     <String Id="AddContextMenu" Overridable="yes">Ajouter l’option &quot;Ouvrir avec !(loc.ShortProductName)&quot; aux menus contextuels de l’Explorateur pour l’ensemble des fichiers et dossiers</String>
       
