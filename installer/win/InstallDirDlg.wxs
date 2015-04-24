@@ -41,7 +41,7 @@
                 <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
                 <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)" />
                 <Control Id="UpdatePath_ChkBox" Type="CheckBox" X="20" Y="160" Width="290" Height="17" Property="UPDATEPATH" CheckBoxValue="1" Text="!(loc.AddBracketsToPath)" />
-                <Control Id="AddContextMenu_ChkBox" Type="CheckBox" X="20" Y="190" Width="290" Height="17" Property="ADDCONTEXTMENU" CheckBoxValue="1" Text="!(loc.AddContextMenu)" /> 
+                <Control Id="AddContextMenu_ChkBox" Type="CheckBox" X="20" Y="190" Width="290" Height="25" Property="ADDCONTEXTMENU" CheckBoxValue="1" Text="!(loc.AddContextMenu)" /> 
             </Dialog>
             <InstallUISequence>
                 <Show Dialog="MyInstallDirDlg" Before="MyProgressDlg" Overridable="yes">NOT Installed</Show>
