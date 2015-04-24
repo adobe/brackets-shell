@@ -8,10 +8,10 @@ TARGET_PATH="$(dirname "$0")"
 
 case `uname` in
     *CYGWIN*) OS_NAME="CYGWIN";;
-    *MINGW32_NT*) OS_NAME="MINGWIN";;
+    *MINGW32_NT*) OS_NAME="MinGW";;
 esac
 
-if [ "$OS_NAME" == "MINGWIN" ]; then
+if [ "$OS_NAME" == "MinGW" ]; then
     # Suprisingly MING32 platform recognizes
     # windows "start" command. Use this against
     # launching .exe as the later is blocking.
