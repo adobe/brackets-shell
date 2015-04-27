@@ -159,6 +159,11 @@
               # Copy locales
               'destination': '<(PRODUCT_DIR)',
               'files': ['Resources/locales/'],
+            },
+            {
+              # Copy windows command line script
+              'destination': '<(PRODUCT_DIR)command',
+              'files': ['scripts/brackets.bat', 'scripts/brackets'],
             }
           ],
         }],

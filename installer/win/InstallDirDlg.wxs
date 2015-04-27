@@ -16,8 +16,16 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <UI>
+
+            <Property Id="UPDATEPATH" Value="1"/>
+            <Property Id="ADDCONTEXTMENU" Value="1" />
+
             <Dialog Id="MyInstallDirDlg" Width="370" Height="270" Title="!(loc.StandardDlg_Title)">
-                <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)" />
+                <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+                    <Publish Event="AddLocal" Value="ALL">1</Publish>
+                    <Publish Event="Remove" Value="UpdatePath">NOT UPDATEPATH</Publish>
+                    <Publish Event="Remove" Value="AddContextMenu">NOT ADDCONTEXTMENU</Publish>
+                </Control>
                 <!-- <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" /> -->
                 <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
                     <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -32,6 +40,8 @@
                 <!--<Control Id="FolderLabel" Type="Text" X="20" Y="60" Width="290" Height="30" NoPrefix="yes" Text="!(loc.InstallDirDlgFolderLabel)" />-->
                 <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
                 <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)" />
+                <Control Id="UpdatePath_ChkBox" Type="CheckBox" X="20" Y="160" Width="290" Height="17" Property="UPDATEPATH" CheckBoxValue="1" Text="!(loc.AddBracketsToPath)" />
+                <Control Id="AddContextMenu_ChkBox" Type="CheckBox" X="20" Y="190" Width="290" Height="25" Property="ADDCONTEXTMENU" CheckBoxValue="1" Text="!(loc.AddContextMenu)" /> 
             </Dialog>
             <InstallUISequence>
                 <Show Dialog="MyInstallDirDlg" Before="MyProgressDlg" Overridable="yes">NOT Installed</Show>
