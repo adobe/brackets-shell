@@ -34,6 +34,12 @@
 
 #import "CustomTitlebarView.h"
 
+// If app is built with 10.9 or lower
+// this constant is not defined.
+#ifndef NSAppKitVersionNumber10_10
+    #define NSAppKitVersionNumber10_10 1343
+#endif
+
 // Application startup time
 CFTimeInterval g_appStartupTime;
 
@@ -253,10 +259,11 @@ extern NSMutableArray* pendingOpenFiles;
 
 -(BOOL)isRunningOnYosemiteOrLater {
     // This seems to be a more reliable way of checking
-    // the MACOS version.
+    // the MACOS version. Documentation about this available
+    // at the following link.
     // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/cross_development/Using/using.html
 
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_0)
+    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10)
         return true;
     else
         return false;
