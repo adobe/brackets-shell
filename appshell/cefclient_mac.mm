@@ -23,6 +23,8 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
+#include "AppKit/NSApplication.h"
+
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
 #include "client_colors_mac.h"
@@ -249,17 +251,22 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
--(BOOL)isRunningOnYosemite {
-    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    NSString* version =  [dict objectForKey:@"ProductVersion"];
-    return [version hasPrefix:@"10.10"];
+-(BOOL)isRunningOnYosemiteOrLater {
+    // This seems to be a more reliable way of checking
+    // the MACOS version.
+    // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/cross_development/Using/using.html
+
+    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_0)
+        return true;
+    else
+        return false;
 }
 
 - (BOOL)isFullScreenSupported {
     // Return False on Yosemite so we
     //  don't draw our own full screen button
     //  and handle full screen mode
-    if (![self isRunningOnYosemite]) {
+    if (![self isRunningOnYosemiteOrLater]) {
         SInt32 version;
         Gestalt(gestaltSystemVersion, &version);
         return (version >= 0x1070);
@@ -268,7 +275,7 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)needsFullScreenActivateHack {
-    if (![self isRunningOnYosemite]) {
+    if (![self isRunningOnYosemiteOrLater]) {
         SInt32 version;
         Gestalt(gestaltSystemVersion, &version);
         return (version >= 0x1090);
@@ -277,7 +284,7 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)useSystemTrafficLights {
-    return [self isRunningOnYosemite];
+    return [self isRunningOnYosemiteOrLater];
 }
 
 -(void)windowDidResize:(NSNotification *)notification
