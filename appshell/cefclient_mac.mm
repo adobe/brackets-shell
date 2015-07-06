@@ -263,7 +263,7 @@ extern NSMutableArray* pendingOpenFiles;
     // at the following link.
     // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/cross_development/Using/using.html
 
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10)
+    if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_10)
         return true;
     else
         return false;
