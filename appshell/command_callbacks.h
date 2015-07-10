@@ -10,7 +10,7 @@ const std::string APP_BEFORE_MENUPOPUP  = "app.before_menupopup";
 const std::string FILE_QUIT             = "file.quit";
 const std::string FILE_CLOSE_WINDOW     = "file.close_window";
 const std::string HELP_ABOUT            = "help.about";
-const std::string OPEN_PREFERENCES_FILE = "file.openPreferences";
+const std::string OPEN_PREFERENCES_FILE = "debug.openPrefsInSplitView";
 
 #if defined(OS_WIN)
 const ExtensionString EDIT_UNDO         = L"edit.undo";
