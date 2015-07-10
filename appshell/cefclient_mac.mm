@@ -199,6 +199,10 @@ extern NSMutableArray* pendingOpenFiles;
     g_handler->SendJSCommand(g_handler->GetBrowser(), HELP_ABOUT);
 }
 
+-(IBAction)handleOpenPreferences:(id)sender {
+    g_handler->SendJSCommand(g_handler->GetBrowser(), OPEN_PREFERENCES_FILE);
+}
+
 - (IBAction)handleMenuAction:(id)sender {
     if (g_handler.get() && g_handler->GetBrowserId()) {
         NSMenuItem* senderItem = sender;
