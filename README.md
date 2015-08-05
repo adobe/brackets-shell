@@ -15,7 +15,7 @@ If you run into any issues with this new shell, please file a bug in the
 _Note: The brackets-shell is only maintained for use by the Brackets project. Although some people have 
 definitely had success using it as an app shell for other projects, we don't provide any official 
 support for that and we haven't done a ton of work to make the app shell easily reusable. Many people 
-will likely find it easier to use a project like node-webkit, which is more generic by design._
+will likely find it easier to use a project like [NW.js](https://github.com/nwjs/nw.js/) or [electron](https://github.com/atom/electron), which is more generic by design._
 
 ## Running
 
