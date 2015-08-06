@@ -22,6 +22,10 @@
 CefRefPtr<ClientHandler> g_handler;
 CefRefPtr<CefCommandLine> g_command_line;
 
+CefRefPtr<ClientHandler> GetClientHandler() {
+    return g_handler;
+}
+
 CefRefPtr<CefBrowser> AppGetBrowser() {
   if (!g_handler.get())
     return NULL;

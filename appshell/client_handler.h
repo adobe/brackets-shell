@@ -73,6 +73,8 @@ public:
   ClientHandler();
   virtual ~ClientHandler();
 
+  static void SendMessageToAllBrowsers( CefRefPtr<CefBrowser> curBrowser, const ExtensionString& filePath);
+                          
   // CefClient methods
   virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE {
     return this;

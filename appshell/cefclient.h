@@ -9,10 +9,15 @@
 #include <string>
 #include "include/cef_base.h"
 #include "client_app.h"
+#include "client_handler.h"
+
 
 class CefApp;
 class CefBrowser;
 class CefCommandLine;
+
+// return client handler
+CefRefPtr<ClientHandler> GetClientHandler();
 
 // Returns the main browser window instance.
 CefRefPtr<CefBrowser> AppGetBrowser();

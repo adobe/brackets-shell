@@ -372,6 +372,11 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
+void SendMessageToAllBrowsers(CefRefPtr<CefBrowser> browser, const ExtensionString& filePath)
+{
+    ClientHandler::SendMessageToAllBrowsers(browser, filePath);
+}
+
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,

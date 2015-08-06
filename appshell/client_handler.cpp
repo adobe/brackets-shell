@@ -41,6 +41,30 @@ ClientHandler::ClientHandler()
 ClientHandler::~ClientHandler() {
 }
 
+/*static*/
+void
+ClientHandler::SendMessageToAllBrowsers( CefRefPtr<CefBrowser> curBrowser, const ExtensionString& filePath) {
+    if (curBrowser != NULL) {
+        BrowserWindowMap::const_iterator i;
+        for (i = browser_window_map_.begin(); i != browser_window_map_.end(); i++)
+        {
+            CefRefPtr<CefBrowser> browser = i->second;
+            int x = 0;
+            if (curBrowser == browser) {
+                x = 1;
+            }
+            
+            if (curBrowser != browser)
+            {
+                CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create("processDwCommand");
+                message->GetArgumentList()->SetString(0, APP_RECIEVE_MESSAGE);
+                message->GetArgumentList()->SetString(1, filePath);
+                browser->SendProcessMessage(PID_RENDERER, message);
+            }
+        }
+    }
+}
+
 bool ClientHandler::OnProcessMessageReceived(
     CefRefPtr<CefBrowser> browser,
     CefProcessId source_process,

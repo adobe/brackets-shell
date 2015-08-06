@@ -389,6 +389,50 @@ bool ClientApp::OnProcessMessageReceived(
                 
                 browser->SendProcessMessage(PID_BROWSER, result);
             }
+        }else if (message->GetName() == "processDwCommand") {
+            // This is called by the browser process to execute a command via JavaScript
+            //
+            // The first argument is the command name. This is required.
+            // The second argument is a message id. This is optional. If set, a response
+            // message will be sent back to the browser process.
+            
+            CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+            CefString commandName = messageArgs->GetString(0);
+            CefString messageContent = messageArgs->GetString(1);
+            bool handled = false;
+            
+            StContextScope ctx(browser->GetMainFrame()->GetV8Context());
+            
+            CefRefPtr<CefV8Value> global = ctx.GetContext()->GetGlobal();
+            
+            if (global->HasValue("brackets")) {
+                
+                CefRefPtr<CefV8Value> brackets = global->GetValue("brackets");
+                
+                if (brackets->HasValue("shellAPI")) {
+                    
+                    CefRefPtr<CefV8Value> shellAPI = brackets->GetValue("shellAPI");
+                    
+                    if (shellAPI->HasValue("executeCommand")) {
+                        
+                        CefRefPtr<CefV8Value> executeCommand = shellAPI->GetValue("executeCommand");
+                        
+                        if (executeCommand->IsFunction()) {
+                            
+                            CefRefPtr<CefV8Value> retval;
+                            CefV8ValueList args;
+                            args.push_back(CefV8Value::CreateString(commandName));
+                            args.push_back(CefV8Value::CreateString(messageContent));
+                            
+                            retval = executeCommand->ExecuteFunction(global, args);
+                            
+                            if (retval) {
+                                handled = retval->GetBoolValue();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     

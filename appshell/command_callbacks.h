@@ -5,6 +5,7 @@
 
 // Command names. These MUST be in sync with the command names in
 // brackets/src/command/Commands.js
+const std::string APP_RECIEVE_MESSAGE   = "app.receiveMessageFromOtherBrowser";
 const std::string APP_ABORT_QUIT        = "app.abort_quit";
 const std::string APP_BEFORE_MENUPOPUP  = "app.before_menupopup";
 const std::string FILE_QUIT             = "file.quit";

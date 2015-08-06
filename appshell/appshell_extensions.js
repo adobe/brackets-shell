@@ -191,7 +191,7 @@ if (!appshell.app) {
                              fileTypes ? fileTypes.join(' ') : '');
         }, 10);
     };
-    
+ 
     /**
       * Display the OS Save dialog, allowing the user to provide a path and name to save a file.
       *
@@ -872,6 +872,11 @@ if (!appshell.app) {
      appshell.app.installCommandLine = function (callback) {
         InstallCommandLineTools(callback);
      };
+ 
+     native function SendMessageToAllBrowsers();
+     appshell.app.sendMessageToAllBrowsers = function (filePath, callback) {
+         SendMessageToAllBrowsers(callback, filePath);
+     }
  
  
     // Alias the appshell object to brackets. This is temporary and should be removed.

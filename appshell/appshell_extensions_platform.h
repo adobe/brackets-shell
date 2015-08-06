@@ -77,6 +77,8 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
 inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #endif
 
+void SendMessageToAllBrowsers(CefRefPtr<CefBrowser> browser, const ExtensionString& filePath);
+
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp

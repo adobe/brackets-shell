@@ -724,7 +724,18 @@ public:
                 error = InstallCommandLineTools();
             }
 
-        } else {
+        } else if (message_name == "SendMessageToAllBrowsers") {
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString filePath = argList->GetString(1);
+                SendMessageToAllBrowsers(browser, filePath);
+            }
+            
+        }else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }
