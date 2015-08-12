@@ -254,9 +254,15 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)isRunningOnYosemite {
-    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    NSString* version =  [dict objectForKey:@"ProductVersion"];
-    return [version hasPrefix:@"10.10"];
+    NSOperatingSystemVersion OSVersion;
+    OSVersion.majorVersion = 10;
+    OSVersion.minorVersion = 10;
+    OSVersion.patchVersion = 0;
+    if ([[NSProcessInfo processInfo] respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)]) {
+        return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:OSVersion];
+    } else {
+        return false;
+    }
 }
 
 - (BOOL)isFullScreenSupported {
