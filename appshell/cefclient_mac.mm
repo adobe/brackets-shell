@@ -23,6 +23,8 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
+#include "AppKit/NSApplication.h"
+
 #include "TrafficLightsView.h"
 #include "TrafficLightsViewController.h"
 #include "client_colors_mac.h"
@@ -31,6 +33,12 @@
 #include "FullScreenViewController.h"
 
 #import "CustomTitlebarView.h"
+
+// If app is built with 10.9 or lower
+// this constant is not defined.
+#ifndef NSAppKitVersionNumber10_10
+    #define NSAppKitVersionNumber10_10 1343
+#endif
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -253,17 +261,23 @@ extern NSMutableArray* pendingOpenFiles;
 #endif
 }
 
--(BOOL)isRunningOnYosemite {
-    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    NSString* version =  [dict objectForKey:@"ProductVersion"];
-    return [version hasPrefix:@"10.10"];
+-(BOOL)isRunningOnYosemiteOrLater {
+    // This seems to be a more reliable way of checking
+    // the MACOS version. Documentation about this available
+    // at the following link.
+    // https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/cross_development/Using/using.html
+
+    if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_10)
+        return true;
+    else
+        return false;
 }
 
 - (BOOL)isFullScreenSupported {
     // Return False on Yosemite so we
     //  don't draw our own full screen button
     //  and handle full screen mode
-    if (![self isRunningOnYosemite]) {
+    if (![self isRunningOnYosemiteOrLater]) {
         SInt32 version;
         Gestalt(gestaltSystemVersion, &version);
         return (version >= 0x1070);
@@ -272,7 +286,7 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)needsFullScreenActivateHack {
-    if (![self isRunningOnYosemite]) {
+    if (![self isRunningOnYosemiteOrLater]) {
         SInt32 version;
         Gestalt(gestaltSystemVersion, &version);
         return (version >= 0x1090);
@@ -281,7 +295,7 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)useSystemTrafficLights {
-    return [self isRunningOnYosemite];
+    return [self isRunningOnYosemiteOrLater];
 }
 
 -(void)windowDidResize:(NSNotification *)notification
