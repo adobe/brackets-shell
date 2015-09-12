@@ -257,6 +257,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         NSArray *parameters = [NSArray arrayWithObjects:
                       @"--no-first-run",
                       @"--no-default-browser-check",
+                      @"--disable-default-apps",
                       debugPortCommandlineArguments,
                       debugProfilePath,
                       urlString,

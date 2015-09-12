@@ -341,7 +341,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
         profilePath += L"\\live-dev-profile";
         args += L" --user-data-dir=\"";
         args += profilePath;
-        args += L"\" --no-first-run --no-default-browser-check --allow-file-access-from-files --remote-debugging-port=9222 ";
+        args += L"\" --no-first-run --no-default-browser-check --disable-default-apps --allow-file-access-from-files --remote-debugging-port=9222 ";
     } else {
         args += L" ";
     }
