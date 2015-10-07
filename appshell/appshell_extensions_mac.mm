@@ -30,6 +30,8 @@
 #include <Cocoa/Cocoa.h>
 #include <sys/sysctl.h>
 
+#include <sstream>
+
 NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
@@ -508,20 +510,53 @@ int32 MakeDir(ExtensionString path, int32 mode)
     return ConvertNSErrorCode(error, false);
 }
 
+// perform a case insensitive filename comparison
+int32 compareCaseInsensitive(std::string str1, std::string str2)
+{
+    std::transform(str1.begin(), str1.end(), str1.begin(), toupper);
+    std::transform(str2.begin(), str2.end(), str2.begin(), toupper);
+    return str1.compare(str2);
+}
+
 int32 Rename(ExtensionString oldName, ExtensionString newName)
 {
     NSError* error = nil;
     NSString* oldPathStr = [NSString stringWithUTF8String:oldName.c_str()];
     NSString* newPathStr = [NSString stringWithUTF8String:newName.c_str()];
-  
-    // Check to make sure newName doesn't already exist. On OS 10.7 and later, moveItemAtPath
-    // returns a nice "NSFileWriteFileExists" error in this case, but 10.6 returns a generic
-    // "can't write" error.
-    if ([[NSFileManager defaultManager] fileExistsAtPath:newPathStr]) {
-        return ERR_FILE_EXISTS;
+    
+    // check if the filename change is a case-only change
+    if (compareCaseInsensitive(oldName, newName) != 0) {
+        // Check to make sure newName doesn't already exist. On OS 10.7 and later, moveItemAtPath
+        // returns a nice "NSFileWriteFileExists" error in this case, but 10.6 returns a generic
+        // "can't write" error.
+        if ([[NSFileManager defaultManager] fileExistsAtPath:newPathStr]) {
+            return ERR_FILE_EXISTS;
+        }
+        
+        [[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:newPathStr error:&error];
+    } else {
+        // brackets issue #8127 - must rename case-only filename changes using an intermediate
+        //   temp filename.  Otherwise, NSFileManager -moveItemAtPath fails.
+        ExtensionString tmpName;
+        NSString* tmpPathStr = NULL;
+        
+        // find an intermediate filename that doesn't already exist
+        int idx = 0;
+        std::ostringstream buff("");
+        do {
+            buff.str("");
+            buff << idx++;
+            tmpName = newName + "." + buff.str();
+            tmpPathStr = [NSString stringWithUTF8String:tmpName.c_str()];
+        } while ([[NSFileManager defaultManager] fileExistsAtPath:tmpPathStr]);
+        
+        if ([[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:tmpPathStr error:&error]) {
+            if (![[NSFileManager defaultManager] moveItemAtPath:tmpPathStr toPath:newPathStr error:&error]) {
+                // recover if can't move to final destination
+                [[NSFileManager defaultManager] moveItemAtPath:tmpPathStr toPath:oldPathStr error:&error];
+            }
+        }
     }
-  
-    [[NSFileManager defaultManager] moveItemAtPath:oldPathStr toPath:newPathStr error:&error];
   
     return ConvertNSErrorCode(error, false);
 }
