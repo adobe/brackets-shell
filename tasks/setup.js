@@ -86,7 +86,7 @@ module.exports = function (grunt) {
 
         // optionally download if CEF is not found
         if (!grunt.file.exists("deps/cef/" + txtName)) {
-            var cefTasks = ["cef-clean", "cef-extract", "cef-symlinks"];
+            var cefTasks = ["cef-clean", "cef-extract", "cef-symlinks", "cef-clean-paths"];
 
             if (grunt.file.exists(zipDest)) {
                 grunt.verbose.writeln("Found CEF download " + zipDest);
@@ -323,6 +323,22 @@ module.exports = function (grunt) {
             grunt.log.error(err);
             done(false);
         });
+    });
+
+    // task: cef-clean-paths
+    grunt.registerTask("cef-clean-paths", "Remove obsolete paths from cef_paths.gyp", function () {
+        var done    = this.async();
+        var cef_paths_gyp_in = grunt.file.read("deps/cef/cef_paths.gypi");
+
+        //var re = /\w+?[\d+\.\d+\.\d+]+_\w+?_(\w+?)_\w+\.zip/;
+        var cef_paths_gyp_out = cef_paths_gyp_in.match(/^(?!.*(cpptoc\/test\/|ctocpp\/test\/)).*$/gm);
+
+        if ( ! grunt.file.exists("deps/cef/cef_paths.gypi.bu")) {
+            grunt.file.write("deps/cef/cef_paths.gypi.bu", cef_paths_gyp_in)
+        }
+        grunt.file.write("deps/cef/cef_paths.gypi", cef_paths_gyp_out.join('\n'));
+
+        done();
     });
 
     // task: node-download
