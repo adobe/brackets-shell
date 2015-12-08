@@ -23,15 +23,7 @@
 #import "FullScreenButton.h"
 
 //these are defined in MainMainu.xib file
-@implementation FullScreenButton {
-    NSImage *inactive;
-    NSImage *active;
-    NSImage *hover;
-    NSImage *pressed;
-    BOOL activeState;
-    BOOL hoverState;
-    BOOL pressedState;
-}
+@implementation FullScreenButton
 
 -(id)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];

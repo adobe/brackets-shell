@@ -224,7 +224,7 @@ module.exports = function (grunt) {
         },
         "cef": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
-            "version"       : "3.2171.1902"
+            "version"       : "3.2357.1291"
         },
         "node": {
             "version"       : "0.10.24"

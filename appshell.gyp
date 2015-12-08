@@ -33,7 +33,7 @@
         'SDKROOT': '',
         'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
         'COMBINE_HIDPI_IMAGES': 'YES',
-        'ARCHS': "$(ARCHS_STANDARD_32_BIT)",
+        'ARCHS': "$(ARCHS_STANDARD_64_BIT)",
         'FRAMEWORK_SEARCH_PATHS': [
           '$(inherited)',
           '$(CONFIGURATION)'

@@ -109,14 +109,16 @@ static void ParseParams(const std::string& params, CefWindowInfo& windowInfo) {
 #endif
 
 bool ClientHandler::OnBeforePopup(CefRefPtr<CefBrowser> browser,
-                             CefRefPtr<CefFrame> frame,
-                             const CefString& target_url,
-                             const CefString& target_frame_name,
-                             const CefPopupFeatures& popupFeatures,
-                             CefWindowInfo& windowInfo,
-                             CefRefPtr<CefClient>& client,
-                             CefBrowserSettings& settings,
-                             bool* no_javascript_access) {
+                           CefRefPtr<CefFrame> frame,
+                           const CefString& target_url,
+                           const CefString& target_frame_name,
+                           CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+                           bool user_gesture,
+                           const CefPopupFeatures& popupFeatures,
+                           CefWindowInfo& windowInfo,
+                           CefRefPtr<CefClient>& client,
+                           CefBrowserSettings& settings,
+                           bool* no_javascript_access){
 #ifndef OS_LINUX
     std::string address = target_url.ToString();
     std::string url;
