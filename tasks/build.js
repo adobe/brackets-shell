@@ -20,15 +20,12 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*jslint vars:true, regexp:true, nomen:true*/
-/*global module, require, process*/
+
+"use strict";
 
 module.exports = function (grunt) {
-    "use strict";
-
     var fs          = require("fs"),
         common      = require("./common")(grunt),
-        q           = require("q"),
         semver      = require("semver"),
         spawn       = common.spawn,
         resolve     = common.resolve,

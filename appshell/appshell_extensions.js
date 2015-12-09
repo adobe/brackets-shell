@@ -27,9 +27,6 @@
 // Note: All file native file i/o functions are synchronous, but are exposed
 // here as asynchronous calls. 
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, forin: true, maxerr: 50, regexp: true */
-/*global define, native */
-
 var appshell;
 if (!appshell) {
     appshell = {};
