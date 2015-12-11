@@ -167,7 +167,8 @@ module.exports = function (grunt) {
                         "cwd"       : "installer/linux/debian/",
                         "src"       : [
                             "brackets.desktop",
-                            "brackets"
+                            "brackets",
+                            "libgcrypt.so.11"
                         ],
                         "dest"      : "<%= build.staging %>"
                     }
