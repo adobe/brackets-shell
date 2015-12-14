@@ -84,8 +84,8 @@ module.exports = function (grunt) {
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
-                               "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
+                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe",
+                               "http://registry.npmjs.org/npm/-/npm-<%= npm.version %>.tgz"]
             }
         },
         "clean": {
@@ -227,10 +227,10 @@ module.exports = function (grunt) {
             "version"       : "3.2623.1397"
         },
         "node": {
-            "version"       : "0.10.24"
+            "version"       : "4.2.3"
         },
         "npm": {
-            "version"       : "1.2.11"
+            "version"       : "2.14.15"
         }
     });
 
