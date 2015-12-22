@@ -63,7 +63,7 @@ module.exports = function (grunt) {
             /* mac */
             "cef-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32.zip"
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx64.zip"
             },
             "cef-mac-symbols": {
                 "src"  : "<%= cef.url %>/cef_binary_<%= cef.version %>_macosx32_release_symbols.zip",
