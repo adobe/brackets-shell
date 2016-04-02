@@ -1687,7 +1687,7 @@ def _GetCopies(spec):
         src_bare = src[:-1]
         base_dir = posixpath.split(src_bare)[0]
         outer_dir = posixpath.split(src_bare)[1]
-        cmd = 'cd "%s" && xcopy /e /f /y "%s" "%s\\%s\\"' % (
+        cmd = 'xcopy /e /f /y "%s\\%s" "%s\\%s\\"' % (
             _FixPath(base_dir), outer_dir, _FixPath(dst), outer_dir)
         copies.append(([src], ['dummy_copies', dst], cmd,
                        'Copying %s to %s' % (src, dst)))
