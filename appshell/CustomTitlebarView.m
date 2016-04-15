@@ -86,6 +86,7 @@
     }
 
     [NSGraphicsContext restoreGraphicsState];
+    //[[self window] setTitle: @""];
 }
 
 - (CGFloat)widthOfString:(NSString *)string withFont:(NSFont *)font

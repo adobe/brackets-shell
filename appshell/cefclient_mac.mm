@@ -406,7 +406,7 @@ extern NSMutableArray* pendingOpenFiles;
         }
     }
 #endif
-    
+     //mainWindow.appearance = [NSAppearance appearanceNamed:NSAppearanceNameVibrantDark];
 
 }
 
