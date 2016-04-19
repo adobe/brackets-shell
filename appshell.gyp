@@ -77,6 +77,7 @@
         # Target build path.
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
@@ -381,6 +382,7 @@
         # Target build path.
         'SYMROOT': 'xcodebuild',
         'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
         'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
       },
       'conditions': [
@@ -472,6 +474,7 @@
             'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
             'SYMROOT': 'xcodebuild',
             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',
+            'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
             'FRAMEWORK_SEARCH_PATHS': [
               '$(inherited)',

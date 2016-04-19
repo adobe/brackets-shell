@@ -520,7 +520,7 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     
     
     // CEF 1750 -- We need to not handle keys for the DevTools Window.
-    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/devtools.html") {
+    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/inspector.html") {
         return false;
     }
     
