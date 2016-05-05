@@ -295,7 +295,7 @@ extern NSMutableArray* pendingOpenFiles;
 }
 
 -(BOOL)useSystemTrafficLights {
-    return [self isRunningOnYosemiteOrLater];
+    return true; //[self isRunningOnYosemiteOrLater];
 }
 
 -(void)windowDidResize:(NSNotification *)notification
@@ -601,7 +601,7 @@ extern NSMutableArray* pendingOpenFiles;
                           NSClosableWindowMask |
                           NSMiniaturizableWindowMask |
                           NSResizableWindowMask |
-                          NSTexturedBackgroundWindowMask );
+                          NSUnifiedTitleAndToolbarWindowMask );
 
   // Get the available screen space
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
@@ -650,7 +650,7 @@ extern NSMutableArray* pendingOpenFiles;
   content_rect = [mainWnd contentRectForFrameRect:[mainWnd frame]];
 
   // Configure the rest of the window
-  [mainWnd setTitle:WINDOW_TITLE];
+  //[mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:self.delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 

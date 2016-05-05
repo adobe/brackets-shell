@@ -32,6 +32,7 @@
 
 - (void)drawRect:(NSRect)dirtyRect
 {
+    [NSGraphicsContext saveGraphicsState];
     NSColorSpace    *sRGB = [NSColorSpace sRGBColorSpace];
     NSColor *fillColor = [NSColor colorWithColorSpace:sRGB components:fillComp count:4];
     NSRect windowFrame   = [NSWindow frameRectForContentRect:[[[self window] contentView] bounds] styleMask:[[self window] styleMask]];
@@ -45,7 +46,7 @@
 
     [fillColor set];
 
-    [NSGraphicsContext saveGraphicsState];
+
     //This constant matches the radius for other macosx apps.
     //For some reason if we use the default value it is double that of safari etc.
     float cornerRadius = 4.0f;
