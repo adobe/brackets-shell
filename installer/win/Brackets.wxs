@@ -50,7 +50,7 @@
                            Value="SOFTWARE\$(var.RegistryRoot)\Capabilities" Type="string" />
 
             <!-- File associations -->
-            <?define SupportedFiletypes=txt;groovy;ini;properties;css;scss;html;htm;shtm;shtml;xhtml;cfm;cfm1;cfc;dhtml;xht;tpl;twig;hbs;handlebars;kit;jsp;aspx;ejs;js;jsx;json;svg;xml;wxs;wxl;wsdl;rss;atom;rdf;xslt;xul;xbl;mathml;config;php;php3;php4;php5;phtm;phtml;ctp;c;h;i;cc;cp;cpp;c++;cxx;hh;hpp;hxx;h++;ii;cs;cshtml;asax;ashx;java;scala;sbt;coffee;cson;cf;clj;pl;pm;rb;ru;gemspec;rake;py;pyw;wsgi;sass;less;lua;sql;diff;patch;md;markdown;yaml;yml;hx;sh?>
+            <?define SupportedFiletypes=css;scss;html;htm;shtm;shtml;xhtml;cfm;cfm1;cfc;dhtml;xht;tpl;twig;hbs;handlebars;kit;jsp;aspx;ejs;js;jsx;json;svg;xml;rss;atom;rdf;xslt;xul;xbl;mathml;php;php3;php4;php5;phtm;phtml;ctp;cshtml;asax;ashx;coffee;cson;cf;clj;wsgi;sass;less;sql;diff;patch;md;markdown;yaml;yml;hx?>
 
             <?foreach filetype in $(var.SupportedFiletypes)?>
                 <!-- associate program with file type -->
