@@ -407,31 +407,8 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
         [openPanel setDirectoryURL:[NSURL URLWithString:[NSString stringWithUTF8String:initialDirectory.c_str()]]];
     
     [openPanel setAllowedFileTypes:allowedFileTypes];
+    
     [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
-    
-    /*
-    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:^(NSInteger result){
-        if (result == NSFileHandlingPanelOKButton) {
-            NSArray* urls = [openPanel URLs];
-            for (NSUInteger i = 0; i < [urls count]; i++) {
-                NSURL *theURL = [urls objectAtIndex:i];
-                NSString *theString = [theURL absoluteString];
-                selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
-            }
-            
-            NSUInteger i = 0;
-            for (NSURL *url in urls)
-            {
-                NSString *theString = [NSString stringWithFormat:@"%@", [url absoluteString]];
-                selectedFiles->SetString(i, [theString UTF8String]);
-                i++;
-            }
-            
-            // Use the URLs to build a list of items to import.
-        }
-        
-    }]; */
-    
     if ([openPanel runModal] == NSOKButton)
     {
         NSArray* urls = [openPanel URLs];

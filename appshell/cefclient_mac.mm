@@ -334,15 +334,15 @@ extern NSMutableArray* pendingOpenFiles;
     }
     if (customTitlebar) {
         [customTitlebar setHidden:YES];
-		NSWindow *window = [notification object];
-    
+        NSWindow *window = [notification object];
+
         // Since we have nuked the title, we will have
         // to set the string back as we are hiding the
         // custom title bar.
-        if([self useSystemTrafficLights])
-			[window setTitle:[customTitlebar titleString]];
-        }
-    
+        [window setTitle:[customTitlebar titleString]];
+    }
+
+
     if ([self needsFullScreenActivateHack]) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp unhide:nil];
@@ -350,7 +350,6 @@ extern NSMutableArray* pendingOpenFiles;
         NSView* contentView = [window contentView];
         [contentView setNeedsDisplay:YES];
     }
-    
 #endif
 }
 
@@ -433,8 +432,8 @@ extern NSMutableArray* pendingOpenFiles;
     if (customTitlebar) {
         [customTitlebar setHidden:NO];
         
-        // Nuke the OS title as the title
-        // string is now done by customTitleBar.
+        // Nuke the OS title as the title string is going to
+        // drawn by customTitleBar.
         NSWindow *window = [notification object];
         [window setTitle:@""];
     }

@@ -56,12 +56,12 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   NSWindow* window = [view window];
   std::string titleStr(title);
   NSString* str = [NSString stringWithUTF8String:titleStr.c_str()];
-    
+  
   NSObject* delegate = [window delegate];
   if ([window styleMask] & NSFullScreenWindowMask) {
       [window setTitle:str];
   }
-    
+
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
 
