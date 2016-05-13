@@ -22,7 +22,15 @@
  */
 
 //title bar background
-static const float fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+
+#ifndef CLIENT_COLORS
+#define CLIENT_COLORS
+
+static CGFloat fillComp[4] = {0.23137255f, 0.24705882f, 0.25490196f, 1.0};
+
 //title text color
-static const float activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
-static const float inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
+static CGFloat activeComp[4] = {0.77254902f, 0.77254902f, 0.77254902f, 1.0};
+static CGFloat inactiveComp[4] = {0.50f, 0.50f, 0.50f, 1.0};
+
+#endif
+

@@ -56,9 +56,12 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   NSWindow* window = [view window];
   std::string titleStr(title);
   NSString* str = [NSString stringWithUTF8String:titleStr.c_str()];
-  [window setTitle:str];
-    
+  
   NSObject* delegate = [window delegate];
+  if ([window styleMask] & NSFullScreenWindowMask) {
+      [window setTitle:str];
+  }
+
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
 
@@ -323,6 +326,13 @@ void ClientHandler::CloseMainWindow() {
     //  transforms from full screen back to normal
     if (customTitlebar) {
         [customTitlebar setHidden:NO];
+
+        NSWindow *popUpWindow = [notification object];
+
+        // Since we have nuked the title, we will have
+        // to set the string back as we are hiding the
+        // custom title bar.
+        [popUpWindow setTitle:@""];
     }
     if (trafficLightsView) {
         [trafficLightsView setHidden:NO];
@@ -352,6 +362,13 @@ void ClientHandler::CloseMainWindow() {
     }
     if (customTitlebar) {
         [customTitlebar setHidden:YES];
+
+        NSWindow *popUpWindow = [notification object];
+
+        // Since we have nuked the title, we will have
+        // to set the string back as we are hiding the
+        // custom title bar.
+        [popUpWindow setTitle:[customTitlebar titleString]];
     }
     if ([self needsFullScreenActivateHack]) {
         // HACK  to make sure that window is activate
@@ -520,7 +537,7 @@ bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
     
     
     // CEF 1750 -- We need to not handle keys for the DevTools Window.
-    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/devtools.html") {
+    if (browser->GetFocusedFrame()->GetURL() == "chrome-devtools://devtools/inspector.html") {
         return false;
     }
     

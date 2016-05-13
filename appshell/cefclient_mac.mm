@@ -334,8 +334,15 @@ extern NSMutableArray* pendingOpenFiles;
     }
     if (customTitlebar) {
         [customTitlebar setHidden:YES];
+        NSWindow *window = [notification object];
+
+        // Since we have nuked the title, we will have
+        // to set the string back as we are hiding the
+        // custom title bar.
+        [window setTitle:[customTitlebar titleString]];
     }
-    
+
+
     if ([self needsFullScreenActivateHack]) {
         [NSApp activateIgnoringOtherApps:YES];
         [NSApp unhide:nil];
@@ -424,6 +431,11 @@ extern NSMutableArray* pendingOpenFiles;
     //  transition from fullscreen back to normal
     if (customTitlebar) {
         [customTitlebar setHidden:NO];
+        
+        // Nuke the OS title as the title string is going to
+        // drawn by customTitleBar.
+        NSWindow *window = [notification object];
+        [window setTitle:@""];
     }
     if (trafficLightsView) {
         [trafficLightsView setHidden:NO];
@@ -601,7 +613,7 @@ extern NSMutableArray* pendingOpenFiles;
                           NSClosableWindowMask |
                           NSMiniaturizableWindowMask |
                           NSResizableWindowMask |
-                          NSTexturedBackgroundWindowMask );
+                          NSUnifiedTitleAndToolbarWindowMask );
 
   // Get the available screen space
   NSRect screen_rect = [[NSScreen mainScreen] visibleFrame];
@@ -650,7 +662,6 @@ extern NSMutableArray* pendingOpenFiles;
   content_rect = [mainWnd contentRectForFrameRect:[mainWnd frame]];
 
   // Configure the rest of the window
-  [mainWnd setTitle:WINDOW_TITLE];
   [mainWnd setDelegate:self.delegate];
   [mainWnd setCollectionBehavior: (1 << 7) /* NSWindowCollectionBehaviorFullScreenPrimary */];
 
