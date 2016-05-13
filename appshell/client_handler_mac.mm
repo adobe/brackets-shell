@@ -326,6 +326,13 @@ void ClientHandler::CloseMainWindow() {
     //  transforms from full screen back to normal
     if (customTitlebar) {
         [customTitlebar setHidden:NO];
+
+        NSWindow *popUpWindow = [notification object];
+
+        // Since we have nuked the title, we will have
+        // to set the string back as we are hiding the
+        // custom title bar.
+        [popUpWindow setTitle:@""];
     }
     if (trafficLightsView) {
         [trafficLightsView setHidden:NO];
@@ -355,6 +362,13 @@ void ClientHandler::CloseMainWindow() {
     }
     if (customTitlebar) {
         [customTitlebar setHidden:YES];
+
+        NSWindow *popUpWindow = [notification object];
+
+        // Since we have nuked the title, we will have
+        // to set the string back as we are hiding the
+        // custom title bar.
+        [popUpWindow setTitle:[customTitlebar titleString]];
     }
     if ([self needsFullScreenActivateHack]) {
         // HACK  to make sure that window is activate
