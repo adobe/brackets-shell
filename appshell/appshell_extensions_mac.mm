@@ -51,6 +51,27 @@ int const debugPort = 9222;
 NSString* debugPortCommandlineArguments = [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort];
 NSString* debugProfilePath = [NSString stringWithFormat:@"--user-data-dir=%s/live-dev-profile", ClientApp::AppGetSupportDirectory().ToString().c_str()];
 
+// These are required for [NSSavePanel beginSheetModalForWindow]
+// We need to store the panel to browser details
+// in a map as that could be the panel is the only
+// variable accessible inside the completionHandler
+// block. Also the map is neccessary for handling
+// reentrant scenarios. E.g.file open/save dialog could
+// be requested from from multiple Brackets windows.
+// Earlier RunModal was making sure none of the opened
+// NSWindows are clickable when running the runModal of
+// the modal sheet. With completionHandler coming into
+// picture, that is not the case anymore.
+
+struct CefBrowserDetails
+{
+    CefRefPtr<CefProcessMessage> m_response;
+    CefRefPtr<CefBrowser>        m_browser;
+};
+
+static  std::map<NSSavePanel *, CefBrowserDetails>           s_panel_to_browser;
+typedef std::map<NSSavePanel *, CefBrowserDetails>::iterator panel_iterator;
+
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac
 
@@ -375,12 +396,13 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
-int32 ShowOpenDialog(bool allowMulitpleSelection,
+void ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFiles)
+                     CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefProcessMessage> response)
 {
     NSArray* allowedFileTypes = nil;
     BOOL canChooseDirectories = chooseDirectory;
@@ -408,23 +430,48 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     
     [openPanel setAllowedFileTypes:allowedFileTypes];
     
-    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
-    if ([openPanel runModal] == NSOKButton)
-    {
-        NSArray* urls = [openPanel URLs];
-        for (NSUInteger i = 0; i < [urls count]; i++) {
-            selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
-        }
-    }
-    [NSApp endSheet:openPanel];
+    // cache the browser details, so has to access
+    // the same inside the completionHandler block.
+    CefBrowserDetails browserDetails;
+    browserDetails.m_browser  = browser;
+    browserDetails.m_response = response;
     
-    return NO_ERROR;
+    s_panel_to_browser[openPanel] = browserDetails;
+    
+    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler: ^(NSInteger returnCode)
+    {
+        panel_iterator _browserDetails;
+        _browserDetails = s_panel_to_browser.find(openPanel);
+        if(_browserDetails != s_panel_to_browser.end()){
+            
+            CefRefPtr<CefProcessMessage> _response = _browserDetails->second.m_response;
+            CefRefPtr<CefBrowser>        _browser  = _browserDetails->second.m_browser;
+            
+            if(_response && _browser){
+
+                NSArray *urls = [openPanel URLs];
+                CefRefPtr<CefListValue> selectedFiles = CefListValue::Create();
+                if (returnCode == NSModalResponseOK){
+                    for (NSUInteger i = 0; i < [urls count]; i++) {
+                        selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
+                    }
+                }
+
+                // Set common response args (error and selectedfiles list)
+                _response->GetArgumentList()->SetInt(1, NO_ERROR);
+                _response->GetArgumentList()->SetList(2, selectedFiles);
+                _browser->SendProcessMessage(PID_RENDERER, _response);
+            }
+            s_panel_to_browser.erase(_browserDetails);
+        }
+    }];
 }
 
-int32 ShowSaveDialog(ExtensionString title,
+void ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
-                       ExtensionString& absoluteFilepath)
+                       CefRefPtr<CefBrowser> browser,
+                       CefRefPtr<CefProcessMessage> response)
 {
     NSSavePanel* savePanel = [NSSavePanel savePanel];
     [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
@@ -436,17 +483,39 @@ int32 ShowSaveDialog(ExtensionString title,
     }
 
     [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
-    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
+
+    // cache the browser details, so has to access
+    // the same inside the completionHandler block.
+    CefBrowserDetails browserDetails;
+    browserDetails.m_browser  = browser;
+    browserDetails.m_response = response;
     
-    if ([savePanel runModal] == NSFileHandlingPanelOKButton)
-    {
-        NSURL* theFile = [savePanel URL];
-        absoluteFilepath = [[theFile path] UTF8String];
+    s_panel_to_browser[savePanel] = browserDetails;
+    
+    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler: ^(NSInteger returnCode)
+     {
+         panel_iterator _browserDetails;
+         _browserDetails = s_panel_to_browser.find(savePanel);
+         if(_browserDetails != s_panel_to_browser.end()){
+             
+             CefRefPtr<CefProcessMessage> _response = _browserDetails->second.m_response;
+             CefRefPtr<CefBrowser>        _browser  = _browserDetails->second.m_browser;
+             
+             if(_response && _browser){
 
-    }
-    [NSApp endSheet:savePanel];
+                 NSURL* selectedFile = nil;
+                 if (returnCode == NSOKButton){
+                     selectedFile = [savePanel URL];
+                 }
 
-    return NO_ERROR;
+                 // Set common response args (error and the new file name string)
+                 _response->GetArgumentList()->SetInt(1, NO_ERROR);
+                 _response->GetArgumentList()->SetString(2, [[selectedFile path] UTF8String]);
+                 _browser->SendProcessMessage(PID_RENDERER, _response);
+             }
+         }
+
+     }];
 }
 
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)

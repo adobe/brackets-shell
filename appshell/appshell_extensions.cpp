@@ -117,8 +117,6 @@ public:
                 argList->GetType(5) != VTYPE_STRING) {
                 error = ERR_INVALID_PARAMS;
             }
-
-            CefRefPtr<CefListValue> selectedFiles = CefListValue::Create();
            
             if (error == NO_ERROR) {
                 bool allowMultipleSelection = argList->GetBool(1);
@@ -127,16 +125,34 @@ public:
                 ExtensionString initialPath = argList->GetString(4);
                 ExtensionString fileTypes = argList->GetString(5);
                 
+#ifdef OS_MACOSX
+                ShowOpenDialog(allowMultipleSelection,
+                               chooseDirectory,
+                               title,
+                               initialPath,
+                               fileTypes,
+                               browser,
+                               response);
+                
+                // On MAC, beginModalSheet is going
+                // to inform us asynchronusly. So here return from here
+                // and delay sending the response until later.
+                
+                return true;
+#else
+                CefRefPtr<CefListValue> selectedFiles = CefListValue::Create();
                 error = ShowOpenDialog(allowMultipleSelection,
                                        chooseDirectory,
                                        title,
                                        initialPath,
                                        fileTypes,
                                        selectedFiles);
+                // Set response args for this function
+                responseArgs->SetList(2, selectedFiles);
+#endif
+                
             }
-
-            // Set response args for this function
-            responseArgs->SetList(2, selectedFiles);
+            
         } else if (message_name == "ShowSaveDialog") {
             // Parameters:
             //  0: int32 - callback id
@@ -150,21 +166,34 @@ public:
                 error = ERR_INVALID_PARAMS;
             }
 
-            ExtensionString newFilePath;
-
             if (error == NO_ERROR) {
                 ExtensionString title = argList->GetString(1);
                 ExtensionString initialPath = argList->GetString(2);
                 ExtensionString proposedNewFilename = argList->GetString(3);
-
+                
+#ifdef OS_MACOSX
+                // ShowSaveDialog itself is going to
+                // take of communicating with the
+                // render process.
+                
+                ShowSaveDialog(title,
+                               initialPath,
+                               proposedNewFilename,
+                               browser,
+                               response);
+                return true;
+#else
+                ExtensionString newFilePath;
                 error = ShowSaveDialog(title,
-                                         initialPath,
-                                         proposedNewFilename,
-                                         newFilePath);
+                                       initialPath,
+                                       proposedNewFilename,
+                                       newFilePath);
+                
+                // Set response args for this function
+                responseArgs->SetString(2, newFilePath);
+#endif
             }
 
-            // Set response args for this function
-            responseArgs->SetString(2, newFilePath);
         } else if (message_name == "IsNetworkDrive") {
             // Parameters:
             //  0: int32 - callback id

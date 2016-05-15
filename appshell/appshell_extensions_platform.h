@@ -86,6 +86,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
 
 int32 OpenURLInDefaultBrowser(ExtensionString url);
 
+#ifndef OS_MACOSX
 int32 ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
@@ -97,6 +98,21 @@ int32 ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
                        ExtensionString& newFilePath);
+#else
+void ShowOpenDialog(bool allowMulitpleSelection,
+                     bool chooseDirectory,
+                     ExtensionString title,
+                     ExtensionString initialDirectory,
+                     ExtensionString fileTypes,
+                     CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefProcessMessage> response);
+
+void ShowSaveDialog(ExtensionString title,
+                     ExtensionString initialDirectory,
+                     ExtensionString proposedNewFilename,
+                     CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefProcessMessage> response);
+#endif
 
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote);
 

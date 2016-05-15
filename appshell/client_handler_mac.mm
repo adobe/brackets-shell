@@ -61,6 +61,8 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   if ([window styleMask] & NSFullScreenWindowMask) {
       [window setTitle:str];
   }
+    
+  [NSApp changeWindowsItem:window title:str filename:NO];
 
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
 }
