@@ -62,6 +62,10 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
       [window setTitle:str];
   }
     
+  // This is required as we are now managing the window title
+  // on our own, because of which the window title entires 
+  // are not getting added to 'Windows' menu. This is an
+  // an official API.
   [NSApp changeWindowsItem:window title:str filename:NO];
 
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];
