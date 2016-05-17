@@ -460,14 +460,16 @@ void ShowSaveDialog(ExtensionString title,
     {
          if(_response && _browser){
 
-             NSURL* selectedFile = nil;
+             CefString pathStr;
              if (returnCode == NSModalResponseOK){
-                 selectedFile = [savePanel URL];
+                 NSURL* selectedFile = [savePanel URL];
+                 if(selectedFile)
+                     pathStr = [[selectedFile path] UTF8String];
              }
 
              // Set common response args (error and the new file name string)
              _response->GetArgumentList()->SetInt(1, NO_ERROR);
-             _response->GetArgumentList()->SetString(2, [[selectedFile path] UTF8String]);
+             _response->GetArgumentList()->SetString(2, pathStr);
              _browser->SendProcessMessage(PID_RENDERER, _response);
          }
     }];
