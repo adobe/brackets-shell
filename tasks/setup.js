@@ -27,8 +27,6 @@ module.exports = function (grunt) {
 
     var common          = require("./common")(grunt),
         fs              = require("fs"),
-        gunzip          = require("gunzip-maybe"),
-        tar             = require("tar-fs"),
         child_process   = require("child_process"),
         path            = require("path"),
         q               = require("q"),
@@ -386,19 +384,6 @@ module.exports = function (grunt) {
 
         // copy node.exe to Brackets-node
         grunt.file.copy(exeFile,  "deps/node/node.exe");
-
-        // unzip NPM
-        fs.createReadStream(npmFile)
-            .pipe(gunzip())
-            .pipe(tar.extract("deps/node"))
-            .on("error", function (err) {
-                grunt.log.error(err);
-                done(false);
-            })
-            .on("finish", function () {
-                nodeWriteVersion();
-                done();
-            });
     });
 
     // task: node-mac
