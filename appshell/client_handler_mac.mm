@@ -61,11 +61,13 @@ void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
   if ([window styleMask] & NSFullScreenWindowMask) {
       [window setTitle:str];
   }
-    
-  // This is required as we are now managing the window title
-  // on our own, because of which the window title entires 
-  // are not getting added to 'Windows' menu. This is an
-  // an official API.
+    // This is required as we are now managing the window's title
+    // on our own, using CustomTitlbeBarView. As we are nuking the
+    // window's title, currently open windows like new brackets
+    // windows/dev tools are not getting listed under the
+    // 'Window' menu. So we are now explicitly telling OS to make
+    // sure we have a menu entry under 'Window' menu. This is a
+    // safe call and is officially supported.
   [NSApp changeWindowsItem:window title:str filename:NO];
 
   [delegate performSelectorOnMainThread:@selector(windowTitleDidChange:) withObject:str waitUntilDone:NO];

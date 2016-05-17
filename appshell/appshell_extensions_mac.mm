@@ -409,8 +409,8 @@ void ShowOpenDialog(bool allowMulitpleSelection,
     
     [openPanel setAllowedFileTypes:allowedFileTypes];
     
-    // cache the browser details, so has to access
-    // the same inside the completionHandler block.
+    // cache the browser and response variables, so that these
+    // can be accessed from within the completionHandler block.
     CefRefPtr<CefBrowser>        _browser  = browser;
     CefRefPtr<CefProcessMessage> _response = response;
 
@@ -451,8 +451,8 @@ void ShowSaveDialog(ExtensionString title,
 
     [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
 
-    // cache the browser details, so has to access
-    // the same inside the completionHandler block.
+    // cache the browser and response variables, so that these
+    // can be accessed from within the completionHandler block.
     CefRefPtr<CefBrowser>        _browser  = browser;
     CefRefPtr<CefProcessMessage> _response = response;
 

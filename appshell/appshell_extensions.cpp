@@ -134,9 +134,8 @@ public:
                                browser,
                                response);
                 
-                // On MAC, beginModalSheet is going
-                // to inform us asynchronusly. So here return from here
-                // and delay sending the response until later.
+                // Skip standard callback handling. ShowOpenDialog fires the
+                // callback asynchronously.
                 
                 return true;
 #else
@@ -172,10 +171,8 @@ public:
                 ExtensionString proposedNewFilename = argList->GetString(3);
                 
 #ifdef OS_MACOSX
-                // ShowSaveDialog itself is going to
-                // take of communicating with the
-                // render process.
-                
+                // Skip standard callback handling. ShowSaveDialog fires the
+                // callback asynchronously.
                 ShowSaveDialog(title,
                                initialPath,
                                proposedNewFilename,
