@@ -377,8 +377,7 @@ module.exports = function (grunt) {
 
         var done        = this.async(),
             nodeDest    = grunt.config("nodeDest"),
-            exeFile     = nodeDest[0],
-            npmFile     = nodeDest[1];
+            exeFile     = nodeDest;
 
         grunt.file.mkdir("deps/node");
 
