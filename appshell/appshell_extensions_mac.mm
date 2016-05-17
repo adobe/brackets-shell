@@ -461,7 +461,7 @@ void ShowSaveDialog(ExtensionString title,
          if(_response && _browser){
 
              NSURL* selectedFile = nil;
-             if (returnCode == NSOKButton){
+             if (returnCode == NSModalResponseOK){
                  selectedFile = [savePanel URL];
              }
 
