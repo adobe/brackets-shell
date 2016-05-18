@@ -375,12 +375,13 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
-int32 ShowOpenDialog(bool allowMulitpleSelection,
+void ShowOpenDialog(bool allowMulitpleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
                      ExtensionString initialDirectory,
                      ExtensionString fileTypes,
-                     CefRefPtr<CefListValue>& selectedFiles)
+                     CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefProcessMessage> response)
 {
     NSArray* allowedFileTypes = nil;
     BOOL canChooseDirectories = chooseDirectory;
@@ -408,23 +409,36 @@ int32 ShowOpenDialog(bool allowMulitpleSelection,
     
     [openPanel setAllowedFileTypes:allowedFileTypes];
     
-    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
-    if ([openPanel runModal] == NSOKButton)
+    // cache the browser and response variables, so that these
+    // can be accessed from within the completionHandler block.
+    CefRefPtr<CefBrowser>        _browser  = browser;
+    CefRefPtr<CefProcessMessage> _response = response;
+
+    [openPanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler: ^(NSInteger returnCode)
     {
-        NSArray* urls = [openPanel URLs];
-        for (NSUInteger i = 0; i < [urls count]; i++) {
-            selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
+        if(_browser && _response){
+
+            NSArray *urls = [openPanel URLs];
+            CefRefPtr<CefListValue> selectedFiles = CefListValue::Create();
+            if (returnCode == NSModalResponseOK){
+                for (NSUInteger i = 0; i < [urls count]; i++) {
+                    selectedFiles->SetString(i, [[[urls objectAtIndex:i] path] UTF8String]);
+                }
+            }
+
+            // Set common response args (error and selectedfiles list)
+            _response->GetArgumentList()->SetInt(1, NO_ERROR);
+            _response->GetArgumentList()->SetList(2, selectedFiles);
+            _browser->SendProcessMessage(PID_RENDERER, _response);
         }
-    }
-    [NSApp endSheet:openPanel];
-    
-    return NO_ERROR;
+    }];
 }
 
-int32 ShowSaveDialog(ExtensionString title,
+void ShowSaveDialog(ExtensionString title,
                        ExtensionString initialDirectory,
                        ExtensionString proposedNewFilename,
-                       ExtensionString& absoluteFilepath)
+                       CefRefPtr<CefBrowser> browser,
+                       CefRefPtr<CefProcessMessage> response)
 {
     NSSavePanel* savePanel = [NSSavePanel savePanel];
     [savePanel setTitle: [NSString stringWithUTF8String:title.c_str()]];
@@ -436,17 +450,29 @@ int32 ShowSaveDialog(ExtensionString title,
     }
 
     [savePanel setNameFieldStringValue:[NSString stringWithUTF8String:proposedNewFilename.c_str()]];
-    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler:nil];
-    
-    if ([savePanel runModal] == NSFileHandlingPanelOKButton)
+
+    // cache the browser and response variables, so that these
+    // can be accessed from within the completionHandler block.
+    CefRefPtr<CefBrowser>        _browser  = browser;
+    CefRefPtr<CefProcessMessage> _response = response;
+
+    [savePanel beginSheetModalForWindow:[NSApp mainWindow] completionHandler: ^(NSInteger returnCode)
     {
-        NSURL* theFile = [savePanel URL];
-        absoluteFilepath = [[theFile path] UTF8String];
+         if(_response && _browser){
 
-    }
-    [NSApp endSheet:savePanel];
+             CefString pathStr;
+             if (returnCode == NSModalResponseOK){
+                 NSURL* selectedFile = [savePanel URL];
+                 if(selectedFile)
+                     pathStr = [[selectedFile path] UTF8String];
+             }
 
-    return NO_ERROR;
+             // Set common response args (error and the new file name string)
+             _response->GetArgumentList()->SetInt(1, NO_ERROR);
+             _response->GetArgumentList()->SetString(2, pathStr);
+             _browser->SendProcessMessage(PID_RENDERER, _response);
+         }
+    }];
 }
 
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
