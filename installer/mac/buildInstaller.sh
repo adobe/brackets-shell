@@ -2,7 +2,7 @@
 
 # config
 releaseName="Brackets"
-version="1.7"
+version="1.8"
 dmgName="${releaseName} Release ${version}"
 format="bzip2"
 encryption="none"
