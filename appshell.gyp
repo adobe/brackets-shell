@@ -340,16 +340,19 @@
             '<@(includes_linux)',
             '<@(appshell_sources_linux)',
           ],
+          'dependencies': [
+            'gtk'
+          ],
           'link_settings': {
             'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
+              # Look for libcef.so in the current directory. Path can also be
+              # specified using the LD_LIBRARY_PATH environment variable.
               '-Wl,-rpath,\$$ORIGIN/lib',
-              '<(march)'
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
-              '$(BUILDTYPE)/libcef.so',
-              'appshell_extensions_js.o',
+              "$(BUILDTYPE)/libcef.so",
+              "appshell_extensions_js.o",
+              "-lX11",
             ],
           },
         }],
@@ -500,6 +503,33 @@
         },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
+    [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+              '-lpthread',
+            ],
+          },
+        },
+      ],
+    }],  # OS=="linux" or OS=="freebsd" or OS=="openbsd"
     ['target_arch=="ia32"', {
       'variables': {
         'output_bfd': 'elf32-i386',

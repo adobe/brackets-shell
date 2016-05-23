@@ -16,7 +16,13 @@
 
 #include <algorithm> 
 
-
+#if defined(OS_LINUX)
+// The Linux client uses GTK instead of the underlying platform type (X11).
+#include <gtk/gtk.h>
+#define ClientWindowHandle GtkWidget*
+#else
+#define ClientWindowHandle CefWindowHandle
+#endif
 
 // Define this value to redirect all popup URLs to the main application browser
 // window.
@@ -186,13 +192,13 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                                     const CefKeyEvent& event,
                                     CefEventHandle os_event) OVERRIDE;
 
-  void SetMainHwnd(CefWindowHandle hwnd);
-  CefWindowHandle GetMainHwnd() { return m_MainHwnd; }
-  void SetEditHwnd(CefWindowHandle hwnd);
-  void SetButtonHwnds(CefWindowHandle backHwnd,
-                      CefWindowHandle forwardHwnd,
-                      CefWindowHandle reloadHwnd,
-                      CefWindowHandle stopHwnd);
+  void SetMainHwnd(ClientWindowHandle hwnd);
+  ClientWindowHandle GetMainHwnd() { return m_MainHwnd; }
+  void SetEditHwnd(ClientWindowHandle hwnd);
+  void SetButtonHwnds(ClientWindowHandle backHwnd,
+                      ClientWindowHandle forwardHwnd,
+                      ClientWindowHandle reloadHwnd,
+                      ClientWindowHandle stopHwnd);
 
   CefRefPtr<CefBrowser> GetBrowser() { return m_Browser; }
   int GetBrowserId() { return m_BrowserId; }
@@ -227,7 +233,7 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   void QuittingApp(bool quitting) { m_quitting = quitting; }
   bool AppIsQuitting() { return m_quitting; }
   bool HasWindows() const { return !browser_window_map_.empty(); }
-
+  
  protected:
   void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
@@ -242,7 +248,7 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   static void CreateRequestDelegates(RequestDelegateSet& delegates);
 
   // The main frame window handle
-  CefWindowHandle m_MainHwnd;
+  ClientWindowHandle m_MainHwnd;
 
   // The child browser window. This is only set for the FIRST client window.
   // The browser id for m_Browser is stored in m_BrowserId.
@@ -259,13 +265,13 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   int m_BrowserId;
 
   // The edit window handle
-  CefWindowHandle m_EditHwnd;
+  ClientWindowHandle m_EditHwnd;
 
   // The button window handles
-  CefWindowHandle m_BackHwnd;
-  CefWindowHandle m_ForwardHwnd;
-  CefWindowHandle m_StopHwnd;
-  CefWindowHandle m_ReloadHwnd;
+  ClientWindowHandle m_BackHwnd;
+  ClientWindowHandle m_ForwardHwnd;
+  ClientWindowHandle m_StopHwnd;
+  ClientWindowHandle m_ReloadHwnd;
                           
   // Support for logging.
   std::string m_LogFile;
@@ -281,7 +287,7 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   ProcessMessageDelegateSet process_message_delegates_;
   RequestDelegateSet request_delegates_;
 
-  typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
+  typedef std::map< ClientWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;
                         
   typedef std::map<int32, CefRefPtr<CommandCallback> > CommandCallbackMap;

@@ -161,7 +161,7 @@ void ClientHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     PopupCreated(browser);
   }
 
-  browser_window_map_[browser->GetHost()->GetWindowHandle()] = browser;
+  browser_window_map_[(ClientWindowHandle)browser->GetHost()->GetWindowHandle()] = browser;
 }
 
 void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
@@ -173,7 +173,7 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
       m_Browser = NULL;
 	}
 
-    browser_window_map_.erase(browser->GetHost()->GetWindowHandle());
+    browser_window_map_.erase((ClientWindowHandle)browser->GetHost()->GetWindowHandle());
   }
   
   if (m_quitting) {
@@ -363,20 +363,20 @@ bool ClientHandler::OnContextMenuCommand(
   }
 }
 
-void ClientHandler::SetMainHwnd(CefWindowHandle hwnd) {
+void ClientHandler::SetMainHwnd(ClientWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_MainHwnd = hwnd;
 }
 
-void ClientHandler::SetEditHwnd(CefWindowHandle hwnd) {
+void ClientHandler::SetEditHwnd(ClientWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_EditHwnd = hwnd;
 }
 
-void ClientHandler::SetButtonHwnds(CefWindowHandle backHwnd,
-                                   CefWindowHandle forwardHwnd,
-                                   CefWindowHandle reloadHwnd,
-                                   CefWindowHandle stopHwnd) {
+void ClientHandler::SetButtonHwnds(ClientWindowHandle backHwnd,
+                                   ClientWindowHandle forwardHwnd,
+                                   ClientWindowHandle reloadHwnd,
+                                   ClientWindowHandle stopHwnd) {
   AutoLock lock_scope(this);
   m_BackHwnd = backHwnd;
   m_ForwardHwnd = forwardHwnd;
