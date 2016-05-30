@@ -15,7 +15,6 @@
 #include "include/cef_web_plugin.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
-#include "string_util.h"
 #include "util.h"
 #include "config.h"
 

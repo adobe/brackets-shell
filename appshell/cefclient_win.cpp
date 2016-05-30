@@ -17,7 +17,6 @@
 #include "client_handler.h"
 #include "config.h"
 #include "resource.h"
-#include "string_util.h"
 #include "appshell/common/client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"

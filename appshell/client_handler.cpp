@@ -11,7 +11,6 @@
 #include "include/wrapper/cef_stream_resource_handler.h"
 #include "cefclient.h"
 #include "resource_util.h"
-#include "string_util.h"
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 

@@ -161,8 +161,6 @@
       'appshell/native_menu_model.cpp',
       'appshell/native_menu_model.h',
       'appshell/resource_util.h',
-      'appshell/string_util.cpp',
-      'appshell/string_util.h',
       'appshell/util.h',
     ],
     'appshell_sources_win': [
@@ -271,8 +269,6 @@
       'appshell/process_helper_mac.cpp',
       'appshell/resource_util.h',
       'appshell/resource_util_mac.mm',
-      'appshell/string_util.cpp',
-      'appshell/string_util.h',
       'appshell/util.h',
     ],
     'appshell_bundle_resources_mac': [
