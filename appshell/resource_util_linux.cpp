@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string>
 #include "include/cef_stream.h"
-#include "util.h"
 
 bool GetResourceDir(std::string& dir) {
   char buff[1024];

@@ -13,9 +13,9 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "include/cef_web_plugin.h"
+#include "include/base/cef_logging.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
-#include "util.h"
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
@@ -49,8 +49,8 @@ CefRefPtr<CefCommandLine> AppGetCommandLine() {
 
 // Returns the application settings based on command line arguments.
 void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
-  ASSERT(app.get());
-  ASSERT(g_command_line.get());
+  DCHECK(app.get());
+  DCHECK(g_command_line.get());
   if (!g_command_line.get())
     return;
 

@@ -26,7 +26,7 @@
 #endif
 
 #include "config.h"
-#include "util.h"
+#include "include/base/cef_logging.h"
 
 static const wchar_t g_szSoftwareFolder[] = L"Software";
 
@@ -49,7 +49,7 @@ void EnsureTrailingSeparator(LPWSTR pRet)
 void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
 {
     // Check for required params
-    ASSERT(pBase && pApp && pRet);
+    DCHECK(pBase && pApp && pRet);
     if (!pBase || !pApp || !pRet)
         return;
 
@@ -94,8 +94,8 @@ bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
         if (ERROR_SUCCESS == RegQueryValueEx(hKey, pEntry, NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
         {
             result = true;
-            ASSERT(dwType == REG_DWORD);
-            ASSERT(dwCount == sizeof(dwValue));
+            DCHECK(dwType == REG_DWORD);
+            DCHECK(dwCount == sizeof(dwValue));
             ret = (int)dwValue;
         }
         RegCloseKey(hKey);

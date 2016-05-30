@@ -7,6 +7,7 @@
 #include <string>
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/wrapper/cef_helpers.h"
 #include "resource.h"
 #include "native_menu_model.h"
 
@@ -24,12 +25,12 @@ extern HACCEL hAccelTable;
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 }
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   // Set the frame window title bar
   CefWindowHandle hwnd = browser->GetHost()->GetWindowHandle();

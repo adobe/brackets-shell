@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include "include/cef_task.h"
+
 // Application name used in native code. This name is *not* used in resources.
 
 #ifdef OS_WIN
