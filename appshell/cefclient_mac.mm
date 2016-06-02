@@ -19,7 +19,7 @@
 #include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
-#include "client_switches.h"
+#include "appshell/common/client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -850,8 +850,8 @@ int main(int argc, char* argv[]) {
   CFRelease(event);
   
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
+    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(client::switches::kStartupPath);
     std::string startupURLStr(cmdLineStartupURL);
     NSString* str = [NSString stringWithUTF8String:startupURLStr.c_str()];
     startupUrl = [NSURL fileURLWithPath:[str stringByExpandingTildeInPath]];

@@ -1,20 +1,33 @@
-// Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
 // Defines all of the command line switches used by cefclient.
 
-#ifndef CEF_TESTS_CEFCLIENT_CEFCLIENT_SWITCHES_H_
-#define CEF_TESTS_CEFCLIENT_CEFCLIENT_SWITCHES_H_
+#ifndef CEF_TESTS_CEFCLIENT_CEFCLIENT_COMMON_SWITCHES_H_
+#define CEF_TESTS_CEFCLIENT_CEFCLIENT_COMMON_SWITCHES_H_
 #pragma once
 
-namespace cefclient {
+namespace client {
+namespace switches {
 
 extern const char kStartupPath[];
 
-// CefSettings attributes.
 extern const char kMultiThreadedMessageLoop[];
 extern const char kCachePath[];
+extern const char kUrl[];
+extern const char kOffScreenRenderingEnabled[];
+extern const char kOffScreenFrameRate[];
+extern const char kTransparentPaintingEnabled[];
+extern const char kShowUpdateRect[];
+extern const char kMouseCursorChangeDisabled[];
+extern const char kRequestContextPerBrowser[];
+extern const char kRequestContextSharedCache[];
+extern const char kBackgroundColor[];
+extern const char kEnableGPU[];
+extern const char kFilterURL[];
+
+// CefSettings attributes.
 extern const char kLogFile[];
 extern const char kLogSeverity[];
 extern const char kLogSeverity_Verbose[];
@@ -75,6 +88,7 @@ extern const char kAcceleratedPluginsDisabled[];
 extern const char kDeveloperToolsDisabled[];
 extern const char kFullscreenEnabled[];
 
-}  // namespace cefclient
+}  // namespace switches
+}  // namespace client
 
-#endif  // CEF_TESTS_CEFCLIENT_CEFCLIENT_SWITCHES_H_
+#endif  // CEF_TESTS_CEFCLIENT_CEFCLIENT_COMMON_SWITCHES_H_
