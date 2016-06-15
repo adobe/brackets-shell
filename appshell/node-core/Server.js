@@ -199,20 +199,7 @@ maxerr: 50, node: true */
                         stop();
                     });
                     
-                    wsServer = new WebSocket.Server({
-                        server: httpServer,
-                        verifyClient : function (info, callback) {
-                            // Accept connections originated from local system only
-                            // Also do a loose check on user-agent to accept connection only from Brackets CEF shell
-                            if (info.origin === "file://" && info.req.headers["user-agent"].indexOf(" Brackets") !== -1) {
-                                callback(true);
-                            } else {
-                                // Reject the connection
-                                callback(false);
-                            }
-                        }
-                    });
-
+                    wsServer = new WebSocket.Server({server: httpServer});
                     wsServer.on("error", function () {
                         Logger.error(
                             "[Server] stopping due to WebSocket error",
