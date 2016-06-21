@@ -18,7 +18,7 @@
 #include "config.h"
 #include "resource.h"
 #include "string_util.h"
-#include "client_switches.h"
+#include "appshell/common/client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -240,8 +240,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   CefInitialize(main_args, settings, app.get(), NULL);
 
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
+  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
+	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(client::switches::kStartupPath).c_str());
   }
   else {
 	// If the shift key is not pressed, look for the index.html file 

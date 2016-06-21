@@ -15,7 +15,7 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
-#include "client_switches.h"
+#include "appshell/common/client_switches.h"
 #include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
@@ -174,8 +174,8 @@ int main(int argc, char* argv[]) {
   
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-    szInitialUrl = cmdLine->GetSwitchValue(cefclient::kStartupPath);
+  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
+    szInitialUrl = cmdLine->GetSwitchValue(client::switches::kStartupPath);
   } else {
     szInitialUrl = AppGetRunningDirectory();
     szInitialUrl.append("/dev/src/index.html");

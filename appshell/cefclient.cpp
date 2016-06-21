@@ -14,7 +14,7 @@
 #include "include/cef_runnable.h"
 #include "include/cef_web_plugin.h"
 #include "client_handler.h"
-#include "client_switches.h"
+#include "appshell/common/client_switches.h"
 #include "string_util.h"
 #include "util.h"
 #include "config.h"
@@ -57,30 +57,30 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
 
 #if defined(OS_WIN)
   settings.multi_threaded_message_loop =
-      g_command_line->HasSwitch(cefclient::kMultiThreadedMessageLoop);
+      g_command_line->HasSwitch(client::switches::kMultiThreadedMessageLoop);
 #endif
 
   CefString(&settings.cache_path) =
-      g_command_line->GetSwitchValue(cefclient::kCachePath);
+      g_command_line->GetSwitchValue(client::switches::kCachePath);
   CefString(&settings.log_file) =
-      g_command_line->GetSwitchValue(cefclient::kLogFile);
+      g_command_line->GetSwitchValue(client::switches::kLogFile);
 
   {
-    std::string str = g_command_line->GetSwitchValue(cefclient::kLogSeverity);
+    std::string str = g_command_line->GetSwitchValue(client::switches::kLogSeverity);
 
     // Default to LOGSEVERITY_DISABLE
     settings.log_severity = LOGSEVERITY_DISABLE;
 
     if (!str.empty()) {
-      if (str == cefclient::kLogSeverity_Verbose)
+      if (str == client::switches::kLogSeverity_Verbose)
         settings.log_severity = LOGSEVERITY_VERBOSE;
-      else if (str == cefclient::kLogSeverity_Info)
+      else if (str == client::switches::kLogSeverity_Info)
         settings.log_severity = LOGSEVERITY_INFO;
-      else if (str == cefclient::kLogSeverity_Warning)
+      else if (str == client::switches::kLogSeverity_Warning)
         settings.log_severity = LOGSEVERITY_WARNING;
-      else if (str == cefclient::kLogSeverity_Error)
+      else if (str == client::switches::kLogSeverity_Error)
         settings.log_severity = LOGSEVERITY_ERROR;
-      else if (str == cefclient::kLogSeverity_Disable)
+      else if (str == client::switches::kLogSeverity_Disable)
         settings.log_severity = LOGSEVERITY_DISABLE;
     }
   }
@@ -91,7 +91,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   //CefString(&settings.locale) = app->GetCurrentLanguage( );
 
   CefString(&settings.javascript_flags) =
-      g_command_line->GetSwitchValue(cefclient::kJavascriptFlags);
+      g_command_line->GetSwitchValue(client::switches::kJavascriptFlags);
     
   // Enable dev tools
   settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
