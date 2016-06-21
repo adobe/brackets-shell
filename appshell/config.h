@@ -23,7 +23,23 @@
 
 #pragma once
 
-#include "include/cef_task.h"
+// Taken from cef_build.h
+// Including directly cef_build.h causes some problems on Windows.
+#if defined(_WIN32)
+#ifndef OS_WIN
+#define OS_WIN 1
+#endif
+#elif defined(__APPLE__)
+#ifndef OS_MACOSX
+#define OS_MACOSX 1
+#endif
+#elif defined(__linux__)
+#ifndef OS_LINUX
+#define OS_LINUX 1
+#endif
+#else
+#error Please add support for your platform in config.h
+#endif
 
 // Application name used in native code. This name is *not* used in resources.
 
