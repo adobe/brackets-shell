@@ -15,7 +15,6 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "resource_util.h"
-#include "string_util.h"
 #include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
