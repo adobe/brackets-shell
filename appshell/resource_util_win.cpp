@@ -5,7 +5,7 @@
 #include "resource_util.h"
 #include "include/cef_stream.h"
 #include "include/wrapper/cef_byte_read_handler.h"
-#include "util.h"
+#include "include/base/cef_logging.h"
 
 #if defined(OS_WIN)
 
@@ -35,7 +35,7 @@ CefRefPtr<CefStreamReader> GetBinaryResourceReader(int binaryId) {
         new CefByteReadHandler(pBytes, dwSize, NULL));
   }
 
-  ASSERT(FALSE);  // The resource should be found.
+  DCHECK(FALSE);  // The resource should be found.
   return NULL;
 }
 
@@ -57,7 +57,7 @@ CefRefPtr<CefStreamReader> GetBinaryResourceReader(const char* resource_name) {
       return GetBinaryResourceReader(resource_map[i].id);
   }
 
-  ASSERT(FALSE);  // The resource should be found.
+  DCHECK(FALSE);  // The resource should be found.
   return NULL;
 }
 

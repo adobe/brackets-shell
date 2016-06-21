@@ -11,7 +11,7 @@
 #include "include/cef_process_message.h"
 #include "include/cef_task.h"
 #include "include/cef_v8.h"
-#include "util.h"  // NOLINT(build/include)
+#include "include/base/cef_logging.h"
 #include "config.h"
 
 namespace {
@@ -40,7 +40,7 @@ void SetListValue(CefRefPtr<CefListValue> list, int index,
 
 // Transfer a V8 array to a List.
 void SetList(CefRefPtr<CefV8Value> source, CefRefPtr<CefListValue> target) {
-  ASSERT(source->IsArray());
+  DCHECK(source->IsArray());
 
   int arg_length = source->GetArrayLength();
   if (arg_length == 0)
@@ -121,7 +121,7 @@ void SetListValue(CefRefPtr<CefV8Value> list, int index,
 
 // Transfer a List to a V8 array.
 void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
-  ASSERT(target->IsArray());
+  DCHECK(target->IsArray());
 
   int arg_length = source->GetSize();
   if (arg_length == 0)
@@ -299,7 +299,7 @@ bool ClientApp::OnProcessMessageReceived(
         CefRefPtr<CefBrowser> browser,
         CefProcessId source_process,
         CefRefPtr<CefProcessMessage> message) {
-    ASSERT(source_process == PID_BROWSER);
+    DCHECK(source_process == PID_BROWSER);
 
     bool handled = false;
 

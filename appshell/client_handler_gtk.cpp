@@ -8,6 +8,7 @@
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/wrapper/cef_helpers.h"
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
@@ -16,7 +17,7 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
 #ifdef SHOW_TOOLBAR_UI
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
       // Set the edit window text
@@ -28,7 +29,7 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   GtkWidget* window = gtk_widget_get_ancestor(
       GTK_WIDGET(browser->GetHost()->GetWindowHandle()),

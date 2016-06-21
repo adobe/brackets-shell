@@ -27,7 +27,6 @@
 #include "appshell_node_process.h"
 #include "appshell_node_process_internal.h"
 
-#include "util.h"
 #include "config.h"
 
 // NOTE ON THREAD SAFETY: This code is not thread-safe. All of the methods
