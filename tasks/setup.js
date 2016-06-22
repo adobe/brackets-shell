@@ -444,7 +444,7 @@ module.exports = function (grunt) {
             gypCommand;
 
         if (platform === "linux") {
-            gypCommand = "bash -c 'python2 gyp/gyp --depth=.'";
+            gypCommand = "bash -c 'gyp/gyp --depth=.'";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
         }
