@@ -22,7 +22,7 @@
  */ 
 
 #include "client_app.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include "include/cef_base.h"
 #include "config.h"
 

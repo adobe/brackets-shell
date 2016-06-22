@@ -20,7 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 #include "cef_dark_window.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include <minmax.h>
 #include <objidl.h>
 #include <Uxtheme.h>

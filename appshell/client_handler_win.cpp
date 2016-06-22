@@ -8,7 +8,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/wrapper/cef_helpers.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include "native_menu_model.h"
 
 #include <ShellAPI.h>

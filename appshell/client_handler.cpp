@@ -11,7 +11,7 @@
 #include "include/wrapper/cef_stream_resource_handler.h"
 #include "include/wrapper/cef_helpers.h"
 #include "cefclient.h"
-#include "resource_util.h"
+#include "appshell/browser/resource_util.h"
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
 
