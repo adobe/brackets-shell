@@ -92,9 +92,9 @@ void SetListValue(CefRefPtr<CefV8Value> list, int index,
   CefValueType type = value->GetType(index);
   switch (type) {
     case VTYPE_LIST: {
-      CefRefPtr<CefListValue> list = value->GetList(index);
-      new_value = CefV8Value::CreateArray(list->GetSize());
-      SetList(list, new_value);
+      CefRefPtr<CefListValue> listValue = value->GetList(index);
+      new_value = CefV8Value::CreateArray(listValue->GetSize());
+      SetList(listValue, new_value);
       } break;
     case VTYPE_BOOL:
       new_value = CefV8Value::CreateBool(value->GetBool(index));
@@ -347,7 +347,7 @@ bool ClientApp::OnProcessMessageReceived(
             CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
             CefString commandName = messageArgs->GetString(0);
             int messageId = messageArgs->GetSize() > 1 ? messageArgs->GetInt(1) : -1;
-            bool handled = false;
+            handled = false;
             
             StContextScope ctx(browser->GetMainFrame()->GetV8Context());
             

@@ -224,7 +224,7 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 				hNodeReadThread = CreateThread(NULL, 0, NodeReadThread, NULL, 0, NULL);
 
 				// Loop to check if process is still running
-				BOOL bSuccess = FALSE;
+				bSuccess = FALSE;
 				DWORD exitCode = 0;
 				for (;;) 
 				{	

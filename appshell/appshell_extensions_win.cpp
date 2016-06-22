@@ -422,66 +422,35 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
     ConvertToNativePath(initialDirectory);
 
     if (chooseDirectory) {
-        // check current OS version
-        OSVERSIONINFO osvi;
-        memset(&osvi, 0, sizeof(OSVERSIONINFO));
-        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        if (GetVersionEx(&osvi) && (osvi.dwMajorVersion >= 6)) {
-            // for Vista or later, use the MSDN-preferred implementation of the Open File dialog in pick folders mode
-            IFileDialog *pfd;
-            if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
-                // configure the dialog to Select Folders only
-                DWORD dwOptions;
-                if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
-                    pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
-                    IShellItem *shellItem = NULL;
-                    if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
-                        pfd->SetFolder(shellItem);
-                    pfd->SetTitle(title.c_str());
-                    if (SUCCEEDED(pfd->Show(GetActiveWindow()))) {
-                        IShellItem *psi;
-                        if (SUCCEEDED(pfd->GetResult(&psi))) {
-                            LPWSTR lpwszName = NULL;
-                            if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
-                                // Add directory path to the result
-                                std::wstring wstrName(lpwszName);
-                                ExtensionString pathName(wstrName);
-                                ConvertToUnixPath(pathName);
-                                selectedFiles->SetString(0, pathName);
-                                ::CoTaskMemFree(lpwszName);
-                            }
-                            psi->Release();
+        IFileDialog *pfd;
+        if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {
+            // configure the dialog to Select Folders only
+            DWORD dwOptions;
+            if (SUCCEEDED(pfd->GetOptions(&dwOptions))) {
+                pfd->SetOptions(dwOptions | FOS_PICKFOLDERS | FOS_DONTADDTORECENT);
+                IShellItem *shellItem = NULL;
+                if (SUCCEEDED(SHCreateItemFromParsingName(initialDirectory.c_str(), 0, IID_IShellItem, reinterpret_cast<void**>(&shellItem))))
+                    pfd->SetFolder(shellItem);
+                pfd->SetTitle(title.c_str());
+                if (SUCCEEDED(pfd->Show(GetActiveWindow()))) {
+                    IShellItem *psi;
+                    if (SUCCEEDED(pfd->GetResult(&psi))) {
+                        LPWSTR lpwszName = NULL;
+                        if(SUCCEEDED(psi->GetDisplayName(SIGDN_DESKTOPABSOLUTEPARSING, (LPWSTR*)&lpwszName))) {
+                            // Add directory path to the result
+                            std::wstring wstrName(lpwszName);
+                            ExtensionString pathName(wstrName);
+                            ConvertToUnixPath(pathName);
+                            selectedFiles->SetString(0, pathName);
+                            ::CoTaskMemFree(lpwszName);
                         }
+                        psi->Release();
                     }
-                    if (shellItem != NULL)
-                        shellItem->Release();
                 }
-                pfd->Release();
+                if (shellItem != NULL)
+                    shellItem->Release();
             }
-        } else {
-            // for XP, use the old-styled SHBrowseForFolder() implementation
-            BROWSEINFO bi = {0};
-            bi.hwndOwner = GetActiveWindow();
-            bi.lpszTitle = title.c_str();
-            bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
-            bi.lpfn = SetInitialPathCallback;
-            bi.lParam = (LPARAM)initialDirectory.c_str();
-
-            LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-            if (pidl != 0) {
-                if (SHGetPathFromIDList(pidl, szFile)) {
-                    // Add directory path to the result
-                    ExtensionString pathName(szFile);
-                    ConvertToUnixPath(pathName);
-                    selectedFiles->SetString(0, pathName);
-                }
-                IMalloc* pMalloc = NULL;
-                SHGetMalloc(&pMalloc);
-                if (pMalloc) {
-                    pMalloc->Free(pidl);
-                    pMalloc->Release();
-                }
-            }
+            pfd->Release();
         }
     } else {
         OPENFILENAME ofn;
@@ -729,7 +698,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
 const int BOMLength = 3;
 
-typedef enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
+enum CheckedState { CS_UNKNOWN, CS_NO, CS_YES };
 
 typedef struct UTFValidationState {
 

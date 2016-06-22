@@ -23,12 +23,23 @@
 #include "resource.h"
 #include <minmax.h>
 #include <objidl.h>
-#include <GdiPlus.h>
 #include <Uxtheme.h>
 #include <Shlwapi.h>
 
 #define OS_WIN
 #include "config.h"
+
+// With VS2015 including the gdiplus.h header results in many C4458 warnings.
+// Disable them.
+#ifdef _MSC_VER
+    #pragma warning(push)
+    #pragma warning(disable:4458) // declaration of 'xxx' hides class member
+#endif
+#include <GdiPlus.h>
+#ifdef _MSC_VER
+    #pragma warning(pop)
+#endif
+
 
 //win HiDPI - Macro for loading button resources for scale factors start 
 #define BUTTON_RESOURCES(scale)\
