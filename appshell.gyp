@@ -58,7 +58,6 @@
       'sources': [
         '<@(includes_common)',
         '<@(includes_wrapper)',
-        '<@(appshell_sources_common)',
       ],
       'mac_bundle_resources': [
         '<@(appshell_bundle_resources_mac)',
@@ -200,7 +199,7 @@
           ],
           'copies': [
             {
-              # Add library dependencies to the bundle.
+              # Add libraries and helper app.
               'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks',
               'files': [
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
@@ -209,7 +208,7 @@
           ],
           'postbuilds': [
             {
-             'postbuild_name': 'Add framework',
+              'postbuild_name': 'Add framework',
               'action': [
                 'cp',
                 '-Rf',
@@ -278,7 +277,7 @@
             '<@(appshell_sources_mac)',
           ],
         }],
-        ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+        [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
           'actions': [
             {
               'action_name': 'appshell_extensions_js',
@@ -341,10 +340,6 @@
               'files': ['appshell/node-core/'],
             },
           ],
-          'sources': [
-            '<@(includes_linux)',
-            '<@(appshell_sources_linux)',
-          ],
           'link_settings': {
             'ldflags': [
               '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
@@ -357,6 +352,10 @@
               'appshell_extensions_js.o',
             ],
           },
+          'sources': [
+            '<@(includes_linux)',
+            '<@(appshell_sources_linux)',
+          ],
         }],
       ],
     },
@@ -402,7 +401,7 @@
             'Debug': {},
           },
         }],
-        ['OS=="win" and multi_threaded_dll', {
+        [ 'OS=="win" and multi_threaded_dll', {
           'configurations': {
             'Common_Base': {
               'msvs_configuration_attributes': {
@@ -426,8 +425,8 @@
               },
             }
           }
-        }]
-      ]
+        }],
+      ],
     },
   ],
   'conditions': [
