@@ -3591,13 +3591,13 @@
               'dbghelp.lib',
               'winmm.lib',
               'shlwapi.lib',
+              'advapi32.lib',
             ],
 
             'conditions': [
               ['MSVS_VERSION=="2005e"', {
                 # Non-express versions link automatically to these
                 'AdditionalDependencies': [
-                  'advapi32.lib',
                   'comdlg32.lib',
                   'ole32.lib',
                   'shell32.lib',
