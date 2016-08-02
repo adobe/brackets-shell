@@ -71,7 +71,7 @@ module.exports = function (grunt) {
             },
             "node-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x64.tar.gz"
             },
             /* win */
             "cef-win": {
@@ -226,10 +226,7 @@ module.exports = function (grunt) {
             "version"       : "3.2623.1397"
         },
         "node": {
-            "version"       : "4.4.4"
-        },
-        "npm": {
-            "version"       : "2.15.6"
+            "version"       : "6.3.1"
         }
     });
 

@@ -375,8 +375,7 @@ module.exports = function (grunt) {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
 
-        var done        = this.async(),
-            nodeDest    = grunt.config("nodeDest"),
+        var nodeDest    = grunt.config("nodeDest"),
             exeFile     = nodeDest;
 
         grunt.file.mkdir("deps/node");
