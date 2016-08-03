@@ -382,6 +382,8 @@ module.exports = function (grunt) {
 
         // copy node.exe to Brackets-node
         grunt.file.copy(exeFile,  "deps/node/node.exe");
+
+        nodeWriteVersion();
     });
 
     // task: node-mac
