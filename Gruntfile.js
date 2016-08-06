@@ -84,7 +84,9 @@ module.exports = function (grunt) {
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
+                "src"       : process.arch === "x64" ?
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x64/node.exe" :
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
             }
         },
         "clean": {
