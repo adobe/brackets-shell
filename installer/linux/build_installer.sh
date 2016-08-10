@@ -5,7 +5,7 @@
 chmod 755 debian/package-root/opt/brackets/brackets
 chmod 755 debian/package-root/opt/brackets/Brackets
 chmod 755 debian/package-root/opt/brackets/Brackets-node
-chmod 755 debian/package-root/opt/brackets/www/LiveDevelopment/MultiBrowserImpl/launchers/node/node_modules/open/vendor/xdg-open
+chmod 755 debian/package-root/opt/brackets/www/LiveDevelopment/MultiBrowserImpl/launchers/node/node_modules/opn/xdg-open
 chmod 755 debian/package-root/DEBIAN/prerm
 chmod 755 debian/package-root/DEBIAN/postrm
 chmod 755 debian/package-root/DEBIAN/postinst
