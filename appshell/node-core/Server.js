@@ -36,7 +36,9 @@ maxerr: 50, node: true */
     
     var fs                = require("fs"),
         http              = require("http"),
+        path              = require("path"),
         WebSocket         = require("./thirdparty/ws"),
+        connect           = require("./thirdparty/connect"),
         EventEmitter      = require("events").EventEmitter,
         Logger            = require("./Logger"),
         ConnectionManager = require("./ConnectionManager"),
@@ -97,29 +99,36 @@ maxerr: 50, node: true */
      * Starts the server.
      */
     function start() {
+        var app = connect(),
+            devPath = path.resolve(__dirname + "/../dev/src"),
+            installPath = path.resolve(__dirname + "/../www");
+        
+        function nodeApiHandler(req, res, next) {
+            var isGet = req.method === "GET",
+                isApiCall = (req.url === "/api" || req.url.indexOf("/api/") === 0);
+
+            if (isGet && isApiCall) {
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                    JSON.stringify(DomainManager.getDomainDescriptions(),
+                                    null,
+                                    4)
+                );
+            } else {
+                next();
+            }
+        }
+
+        // TODO fs.exists(devPath) and fs.exists(installPath)
+        // Legacy /api handler for DomainManager
+        app.use(nodeApiHandler);
+        app.use(connect["static"](devPath));
+        app.use(connect.directory(devPath));
+
         function sendCommandToParentProcess() {
             var cmd = "\n\n" + (_commandCount++) + "|"
                 + Array.prototype.join.call(arguments, "|") + "\n\n";
             process.stdout.write(cmd);
-        }
-        
-        function httpRequestHandler(req, res) {
-            if (req.method === "GET") {
-                if (req.url === "/api" || req.url.indexOf("/api/") === 0) {
-                    res.setHeader("Content-Type", "application/json");
-                    res.end(
-                        JSON.stringify(DomainManager.getDomainDescriptions(),
-                                        null,
-                                        4)
-                    );
-                } else {
-                    res.setHeader("Content-Type", "text/plain");
-                    res.end("Brackets-Shell Server\n");
-                }
-            } else { // Not a GET request
-                res.statusCode = 501;
-                res.end();
-            }
         }
         
         function setupStdin() {
@@ -180,7 +189,7 @@ maxerr: 50, node: true */
                 }, timeout);
             }
         
-            httpServer = http.createServer(httpRequestHandler);
+            httpServer = http.createServer(app);
             
             httpServer.on("error", function () {
                 if (callback) {
@@ -188,7 +197,7 @@ maxerr: 50, node: true */
                 }
             });
             
-            httpServer.listen(0, "127.0.0.1", function () {
+            httpServer.listen(59234, "127.0.0.1", function () {
                 var wsServer = null;
                 var address = httpServer.address();
                 if (address !== null) {
@@ -272,5 +281,4 @@ maxerr: 50, node: true */
     // Public interface
     Server.start                    = start;
     Server.stop                     = stop;
-    
 }());
