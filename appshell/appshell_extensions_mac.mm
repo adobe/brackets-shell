@@ -801,9 +801,11 @@ int32 ConvertNSErrorCode(NSError* error, bool isReading)
         case NSFileWriteOutOfSpaceError:
             return ERR_OUT_OF_SPACE;
             break;
+#if 1070 <= MAC_OS_X_VERSION_MAX_ALLOWED
         case NSFileWriteFileExistsError:
             return ERR_FILE_EXISTS;
             break;
+#endif
     }
     
     // Unknown error
