@@ -135,6 +135,8 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) OVERRIDE;
+  virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
+                                         TerminationStatus status) OVERRIDE;
 
   // CefRequestHandler methods
   virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
