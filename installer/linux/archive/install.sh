@@ -5,6 +5,9 @@ curDir=$(pwd)
 
 mkdir -p ~/.local/share/applications
 mkdir -p ~/.local/bin
+mkdir -p ~/.config/Brackets/extensions/dev
+mkdir -p ~/.config/Brackets/extensions/disabled
+mkdir -p ~/.config/Brackets/extensions/user
 
 # Setup our brackets.desktop file.
 cp brackets.desktop temp.desktop
