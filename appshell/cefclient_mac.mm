@@ -14,7 +14,7 @@
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
 #include "client_handler.h"
-#include "resource_util.h"
+#include "appshell/browser/resource_util.h"
 #include "config.h"
 #include "appshell_extensions.h"
 #include "command_callbacks.h"

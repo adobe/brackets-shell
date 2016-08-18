@@ -16,7 +16,7 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "config.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include "appshell/common/client_switches.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"

@@ -23,7 +23,7 @@
 #include "cef_main_window.h"
 #include "cef_registry.h"
 #include "client_handler.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include "native_menu_model.h"
 #include "config.h"
 
