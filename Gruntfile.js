@@ -158,7 +158,10 @@ module.exports = function (grunt) {
                             "Brackets",
                             "Brackets-node",
                             "cef.pak",
-                            "devtools_resources.pak"
+                            "cef_100_percent.pak",
+                            "cef_200_percent.pak",
+                            "devtools_resources.pak",
+                            "icudtl.dat",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
