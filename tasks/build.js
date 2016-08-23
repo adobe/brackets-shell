@@ -127,7 +127,8 @@ module.exports = function (grunt) {
                     "git checkout " + this.data.branch,
                     "git pull origin " + this.data.branch,
                     "git submodule sync",
-                    "git submodule update --init --recursive"
+                    "git submodule update --init --recursive",
+                    "npm install --production"
                 ], { cwd: repo });
 
             promise.then(function () {
