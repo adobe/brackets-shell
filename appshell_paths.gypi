@@ -144,7 +144,7 @@
       'appshell/browser/resource.h',
       'appshell/browser/resource_util.h',
     ],
-    'appshell_sources_common': [
+    'appshell_sources_common_helper': [
       'appshell/common/client_switches.cc',
       'appshell/common/client_switches.h',
       'appshell/appshell_extensions.cpp',
@@ -156,8 +156,6 @@
       'appshell/appshell_node_process.cpp',
       'appshell/command_callbacks.h',
       'appshell/config.h',
-      'appshell/cefclient.cpp',
-      'appshell/cefclient.h',
       'appshell/client_app.cpp',
       'appshell/client_app.h',
       'appshell/client_app_delegates.cpp',
@@ -165,6 +163,11 @@
       'appshell/client_handler.h',
       'appshell/native_menu_model.cpp',
       'appshell/native_menu_model.h',
+    ],
+    'appshell_sources_common': [
+      'appshell/cefclient.cpp',
+      'appshell/cefclient.h',
+      '<@(appshell_sources_common_helper)',
     ],
     'appshell_sources_renderer': [
     ],
@@ -258,7 +261,7 @@
       'appshell/client_app_mac.mm',
       'appshell/client_handler_mac.mm',
       'appshell/process_helper_mac.cpp',
-      '<@(appshell_sources_common)',
+      '<@(appshell_sources_common_helper)',
       '<@(appshell_sources_renderer)',
     ],
     'appshell_bundle_resources_mac': [
