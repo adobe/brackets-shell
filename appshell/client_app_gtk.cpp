@@ -26,6 +26,7 @@
 #include "include/cef_base.h"
 #include "config.h"
 
+#include <gtk/gtk.h>
 #include <pwd.h>
 #include <algorithm>
 //#include <MMSystem.h>

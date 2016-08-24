@@ -315,15 +315,25 @@
           },
           'copies': [
             {
-              'destination': '<(PRODUCT_DIR)/lib',
+              'destination': '<(PRODUCT_DIR)/files',
               'files': [
-                '<@(appshell_bundle_libraries_linux)',
+                '<@(appshell_bundle_resources_linux)',
               ],
             },
             {
-              'destination': '<(PRODUCT_DIR)',
+              'destination': '<(PRODUCT_DIR)/',
               'files': [
-                '<@(appshell_bundle_resources_linux)'
+                'Resources/cef.pak',
+                'Resources/cef_100_percent.pak',
+                'Resources/cef_200_percent.pak',
+                'Resources/cef_extensions.pak',
+                'Resources/devtools_resources.pak',
+                'Resources/icudtl.dat',
+                'Resources/locales/',
+                '$(BUILDTYPE)/chrome-sandbox',
+                '$(BUILDTYPE)/libcef.so',
+                '$(BUILDTYPE)/natives_blob.bin',
+                '$(BUILDTYPE)/snapshot_blob.bin',
               ],
             },
             {
@@ -340,15 +350,17 @@
               'files': ['appshell/node-core/'],
             },
           ],
+          'dependencies': [
+            'gtk',
+          ],
           'link_settings': {
             'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
               '-Wl,-rpath,\$$ORIGIN/lib',
               '<(march)'
             ],
             'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
-              '$(BUILDTYPE)/libcef.so',
+              "$(BUILDTYPE)/libcef.so",
+              "-lX11",
               'appshell_extensions_js.o',
             ],
           },
@@ -392,8 +404,7 @@
       'conditions': [
         ['OS=="linux"', {
           'cflags': [
-          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
-          '<(march)',
+            '<(march)',
           ],
           'default_configuration': 'Release',
           'configurations': {
@@ -504,6 +515,32 @@
         },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
+    [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0 gtk+-unix-print-2.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+            ],
+          },
+        },
+      ],
+    }],  # OS=="linux" or OS=="freebsd" or OS=="openbsd"
     ['target_arch=="ia32"', {
       'variables': {
         'output_bfd': 'elf32-i386',
