@@ -20,13 +20,11 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*jslint regexp:true*/
-/*global module, require, process*/
-module.exports = function (grunt) {
-    "use strict";
 
+"use strict";
+
+module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
-        resolve = common.resolve,
         platform = common.platform(),
         staging;
 
@@ -205,10 +203,14 @@ module.exports = function (grunt) {
                 "dest"      : "deps/cef"
             }
         },
-        "jshint": {
-            "all"           : ["Gruntfile.js", "tasks/**/*.js"],
+        "eslint": {
+            "all"           : [
+                "Gruntfile.js",
+                "tasks/**/*.js",
+                "appshell/node-core/*.js"
+            ],
             "options": {
-                "jshintrc"  : ".jshintrc"
+                "quiet"     : true
             }
         },
         "build": {
@@ -238,7 +240,7 @@ module.exports = function (grunt) {
     });
 
     grunt.loadTasks("tasks");
-    grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-eslint");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-curl");

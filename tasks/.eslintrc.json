@@ -1,0 +1,7 @@
+{
+    "extends": "../.eslintrc.json",
+
+    "rules": {
+        "no-invalid-this": 0
+    }
+}
