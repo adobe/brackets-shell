@@ -113,6 +113,8 @@ module.exports = function (grunt) {
                             "devtools_resources.pak",
                             "icudtl.dat",
                             "libcef.dll",
+                            "natives_blob.bin",
+                            "snapshot_blob.bin",
                             "command/**"
                         ],
                         "dest"      : "installer/win/staging/"
