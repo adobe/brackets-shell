@@ -244,6 +244,10 @@ int main(int argc, char* argv[]) {
 
   browserSettings.web_security = STATE_DISABLED;
 
+  // Necessary to enable document.executeCommand("paste")
+  browserSettings.javascript_access_clipboard = STATE_ENABLED;
+  browserSettings.javascript_dom_paste = STATE_ENABLED;
+
   window_info.SetAsChild(vbox);
 
   CefBrowserHost::CreateBrowser(

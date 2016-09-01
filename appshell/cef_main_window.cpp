@@ -226,6 +226,10 @@ BOOL cef_main_window::HandleCreate()
 
     settings.web_security = STATE_DISABLED;
 
+    // Necessary to enable document.executeCommand("paste")
+    settings.javascript_access_clipboard = STATE_ENABLED;
+    settings.javascript_dom_paste = STATE_ENABLED;
+
     // Initialize window info to the defaults for a child window
     info.SetAsChild(mWnd, rect);
 
