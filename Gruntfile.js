@@ -69,7 +69,7 @@ module.exports = function (grunt) {
             },
             "node-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x64.tar.gz"
             },
             /* win */
             "cef-win": {
@@ -82,8 +82,9 @@ module.exports = function (grunt) {
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
-                               "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
+                "src"       : process.arch === "x64" ?
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x64/node.exe" :
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
             }
         },
         "clean": {
@@ -234,10 +235,7 @@ module.exports = function (grunt) {
             "version"       : "3.2623.1397"
         },
         "node": {
-            "version"       : "0.10.24"
-        },
-        "npm": {
-            "version"       : "1.2.11"
+            "version"       : "6.3.1"
         }
     });
 
