@@ -375,24 +375,15 @@ module.exports = function (grunt) {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
 
-        var done        = this.async(),
-            nodeDest    = grunt.config("nodeDest"),
-            exeFile     = nodeDest[0],
-            npmFile     = nodeDest[1];
+        var nodeDest    = grunt.config("nodeDest"),
+            exeFile     = nodeDest;
 
         grunt.file.mkdir("deps/node");
 
         // copy node.exe to Brackets-node
         grunt.file.copy(exeFile,  "deps/node/node.exe");
 
-        // unzip NPM
-        unzip(npmFile, "deps/node").then(function () {
-            nodeWriteVersion();
-            done();
-        }, function (err) {
-            grunt.log.error(err);
-            done(false);
-        });
+        nodeWriteVersion();
     });
 
     // task: node-mac
