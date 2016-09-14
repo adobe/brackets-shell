@@ -2,6 +2,7 @@
 
 #include "include/cef_browser.h"
 #include "appshell_extensions_platform.h"
+#include "config.h"
 
 // Command names. These MUST be in sync with the command names in
 // brackets/src/command/Commands.js
