@@ -22,6 +22,7 @@
  */
 
 #include "client_app.h"
+
 #include "include/cef_base.h"
 #include "config.h"
 #include <Cocoa/Cocoa.h>

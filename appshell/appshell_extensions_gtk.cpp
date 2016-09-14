@@ -21,13 +21,14 @@
  *
  */
 
+#include "appshell_extensions_platform.h"
+#include "appshell_extensions.h"
+
 #include "client_app.h"
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
-#include "appshell_extensions.h"
-#include "appshell_extensions_platform.h"
 #include "client_handler.h"
 
 #include <errno.h>

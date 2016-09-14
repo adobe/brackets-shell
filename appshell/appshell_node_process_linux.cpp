@@ -21,7 +21,6 @@
  *
  */
 
-
 #include "appshell_node_process.h"
 #include "appshell_node_process_internal.h"
 

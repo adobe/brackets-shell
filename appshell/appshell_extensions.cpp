@@ -22,6 +22,7 @@
  */
 
 #include "appshell_extensions.h"
+
 #include "appshell_extensions_platform.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"

@@ -23,6 +23,7 @@
 
 #include "appshell_extensions_platform.h"
 #include "appshell_extensions.h"
+
 #include "native_menu_model.h"
 
 #include "GoogleChrome.h"

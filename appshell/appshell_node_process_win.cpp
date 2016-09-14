@@ -21,12 +21,12 @@
  *
  */
 
+#include "appshell_node_process.h"
+#include "appshell_node_process_internal.h"
+
 #include <windows.h>
 #include <Shlwapi.h>
 #include <MMSystem.h>
-
-#include "appshell_node_process.h"
-#include "appshell_node_process_internal.h"
 
 #include <strsafe.h> // must be included after STL headers
 

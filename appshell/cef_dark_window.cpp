@@ -19,7 +19,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
 #include "cef_dark_window.h"
+
 #include "appshell/browser/resource.h"
 #include <minmax.h>
 #include <objidl.h>

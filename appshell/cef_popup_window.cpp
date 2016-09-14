@@ -19,8 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "cefclient.h"
+
 #include "cef_popup_window.h"
+
+#include "cefclient.h"
 #include "cef_registry.h"
 #include "client_handler.h"
 #include "appshell/browser/resource.h"

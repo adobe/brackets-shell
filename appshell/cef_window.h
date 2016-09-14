@@ -1,4 +1,3 @@
-#pragma once
 /*
  * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
@@ -20,6 +19,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
+#pragma once
+
 #include <windows.h>
 #include <winuser.h>
 #include <Shellapi.h>

@@ -20,6 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+
 #import "TrafficLightsView.h"
 
 @implementation TrafficLightsView

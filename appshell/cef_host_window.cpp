@@ -19,8 +19,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "client_handler.h"
+
 #include "cef_host_window.h"
+
+#include "client_handler.h"
 #include "native_menu_model.h"
 
 // externals

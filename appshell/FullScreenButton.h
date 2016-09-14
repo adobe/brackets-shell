@@ -20,6 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+
 #import <Cocoa/Cocoa.h>
 
 @interface FullScreenButton : NSButton {

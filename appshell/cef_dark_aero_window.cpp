@@ -19,7 +19,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
 #include "cef_dark_aero_window.h"
+
 #include <stdio.h>
 #include <ShellAPI.h>
 #include <stdlib.h>

@@ -21,11 +21,11 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import <Cocoa/Cocoa.h>
-
 #include "appshell_node_process.h"
 #include "appshell_node_process_internal.h"
+
+#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 #include "config.h"
 

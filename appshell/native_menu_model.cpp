@@ -19,7 +19,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
 #include "native_menu_model.h"
+
 #include "command_callbacks.h"
 
 #if defined(OS_WIN)
