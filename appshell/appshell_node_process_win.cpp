@@ -30,9 +30,6 @@
 
 #include <strsafe.h> // must be included after STL headers
 
-#ifndef OS_WIN
-#define OS_WIN 1
-#endif
 #include "config.h"
 
 #define BRACKETS_NODE_BUFFER_SIZE 4096

@@ -26,7 +26,6 @@
 #include <Uxtheme.h>
 #include <Shlwapi.h>
 
-#define OS_WIN
 #include "config.h"
 
 // With VS2015 including the gdiplus.h header results in many C4458 warnings.
