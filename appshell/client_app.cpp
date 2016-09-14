@@ -68,31 +68,6 @@ void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
     
 }
 
-//Simple stack class to ensure calls to Enter and Exit are balanced
-class StContextScope {
-public:
-    StContextScope( const CefRefPtr<CefV8Context>& ctx )
-    : m_ctx(NULL) {
-        if( ctx && ctx->Enter() ) {
-            m_ctx = ctx;
-        }
-    }
-    
-    ~StContextScope() {
-        if(m_ctx) {
-            m_ctx->Exit();
-        }
-    }
-    
-    const CefRefPtr<CefV8Context>& GetContext() const { 
-        return m_ctx;
-    }
-    
-private:
-    CefRefPtr<CefV8Context> m_ctx;
-    
-};
-
 void ClientApp::OnUncaughtException(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     CefRefPtr<CefV8Context> context,
@@ -159,7 +134,7 @@ bool ClientApp::OnProcessMessageReceived(
             int messageId = messageArgs->GetSize() > 1 ? messageArgs->GetInt(1) : -1;
             handled = false;
             
-            StContextScope ctx(browser->GetMainFrame()->GetV8Context());
+            appshell::StContextScope ctx(browser->GetMainFrame()->GetV8Context());
             
             CefRefPtr<CefV8Value> global = ctx.GetContext()->GetGlobal();
             
