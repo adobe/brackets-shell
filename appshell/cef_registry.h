@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <windows.h>
+
 extern void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet);
 extern bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret);
 extern bool WriteRegistryInt (LPCWSTR pFolder, LPCWSTR pEntry, int val);
