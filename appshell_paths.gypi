@@ -277,6 +277,8 @@
       'appshell/browser/temp_window_mac.mm',
       'appshell/browser/window_test_mac.mm',
       'appshell/client_colors_mac.h',
+      'appshell/PopupClientWindowDelegate.h',
+      'appshell/PopupClientWindowDelegate.mm',
       'appshell/TrafficLightButton.h',
       'appshell/TrafficLightButton.mm',
       'appshell/TrafficLightsView.h',
@@ -300,6 +302,8 @@
       '<@(appshell_sources_common)',
    ],
     'appshell_sources_mac_helper': [
+      'appshell/PopupClientWindowDelegate.h',
+      'appshell/PopupClientWindowDelegate.mm',
       'appshell/TrafficLightButton.h',
       'appshell/TrafficLightButton.mm',
       'appshell/TrafficLightsView.h',
