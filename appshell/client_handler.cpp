@@ -14,7 +14,7 @@
 #include "appshell/browser/resource_util.h"
 #include "appshell/appshell_extensions.h"
 #include "appshell/command_callbacks.h"
-
+#include "config.h"
 
 // Custom menu command Ids.
 enum client_menu_ids {

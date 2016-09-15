@@ -33,9 +33,6 @@
 #include <sys/wait.h>
 
 
-#ifndef OS_LINUX
-#define OS_LINUX 1
-#endif
 #include "config.h"
 
 #define BRACKETS_NODE_BUFFER_SIZE 4096

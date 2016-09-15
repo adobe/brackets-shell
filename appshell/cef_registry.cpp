@@ -24,10 +24,6 @@
 
 #include <windows.h>
 
-#ifndef OS_WIN
-#define OS_WIN 1
-#endif
-
 #include "config.h"
 #include "include/base/cef_logging.h"
 

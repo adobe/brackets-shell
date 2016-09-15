@@ -23,6 +23,7 @@
 #include "native_menu_model.h"
 
 #include "command_callbacks.h"
+#include "config.h"
 
 #if defined(OS_WIN)
 const ExtensionString WINDOW_COMMAND    = L"window";

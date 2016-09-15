@@ -28,6 +28,8 @@
 
 #include <string>
 
+#include "config.h"
+
 // Extension error codes. These MUST be in sync with the error
 // codes in appshell_extensions.js
 #if !defined(OS_WIN) // NO_ERROR is defined on windows
