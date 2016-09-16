@@ -21,12 +21,6 @@
 CefRefPtr<ClientHandler> g_handler;
 CefRefPtr<CefCommandLine> g_command_line;
 
-CefRefPtr<CefBrowser> AppGetBrowser() {
-  if (!g_handler.get())
-    return NULL;
-  return g_handler->GetBrowser();
-}
-
 CefWindowHandle AppGetMainHwnd() {
   if (!g_handler.get())
     return NULL;
