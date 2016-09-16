@@ -27,6 +27,13 @@ class ClientApp : public CefApp {
   // Determine the process type based on command-line arguments.
   static ProcessType GetProcessType(CefRefPtr<CefCommandLine> command_line);
 
+  // Platform-specific methods implemented in client_app_<platform>
+  double GetElapsedMilliseconds();
+  CefString GetCurrentLanguage();
+  std::string GetExtensionJSSource();
+  static CefString AppGetSupportDirectory();
+  static CefString AppGetDocumentsDirectory();
+
  protected:
   // Schemes that will be registered with the global cookie manager.
   std::vector<CefString> cookieable_schemes_;

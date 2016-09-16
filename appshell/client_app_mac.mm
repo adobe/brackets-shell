@@ -21,7 +21,7 @@
  *
  */
 
-#include "client_app.h"
+#include "appshell/common/client_app.h"
 
 #include "include/cef_base.h"
 #include "config.h"
@@ -30,6 +30,8 @@
 #include <string>
 
 extern CFTimeInterval g_appStartupTime;
+
+namespace client {
 
 double ClientApp::GetElapsedMilliseconds()
 {
@@ -96,3 +98,5 @@ CefString ClientApp::AppGetDocumentsDirectory() {
     NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
     return CefString([documentsDirectory UTF8String]);
 }
+    
+}  // namespace client

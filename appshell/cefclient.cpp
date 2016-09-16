@@ -48,7 +48,7 @@ CefRefPtr<CefCommandLine> AppGetCommandLine() {
 }
 
 // Returns the application settings based on command line arguments.
-void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
+void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app) {
   DCHECK(app.get());
   DCHECK(g_command_line.get());
   if (!g_command_line.get())

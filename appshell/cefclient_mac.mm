@@ -19,6 +19,7 @@
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/browser/client_app_browser.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -796,8 +797,10 @@ extern NSMutableArray* pendingOpenFiles;
 }
 @end
 
-
-int main(int argc, char* argv[]) {
+namespace client {
+namespace {
+        
+int RunMain(int argc, char* argv[]) {
   // Initialize the AutoRelease pool.
   g_autopool = [[NSAutoreleasePool alloc] init];
 
@@ -813,8 +816,16 @@ int main(int argc, char* argv[]) {
 
   // Start the node server process
   startNodeProcess();
-    
-  CefRefPtr<ClientApp> app(new ClientApp);
+
+  // Parse command-line arguments.
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromArgv(argc, argv);
+
+  // Create a ClientApp of the correct type.
+  CefRefPtr<CefApp> app;
+  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
+  if (process_type == ClientApp::BrowserProcess)
+    app = new ClientAppBrowser();
 
   // Execute the secondary process, if any.
   int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
@@ -833,7 +844,7 @@ int main(int argc, char* argv[]) {
   AppInitCommandLine(argc, argv);
 
   CefSettings settings;
-
+/*
  // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
@@ -843,7 +854,7 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
-
+*/
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 
@@ -914,6 +925,15 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+}  // namespace
+}  // namespace client
+
+
+// Program entry point function.
+int main(int argc, char* argv[]) {
+    return client::RunMain(argc, argv);
+}
+
 
 // Global functions
 
@@ -922,7 +942,7 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
+  std::string cachePath = std::string(client::ClientApp::AppGetSupportDirectory()) + "/cef_data";
   
   return CefString(cachePath);
 }

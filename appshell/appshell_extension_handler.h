@@ -25,6 +25,9 @@
 #include "include/cef_process_message.h"
 #include "include/cef_v8.h"
 
+#include "appshell/renderer/client_app_renderer.h"
+#include "config.h"
+
 namespace appshell {
 
 // Forward declarations.
@@ -146,7 +149,7 @@ void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
 // Handles the native implementation for the appshell extension.
 class AppShellExtensionHandler : public CefV8Handler {
   public:
-    explicit AppShellExtensionHandler(CefRefPtr<ClientApp> client_app)
+    explicit AppShellExtensionHandler(CefRefPtr<client::ClientAppRenderer> client_app)
       : client_app_(client_app)
       , messageId(0) {
     }
@@ -165,9 +168,9 @@ class AppShellExtensionHandler : public CefV8Handler {
         } else if (name == "GetCurrentLanguage") {
             retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
         } else if (name == "GetApplicationSupportDirectory") {
-            retval = CefV8Value::CreateString(ClientApp::AppGetSupportDirectory());
+            retval = CefV8Value::CreateString(client::ClientApp::AppGetSupportDirectory());
         } else if (name == "GetUserDocumentsDirectory") {
-            retval = CefV8Value::CreateString(ClientApp::AppGetDocumentsDirectory());
+            retval = CefV8Value::CreateString(client::ClientApp::AppGetDocumentsDirectory());
         } else if (name == "GetRemoteDebuggingPort") {
             retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
         } else {
@@ -205,7 +208,7 @@ class AppShellExtensionHandler : public CefV8Handler {
     }
 
   private:
-    CefRefPtr<ClientApp> client_app_;
+    CefRefPtr<client::ClientAppRenderer> client_app_;
     int32 messageId;
 
     IMPLEMENT_REFCOUNTING(AppShellExtensionHandler);

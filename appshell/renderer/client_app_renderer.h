@@ -82,8 +82,13 @@ class ClientAppRenderer : public ClientApp,
   };
 
   typedef std::set<CefRefPtr<Delegate> > DelegateSet;
+  typedef std::map<int32, std::pair< CefRefPtr<CefV8Context>, CefRefPtr<CefV8Value> > > CallbackMap;
 
   ClientAppRenderer();
+
+  void AddCallback(int32 id, CefRefPtr<CefV8Context> context, CefRefPtr<CefV8Value> callbackFunction) {
+      callback_map_[id] = std::make_pair(context, callbackFunction);
+  }
 
  private:
   // Creates all of the Delegate objects. Implemented by cefclient in
@@ -128,6 +133,9 @@ class ClientAppRenderer : public ClientApp,
  private:
   // Set of supported Delegates.
   DelegateSet delegates_;
+
+  // Set of callbacks
+  CallbackMap callback_map_;
 
   IMPLEMENT_REFCOUNTING(ClientAppRenderer);
   DISALLOW_COPY_AND_ASSIGN(ClientAppRenderer);
