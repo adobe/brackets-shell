@@ -109,11 +109,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                            DragOperationsMask mask) OVERRIDE;
 
   // CefLoadHandler methods
-  virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame) OVERRIDE;
-  virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame,
-                         int httpStatusCode) OVERRIDE;
   virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame,
                            ErrorCode errorCode,
@@ -202,7 +197,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   bool HasWindows() const { return !browser_window_map_.empty(); }
 
  protected:
-  void SetLoading(bool isLoading);
   void SetNavState(bool canGoBack, bool canGoForward);
   void PopupCreated(CefRefPtr<CefBrowser> browser);
   void ComputePopupPlacement(CefWindowInfo& windowInfo);

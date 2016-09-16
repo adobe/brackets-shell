@@ -42,9 +42,6 @@ void ClientHandler::SendNotification(NotificationType type) {
   // TODO(port): Implement this method.
 }
 
-void ClientHandler::SetLoading(bool isLoading) {
-}
-
 void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
 }
 

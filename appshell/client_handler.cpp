@@ -196,27 +196,6 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
     return false;
 }
 
-void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame) {
-  CEF_REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
-    // We've just started loading a page
-    SetLoading(true);
-  }
-}
-
-void ClientHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                              CefRefPtr<CefFrame> frame,
-                              int httpStatusCode) {
-  CEF_REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
-    // We've just finished loading a page
-    SetLoading(false);
-  }
-}
-
 void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 ErrorCode errorCode,
@@ -251,7 +230,6 @@ void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
                                          bool canGoBack,
                                          bool canGoForward) {
   CEF_REQUIRE_UI_THREAD();
-  SetLoading(isLoading);
   SetNavState(canGoBack, canGoForward);
 }
 
