@@ -22,8 +22,9 @@
  */
 
 #include "appshell_extensions_platform.h"
-#include "appshell_extensions.h"
 
+#include "appshell_helpers.h"
+#include "client_app.h"
 #include "native_menu_model.h"
 
 #include "GoogleChrome.h"
@@ -1063,17 +1064,17 @@ NSUInteger processKeyString(ExtensionString& key)
         return 0;
     }
     NSUInteger mask = 0;
-    if (appshell_extensions::fixupKey(key, "Cmd-", "")) {
+    if (appshell::fixupKey(key, "Cmd-", "")) {
         mask |= NSCommandKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Ctrl-", "")) {
+    if (appshell::fixupKey(key, "Ctrl-", "")) {
         mask |= NSControlKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Shift-", "")) {
+    if (appshell::fixupKey(key, "Shift-", "")) {
         mask |= NSShiftKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Alt-", "") ||
-        appshell_extensions::fixupKey(key, "Opt-", "")) {
+    if (appshell::fixupKey(key, "Alt-", "") ||
+        appshell::fixupKey(key, "Opt-", "")) {
         mask |= NSAlternateKeyMask;
     }
 
@@ -1093,24 +1094,24 @@ NSUInteger processKeyString(ExtensionString& key)
     const ExtensionString backspace = (ExtensionString() += NSBackspaceCharacter);
     const ExtensionString tab       = (ExtensionString() += NSTabCharacter);
     const ExtensionString enter     = (ExtensionString() += NSEnterCharacter);
-    
-    appshell_extensions::fixupKey(key, "PageUp", pageUp);
-    appshell_extensions::fixupKey(key, "PageDown", pageDown);
-    appshell_extensions::fixupKey(key, "Home", home);
-    appshell_extensions::fixupKey(key, "End", end);
-    appshell_extensions::fixupKey(key, "Insert", ins);
-    appshell_extensions::fixupKey(key, "Delete", del);
-    appshell_extensions::fixupKey(key, "Backspace", backspace);
-    appshell_extensions::fixupKey(key, "Space", " ");
-    appshell_extensions::fixupKey(key, "Tab", tab);
-    appshell_extensions::fixupKey(key, "Enter", enter);
-    appshell_extensions::fixupKey(key, "Up", "↑");
-    appshell_extensions::fixupKey(key, "Down", "↓");
-    appshell_extensions::fixupKey(key, "Left", "←");
-    appshell_extensions::fixupKey(key, "Right", "→");
+
+    appshell::fixupKey(key, "PageUp", pageUp);
+    appshell::fixupKey(key, "PageDown", pageDown);
+    appshell::fixupKey(key, "Home", home);
+    appshell::fixupKey(key, "End", end);
+    appshell::fixupKey(key, "Insert", ins);
+    appshell::fixupKey(key, "Delete", del);
+    appshell::fixupKey(key, "Backspace", backspace);
+    appshell::fixupKey(key, "Space", " ");
+    appshell::fixupKey(key, "Tab", tab);
+    appshell::fixupKey(key, "Enter", enter);
+    appshell::fixupKey(key, "Up", "↑");
+    appshell::fixupKey(key, "Down", "↓");
+    appshell::fixupKey(key, "Left", "←");
+    appshell::fixupKey(key, "Right", "→");
 
     // from unicode display char to ascii hyphen
-    appshell_extensions::fixupKey(key, "−", "-");
+    appshell::fixupKey(key, "−", "-");
 
     // Check for F1 - F15 keys.
     if (key.find("F") != ExtensionString::npos) {
@@ -1120,7 +1121,7 @@ NSUInteger processKeyString(ExtensionString& key)
             if (key.find(fKey) != ExtensionString::npos) {
                 unichar ch = i;
                 NSString *actualKey = [NSString stringWithCharacters: &ch length: 1];
-                appshell_extensions::fixupKey(key, fKey, ExtensionString([actualKey UTF8String]));
+                appshell::fixupKey(key, fKey, ExtensionString([actualKey UTF8String]));
                 break;
             }
         }

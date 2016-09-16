@@ -181,6 +181,7 @@
       'appshell/common/client_switches.cc',
       'appshell/common/client_switches.h',
       'appshell/appshell_extension_handler.h',
+      'appshell/appshell_helpers.h',
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
       'appshell/appshell_extensions_platform.h',

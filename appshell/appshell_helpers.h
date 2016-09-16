@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 - present Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2016 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,19 @@
  *
  */
 
-#pragma once
+#include "config.h"
 
-#include "client_handler.h"
+namespace appshell {
 
-namespace appshell_extensions {
+// Replace keyStroke with replaceString.
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+    size_t idx = key.find(keyStroke, 0);
+    if (idx != ExtensionString::npos) {
+        key = key.replace(idx, keyStroke.size(), replaceString);
+        return true;
+    }
+    return false;
+}
 
-// Create message delegates that run in the browser process
-void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates);
-
-}  // namespace appshell_extensions
+} // namespace appshell
