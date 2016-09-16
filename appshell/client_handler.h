@@ -125,10 +125,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                                const CefString& url) OVERRIDE;
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) OVERRIDE;
-  virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                const CefString& message,
-                                const CefString& source,
-                                int line) OVERRIDE;
 
   // CefGeolocationHandler methods
   virtual bool OnRequestGeolocationPermission(

@@ -268,6 +268,33 @@ bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                                      int line) {
   CEF_REQUIRE_UI_THREAD();
 
+  // Don't write the message to a console.log file. Instead, we'll just
+  // return false here so the message gets written to the console (output window
+  // in xcode, or console window in dev tools)
+
+/*
+  bool first_message;
+  std::string logFile;
+
+  {
+    AutoLock lock_scope(this);
+
+    first_message = m_LogFile.empty();
+    if (first_message) {
+      std::stringstream ss;
+      ss << AppGetWorkingDirectory();
+#if defined(OS_WIN)
+      ss << "\\";
+#else
+      ss << "/";
+#endif
+      ss << "console.log";
+      m_LogFile = ss.str();
+    }
+    logFile = m_LogFile;
+  }
+*/
+
 //  FILE* file = fopen(console_log_file_.c_str(), "a");
 //  if (file) {
 //    std::stringstream ss;
