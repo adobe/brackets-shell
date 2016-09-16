@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,11 +21,11 @@
  *
  */
 
-#import <Foundation/Foundation.h>
-#import <Cocoa/Cocoa.h>
-
 #include "appshell_node_process.h"
 #include "appshell_node_process_internal.h"
+
+#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 #include "config.h"
 

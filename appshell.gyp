@@ -355,7 +355,7 @@
           ],
           'link_settings': {
             'ldflags': [
-              '-Wl,-rpath,\$$ORIGIN/lib',
+              '-Wl,-rpath,\$$ORIGIN/',
               '<(march)'
             ],
             'libraries': [
