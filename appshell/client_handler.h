@@ -197,7 +197,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   bool HasWindows() const { return !browser_window_map_.empty(); }
 
  protected:
-  void SetNavState(bool canGoBack, bool canGoForward);
   void PopupCreated(CefRefPtr<CefBrowser> browser);
   void ComputePopupPlacement(CefWindowInfo& windowInfo);
                         

@@ -229,7 +229,6 @@ void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
                                          bool canGoBack,
                                          bool canGoForward) {
   CEF_REQUIRE_UI_THREAD();
-  SetNavState(canGoBack, canGoForward);
 }
 
 bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,

@@ -42,9 +42,6 @@ void ClientHandler::SendNotification(NotificationType type) {
   // TODO(port): Implement this method.
 }
 
-void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
-}
-
 void ClientHandler::CloseMainWindow() {
   // TODO(port): Check if this is enough
   gtk_main_quit();
