@@ -53,22 +53,6 @@ public:
   typedef std::set<CefRefPtr<ProcessMessageDelegate> >
       ProcessMessageDelegateSet;
 
-  // Interface for request handler delegates. Do not perform work in the
-  // RequestDelegate constructor.
-  class RequestDelegate : public virtual CefBase {
-   public:
-    // Called to retrieve a resource handler.
-    virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
-        CefRefPtr<ClientHandler> handler,
-        CefRefPtr<CefBrowser> browser,
-        CefRefPtr<CefFrame> frame,
-        CefRefPtr<CefRequest> request) {
-      return NULL;
-    }
-  };
-
-  typedef std::set<CefRefPtr<RequestDelegate> > RequestDelegateSet;
-
   ClientHandler();
   virtual ~ClientHandler();
 
@@ -135,12 +119,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) OVERRIDE;
-
-  // CefRequestHandler methods
-  virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) OVERRIDE;
 
   // CefDisplayHandler methods
   virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
@@ -237,9 +215,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   static void CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates);
 
-  // Create all of RequestDelegateSet objects.
-  static void CreateRequestDelegates(RequestDelegateSet& delegates);
-
   // The main frame window handle
   CefWindowHandle m_MainHwnd;
 
@@ -278,7 +253,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
 
   // Registered delegates.
   ProcessMessageDelegateSet process_message_delegates_;
-  RequestDelegateSet request_delegates_;
 
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;

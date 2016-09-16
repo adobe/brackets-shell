@@ -35,7 +35,6 @@ ClientHandler::ClientHandler()
     m_quitting(false) {
   callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);
-  CreateRequestDelegates(request_delegates_);
 }
 
 ClientHandler::~ClientHandler() {
@@ -249,20 +248,6 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
         "</head>" <<
         "<body><a class='debug logo' onclick='brackets.app.showDeveloperTools()' title='Click to view loading error in Developer Tools'>&nbsp;</a></body></html>";
   frame->LoadString(ss.str(), failedUrl);
-}
-
-CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) {
-  CefRefPtr<CefResourceHandler> handler;
-
-  // Execute delegate callbacks.
-  RequestDelegateSet::iterator it = request_delegates_.begin();
-  for (; it != request_delegates_.end() && !handler.get(); ++it)
-    handler = (*it)->GetResourceHandler(this, browser, frame, request);
-
-  return handler;
 }
 
 void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
@@ -491,8 +476,4 @@ void ClientHandler::AbortQuit()
 void ClientHandler::CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates) {
 	appshell_extensions::CreateProcessMessageDelegates(delegates);
-}
-
-// static
-void ClientHandler::CreateRequestDelegates(RequestDelegateSet& delegates) {
 }
