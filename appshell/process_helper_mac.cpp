@@ -6,8 +6,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "appshell/common/client_app_other.h"
-#include "appshell/renderer/client_app_renderer.h"
+// This file is shared by cefclient and cef_unittests so don't include using
+// a qualified path.
+#include "client_app.h"  // NOLINT(build/include)
 
 // Application startup time
 CFTimeInterval g_appStartupTime;
@@ -20,33 +21,15 @@ CefWindowHandle AppGetMainHwnd() {
   return NULL;
 }
 
-namespace client {
-
-int RunMain(int argc, char* argv[]) {
-  CefMainArgs main_args(argc, argv);
-
-  g_appStartupTime = CFAbsoluteTimeGetCurrent();
-
-  // Parse command-line arguments.
-  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
-  command_line->InitFromArgv(argc, argv);
-
-  // Create a ClientApp of the correct type.
-  CefRefPtr<CefApp> app;
-  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
-  if (process_type == ClientApp::RendererProcess)
-    app = new ClientAppRenderer();
-  else if (process_type == ClientApp::OtherProcess)
-    app = new ClientAppOther();
-
-  // Execute the secondary process.
-  return CefExecuteProcess(main_args, app, NULL);
-}
-
-}  // namespace client
-
 
 // Process entry point.
 int main(int argc, char* argv[]) {
-  return client::RunMain(argc, argv);
+  CefMainArgs main_args(argc, argv);
+	
+  g_appStartupTime = CFAbsoluteTimeGetCurrent();
+
+  CefRefPtr<CefApp> app(new ClientApp);
+
+  // Execute the secondary process.
+  return CefExecuteProcess(main_args, app, NULL);
 }
