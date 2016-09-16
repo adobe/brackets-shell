@@ -232,7 +232,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   std::string m_LastDownloadFile;
 
   // True if a form element currently has focus
-  bool m_bFormElementHasFocus;
   bool m_quitting;
 
   // Registered delegates.
