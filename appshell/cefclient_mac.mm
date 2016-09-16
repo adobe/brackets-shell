@@ -8,7 +8,6 @@
 #include <sstream>
 #include "cefclient.h"
 #include "include/cef_app.h"
-#include "include/cef_version.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
@@ -945,25 +944,4 @@ CefString AppGetCachePath() {
   std::string cachePath = std::string(client::ClientApp::AppGetSupportDirectory()) + "/cef_data";
   
   return CefString(cachePath);
-}
-
-CefString AppGetProductVersionString() {
-  NSMutableString *s = [NSMutableString stringWithString:APP_NAME];
-  [s replaceOccurrencesOfString:@" "
-                     withString:@""
-                        options:NSLiteralSearch
-                          range:NSMakeRange(0, [s length])];
-  [s appendString:@"/"];
-  [s appendString:(NSString*)[[NSBundle mainBundle]
-                              objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
-  CefString result = CefString([s UTF8String]);
-  return result;
-}
-
-CefString AppGetChromiumVersionString() {
-  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
-                           cef_version_info(2), cef_version_info(3),
-                           cef_version_info(4), cef_version_info(5)];
-  CefString result = CefString([s UTF8String]);
-  return result;
 }
