@@ -21,6 +21,7 @@
  *
  */
 
+#include "appshell_extensions_platform.h"
 #include "config.h"
 
 namespace appshell {
