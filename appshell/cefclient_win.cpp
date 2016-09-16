@@ -16,8 +16,11 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "config.h"
+#include "appshell/browser/client_app_browser.h"
 #include "appshell/browser/resource.h"
+#include "appshell/common/client_app_other.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/renderer/client_app_renderer.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -40,11 +43,14 @@ static char      szWorkingDir[MAX_UNC_PATH];    // The current working directory
 static wchar_t   szInitialUrl[MAX_UNC_PATH] = {0};
 
 
-// Forward declarations of functions included in this code module:
-BOOL InitInstance(HINSTANCE, int);
-
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+namespace client {
+namespace {
+
+// Forward declarations of functions included in this code module:
+BOOL InitInstance(HINSTANCE, int);
 
 #if defined(OS_WIN)
 // Add Common Controls to the application manifest because it's required to
@@ -128,13 +134,13 @@ bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
 
 }
 
-std::wstring GetFilenamesFromCommandLine() {
+std::wstring GetFilenamesFromCommandLine(CefRefPtr<CefCommandLine> command_line) {
   std::wstring result = L"[]";
 
-  if (AppGetCommandLine()->HasArguments()) {
+  if (command_line->HasArguments()) {
     bool firstEntry = true;
     std::vector<CefString> args;
-    AppGetCommandLine()->GetArguments(args);
+    command_line->GetArguments(args);
     std::vector<CefString>::iterator iterator;
     result = L"[";
     for (iterator = args.begin(); iterator != args.end(); iterator++) {
@@ -163,21 +169,33 @@ std::wstring GetFilenamesFromCommandLine() {
 // forward declaration; implemented in appshell_extensions_win.cpp
 void ConvertToUnixPath(ExtensionString& filename);
 
-// Program entry point function.
-int APIENTRY wWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow) {
+int RunMain(HINSTANCE hInstance,
+            HINSTANCE hPrevInstance,
+            LPTSTR    lpCmdLine,
+            int       nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
   g_appStartupTime = timeGetTime();
 
   CefMainArgs main_args(hInstance);
-  CefRefPtr<ClientApp> app(new ClientApp);
+
+  // Parse command-line arguments.
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromString(::GetCommandLineW());
+
+  // Create a ClientApp of the correct type.
+  CefRefPtr<CefApp> app;
+  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
+  if (process_type == ClientApp::BrowserProcess)
+    app = new ClientAppBrowser();
+  else if (process_type == ClientApp::RendererProcess)
+    app = new ClientAppRenderer();
+  else if (process_type == ClientApp::OtherProcess)
+    app = new ClientAppOther();
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
   if (exit_code >= 0)
     return exit_code;
 
@@ -187,12 +205,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(0, NULL);
-
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
-  if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
+  if ((hMutex != NULL) && command_line->HasArguments() && (lpCmdLine != NULL)) {
    // for subsequent instances, re-use an already running instance if we're being called to
    //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
    HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
@@ -227,6 +242,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   CefSettings settings;
 
+  /*
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
@@ -234,13 +250,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (CefString(&settings.cache_path).length() == 0) {
 	  CefString(&settings.cache_path) = AppGetCachePath();
   }
+  */
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
-	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(client::switches::kStartupPath).c_str());
+  if (command_line->HasSwitch(client::switches::kStartupPath)) {
+	  wcscpy(szInitialUrl, command_line->GetSwitchValue(client::switches::kStartupPath).c_str());
   }
   else {
 	// If the shift key is not pressed, look for the index.html file 
@@ -298,7 +314,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Start the node server process
   startNodeProcess();
 
-  gFilesToOpen = GetFilenamesFromCommandLine();
+  gFilesToOpen = GetFilenamesFromCommandLine(command_line);
 
   int result = 0;
 
@@ -348,6 +364,21 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   return gMainWnd->Create();
 }
 
+
+}  // namespace
+}  // namespace client
+
+
+// Program entry point function.
+int APIENTRY wWinMain(HINSTANCE hInstance,
+                      HINSTANCE hPrevInstance,
+                      LPTSTR    lpCmdLine,
+                      int       nCmdShow) {
+  UNREFERENCED_PARAMETER(hPrevInstance);
+  UNREFERENCED_PARAMETER(lpCmdLine);
+  return client::RunMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+}
+
 // Global functions
 
 std::string AppGetWorkingDirectory() {
@@ -355,7 +386,7 @@ std::string AppGetWorkingDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::wstring cachePath = ClientApp::AppGetSupportDirectory();
+  std::wstring cachePath = client::ClientApp::AppGetSupportDirectory();
   cachePath +=  L"/cef_data";
 
   return CefString(cachePath);

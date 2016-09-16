@@ -21,7 +21,7 @@
  *
  */
 
-#include "client_app.h"
+#include "appshell/common/client_app.h"
 
 #include "appshell/browser/resource.h"
 #include "include/cef_base.h"
@@ -33,6 +33,8 @@
 #include <string>
 
 extern DWORD g_appStartupTime;
+
+namespace client {
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -117,3 +119,5 @@ CefString ClientApp::AppGetDocumentsDirectory()
 
     return CefString(appUserDocuments);
 }
+
+}  // namespace client
