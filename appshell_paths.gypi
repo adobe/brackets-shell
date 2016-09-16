@@ -227,6 +227,7 @@
       'appshell/browser/window_test_win.cc',
       'appshell/appshell_extensions_win.cpp',
       'appshell/appshell_node_process_win.cpp',
+      'appshell/appshell_versions_win.cc',
       'appshell/cefclient.rc',
       'appshell/version.rc',
       'appshell/cefclient_win.cpp',
