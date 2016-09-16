@@ -27,10 +27,6 @@ ClientHandler::ClientHandler()
   : m_MainHwnd(NULL),
     m_BrowserId(0),
     m_EditHwnd(NULL),
-    m_BackHwnd(NULL),
-    m_ForwardHwnd(NULL),
-    m_StopHwnd(NULL),
-    m_ReloadHwnd(NULL),
     m_bFormElementHasFocus(false),
     m_quitting(false) {
   callbackId = 0;
@@ -356,17 +352,6 @@ void ClientHandler::SetMainHwnd(CefWindowHandle hwnd) {
 void ClientHandler::SetEditHwnd(CefWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_EditHwnd = hwnd;
-}
-
-void ClientHandler::SetButtonHwnds(CefWindowHandle backHwnd,
-                                   CefWindowHandle forwardHwnd,
-                                   CefWindowHandle reloadHwnd,
-                                   CefWindowHandle stopHwnd) {
-  AutoLock lock_scope(this);
-  m_BackHwnd = backHwnd;
-  m_ForwardHwnd = forwardHwnd;
-  m_ReloadHwnd = reloadHwnd;
-  m_StopHwnd = stopHwnd;
 }
 
 std::string ClientHandler::GetLogFile() {

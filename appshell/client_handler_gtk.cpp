@@ -43,26 +43,9 @@ void ClientHandler::SendNotification(NotificationType type) {
 }
 
 void ClientHandler::SetLoading(bool isLoading) {
-#ifdef SHOW_TOOLBAR_UI
-  if (isLoading)
-    gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), true);
-  else
-    gtk_widget_set_sensitive(GTK_WIDGET(m_StopHwnd), false);
-#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
-#ifdef SHOW_TOOLBAR_UI
-  if (canGoBack)
-    gtk_widget_set_sensitive(GTK_WIDGET(m_BackHwnd), true);
-  else
-    gtk_widget_set_sensitive(GTK_WIDGET(m_BackHwnd), false);
-
-  if (canGoForward)
-    gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), true);
-  else
-    gtk_widget_set_sensitive(GTK_WIDGET(m_ForwardHwnd), false);
-#endif // SHOW_TOOLBAR_UI
 }
 
 void ClientHandler::CloseMainWindow() {
