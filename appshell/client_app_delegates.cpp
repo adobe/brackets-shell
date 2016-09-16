@@ -7,7 +7,3 @@
 // static
 void ClientApp::CreateRenderDelegates(RenderDelegateSet& delegates) {
 }
-
-// static
-void ClientApp::RegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar) {
-}
