@@ -162,8 +162,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   int GetBrowserId() { return m_BrowserId; }
   bool CanCloseBrowser(CefRefPtr<CefBrowser> browser);
 
-  std::string GetLogFile();
-
   void SetLastDownloadFile(const std::string& fileName);
   std::string GetLastDownloadFile();
 
@@ -219,9 +217,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
 
   // The edit window handle
   CefWindowHandle m_EditHwnd;
-
-  // Support for logging.
-  std::string m_LogFile;
 
   // Support for downloading files.
   std::string m_LastDownloadFile;

@@ -282,11 +282,6 @@ void ClientHandler::SetEditHwnd(CefWindowHandle hwnd) {
   m_EditHwnd = hwnd;
 }
 
-std::string ClientHandler::GetLogFile() {
-  AutoLock lock_scope(this);
-  return m_LogFile;
-}
-
 void ClientHandler::SetLastDownloadFile(const std::string& fileName) {
   AutoLock lock_scope(this);
   m_LastDownloadFile = fileName;
