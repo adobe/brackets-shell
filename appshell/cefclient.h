@@ -27,12 +27,6 @@ CefString AppGetInitialURL();
 // Returns the default CEF cache location
 CefString AppGetCachePath();
 
-// Initialize the application command line.
-void AppInitCommandLine(int argc, const char* const* argv);
-
-// Returns the application command line object.
-CefRefPtr<CefCommandLine> AppGetCommandLine();
-
 // Returns the application settings based on command line arguments.
 void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app);
 
