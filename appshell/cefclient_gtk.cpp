@@ -307,14 +307,3 @@ int RunMain(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   return client::RunMain(argc, argv);
 }
-
-
-CefString AppGetProductVersionString() {
-  // TODO
-  return CefString("");
-}
-
-CefString AppGetChromiumVersionString() {
-  // TODO
-  return CefString("");
-}
