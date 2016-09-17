@@ -72,7 +72,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     GError *gerror = NULL;
     
     if (enableRemoteDebugging) {
-        CefString appSupportDirectory = AppGetSupportDirectory();
+        CefString appSupportDirectory = appshell::AppGetSupportDirectory();
 
         // TODO: (INGO) to better understand to string conversion issue, I need a consultant
         // here. Getting the char* from CefString I had to call ToString().c_str()
