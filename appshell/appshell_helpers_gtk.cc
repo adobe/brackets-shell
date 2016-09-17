@@ -29,13 +29,38 @@
 namespace appshell {
 
 CefString AppGetProductVersionString() {
-  // TODO
-  return CefString("");
+    // TODO
+    return CefString("");
 }
 
 CefString AppGetChromiumVersionString() {
-  // TODO
-  return CefString("");
+    // TODO
+    return CefString("");
+}
+
+CefString AppGetSupportDirectory()
+{
+    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), APP_NAME);
+    CefString result = CefString(supportDir);
+    g_free(supportDir);
+
+    return result;
+}
+
+CefString AppGetDocumentsDirectory()
+{
+    const char *dir = g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS);
+    if (dir == NULL)  {
+        return AppGetSupportDirectory();
+    } else {
+        return CefString(dir);
+    }
+}
+
+CefString AppGetCachePath() {
+  std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
+
+  return CefString(cachePath);
 }
 
 }  // namespace appshell

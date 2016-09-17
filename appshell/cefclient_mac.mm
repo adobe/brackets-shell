@@ -933,9 +933,3 @@ int main(int argc, char* argv[]) {
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
 }
-
-CefString AppGetCachePath() {
-  std::string cachePath = std::string(client::ClientApp::AppGetSupportDirectory()) + "/cef_data";
-  
-  return CefString(cachePath);
-}

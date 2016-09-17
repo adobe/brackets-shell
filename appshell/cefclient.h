@@ -23,10 +23,6 @@ std::string AppGetWorkingDirectory();
 // Returns the starting URL
 CefString AppGetInitialURL();
 
-
-// Returns the default CEF cache location
-CefString AppGetCachePath();
-
 // Returns the application settings based on command line arguments.
 void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app);
 

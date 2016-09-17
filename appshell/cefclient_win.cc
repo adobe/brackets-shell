@@ -23,9 +23,7 @@
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
-#include <algorithm>
 #include <ShellAPI.h>
-#include <ShlObj.h>
 
 #include "cef_registry.h"
 #include "cef_main_window.h"
@@ -382,13 +380,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
-}
-
-CefString AppGetCachePath() {
-  std::wstring cachePath = client::ClientApp::AppGetSupportDirectory();
-  cachePath +=  L"/cef_data";
-
-  return CefString(cachePath);
 }
 
 CefString AppGetInitialURL() {

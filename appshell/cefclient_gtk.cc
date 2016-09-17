@@ -115,12 +115,6 @@ std::string AppGetRunningDirectory() {
   }
 }
 
-CefString AppGetCachePath() {
-  std::string cachePath = std::string(client::ClientApp::AppGetSupportDirectory()) + "/cef_data";
-
-  return CefString(cachePath);
-}
-
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
                         GCallback callback) {
   GtkWidget* entry = gtk_menu_item_new_with_label(text);

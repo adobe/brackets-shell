@@ -31,8 +31,6 @@ class ClientApp : public CefApp {
   double GetElapsedMilliseconds();
   CefString GetCurrentLanguage();
   std::string GetExtensionJSSource();
-  static CefString AppGetSupportDirectory();
-  static CefString AppGetDocumentsDirectory();
 
  protected:
   // Schemes that will be registered with the global cookie manager.

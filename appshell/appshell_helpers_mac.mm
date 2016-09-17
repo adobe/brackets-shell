@@ -51,4 +51,22 @@ CefString AppGetChromiumVersionString() {
   return result;
 }
 
+CefString AppGetSupportDirectory() {
+  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+  NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
+
+  return CefString([supportDirectory UTF8String]);
+}
+
+CefString AppGetDocumentsDirectory() {
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    return CefString([documentsDirectory UTF8String]);
+}
+
+CefString AppGetCachePath() {
+  std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
+
+  return CefString(cachePath);
+}
+
 }  // namespace appshell

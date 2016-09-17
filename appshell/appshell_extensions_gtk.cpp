@@ -24,6 +24,8 @@
 #include "appshell_extensions_platform.h"
 
 #include "appshell/common/client_app.h"
+#include "appshell/appshell_helpers.h"
+
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -70,7 +72,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     GError *gerror = NULL;
     
     if (enableRemoteDebugging) {
-        CefString appSupportDirectory = client::ClientApp::AppGetSupportDirectory();
+        CefString appSupportDirectory = AppGetSupportDirectory();
 
         // TODO: (INGO) to better understand to string conversion issue, I need a consultant
         // here. Getting the char* from CefString I had to call ToString().c_str()

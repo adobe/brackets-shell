@@ -23,6 +23,8 @@
 
 #include "appshell/appshell_helpers.h"
 
+#include <algorithm>
+#include <ShlObj.h>
 #include <sstream>
 #include <windows.h>
 
@@ -91,6 +93,39 @@ CefString AppGetChromiumVersionString() {
                 << L"." << cef_version_info(4) << L"." << cef_version_info(5);
 
   return CefString(versionStream.str());
+}
+
+CefString AppGetSupportDirectory()
+{
+    wchar_t dataPath[MAX_UNC_PATH];
+    SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
+
+    std::wstring appSupportPath = dataPath;
+    appSupportPath +=  L"\\" GROUP_NAME APP_NAME;
+
+    // Convert '\\' to '/'
+    replace(appSupportPath.begin(), appSupportPath.end(), '\\', '/');
+
+    return CefString(appSupportPath);
+}
+
+CefString AppGetDocumentsDirectory()
+{
+    wchar_t dataPath[MAX_UNC_PATH] = {0};
+    SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, dataPath);
+    std::wstring appUserDocuments = dataPath;
+
+    // Convert '\\' to '/'
+    replace(appUserDocuments.begin(), appUserDocuments.end(), '\\', '/');
+
+    return CefString(appUserDocuments);
+}
+
+CefString AppGetCachePath() {
+  std::wstring cachePath = AppGetSupportDirectory();
+  cachePath +=  L"/cef_data";
+
+  return CefString(cachePath);
 }
 
 }  // namespace appshell

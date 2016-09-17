@@ -34,6 +34,11 @@ CefString AppGetProductVersionString();
 // Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
 CefString AppGetChromiumVersionString();
 
+CefString AppGetSupportDirectory();
+CefString AppGetDocumentsDirectory();
+
+// Returns the default CEF cache location
+CefString AppGetCachePath();
 
 #if defined(OS_MACOSX)
 

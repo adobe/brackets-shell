@@ -26,6 +26,7 @@
 #include "include/cef_v8.h"
 
 #include "appshell/renderer/client_app_renderer.h"
+#include "appshell/appshell_helpers.h"
 #include "config.h"
 
 namespace appshell {
@@ -168,9 +169,9 @@ class AppShellExtensionHandler : public CefV8Handler {
         } else if (name == "GetCurrentLanguage") {
             retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
         } else if (name == "GetApplicationSupportDirectory") {
-            retval = CefV8Value::CreateString(client::ClientApp::AppGetSupportDirectory());
+            retval = CefV8Value::CreateString(AppGetSupportDirectory());
         } else if (name == "GetUserDocumentsDirectory") {
-            retval = CefV8Value::CreateString(client::ClientApp::AppGetDocumentsDirectory());
+            retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
         } else if (name == "GetRemoteDebuggingPort") {
             retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
         } else {
