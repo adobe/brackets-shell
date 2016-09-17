@@ -16,7 +16,7 @@
 #include "include/base/cef_logging.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
-#include "appshell/appshell_versions.h"
+#include "appshell/appshell_helpers.h"
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;

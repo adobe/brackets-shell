@@ -21,13 +21,12 @@
  *
  */
 
-#include "appshell/appshell_versions.h"
+#include "appshell/appshell_helpers.h"
 
 #include <sstream>
 #include <windows.h>
 
 #include "include/cef_version.h"
-#include "config.h"
 
 namespace appshell {
 

@@ -21,10 +21,21 @@
  *
  */
 
+#include "include/internal/cef_string.h"
+
 #include "appshell_extensions_platform.h"
 #include "config.h"
 
 namespace appshell {
+
+// Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
+CefString AppGetProductVersionString();
+
+// Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
+CefString AppGetChromiumVersionString();
+
+
+#if defined(OS_MACOSX)
 
 // Replace keyStroke with replaceString.
 bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
@@ -37,4 +48,6 @@ bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString r
     return false;
 }
 
-} // namespace appshell
+#endif
+
+}  // namespace appshell

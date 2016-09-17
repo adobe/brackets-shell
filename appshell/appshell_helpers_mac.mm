@@ -21,14 +21,34 @@
  *
  */
 
-#include "include/internal/cef_string.h"
+#include "appshell/appshell_helpers.h"
+
+#import <Cocoa/Cocoa.h>
+
+#include "include/cef_version.h"
+#include "config.h"
 
 namespace appshell {
 
-// Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
-CefString AppGetProductVersionString();
+CefString AppGetProductVersionString() {
+  NSMutableString *s = [NSMutableString stringWithString:APP_NAME];
+  [s replaceOccurrencesOfString:@" "
+                     withString:@""
+                        options:NSLiteralSearch
+                          range:NSMakeRange(0, [s length])];
+  [s appendString:@"/"];
+  [s appendString:(NSString*)[[NSBundle mainBundle]
+                              objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
+  CefString result = CefString([s UTF8String]);
+  return result;
+}
 
-// Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
-CefString AppGetChromiumVersionString();
+CefString AppGetChromiumVersionString() {
+  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
+                           cef_version_info(2), cef_version_info(3),
+                           cef_version_info(4), cef_version_info(5)];
+  CefString result = CefString([s UTF8String]);
+  return result;
+}
 
 }  // namespace appshell
