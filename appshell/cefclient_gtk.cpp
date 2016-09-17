@@ -14,8 +14,12 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 #include "include/cef_runnable.h"
+#include "include/wrapper/cef_helpers.h"
 #include "client_handler.h"
+#include "appshell/browser/client_app_browser.h"
+#include "appshell/common/client_app_other.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/renderer/client_app_renderer.h"
 #include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
@@ -112,7 +116,7 @@ std::string AppGetRunningDirectory() {
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
+  std::string cachePath = std::string(client::ClientApp::AppGetSupportDirectory()) + "/cef_data";
 
   return CefString(cachePath);
 }
@@ -138,18 +142,44 @@ gboolean GetSourceActivated(GtkWidget* widget) {
   return FALSE;
 }
 
-int main(int argc, char* argv[]) {
+namespace client {
+namespace {
+
+int RunMain(int argc, char* argv[]) {
+  // Create a copy of |argv| on Linux because Chromium mangles the value
+  // internally (see issue #620).
+  CefScopedArgArray scoped_arg_array(argc, argv);
+  char** argv_copy = scoped_arg_array.array();
+
   CefMainArgs main_args(argc, argv);
 
   g_appStartupTime = time(NULL);
 
-  gtk_init(&argc, &argv);
-  CefRefPtr<ClientApp> app(new ClientApp);
+  // Parse command-line arguments.
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromArgv(argc, argv);
+
+  // Create a ClientApp of the correct type.
+  CefRefPtr<CefApp> app;
+  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
+  if (process_type == ClientApp::BrowserProcess) {
+    app = new ClientAppBrowser();
+  } else if (process_type == ClientApp::RendererProcess ||
+             process_type == ClientApp::ZygoteProcess) {
+    // On Linux the zygote process is used to spawn other process types. Since
+    // we don't know what type of process it will be give it the renderer
+    // client.
+    app = new ClientAppRenderer();
+  } else if (process_type == ClientApp::OtherProcess) {
+    app = new ClientAppOther();
+  }
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
   if (exit_code >= 0)
     return exit_code;
+
+  gtk_init(&argc, &argv);
 
   //Retrieve the current working directory
   if (!getcwd(szWorkingDir, sizeof (szWorkingDir)))
@@ -157,11 +187,9 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* window;
 
-  // Parse command line arguments.
-  AppInitCommandLine(argc, argv);
-
   CefSettings settings;
 
+/*
   // Populate the settings based on command line arguments.
   AppGetSettings(settings, app);
 
@@ -171,11 +199,10 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = AppGetCachePath();
   }
-  
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  
-  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
-    szInitialUrl = cmdLine->GetSwitchValue(client::switches::kStartupPath);
+*/
+
+  if (command_line->HasSwitch(client::switches::kStartupPath)) {
+    szInitialUrl = command_line->GetSwitchValue(client::switches::kStartupPath);
   } else {
     szInitialUrl = AppGetRunningDirectory();
     szInitialUrl.append("/dev/src/index.html");
@@ -271,6 +298,16 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+}  // namespace
+}  // namespace client
+
+
+// Program entry point function.
+int main(int argc, char* argv[]) {
+  return client::RunMain(argc, argv);
+}
+
 
 CefString AppGetProductVersionString() {
   // TODO
