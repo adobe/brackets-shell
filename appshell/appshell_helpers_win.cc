@@ -30,8 +30,8 @@
 #include <windows.h>
 
 #include "include/cef_version.h"
-
 #include "appshell/common/client_switches.h"
+#include "config.h"
 
 namespace appshell {
 

@@ -23,12 +23,16 @@
 
 #include "appshell/appshell_helpers.h"
 
+#include <sys/stat.h>
+
 #include "include/cef_version.h"
+#include "appshell/common/client_switches.h"
 #include "config.h"
 
 namespace appshell {
 
 static std::string szInitialUrl;
+static std::string szRunningDir;
 
 CefString AppGetProductVersionString() {
     // TODO
@@ -63,6 +67,25 @@ CefString AppGetCachePath() {
     std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
 
     return CefString(cachePath);
+}
+
+std::string AppGetRunningDirectory() {
+  if(szRunningDir.length() > 0)
+    return szRunningDir;
+
+  char buf[512];
+  int len = readlink("/proc/self/exe", buf, 512);
+
+//  if(len < 0)
+//    return AppGetWorkingDirectory();  //# Well, can't think of any real-world case where this would be happen
+
+  for(; len >= 0; len--){
+    if(buf[len] == '/'){
+      buf[len] = '\0';
+      szRunningDir.append(buf);
+      return szRunningDir;
+    }
+  }
 }
 
 int GetInitialUrl(std::string& url) {
