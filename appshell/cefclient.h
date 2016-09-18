@@ -20,9 +20,6 @@ CefWindowHandle AppGetMainHwnd();
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
 
-// Returns the starting URL
-CefString AppGetInitialURL();
-
 // Returns the application settings based on command line arguments.
 void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app);
 
