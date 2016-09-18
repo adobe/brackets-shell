@@ -21,6 +21,7 @@
  *
  */
 
+#include "include/cef_command_line.h"
 #include "include/internal/cef_string.h"
 
 #include "appshell_extensions_platform.h"
@@ -52,6 +53,13 @@ bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString r
     }
     return false;
 }
+
+#endif
+
+#if !defined(OS_MACOSX)
+
+int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line);
+CefString AppGetInitialURL();
 
 #endif
 

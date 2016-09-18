@@ -26,6 +26,7 @@
 #include "cef_registry.h"
 #include "client_handler.h"
 #include "appshell/browser/resource.h"
+#include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
 #include "config.h"
 
@@ -238,7 +239,7 @@ BOOL cef_main_window::HandleCreate()
     // Creat the new child browser window
     CefBrowserHost::CreateBrowser(info,
         static_cast<CefRefPtr<CefClient> >(g_handler),
-        ::AppGetInitialURL(), settings, NULL);
+        appshell::AppGetInitialURL(), settings, NULL);
 
     return TRUE;
 }

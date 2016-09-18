@@ -28,6 +28,8 @@
 
 namespace appshell {
 
+static std::string szInitialUrl;
+
 CefString AppGetProductVersionString() {
     // TODO
     return CefString("");
@@ -58,9 +60,61 @@ CefString AppGetDocumentsDirectory()
 }
 
 CefString AppGetCachePath() {
-  std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
+    std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
 
-  return CefString(cachePath);
+    return CefString(cachePath);
+}
+
+int GetInitialUrl(std::string& url) {
+    GtkWidget *dialog;
+    const char* dialog_title = "Please select the index.html file";
+    GtkFileChooserAction file_or_directory = GTK_FILE_CHOOSER_ACTION_OPEN;
+    dialog = gtk_file_chooser_dialog_new(dialog_title,
+                                         NULL,
+                                         file_or_directory,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                         NULL);
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+        url = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+        gtk_widget_destroy (dialog);
+        return 0;
+    }
+
+    return -1;
+}
+
+bool FileExists(std::string path) {
+    struct stat buf;
+    return (stat(path.c_str(), &buf) >= 0) && (S_ISREG(buf.st_mode));
+}
+
+int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line) {
+    if (command_line->HasSwitch(client::switches::kStartupPath)) {
+        szInitialUrl = command_line->GetSwitchValue(client::switches::kStartupPath);
+        return 0;
+    }
+
+    std::string url = AppGetRunningDirectory();
+    url.append("/dev/src/index.html");
+
+    if (!FileExists(url)) {
+        url = AppGetRunningDirectory();
+        url.append("/www/index.html");
+
+        if (!FileExists(url)) {
+            if (GetInitialUrl(url) < 0) {
+                return -1;
+            }
+        }
+    }
+
+    szInitialUrl = url;
+    return 0;
+}
+
+CefString AppGetInitialURL() {
+    return szInitialUrl;
 }
 
 }  // namespace appshell

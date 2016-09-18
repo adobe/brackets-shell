@@ -4,7 +4,6 @@
 
 #include "cefclient.h"
 #include <windows.h>
-#include <commdlg.h>
 #include <direct.h>
 #include <MMSystem.h>
 #include <string>
@@ -22,6 +21,7 @@
 #include "appshell/renderer/client_app_renderer.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
+#include "appshell_helpers.h"
 
 #include <ShellAPI.h>
 
@@ -37,7 +37,6 @@ cef_main_window* gMainWnd = NULL;
 
 // static variables (not exported)
 static char      szWorkingDir[MAX_UNC_PATH];    // The current working directory
-static wchar_t   szInitialUrl[MAX_UNC_PATH] = {0};
 
 
 // The global ClientHandler reference.
@@ -196,8 +195,6 @@ int RunMain(HINSTANCE hInstance,
   if (exit_code >= 0)
     return exit_code;
 
-  bool isShiftKeyDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? true: false;
-
   // Retrieve the current working directory.
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
@@ -249,60 +246,13 @@ int RunMain(HINSTANCE hInstance,
   }
   */
 
+  if (appshell::AppInitInitialUrl(command_line) < 0) {
+    CefShutdown();
+    return 0;
+  }
+
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
-
-  if (command_line->HasSwitch(client::switches::kStartupPath)) {
-	  wcscpy(szInitialUrl, command_line->GetSwitchValue(client::switches::kStartupPath).c_str());
-  }
-  else {
-	// If the shift key is not pressed, look for the index.html file 
-	if (!isShiftKeyDown) {
-	// Get the full pathname for the app. We look for the index.html
-	// file relative to this location.
-	wchar_t appPath[MAX_UNC_PATH];
-	wchar_t *pathRoot;
-	GetModuleFileName(NULL, appPath, MAX_UNC_PATH);
-
-	// Strip the .exe filename (and preceding "\") from the appPath
-	// and store in pathRoot
-	pathRoot = wcsrchr(appPath, '\\');
-
-	// Look for .\dev\src\index.html first
-	wcscpy(pathRoot, L"\\dev\\src\\index.html");
-
-	// If the file exists, use it
-	if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-	}
-
-	if (!wcslen(szInitialUrl)) {
-		// Look for .\www\index.html next
-		wcscpy(pathRoot, L"\\www\\index.html");
-		if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-		}
-	}
-	}
-  }
-
-  if (!wcslen(szInitialUrl)) {
-      // If we got here, either the startup file couldn't be found, or the user pressed the
-      // shift key while launching. Prompt to select the index.html file.
-      OPENFILENAME ofn = {0};
-      ofn.lStructSize = sizeof(ofn);
-      ofn.lpstrFile = szInitialUrl;
-      ofn.nMaxFile = MAX_UNC_PATH;
-      ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
-      ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
-      ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-
-      if (!GetOpenFileName(&ofn)) {
-        // User cancelled, exit the app
-        CefShutdown();
-        return 0;
-      }
-  }
 
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
@@ -380,8 +330,4 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
-}
-
-CefString AppGetInitialURL() {
-    return szInitialUrl;
 }
