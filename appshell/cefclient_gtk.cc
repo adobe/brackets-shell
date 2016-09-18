@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
-#include <sys/stat.h>
 #include "cefclient.h"
 #include "include/cef_app.h"
 #include "include/cef_version.h"
@@ -21,10 +20,10 @@
 #include "appshell/common/client_switches.h"
 #include "appshell/renderer/client_app_renderer.h"
 #include "appshell_node_process.h"
+#include "appshell_helpers.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 char szWorkingDir[512];  // The current working directory
-std::string szRunningDir;
 int add_handler_id;
 bool isReallyClosing = false;
 
@@ -68,25 +67,6 @@ static gboolean HandleQuit(int signatl) {
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
-}
-
-std::string AppGetRunningDirectory() {
-  if(szRunningDir.length() > 0)
-    return szRunningDir;
-
-  char buf[512];
-  int len = readlink("/proc/self/exe", buf, 512);
-
-  if(len < 0)
-    return AppGetWorkingDirectory();  //# Well, can't think of any real-world case where this would be happen
-
-  for(; len >= 0; len--){
-    if(buf[len] == '/'){
-      buf[len] = '\0';
-      szRunningDir.append(buf);
-      return szRunningDir;
-    }
-  }
 }
 
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
