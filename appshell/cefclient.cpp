@@ -21,8 +21,12 @@
 
 CefRefPtr<ClientHandler> g_handler;
 
+#if defined(OS_MACOSX)
+
 CefWindowHandle AppGetMainHwnd() {
   if (!g_handler.get())
     return NULL;
   return g_handler->GetMainHwnd();
 }
+
+#endif

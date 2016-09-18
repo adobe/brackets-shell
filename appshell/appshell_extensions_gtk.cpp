@@ -51,7 +51,7 @@ std::string browsers[3] = {"google-chrome", "chromium-browser", "chromium"};
 int ConvertLinuxErrorCode(int errorCode, bool isReading = true);
 int ConvertGnomeErrorCode(GError* gerror, bool isReading = true);
 
-extern bool isReallyClosing;
+// extern bool isReallyClosing;
 
 int GErrorToErrorCode(GError *gerror) {
     int error = ConvertGnomeErrorCode(gerror);
@@ -534,6 +534,7 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
+/*
     if (browser.get()) {
         isReallyClosing = true;
         // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
@@ -543,6 +544,7 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
         // else
             browser->GetHost()->CloseBrowser(true);
     }
+*/
 }
 
 void BringBrowserWindowToFront(CefRefPtr<CefBrowser> browser)

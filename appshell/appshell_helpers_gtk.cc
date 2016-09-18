@@ -23,6 +23,7 @@
 
 #include "appshell/appshell_helpers.h"
 
+#include <gtk/gtk.h>
 #include <sys/stat.h>
 
 #include "include/cef_version.h"
