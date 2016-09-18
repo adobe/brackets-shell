@@ -9,21 +9,20 @@
 #include <string>
 #include "include/cef_base.h"
 #include "appshell/common/client_app.h"
+#include "appshell/config.h"
 
 class CefApp;
 class CefBrowser;
 class CefCommandLine;
 
+#if defined(OS_MACOSX)
+
 // Returns the main application window handle.
 CefWindowHandle AppGetMainHwnd();
 
+#endif
+
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
-
-// Returns the starting URL
-CefString AppGetInitialURL();
-
-// Returns the application settings based on command line arguments.
-void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app);
 
 #endif  // CEF_TESTS_CEFCLIENT_CEFCLIENT_H_

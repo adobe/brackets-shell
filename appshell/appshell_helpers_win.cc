@@ -24,13 +24,18 @@
 #include "appshell/appshell_helpers.h"
 
 #include <algorithm>
+#include <commdlg.h>
 #include <ShlObj.h>
 #include <sstream>
 #include <windows.h>
 
 #include "include/cef_version.h"
+#include "appshell/common/client_switches.h"
+#include "config.h"
 
 namespace appshell {
+
+static wchar_t szInitialUrl[MAX_UNC_PATH] = {0};
 
 // Helper function for AppGetProductVersionString. Reads version info from
 // VERSIONINFO and writes it into the passed in std::wstring.
@@ -126,6 +131,76 @@ CefString AppGetCachePath() {
   cachePath +=  L"/cef_data";
 
   return CefString(cachePath);
+}
+
+int GetInitialUrl(wchar_t* url) {
+    OPENFILENAME ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = url;
+    ofn.nMaxFile = MAX_UNC_PATH;
+    ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
+    ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
+
+    if (GetOpenFileName(&ofn)) {
+        return 0;
+    }
+
+    // User cancelled
+    return -1;
+}
+
+int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line) {
+    static wchar_t url[MAX_UNC_PATH] = {0};
+
+    if (command_line->HasSwitch(client::switches::kStartupPath)) {
+        wcscpy(url, command_line->GetSwitchValue(client::switches::kStartupPath).c_str());
+    }
+    else {
+        bool isShiftKeyDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? true : false;
+
+        // If the shift key is not pressed, look for the index.html file 
+        if (!isShiftKeyDown) {
+            // Get the full pathname for the app. We look for the index.html
+            // file relative to this location.
+            wchar_t appPath[MAX_UNC_PATH];
+            wchar_t *pathRoot;
+            GetModuleFileName(NULL, appPath, MAX_UNC_PATH);
+
+            // Strip the .exe filename (and preceding "\") from the appPath
+            // and store in pathRoot
+            pathRoot = wcsrchr(appPath, '\\');
+
+            // Look for .\dev\src\index.html first
+            wcscpy(pathRoot, L"\\dev\\src\\index.html");
+
+            // If the file exists, use it
+            if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+                wcscpy(url, appPath);
+            }
+
+            if (!wcslen(url)) {
+                // Look for .\www\index.html next
+                wcscpy(pathRoot, L"\\www\\index.html");
+                if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
+                    wcscpy(url, appPath);
+                }
+            }
+        }
+    }
+
+    if (!wcslen(url)) {
+        if (GetInitialUrl(url) < 0) {
+            return -1;
+        }
+    }
+
+    *szInitialUrl = *url;
+    return 0;
+}
+
+CefString AppGetInitialURL() {
+    return szInitialUrl;
 }
 
 }  // namespace appshell
