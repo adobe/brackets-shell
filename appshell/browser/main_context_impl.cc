@@ -137,6 +137,12 @@ void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {
     settings->windowless_frame_rate = atoi(command_line_->
         GetSwitchValue(switches::kOffScreenFrameRate).ToString().c_str());
   }
+
+  settings->web_security = STATE_DISABLED;
+
+  // Necessary to enable document.executeCommand("paste")
+  settings->javascript_access_clipboard = STATE_ENABLED;
+  settings->javascript_dom_paste = STATE_ENABLED;
 }
 
 RootWindowManager* MainContextImpl::GetRootWindowManager() {

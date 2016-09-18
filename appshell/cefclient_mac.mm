@@ -680,12 +680,6 @@ extern NSMutableArray* pendingOpenFiles;
   CefWindowInfo window_info;
   CefBrowserSettings settings;
 
-  settings.web_security = STATE_DISABLED;
-
-  // Necessary to enable document.executeCommand("paste")
-  settings.javascript_access_clipboard = STATE_ENABLED;
-  settings.javascript_dom_paste = STATE_ENABLED;
-
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
   // CSS.
