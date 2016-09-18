@@ -838,17 +838,7 @@ int RunMain(int argc, char* argv[]) {
   [NSApp setDelegate:delegate];
 
   CefSettings settings;
-/*
- // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
 
-  settings.no_sandbox = YES;
-    
-  // Check command
-  if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
-  }
-*/
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 

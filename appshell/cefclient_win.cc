@@ -236,16 +236,6 @@ int RunMain(HINSTANCE hInstance,
 
   CefSettings settings;
 
-  /*
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
-
-  // Check command
-  if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
-  }
-  */
-
   if (appshell::AppInitInitialUrl(command_line) < 0) {
     CefShutdown();
     return 0;

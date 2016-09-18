@@ -7,6 +7,9 @@
 #include "include/cef_parser.h"
 #include "appshell/common/client_switches.h"
 
+#include "appshell/appshell_helpers.h"
+#include "appshell/config.h"
+
 namespace client {
 
 namespace {
@@ -69,6 +72,64 @@ void MainContextImpl::PopulateSettings(CefSettings* settings) {
     settings->windowless_rendering_enabled = true;
 
   settings->background_color = background_color_;
+
+  CefString(&settings->log_file) =
+      command_line_->GetSwitchValue(switches::kLogFile);
+
+  {
+    std::string str = command_line_->GetSwitchValue(switches::kLogSeverity);
+
+    // Default to LOGSEVERITY_DISABLE
+    settings->log_severity = LOGSEVERITY_DISABLE;
+
+    if (!str.empty()) {
+      if (str == client::switches::kLogSeverity_Verbose)
+        settings->log_severity = LOGSEVERITY_VERBOSE;
+      else if (str == client::switches::kLogSeverity_Info)
+        settings->log_severity = LOGSEVERITY_INFO;
+      else if (str == client::switches::kLogSeverity_Warning)
+        settings->log_severity = LOGSEVERITY_WARNING;
+      else if (str == client::switches::kLogSeverity_Error)
+        settings->log_severity = LOGSEVERITY_ERROR;
+      else if (str == client::switches::kLogSeverity_Disable)
+        settings->log_severity = LOGSEVERITY_DISABLE;
+    }
+  }
+
+  // Don't update the settings.locale with the locale that we detected from the OS.
+  // Otherwise, CEF will use it to find the resources and when it fails in finding resources
+  // for some locales that are not available in resources, it crashes.
+  //CefString(&settings.locale) = app->GetCurrentLanguage( );
+
+  CefString(&settings->javascript_flags) =
+      command_line_->GetSwitchValue(switches::kJavascriptFlags);
+
+  // Enable dev tools
+  settings->remote_debugging_port = REMOTE_DEBUGGING_PORT;
+
+  std::wstring versionStr = appshell::AppGetProductVersionString();
+
+  if (!versionStr.empty()) {
+    // Explicitly append the Chromium version to our own product version string
+    // since assigning product version always replaces the Chromium version in
+    // the User Agent string.
+    versionStr.append(L" ");
+    versionStr.append(appshell::AppGetChromiumVersionString());
+
+    // Set product version, which gets added to the User Agent string
+    CefString(&settings->product_version) = versionStr;
+  }
+
+#if defined(OS_LINUX)
+  settings->no_sandbox = TRUE;
+#elif defined(OS_MACOSX)
+  settings->no_sandbox = YES;
+#endif
+
+  // Check cache_path setting
+  if (CefString(&settings->cache_path).length() == 0) {
+    CefString(&settings->cache_path) = appshell::AppGetCachePath();
+  }
 }
 
 void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {

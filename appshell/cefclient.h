@@ -20,7 +20,4 @@ CefWindowHandle AppGetMainHwnd();
 // Returns the application working directory.
 std::string AppGetWorkingDirectory();
 
-// Returns the application settings based on command line arguments.
-void AppGetSettings(CefSettings& settings, CefRefPtr<client::ClientApp> app);
-
 #endif  // CEF_TESTS_CEFCLIENT_CEFCLIENT_H_

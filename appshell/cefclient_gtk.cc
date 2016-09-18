@@ -137,18 +137,6 @@ int RunMain(int argc, char* argv[]) {
 
   CefSettings settings;
 
-/*
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
-
-  settings.no_sandbox = TRUE;
-
-  // Check cache_path setting
-  if (CefString(&settings.cache_path).length() == 0) {
-    CefString(&settings.cache_path) = AppGetCachePath();
-  }
-*/
-
   if (appshell::AppInitInitialUrl(command_line) < 0) {
     return 0;
   }
