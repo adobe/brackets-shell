@@ -39,6 +39,7 @@ xcodebuild/*
 /include
 ipch
 /libcef_dll
+/out
 tools
 
 /installer/mac/staging/
