@@ -66,10 +66,10 @@
         # TODO(mark): Come up with a fancier way to do this (mac_info_plist?)
         # that automatically sets the correct INFOPLIST_FILE setting and adds
         # the file to a source group.
-        'appshell/mac/Info.plist',
+        'appshell/resources/mac/Info.plist',
       ],
       'xcode_settings': {
-        'INFOPLIST_FILE': 'appshell/mac/Info.plist',
+        'INFOPLIST_FILE': 'appshell/resources/mac/Info.plist',
         # Necessary to avoid an "install_name_tool: changing install names or
         # rpaths can't be redone" error.
         'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
@@ -267,6 +267,7 @@
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+              '$(SDKROOT)/System/Library/Frameworks/OpenGL.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
@@ -462,6 +463,7 @@
             'libraries': [
               '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
               '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+              '$(SDKROOT)/System/Library/Frameworks/OpenGL.framework',
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
@@ -474,7 +476,7 @@
           # be necessary to list helper-Info.plist once, not the three times it
           # is listed here.
           'mac_bundle_resources!': [
-            'appshell/mac/helper-Info.plist',
+            'appshell/resources/mac/helper-Info.plist',
           ],
           # TODO(mark): For now, don't put any resources into this app.  Its
           # resources directory will be a symbolic link to the browser app's
@@ -483,7 +485,7 @@
             ['exclude', '.*'],
           ],
           'xcode_settings': {
-            'INFOPLIST_FILE': 'appshell/mac/helper-Info.plist',
+            'INFOPLIST_FILE': 'appshell/resources/mac/helper-Info.plist',
             # Necessary to avoid an "install_name_tool: changing install names or
             # rpaths can't be redone" error.
             'OTHER_LDFLAGS': ['-Wl,-headerpad_max_install_names'],
