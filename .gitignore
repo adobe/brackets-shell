@@ -32,13 +32,13 @@ xcodebuild/*
 *.log
 *.dmg
 
-Debug
-Release
-Resources
-deps
-include
+/Debug
+/Release
+/Resources
+/deps
+/include
 ipch
-libcef_dll
+/libcef_dll
 tools
 
 /installer/mac/staging/
