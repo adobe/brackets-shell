@@ -279,29 +279,29 @@
           ],
         }],
         [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
-          'actions': [
-            {
-              'action_name': 'appshell_extensions_js',
-              'inputs': [
-                'appshell/appshell_extensions.js',
-              ],
-              'outputs': [
-                'appshell_extensions_js.o',
-              ],
-              'action': [
-                'objcopy',
-                '--input',
-                'binary',
-                '--output',
-                '<(output_bfd)',
-                '--binary-architecture',
-                'i386',
-                '<@(_inputs)',
-                '<@(_outputs)',
-              ],
-              'message': 'compiling js resource'
-            }
-          ],
+          # 'actions': [
+          #   {
+          #     'action_name': 'appshell_extensions_js',
+          #     'inputs': [
+          #       'appshell/appshell_extensions.js',
+          #     ],
+          #     'outputs': [
+          #       'appshell_extensions_js.o',
+          #     ],
+          #     'action': [
+          #       'objcopy',
+          #       '--input',
+          #       'binary',
+          #       '--output',
+          #       '<(output_bfd)',
+          #       '--binary-architecture',
+          #       'i386',
+          #       '<@(_inputs)',
+          #       '<@(_outputs)',
+          #     ],
+          #     'message': 'compiling js resource'
+          #   }
+          # ],
           'cflags': [
             '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
             '<(march)',
