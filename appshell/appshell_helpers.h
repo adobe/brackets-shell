@@ -21,13 +21,58 @@
  *
  */
 
+#pragma once
+
 #include <string>
 
+#include "include/cef_command_line.h"
+#include "include/internal/cef_string.h"
 #include "include/internal/cef_types_wrappers.h"
+
+//#include "appshell_extensions_platform.h"
+#include "config.h"
 
 namespace appshell {
 
 std::string GetExtensionJSSource();
 void PopulateSettings(CefSettings* settings);
+
+}  // namespace appshell
+
+namespace appshell {
+
+// Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
+CefString AppGetProductVersionString();
+
+// Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
+CefString AppGetChromiumVersionString();
+
+CefString AppGetSupportDirectory();
+CefString AppGetDocumentsDirectory();
+
+// Returns the default CEF cache location
+CefString AppGetCachePath();
+
+#if defined(OS_MACOSX)
+
+// Replace keyStroke with replaceString.
+//bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+//{
+//    size_t idx = key.find(keyStroke, 0);
+//    if (idx != ExtensionString::npos) {
+//        key = key.replace(idx, keyStroke.size(), replaceString);
+//        return true;
+//    }
+//    return false;
+//}
+
+#endif
+
+#if !defined(OS_MACOSX)
+
+int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line);
+CefString AppGetInitialURL();
+
+#endif
 
 }  // namespace appshell

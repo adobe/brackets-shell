@@ -21,9 +21,12 @@
  *
  */
 
-#include "appshell_helpers.h"
+#include "appshell/appshell_helpers.h"
 
-#include <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
+
+#include "include/cef_version.h"
+#include "config.h"
 
 namespace appshell {
 
@@ -57,6 +60,45 @@ std::string GetExtensionJSSource()
 
 void PopulateSettings(CefSettings* settings) {
     settings->no_sandbox = YES;
+}
+
+CefString AppGetProductVersionString() {
+    NSMutableString *s = [NSMutableString stringWithString:APP_NAME];
+    [s replaceOccurrencesOfString:@" "
+                       withString:@""
+                          options:NSLiteralSearch
+                            range:NSMakeRange(0, [s length])];
+    [s appendString:@"/"];
+    [s appendString:(NSString*)[[NSBundle mainBundle]
+                                objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
+    CefString result = CefString([s UTF8String]);
+    return result;
+}
+
+CefString AppGetChromiumVersionString() {
+    NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
+                          cef_version_info(2), cef_version_info(3),
+                          cef_version_info(4), cef_version_info(5)];
+    CefString result = CefString([s UTF8String]);
+    return result;
+}
+
+CefString AppGetSupportDirectory() {
+    NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *supportDirectory = [NSString stringWithFormat:@"%@/%@%@", libraryDirectory, GROUP_NAME, APP_NAME];
+
+    return CefString([supportDirectory UTF8String]);
+}
+
+CefString AppGetDocumentsDirectory() {
+    NSString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    return CefString([documentsDirectory UTF8String]);
+}
+
+CefString AppGetCachePath() {
+    std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
+
+    return CefString(cachePath);
 }
 
 }  // namespace appshell

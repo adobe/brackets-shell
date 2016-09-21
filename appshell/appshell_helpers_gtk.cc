@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2016 - present Adobe Systems Incorporated. All rights reserved.
  *

@@ -161,49 +161,49 @@ class AppShellExtensionHandler : public CefV8Handler {
                          CefRefPtr<CefV8Value>& retval,
                          CefString& exception) {
 
-//        // The only messages that are handled here is getElapsedMilliseconds(),
-//        // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
-//        // All other messages are passed to the browser process.
+        // The only messages that are handled here is getElapsedMilliseconds(),
+        // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
+        // All other messages are passed to the browser process.
 //        if (name == "GetElapsedMilliseconds") {
 //            retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
 //        } else if (name == "GetCurrentLanguage") {
 //            retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
-//        } else if (name == "GetApplicationSupportDirectory") {
-//            retval = CefV8Value::CreateString(AppGetSupportDirectory());
-//        } else if (name == "GetUserDocumentsDirectory") {
-//            retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
-//        } else if (name == "GetRemoteDebuggingPort") {
-//            retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
-//        } else {
-//            // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
-//            CefRefPtr<CefBrowser> browser = CefV8Context::GetCurrentContext()->GetBrowser();
-//            if (!browser.get()) {
-//                // If we don't have a browser, we can't handle the command.
-//                return false;
-//            }
-//            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(name);
-//            CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
-//
-//            // The first argument must be a callback function
-//            if (arguments.size() > 0 && !arguments[0]->IsFunction()) {
-//                std::string functionName = name;
-//                fprintf(stderr, "Function called without callback param: %s\n", functionName.c_str());
-//                return false;
-//            }
-//
-//            if (arguments.size() > 0) {
-//                // The first argument is the message id
+        /*} else*/ if (name == "GetApplicationSupportDirectory") {
+            retval = CefV8Value::CreateString(AppGetSupportDirectory());
+        } else if (name == "GetUserDocumentsDirectory") {
+            retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
+        } else if (name == "GetRemoteDebuggingPort") {
+            retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
+        } else {
+            // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
+            CefRefPtr<CefBrowser> browser = CefV8Context::GetCurrentContext()->GetBrowser();
+            if (!browser.get()) {
+                // If we don't have a browser, we can't handle the command.
+                return false;
+            }
+            CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(name);
+            CefRefPtr<CefListValue> messageArgs = message->GetArgumentList();
+
+            // The first argument must be a callback function
+            if (arguments.size() > 0 && !arguments[0]->IsFunction()) {
+                std::string functionName = name;
+                fprintf(stderr, "Function called without callback param: %s\n", functionName.c_str());
+                return false;
+            }
+
+            if (arguments.size() > 0) {
+                // The first argument is the message id
 //                client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
-//                SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
-//            }
-//
-//            // Pass the rest of the arguments
-//            for (unsigned int i = 1; i < arguments.size(); i++)
-//                SetListValue(messageArgs, i, arguments[i]);
-//            browser->SendProcessMessage(PID_BROWSER, message);
-//
-//            messageId++;
-//        }
+                SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
+            }
+
+            // Pass the rest of the arguments
+            for (unsigned int i = 1; i < arguments.size(); i++)
+                SetListValue(messageArgs, i, arguments[i]);
+            browser->SendProcessMessage(PID_BROWSER, message);
+
+            messageId++;
+        }
 
         return true;
     }

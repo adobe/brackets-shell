@@ -400,6 +400,7 @@
       'appshell/appshell_extension_handler.h',
       'appshell/appshell_extensions.js',
       'appshell/appshell_helpers.h',
+      'appshell/config.h',
     ],
     'appshell_sources_renderer': [
       'appshell/renderer/client_app_delegates_renderer.cc',
