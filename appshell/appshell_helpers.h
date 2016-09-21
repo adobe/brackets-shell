@@ -37,10 +37,6 @@ namespace appshell {
 std::string GetExtensionJSSource();
 void PopulateSettings(CefSettings* settings);
 
-}  // namespace appshell
-
-namespace appshell {
-
 // Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
 CefString AppGetProductVersionString();
 

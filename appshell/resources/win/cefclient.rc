@@ -29,6 +29,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Binary
 //
 
+IDS_APPSHELL_EXTENSIONS         BINARY          "..\\..\\appshell_extensions.js"
+
 IDS_BINDING_HTML BINARY "..\\binding.html"
 IDS_DIALOGS_HTML BINARY "..\\dialogs.html"
 IDS_LOCALSTORAGE_HTML BINARY "..\\localstorage.html"

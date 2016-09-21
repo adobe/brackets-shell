@@ -461,6 +461,7 @@
       'appshell/browser/osr_dragdrop_events.h',
       'appshell/browser/osr_renderer.h',
       'appshell/browser/osr_renderer.cc',
+      'appshell/appshell_helpers_win.cc',
       'appshell/appshell_process_message.h',
       '<@(appshell_sources_browser)',
       '<@(appshell_sources_common)',
