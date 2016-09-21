@@ -4,8 +4,11 @@
 
 #include "appshell/browser/main_context_impl.h"
 
+//#import <Cocoa/Cocoa.h>
+
 #include "include/cef_parser.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/appshell_helpers.h"
 
 namespace client {
 
@@ -69,6 +72,8 @@ void MainContextImpl::PopulateSettings(CefSettings* settings) {
     settings->windowless_rendering_enabled = true;
 
   settings->background_color = background_color_;
+
+  appshell::PopulateSettings(settings);
 }
 
 void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {
@@ -76,6 +81,12 @@ void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {
     settings->windowless_frame_rate = atoi(command_line_->
         GetSwitchValue(switches::kOffScreenFrameRate).ToString().c_str());
   }
+
+  settings->web_security = STATE_DISABLED;
+
+  // Necessary to enable document.executeCommand("paste")
+  settings->javascript_access_clipboard = STATE_ENABLED;
+  settings->javascript_dom_paste = STATE_ENABLED;
 }
 
 void MainContextImpl::PopulateOsrSettings(OsrRenderer::Settings* settings) {

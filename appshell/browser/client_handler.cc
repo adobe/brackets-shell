@@ -20,6 +20,7 @@
 #include "appshell/browser/root_window_manager.h"
 #include "appshell/browser/test_runner.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/appshell_process_message.h"
 
 namespace client {
 
@@ -191,7 +192,7 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
   }
 
-  return false;
+  return appshell::OnProcessMessageReceived(this, browser, source_process, message);
 }
 
 void ClientHandler::OnBeforeContextMenu(
