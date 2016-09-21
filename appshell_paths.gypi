@@ -521,6 +521,7 @@
       'appshell/browser/temp_window_x11.h',
       'appshell/browser/window_test_gtk.cc',
       'appshell/cefclient_gtk.cc',
+      'appshell/appshell_helpers_gtk.cc',
       '<@(appshell_sources_browser)',
       '<@(appshell_sources_common)',
       '<@(appshell_sources_renderer)',
