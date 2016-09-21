@@ -4,8 +4,11 @@
 
 #include "appshell/browser/main_context_impl.h"
 
+//#import <Cocoa/Cocoa.h>
+
 #include "include/cef_parser.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/appshell_helpers.h"
 
 namespace client {
 
@@ -69,6 +72,8 @@ void MainContextImpl::PopulateSettings(CefSettings* settings) {
     settings->windowless_rendering_enabled = true;
 
   settings->background_color = background_color_;
+
+  appshell::PopulateSettings(settings);
 }
 
 void MainContextImpl::PopulateBrowserSettings(CefBrowserSettings* settings) {

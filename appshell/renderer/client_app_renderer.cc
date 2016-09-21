@@ -5,6 +5,8 @@
 #include "appshell/renderer/client_app_renderer.h"
 
 #include "include/base/cef_logging.h"
+#include "appshell/appshell_extension_handler.h"
+#include "appshell/appshell_helpers.h"
 
 namespace client {
 
@@ -20,6 +22,12 @@ void ClientAppRenderer::OnRenderThreadCreated(
 }
 
 void ClientAppRenderer::OnWebKitInitialized() {
+  // Register the appshell extension.
+  std::string extension_code = appshell::GetExtensionJSSource();
+
+  CefRegisterExtension("appshell", extension_code,
+      new appshell::AppShellExtensionHandler(this));
+
   DelegateSet::iterator it = delegates_.begin();
   for (; it != delegates_.end(); ++it)
     (*it)->OnWebKitInitialized(this);
