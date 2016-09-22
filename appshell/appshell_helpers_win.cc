@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <commdlg.h>
+#include <MMSystem.h>
 #include <ShlObj.h>
 #include <sstream>
 #include <windows.h>

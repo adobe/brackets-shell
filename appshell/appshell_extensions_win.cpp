@@ -58,8 +58,8 @@ UINT_PTR redrawTimerId = NULL;
 CefRefPtr<CefBrowser> redrawBrowser;
 
 extern HINSTANCE hInst;
-extern HACCEL hAccelTable;
-extern std::wstring gFilesToOpen;
+/*extern */HACCEL hAccelTable;
+//extern std::wstring gFilesToOpen;
 
 // constants
 #define MAX_LOADSTRING 100
@@ -1161,9 +1161,9 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
 }
 
 int32 GetPendingFilesToOpen(ExtensionString& files) {
-    files = gFilesToOpen;
-    ConvertToUnixPath(files);
-    gFilesToOpen = L"";
+//    files = gFilesToOpen;
+//    ConvertToUnixPath(files);
+//    gFilesToOpen = L"";
     return NO_ERROR;
 }
 
