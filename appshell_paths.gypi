@@ -513,7 +513,7 @@
       '<@(appshell_sources_renderer)',
     ],
     'appshell_bundle_resources_mac': [
-      'appshell/resources/mac/cefclient.icns',
+      'appshell/resources/mac/appshell.icns',
       'appshell/resources/mac/English.lproj/InfoPlist.strings',
       'appshell/resources/mac/English.lproj/MainMenu.xib',
       'appshell/resources/mac/Info.plist',
