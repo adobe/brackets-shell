@@ -21,10 +21,10 @@
  *
  */
 
-//#include "appshell_extensions_platform.h"
-//#include "native_menu_model.h"
+#include "appshell_extensions_platform.h"
+#include "native_menu_model.h"
 #include "appshell_node_process.h"
-//#include "config.h"
+#include "config.h"
 
 #include <algorithm>
 
@@ -40,29 +40,29 @@ namespace appshell {
         std::string message_name = message->GetName();
         CefRefPtr<CefListValue> argList = message->GetArgumentList();
         int32 callbackId = -1;
-        // int32 error = NO_ERROR;
-        CefRefPtr<CefProcessMessage> response = 
+        int32 error = NO_ERROR;
+        CefRefPtr<CefProcessMessage> response =
             CefProcessMessage::Create("invokeCallback");
         CefRefPtr<CefListValue> responseArgs = response->GetArgumentList();
         
-//        // V8 extension messages are handled here. These messages come from the 
-//        // render process thread (in client_app.cpp), and have the following format:
-//        //   name - the name of the native function to call
-//        //   argument0 - the id of this message. This id is passed back to the
-//        //               render process in order to execute callbacks
-//        //   argument1 - argumentN - the arguments for the function
-//        //
-//        // Note: Functions without callback can be specified, but they *cannot*
-//        // take any arguments.
-//        
-//        // If we have any arguments, the first is the callbackId
-//        if (argList->GetSize() > 0) {
-//            callbackId = argList->GetInt(0);
-//            
-//            if (callbackId != -1)
-//                responseArgs->SetInt(0, callbackId);
-//        }
-//        
+        // V8 extension messages are handled here. These messages come from the 
+        // render process thread (in client_app.cpp), and have the following format:
+        //   name - the name of the native function to call
+        //   argument0 - the id of this message. This id is passed back to the
+        //               render process in order to execute callbacks
+        //   argument1 - argumentN - the arguments for the function
+        //
+        // Note: Functions without callback can be specified, but they *cannot*
+        // take any arguments.
+        
+        // If we have any arguments, the first is the callbackId
+        if (argList->GetSize() > 0) {
+            callbackId = argList->GetInt(0);
+            
+            if (callbackId != -1)
+                responseArgs->SetInt(0, callbackId);
+        }
+        
 //        if (message_name == "OpenLiveBrowser") {
 //            // Parameters:
 //            //  0: int32 - callback id
@@ -256,31 +256,31 @@ namespace appshell {
 //                error = Rename(oldName, newName);
 //            }
 //          // No additional response args for this function
-//        } else if (message_name == "GetFileInfo") {
-//            // Parameters:
-//            //  0: int32 - callback id
-//            //  1: string - filename
-//            if (argList->GetSize() != 2 ||
-//                argList->GetType(1) != VTYPE_STRING) {
-//                error = ERR_INVALID_PARAMS;
-//            }
-//            
-//            if (error == NO_ERROR) {
-//                ExtensionString filename = argList->GetString(1);
-//                ExtensionString realPath;
-//                uint32 modtime;
-//                double size;
-//                bool isDir;
-//                
-//                error = GetFileInfo(filename, modtime, isDir, size, realPath);
-//                
-//                // Set response args for this function
-//                responseArgs->SetInt(2, modtime);
-//                responseArgs->SetBool(3, isDir);
-//                responseArgs->SetInt(4, size);
-//                responseArgs->SetString(5, realPath);
-//            }
-//        } else if (message_name == "ReadFile") {
+        /*} else*/ if (message_name == "GetFileInfo") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - filename
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            if (error == NO_ERROR) {
+                ExtensionString filename = argList->GetString(1);
+                ExtensionString realPath;
+                uint32 modtime;
+                double size;
+                bool isDir;
+                
+                error = GetFileInfo(filename, modtime, isDir, size, realPath);
+                
+                // Set response args for this function
+                responseArgs->SetInt(2, modtime);
+                responseArgs->SetBool(3, isDir);
+                responseArgs->SetInt(4, size);
+                responseArgs->SetString(5, realPath);
+            }
+        } //else if (message_name == "ReadFile") {
 //            // Parameters:
 //            //  0: int32 - callback id
 //            //  1: string - filename
@@ -747,13 +747,13 @@ namespace appshell {
 //            fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
 //            return false;
 //        }
-//      
-//        if (callbackId != -1) {
-//            responseArgs->SetInt(1, error);
-//          
-//            // Send response
-//            browser->SendProcessMessage(PID_RENDERER, response);
-//        }
+      
+        if (callbackId != -1) {
+            responseArgs->SetInt(1, error);
+          
+            // Send response
+            browser->SendProcessMessage(PID_RENDERER, response);
+        }
       
         return true;
     }
