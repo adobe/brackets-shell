@@ -377,14 +377,7 @@ namespace appshell {
             }
         } else if (message_name == "ShowDeveloperTools") {
             // Parameters - none
-            CefWindowInfo wi;
-            CefBrowserSettings settings;
-
-#if defined(OS_WIN)
-            wi.SetAsPopup(NULL, "DevTools");
-#endif
-            browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings, CefPoint());
-
+            handler->ShowDevTools(browser, CefPoint());
         } else if (message_name == "GetNodeState") {
             // Parameters:
             //  0: int32 - callback id
