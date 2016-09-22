@@ -34,7 +34,10 @@
 
 namespace appshell {
 
+double GetElapsedMilliseconds();
+CefString GetCurrentLanguage();
 std::string GetExtensionJSSource();
+
 void PopulateSettings(CefSettings* settings);
 
 // Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")

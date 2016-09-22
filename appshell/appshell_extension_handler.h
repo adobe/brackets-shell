@@ -164,11 +164,11 @@ class AppShellExtensionHandler : public CefV8Handler {
         // The only messages that are handled here is getElapsedMilliseconds(),
         // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
         // All other messages are passed to the browser process.
-//        if (name == "GetElapsedMilliseconds") {
-//            retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
-//        } else if (name == "GetCurrentLanguage") {
-//            retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
-        /*} else*/ if (name == "GetApplicationSupportDirectory") {
+        if (name == "GetElapsedMilliseconds") {
+            retval = CefV8Value::CreateDouble(GetElapsedMilliseconds());
+        } else if (name == "GetCurrentLanguage") {
+            retval = CefV8Value::CreateString(GetCurrentLanguage());
+        } else if (name == "GetApplicationSupportDirectory") {
             retval = CefV8Value::CreateString(AppGetSupportDirectory());
         } else if (name == "GetUserDocumentsDirectory") {
             retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
@@ -193,7 +193,7 @@ class AppShellExtensionHandler : public CefV8Handler {
 
             if (arguments.size() > 0) {
                 // The first argument is the message id
-//                client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
+                client_app_->AddCallback(messageId, CefV8Context::GetCurrentContext(), arguments[0]);
                 SetListValue(messageArgs, 0, CefV8Value::CreateInt(messageId));
             }
 

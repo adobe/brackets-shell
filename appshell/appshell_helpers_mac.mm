@@ -30,6 +30,33 @@
 
 namespace appshell {
 
+CFTimeInterval g_appStartupTime = CFAbsoluteTimeGetCurrent();
+
+double GetElapsedMilliseconds()
+{
+    CFAbsoluteTime elapsed = CFAbsoluteTimeGetCurrent() - g_appStartupTime;
+
+    return round(elapsed * 1000);
+}
+
+CefString GetCurrentLanguage()
+{
+    // Do not confuse preferredLanguages with currentLocale.
+    // preferredLanguages specifies to UI language. currentLocale
+    // represents formatting for date, time, measurement, etc.
+    // The end result is that the language that we may return a language
+    // without a country code. e.g. Macs have English "en", British "en-GB"
+    // and U.S. English "en-US" each as separate language. "en" is the
+    // default on US systems.
+    // NSLog(@"localeIdentifier: %@", [[NSLocale currentLocale] localeIdentifier]);
+    // NSLog(@"%@", language);
+
+    NSString* language = [[NSLocale preferredLanguages] objectAtIndex:0];
+
+    CefString result = [language UTF8String];
+    return result;
+}
+
 std::string GetExtensionJSSource()
 {
     std::string result;
