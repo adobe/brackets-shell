@@ -522,6 +522,8 @@
       'appshell/resources/mac/Japanese.lproj/MainMenu.xib',
       'appshell/resources/mac/Info.plist',
       'appshell/resources/mac/brackets.sh',
+      'appshell/resources/mac/TrafficLights.xib',
+      'appshell/resources/mac/FullScreen.xib',
       'appshell/appshell_extensions.js',
       '<@(appshell_sources_resources)',
     ],
