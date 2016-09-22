@@ -521,6 +521,7 @@
       'appshell/resources/mac/Japanese.lproj/InfoPlist.strings',
       'appshell/resources/mac/Japanese.lproj/MainMenu.xib',
       'appshell/resources/mac/Info.plist',
+      'appshell/resources/mac/brackets.sh',
       'appshell/appshell_extensions.js',
       '<@(appshell_sources_resources)',
     ],
