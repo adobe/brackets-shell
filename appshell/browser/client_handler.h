@@ -14,6 +14,7 @@
 #include "include/wrapper/cef_message_router.h"
 #include "include/wrapper/cef_resource_manager.h"
 #include "appshell/browser/client_types.h"
+#include "appshell/command_callbacks.h"
 
 #if defined(OS_LINUX)
 #include "appshell/browser/dialog_handler_gtk.h"
@@ -348,6 +349,10 @@ class ClientHandler : public CefClient,
 
   // Set of Handlers registered with the message router.
   MessageHandlerSet message_handler_set_;
+
+  typedef std::map<int32, CefRefPtr<CommandCallback> > CommandCallbackMap;
+  int32 callbackId;
+  CommandCallbackMap command_callback_map_;
 
   DISALLOW_COPY_AND_ASSIGN(ClientHandler);
 };

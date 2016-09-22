@@ -191,6 +191,18 @@ bool ClientHandler::OnProcessMessageReceived(
     focus_on_editable_field_ = message->GetArgumentList()->GetBool(0);
     return true;
   }
+    
+    // Check for callbacks first
+    if (message->GetName() == "executeCommandCallback") {
+        int32 commandId = message->GetArgumentList()->GetInt(0);
+        bool result = message->GetArgumentList()->GetBool(1);
+        
+        CefRefPtr<CommandCallback> callback = command_callback_map_[commandId];
+        callback->CommandComplete(result);
+        command_callback_map_.erase(commandId);
+        
+        return true;
+    }
 
   return appshell::OnProcessMessageReceived(this, browser, source_process, message);
 }
