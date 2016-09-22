@@ -101,4 +101,14 @@ CefString AppGetCachePath() {
     return CefString(cachePath);
 }
 
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+    size_t idx = key.find(keyStroke, 0);
+    if (idx != ExtensionString::npos) {
+        key = key.replace(idx, keyStroke.size(), replaceString);
+        return true;
+    }
+    return false;
+}
+
 }  // namespace appshell

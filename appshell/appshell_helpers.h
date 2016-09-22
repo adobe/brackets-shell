@@ -29,7 +29,7 @@
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_types_wrappers.h"
 
-//#include "appshell_extensions_platform.h"
+#include "appshell_extensions_platform.h"
 #include "config.h"
 
 namespace appshell {
@@ -52,15 +52,7 @@ CefString AppGetCachePath();
 #if defined(OS_MACOSX)
 
 // Replace keyStroke with replaceString.
-//bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
-//{
-//    size_t idx = key.find(keyStroke, 0);
-//    if (idx != ExtensionString::npos) {
-//        key = key.replace(idx, keyStroke.size(), replaceString);
-//        return true;
-//    }
-//    return false;
-//}
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString);
 
 #endif
 
