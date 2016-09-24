@@ -198,7 +198,7 @@ function start() {
                 });
 
                 wsServer = new WebSocket.Server({
-                    server: httpServer,
+                    server: httpServer/*,
                     verifyClient : function (info, callback) {
                         // Accept connections originated from local system only
                         // Also do a loose check on user-agent to accept connection only from Brackets CEF shell
@@ -208,7 +208,7 @@ function start() {
                             // Reject the connection
                             callback(false);
                         }
-                    }
+                    }*/
                 });
 
                 wsServer.on("error", function () {
