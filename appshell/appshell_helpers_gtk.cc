@@ -30,16 +30,17 @@
 #include "appshell/common/client_switches.h"
 #include "config.h"
 
+extern char _binary_appshell_appshell_extensions_js_start;
+
 namespace appshell {
 
-extern char _binary_appshell_appshell_extensions_js_start;
 
 static std::string szInitialUrl;
 static std::string szRunningDir;
 
 time_t g_appStartupTime = time(NULL);
 
-double ClientApp::GetElapsedMilliseconds()
+double GetElapsedMilliseconds()
 {
     return (time(NULL) - g_appStartupTime);
 }

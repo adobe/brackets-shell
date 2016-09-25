@@ -30,7 +30,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
-#include "client_handler.h"
 
 #include <errno.h>
 #include <dirent.h>
