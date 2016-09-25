@@ -23,6 +23,7 @@
 #include "appshell/browser/test_runner.h"
 #include "appshell/common/client_app_other.h"
 #include "appshell/renderer/client_app_renderer.h"
+#include "appshell_node_process.h"
 
 namespace client {
 namespace {
@@ -96,6 +97,9 @@ int RunMain(int argc, char* argv[]) {
   // The Chromium sandbox requires that there only be a single thread during
   // initialization. Therefore initialize GTK after CEF.
   gtk_init(&argc, &argv_copy);
+
+  // Start the node server process
+  startNodeProcess();
 
   // Install xlib error handlers so that the application won't be terminated
   // on non-fatal errors. Must be done after initializing GTK.
