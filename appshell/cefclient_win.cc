@@ -15,6 +15,7 @@
 #include "appshell/browser/test_runner.h"
 #include "appshell/common/client_app_other.h"
 #include "appshell/renderer/client_app_renderer.h"
+#include "appshell/appshell_node_process.h"
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
 // automatically if using the required compiler version. Pass -DUSE_SANDBOX=OFF
@@ -89,6 +90,9 @@ int RunMain(HINSTANCE hInstance, int nCmdShow) {
 
   // Register scheme handlers.
   test_runner::RegisterSchemeHandlers();
+
+  // Start the node server process
+  startNodeProcess();
 
   // Create the first window.
   context->GetRootWindowManager()->CreateRootWindow(
