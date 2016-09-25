@@ -89,7 +89,7 @@
             },
           },
           'variables': {
-            'win_exe_compatibility_manifest': 'compatibility.manifest',
+            'win_exe_compatibility_manifest': 'appshell/resources/win/compatibility.manifest',
             'xparams': "/efy",
           },
           'actions': [
