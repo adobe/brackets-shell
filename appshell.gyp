@@ -114,7 +114,7 @@
             },
             'VCManifestTool': {
               'AdditionalManifestFiles': [
-                'appshell.exe.manifest',
+                'appshell/resources/win/appshell.exe.manifest',
               ],
             },
           },

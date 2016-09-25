@@ -22,5 +22,5 @@
       <ms_windowsSettings:dpiAware xmlns:ms_windowsSettings="http://schemas.microsoft.com/SMI/2005/WindowsSettings" xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</ms_windowsSettings:dpiAware>
     </windowsSettings>
   </application>
-  
+
 </assembly>
