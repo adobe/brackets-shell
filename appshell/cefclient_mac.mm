@@ -12,6 +12,7 @@
 #include "appshell/browser/resource.h"
 #include "appshell/browser/root_window.h"
 #include "appshell/browser/test_runner.h"
+#include "appshell/appshell_node_process.h"
 
 namespace {
 
@@ -203,6 +204,9 @@ int RunMain(int argc, char* argv[]) {
   ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
   if (process_type == ClientApp::BrowserProcess)
     app = new ClientAppBrowser();
+
+  // Start the node server process
+  startNodeProcess();
 
   // Create the main context object.
   scoped_ptr<MainContextImpl> context(new MainContextImpl(command_line, true));
