@@ -27,15 +27,9 @@ ClientHandler::ClientHandler()
   : m_MainHwnd(NULL),
     m_BrowserId(0),
     m_EditHwnd(NULL),
-    m_BackHwnd(NULL),
-    m_ForwardHwnd(NULL),
-    m_StopHwnd(NULL),
-    m_ReloadHwnd(NULL),
-    m_bFormElementHasFocus(false),
     m_quitting(false) {
   callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);
-  CreateRequestDelegates(request_delegates_);
 }
 
 ClientHandler::~ClientHandler() {
@@ -201,27 +195,6 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
     return false;
 }
 
-void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame) {
-  CEF_REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
-    // We've just started loading a page
-    SetLoading(true);
-  }
-}
-
-void ClientHandler::OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                              CefRefPtr<CefFrame> frame,
-                              int httpStatusCode) {
-  CEF_REQUIRE_UI_THREAD();
-
-  if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
-    // We've just finished loading a page
-    SetLoading(false);
-  }
-}
-
 void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 ErrorCode errorCode,
@@ -251,75 +224,11 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
   frame->LoadString(ss.str(), failedUrl);
 }
 
-CefRefPtr<CefResourceHandler> ClientHandler::GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) {
-  CefRefPtr<CefResourceHandler> handler;
-
-  // Execute delegate callbacks.
-  RequestDelegateSet::iterator it = request_delegates_.begin();
-  for (; it != request_delegates_.end() && !handler.get(); ++it)
-    handler = (*it)->GetResourceHandler(this, browser, frame, request);
-
-  return handler;
-}
-
 void ClientHandler::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
                                          bool isLoading,
                                          bool canGoBack,
                                          bool canGoForward) {
   CEF_REQUIRE_UI_THREAD();
-  SetLoading(isLoading);
-  SetNavState(canGoBack, canGoForward);
-}
-
-bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                     const CefString& message,
-                                     const CefString& source,
-                                     int line) {
-  // Don't write the message to a console.log file. Instead, we'll just
-  // return false here so the message gets written to the console (output window
-  // in xcode, or console window in dev tools)
-  
-/*
-  CEF_REQUIRE_UI_THREAD();
-
-  bool first_message;
-  std::string logFile;
-
-  {
-    AutoLock lock_scope(this);
-
-    first_message = m_LogFile.empty();
-    if (first_message) {
-      std::stringstream ss;
-      ss << AppGetWorkingDirectory();
-#if defined(OS_WIN)
-      ss << "\\";
-#else
-      ss << "/";
-#endif
-      ss << "console.log";
-      m_LogFile = ss.str();
-    }
-    logFile = m_LogFile;
-  }
-
-  FILE* file = fopen(logFile.c_str(), "a");
-  if (file) {
-    std::stringstream ss;
-    ss << "Message: " << std::string(message) << "\r\nSource: " <<
-        std::string(source) << "\r\nLine: " << line <<
-        "\r\n-----------------------\r\n";
-    fputs(ss.str().c_str(), file);
-    fclose(file);
-
-    if (first_message)
-      SendNotification(NOTIFY_CONSOLE_MESSAGE);
-  }
-*/
-  return false;
 }
 
 bool ClientHandler::OnRequestGeolocationPermission(
@@ -371,22 +280,6 @@ void ClientHandler::SetMainHwnd(CefWindowHandle hwnd) {
 void ClientHandler::SetEditHwnd(CefWindowHandle hwnd) {
   AutoLock lock_scope(this);
   m_EditHwnd = hwnd;
-}
-
-void ClientHandler::SetButtonHwnds(CefWindowHandle backHwnd,
-                                   CefWindowHandle forwardHwnd,
-                                   CefWindowHandle reloadHwnd,
-                                   CefWindowHandle stopHwnd) {
-  AutoLock lock_scope(this);
-  m_BackHwnd = backHwnd;
-  m_ForwardHwnd = forwardHwnd;
-  m_ReloadHwnd = reloadHwnd;
-  m_StopHwnd = stopHwnd;
-}
-
-std::string ClientHandler::GetLogFile() {
-  AutoLock lock_scope(this);
-  return m_LogFile;
 }
 
 void ClientHandler::SetLastDownloadFile(const std::string& fileName) {
@@ -491,8 +384,4 @@ void ClientHandler::AbortQuit()
 void ClientHandler::CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates) {
 	appshell_extensions::CreateProcessMessageDelegates(delegates);
-}
-
-// static
-void ClientHandler::CreateRequestDelegates(RequestDelegateSet& delegates) {
 }

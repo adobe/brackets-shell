@@ -8,7 +8,6 @@
 #include <sstream>
 #include "cefclient.h"
 #include "include/cef_app.h"
-#include "include/cef_version.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
@@ -19,6 +18,7 @@
 #include "appshell_extensions.h"
 #include "command_callbacks.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/browser/client_app_browser.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -680,14 +680,6 @@ extern NSMutableArray* pendingOpenFiles;
   CefWindowInfo window_info;
   CefBrowserSettings settings;
 
-  settings.web_security = STATE_DISABLED;
-
-  // Necessary to enable document.executeCommand("paste")
-  settings.javascript_access_clipboard = STATE_ENABLED;
-  settings.javascript_dom_paste = STATE_ENABLED;
-
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
   // CSS.
@@ -796,8 +788,10 @@ extern NSMutableArray* pendingOpenFiles;
 }
 @end
 
-
-int main(int argc, char* argv[]) {
+namespace client {
+namespace {
+        
+int RunMain(int argc, char* argv[]) {
   // Initialize the AutoRelease pool.
   g_autopool = [[NSAutoreleasePool alloc] init];
 
@@ -813,8 +807,16 @@ int main(int argc, char* argv[]) {
 
   // Start the node server process
   startNodeProcess();
-    
-  CefRefPtr<ClientApp> app(new ClientApp);
+
+  // Parse command-line arguments.
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromArgv(argc, argv);
+
+  // Create a ClientApp of the correct type.
+  CefRefPtr<CefApp> app;
+  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
+  if (process_type == ClientApp::BrowserProcess)
+    app = new ClientAppBrowser();
 
   // Execute the secondary process, if any.
   int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
@@ -829,20 +831,7 @@ int main(int argc, char* argv[]) {
   NSObject* delegate = [[ClientAppDelegate alloc] init];
   [NSApp setDelegate:delegate];
 
-  // Parse command line arguments.
-  AppInitCommandLine(argc, argv);
-
   CefSettings settings;
-
- // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
-
-  settings.no_sandbox = YES;
-    
-  // Check command
-  if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
-  }
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
@@ -851,10 +840,9 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-  
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
-    CefString cmdLineStartupURL = cmdLine->GetSwitchValue(client::switches::kStartupPath);
+
+  if (command_line->HasSwitch(client::switches::kStartupPath)) {
+    CefString cmdLineStartupURL = command_line->GetSwitchValue(client::switches::kStartupPath);
     std::string startupURLStr(cmdLineStartupURL);
     NSString* str = [NSString stringWithUTF8String:startupURLStr.c_str()];
     startupUrl = [NSURL fileURLWithPath:[str stringByExpandingTildeInPath]];
@@ -914,36 +902,18 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+}  // namespace
+}  // namespace client
+
+
+// Program entry point function.
+int main(int argc, char* argv[]) {
+    return client::RunMain(argc, argv);
+}
+
 
 // Global functions
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
-}
-
-CefString AppGetCachePath() {
-  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
-  
-  return CefString(cachePath);
-}
-
-CefString AppGetProductVersionString() {
-  NSMutableString *s = [NSMutableString stringWithString:APP_NAME];
-  [s replaceOccurrencesOfString:@" "
-                     withString:@""
-                        options:NSLiteralSearch
-                          range:NSMakeRange(0, [s length])];
-  [s appendString:@"/"];
-  [s appendString:(NSString*)[[NSBundle mainBundle]
-                              objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
-  CefString result = CefString([s UTF8String]);
-  return result;
-}
-
-CefString AppGetChromiumVersionString() {
-  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
-                           cef_version_info(2), cef_version_info(3),
-                           cef_version_info(4), cef_version_info(5)];
-  CefString result = CefString([s UTF8String]);
-  return result;
 }

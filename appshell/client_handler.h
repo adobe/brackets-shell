@@ -53,22 +53,6 @@ public:
   typedef std::set<CefRefPtr<ProcessMessageDelegate> >
       ProcessMessageDelegateSet;
 
-  // Interface for request handler delegates. Do not perform work in the
-  // RequestDelegate constructor.
-  class RequestDelegate : public virtual CefBase {
-   public:
-    // Called to retrieve a resource handler.
-    virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
-        CefRefPtr<ClientHandler> handler,
-        CefRefPtr<CefBrowser> browser,
-        CefRefPtr<CefFrame> frame,
-        CefRefPtr<CefRequest> request) {
-      return NULL;
-    }
-  };
-
-  typedef std::set<CefRefPtr<RequestDelegate> > RequestDelegateSet;
-
   ClientHandler();
   virtual ~ClientHandler();
 
@@ -125,22 +109,11 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                            DragOperationsMask mask) OVERRIDE;
 
   // CefLoadHandler methods
-  virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame) OVERRIDE;
-  virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame,
-                         int httpStatusCode) OVERRIDE;
   virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame,
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) OVERRIDE;
-
-  // CefRequestHandler methods
-  virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) OVERRIDE;
 
   // CefDisplayHandler methods
   virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
@@ -152,10 +125,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                                const CefString& url) OVERRIDE;
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) OVERRIDE;
-  virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                const CefString& message,
-                                const CefString& source,
-                                int line) OVERRIDE;
 
   // CefGeolocationHandler methods
   virtual bool OnRequestGeolocationPermission(
@@ -188,16 +157,10 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   void SetMainHwnd(CefWindowHandle hwnd);
   CefWindowHandle GetMainHwnd() { return m_MainHwnd; }
   void SetEditHwnd(CefWindowHandle hwnd);
-  void SetButtonHwnds(CefWindowHandle backHwnd,
-                      CefWindowHandle forwardHwnd,
-                      CefWindowHandle reloadHwnd,
-                      CefWindowHandle stopHwnd);
 
   CefRefPtr<CefBrowser> GetBrowser() { return m_Browser; }
   int GetBrowserId() { return m_BrowserId; }
   bool CanCloseBrowser(CefRefPtr<CefBrowser> browser);
-
-  std::string GetLogFile();
 
   void SetLastDownloadFile(const std::string& fileName);
   std::string GetLastDownloadFile();
@@ -228,17 +191,12 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   bool HasWindows() const { return !browser_window_map_.empty(); }
 
  protected:
-  void SetLoading(bool isLoading);
-  void SetNavState(bool canGoBack, bool canGoForward);
   void PopupCreated(CefRefPtr<CefBrowser> browser);
   void ComputePopupPlacement(CefWindowInfo& windowInfo);
                         
   // Create all of ProcessMessageDelegate objects.
   static void CreateProcessMessageDelegates(
       ProcessMessageDelegateSet& delegates);
-
-  // Create all of RequestDelegateSet objects.
-  static void CreateRequestDelegates(RequestDelegateSet& delegates);
 
   // The main frame window handle
   CefWindowHandle m_MainHwnd;
@@ -260,25 +218,14 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   // The edit window handle
   CefWindowHandle m_EditHwnd;
 
-  // The button window handles
-  CefWindowHandle m_BackHwnd;
-  CefWindowHandle m_ForwardHwnd;
-  CefWindowHandle m_StopHwnd;
-  CefWindowHandle m_ReloadHwnd;
-                          
-  // Support for logging.
-  std::string m_LogFile;
-
   // Support for downloading files.
   std::string m_LastDownloadFile;
 
   // True if a form element currently has focus
-  bool m_bFormElementHasFocus;
   bool m_quitting;
 
   // Registered delegates.
   ProcessMessageDelegateSet process_message_delegates_;
-  RequestDelegateSet request_delegates_;
 
   typedef std::map< CefWindowHandle, CefRefPtr<CefBrowser> > BrowserWindowMap;
   static BrowserWindowMap browser_window_map_;

@@ -59,12 +59,6 @@ void ClientHandler::SendNotification(NotificationType type) {
   PostMessage(m_MainHwnd, WM_COMMAND, id, 0);
 }
 
-void ClientHandler::SetLoading(bool isLoading) {
-}
-
-void ClientHandler::SetNavState(bool canGoBack, bool canGoForward) {
-}
-
 void ClientHandler::CloseMainWindow() {
   ::PostMessage(m_MainHwnd, WM_CLOSE, 0, 0);
 }

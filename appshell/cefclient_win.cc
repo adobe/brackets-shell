@@ -4,10 +4,8 @@
 
 #include "cefclient.h"
 #include <windows.h>
-#include <commdlg.h>
 #include <direct.h>
 #include <MMSystem.h>
-#include <sstream>
 #include <string>
 #include "include/cef_app.h"
 #include "include/cef_version.h"
@@ -16,14 +14,16 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "config.h"
+#include "appshell/browser/client_app_browser.h"
 #include "appshell/browser/resource.h"
+#include "appshell/common/client_app_other.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/renderer/client_app_renderer.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
+#include "appshell_helpers.h"
 
-#include <algorithm>
 #include <ShellAPI.h>
-#include <ShlObj.h>
 
 #include "cef_registry.h"
 #include "cef_main_window.h"
@@ -37,14 +37,16 @@ cef_main_window* gMainWnd = NULL;
 
 // static variables (not exported)
 static char      szWorkingDir[MAX_UNC_PATH];    // The current working directory
-static wchar_t   szInitialUrl[MAX_UNC_PATH] = {0};
 
-
-// Forward declarations of functions included in this code module:
-BOOL InitInstance(HINSTANCE, int);
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
+
+namespace client {
+namespace {
+
+// Forward declarations of functions included in this code module:
+BOOL InitInstance(HINSTANCE, int);
 
 #if defined(OS_WIN)
 // Add Common Controls to the application manifest because it's required to
@@ -128,13 +130,13 @@ bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
 
 }
 
-std::wstring GetFilenamesFromCommandLine() {
+std::wstring GetFilenamesFromCommandLine(CefRefPtr<CefCommandLine> command_line) {
   std::wstring result = L"[]";
 
-  if (AppGetCommandLine()->HasArguments()) {
+  if (command_line->HasArguments()) {
     bool firstEntry = true;
     std::vector<CefString> args;
-    AppGetCommandLine()->GetArguments(args);
+    command_line->GetArguments(args);
     std::vector<CefString>::iterator iterator;
     result = L"[";
     for (iterator = args.begin(); iterator != args.end(); iterator++) {
@@ -163,36 +165,43 @@ std::wstring GetFilenamesFromCommandLine() {
 // forward declaration; implemented in appshell_extensions_win.cpp
 void ConvertToUnixPath(ExtensionString& filename);
 
-// Program entry point function.
-int APIENTRY wWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow) {
+int RunMain(HINSTANCE hInstance,
+            HINSTANCE hPrevInstance,
+            LPTSTR    lpCmdLine,
+            int       nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
   g_appStartupTime = timeGetTime();
 
   CefMainArgs main_args(hInstance);
-  CefRefPtr<ClientApp> app(new ClientApp);
+
+  // Parse command-line arguments.
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromString(::GetCommandLineW());
+
+  // Create a ClientApp of the correct type.
+  CefRefPtr<CefApp> app;
+  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
+  if (process_type == ClientApp::BrowserProcess)
+    app = new ClientAppBrowser();
+  else if (process_type == ClientApp::RendererProcess)
+    app = new ClientAppRenderer();
+  else if (process_type == ClientApp::OtherProcess)
+    app = new ClientAppOther();
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
   if (exit_code >= 0)
     return exit_code;
-
-  bool isShiftKeyDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? true: false;
 
   // Retrieve the current working directory.
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(0, NULL);
-
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
-  if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
+  if ((hMutex != NULL) && command_line->HasArguments() && (lpCmdLine != NULL)) {
    // for subsequent instances, re-use an already running instance if we're being called to
    //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
    HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
@@ -227,69 +236,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   CefSettings settings;
 
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
-
-  // Check command
-  if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
+  if (appshell::AppInitInitialUrl(command_line) < 0) {
+    CefShutdown();
+    return 0;
   }
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
-
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
-	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(client::switches::kStartupPath).c_str());
-  }
-  else {
-	// If the shift key is not pressed, look for the index.html file 
-	if (!isShiftKeyDown) {
-	// Get the full pathname for the app. We look for the index.html
-	// file relative to this location.
-	wchar_t appPath[MAX_UNC_PATH];
-	wchar_t *pathRoot;
-	GetModuleFileName(NULL, appPath, MAX_UNC_PATH);
-
-	// Strip the .exe filename (and preceding "\") from the appPath
-	// and store in pathRoot
-	pathRoot = wcsrchr(appPath, '\\');
-
-	// Look for .\dev\src\index.html first
-	wcscpy(pathRoot, L"\\dev\\src\\index.html");
-
-	// If the file exists, use it
-	if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-	}
-
-	if (!wcslen(szInitialUrl)) {
-		// Look for .\www\index.html next
-		wcscpy(pathRoot, L"\\www\\index.html");
-		if (GetFileAttributes(appPath) != INVALID_FILE_ATTRIBUTES) {
-		wcscpy(szInitialUrl, appPath);
-		}
-	}
-	}
-  }
-
-  if (!wcslen(szInitialUrl)) {
-      // If we got here, either the startup file couldn't be found, or the user pressed the
-      // shift key while launching. Prompt to select the index.html file.
-      OPENFILENAME ofn = {0};
-      ofn.lStructSize = sizeof(ofn);
-      ofn.lpstrFile = szInitialUrl;
-      ofn.nMaxFile = MAX_UNC_PATH;
-      ofn.lpstrFilter = L"Web Files\0*.htm;*.html\0\0";
-      ofn.lpstrTitle = L"Please select the " APP_NAME L" index.html file.";
-      ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_EXPLORER;
-
-      if (!GetOpenFileName(&ofn)) {
-        // User cancelled, exit the app
-        CefShutdown();
-        return 0;
-      }
-  }
 
   // Perform application initialization
   if (!InitInstance (hInstance, nCmdShow))
@@ -298,7 +251,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Start the node server process
   startNodeProcess();
 
-  gFilesToOpen = GetFilenamesFromCommandLine();
+  gFilesToOpen = GetFilenamesFromCommandLine(command_line);
 
   int result = 0;
 
@@ -348,82 +301,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   return gMainWnd->Create();
 }
 
+
+}  // namespace
+}  // namespace client
+
+
+// Program entry point function.
+int APIENTRY wWinMain(HINSTANCE hInstance,
+                      HINSTANCE hPrevInstance,
+                      LPTSTR    lpCmdLine,
+                      int       nCmdShow) {
+  UNREFERENCED_PARAMETER(hPrevInstance);
+  UNREFERENCED_PARAMETER(lpCmdLine);
+  return client::RunMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+}
+
 // Global functions
 
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
-}
-
-CefString AppGetCachePath() {
-  std::wstring cachePath = ClientApp::AppGetSupportDirectory();
-  cachePath +=  L"/cef_data";
-
-  return CefString(cachePath);
-}
-
-CefString AppGetInitialURL() {
-    return szInitialUrl;    
-}
-
-// Helper function for AppGetProductVersionString. Reads version info from
-// VERSIONINFO and writes it into the passed in std::wstring.
-void GetFileVersionString(std::wstring &retVersion) {
-  DWORD dwSize = 0;
-  BYTE *pVersionInfo = NULL;
-  VS_FIXEDFILEINFO *pFileInfo = NULL;
-  UINT pLenFileInfo = 0;
-
-  HMODULE module = GetModuleHandle(NULL);
-  TCHAR executablePath[MAX_UNC_PATH];
-  GetModuleFileName(module, executablePath, MAX_UNC_PATH);
-
-  dwSize = GetFileVersionInfoSize(executablePath, NULL);
-  if (dwSize == 0) {
-    return;
-  }
-
-  pVersionInfo = new BYTE[dwSize];
-
-  if (!GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo)) 	{
-    delete[] pVersionInfo;
-    return;
-  }
-
-  if (!VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo)) {
-    delete[] pVersionInfo;
-    return;
-  }
-
-  int major  = (pFileInfo->dwFileVersionMS >> 16) & 0xffff ;
-  int minor  = (pFileInfo->dwFileVersionMS) & 0xffff;
-  int hotfix = (pFileInfo->dwFileVersionLS >> 16) & 0xffff;
-  int other  = (pFileInfo->dwFileVersionLS) & 0xffff;
-
-  delete[] pVersionInfo;
-
-  std::wostringstream versionStream(L"");
-  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
-  retVersion = versionStream.str();
-}
-
-CefString AppGetProductVersionString() {
-  std::wstring s(APP_NAME);
-  size_t i = s.find(L" ");
-  while (i != std::wstring::npos) {
-    s.erase(i, 1);
-    i = s.find(L" ");
-  }
-  std::wstring version(L"");
-  GetFileVersionString(version);
-  s.append(L"/");
-  s.append(version);
-  return CefString(s);
-}
-
-CefString AppGetChromiumVersionString() {
-  std::wostringstream versionStream(L"");
-  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
-                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
-
-  return CefString(versionStream.str());
 }

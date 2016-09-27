@@ -23,15 +23,11 @@
 
 #pragma once
 
-#include "client_app.h"
 #include "client_handler.h"
 
 namespace appshell_extensions {
 
 // Create message delegates that run in the browser process
 void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates);
-
-//Replace keyStroke with replaceString 
-bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString);
 
 }  // namespace appshell_extensions

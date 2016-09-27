@@ -21,7 +21,7 @@
  *
  */
 
-#include "client_app.h"
+#include "appshell/common/client_app.h"
 
 #include "appshell/browser/resource.h"
 #include "include/cef_base.h"
@@ -37,6 +37,8 @@
 
 extern time_t g_appStartupTime;
 extern char _binary_appshell_appshell_extensions_js_start;
+
+namespace client {
 
 CefString ClientApp::GetCurrentLanguage()
 {
@@ -81,21 +83,4 @@ double ClientApp::GetElapsedMilliseconds()
     return (time(NULL) - g_appStartupTime);
 }
 
-CefString ClientApp::AppGetSupportDirectory() 
-{
-    gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), APP_NAME);
-    CefString result = CefString(supportDir);
-    g_free(supportDir);
-    
-    return result;
-}
-
-CefString ClientApp::AppGetDocumentsDirectory() 
-{
-    const char *dir = g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS);
-    if (dir == NULL)  {
-        return AppGetSupportDirectory();
-    } else {
-        return CefString(dir);
-    }
-}
+}  // namespace client

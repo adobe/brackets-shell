@@ -22,10 +22,10 @@
  */
 
 #include "appshell_extensions_platform.h"
-#include "appshell_extensions.h"
 
+#include "appshell/common/client_app.h"
+#include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
-#include "client_handler.h"
 
 #include <algorithm>
 #include <CommDlg.h>
@@ -339,7 +339,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     std::wstring args = appPath;
 
     if (enableRemoteDebugging) {
-        std::wstring profilePath(ClientApp::AppGetSupportDirectory());
+        std::wstring profilePath(appshell::AppGetSupportDirectory());
         profilePath += L"\\live-dev-profile";
         args += L" --user-data-dir=\"";
         args += profilePath;
