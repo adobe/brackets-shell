@@ -22,7 +22,6 @@
  */
 
 #include "appshell_extensions_platform.h"
-#include "appshell_extensions.h"
 
 #include "client_app.h"
 #include <glib.h>
