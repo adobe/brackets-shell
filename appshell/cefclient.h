@@ -26,10 +26,6 @@ std::string AppGetWorkingDirectory();
 // Returns the starting URL
 CefString AppGetInitialURL();
 
-
-// Returns the default CEF cache location
-CefString AppGetCachePath();
-
 // Returns a string containing the product and version (e.g. "Brackets/0.19.0.0")
 CefString AppGetProductVersionString();
 

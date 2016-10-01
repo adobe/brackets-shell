@@ -87,13 +87,6 @@ class ClientApp : public CefApp,
       callback_map_[id] = std::make_pair(context, callbackFunction);
   }
 
-  // Platform-specific methods implemented in client_app_mac/client_app_win
-  double GetElapsedMilliseconds();
-  CefString GetCurrentLanguage();
-  std::string GetExtensionJSSource();
-  static CefString AppGetSupportDirectory();
-  static CefString AppGetDocumentsDirectory();
-
 private:
   // Creates all of the RenderDelegate objects. Implemented in
   // client_app_delegates.

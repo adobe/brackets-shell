@@ -21,49 +21,48 @@
  *
  */
 
-#include "client_app.h"
+#include "appshell/appshell_helpers.h"
 
 #include "appshell/browser/resource.h"
 #include "include/cef_base.h"
-#include "config.h"
 
 #include <algorithm>
 #include <MMSystem.h>
 #include <ShlObj.h>
-#include <string>
 
 extern DWORD g_appStartupTime;
+extern HINSTANCE hInst;
 
-CefString ClientApp::GetCurrentLanguage()
+namespace appshell {
+
+CefString GetCurrentLanguage()
 {
-	// Get the user's selected language
-	// Defaults to the system installed language if not using MUI.
-	LANGID langID = GetUserDefaultUILanguage();
+    // Get the user's selected language
+    // Defaults to the system installed language if not using MUI.
+    LANGID langID = GetUserDefaultUILanguage();
 
-	// Convert LANGID to a RFC 4646 language tag (per navigator.language)
-	int langSize = GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, NULL, 0);
-	int countrySize = GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, NULL, 0);
+    // Convert LANGID to a RFC 4646 language tag (per navigator.language)
+    int langSize = GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, NULL, 0);
+    int countrySize = GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, NULL, 0);
 
-	wchar_t *lang = new wchar_t[langSize + countrySize + 1];
-	wchar_t *country = new wchar_t[countrySize];
-	
-	GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, lang, langSize);
-	GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, country, countrySize);
+    wchar_t *lang = new wchar_t[langSize + countrySize + 1];
+    wchar_t *country = new wchar_t[countrySize];
 
-	// add hyphen
-	wcscat(wcscat(lang, L"-"), country);
-	std::wstring locale(lang);
+    GetLocaleInfo(langID, LOCALE_SISO639LANGNAME, lang, langSize);
+    GetLocaleInfo(langID, LOCALE_SISO3166CTRYNAME, country, countrySize);
 
-	delete [] lang;
-	delete [] country;
+    // add hyphen
+    wcscat(wcscat(lang, L"-"), country);
+    std::wstring locale(lang);
 
-	return CefString(locale);
+    delete [] lang;
+    delete [] country;
+
+    return CefString(locale);
 }
 
-std::string ClientApp::GetExtensionJSSource()
+std::string GetExtensionJSSource()
 {
-    extern HINSTANCE hInst;
-
     HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(IDS_APPSHELL_EXTENSIONS), MAKEINTRESOURCE(256));
     DWORD dwSize;
     LPBYTE pBytes = NULL;
@@ -86,16 +85,16 @@ std::string ClientApp::GetExtensionJSSource()
     return "";
 }
 
-double ClientApp::GetElapsedMilliseconds()
+double GetElapsedMilliseconds()
 {
     return (timeGetTime() - g_appStartupTime);
 }
 
-CefString ClientApp::AppGetSupportDirectory() 
+CefString AppGetSupportDirectory()
 {
     wchar_t dataPath[MAX_UNC_PATH];
     SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, dataPath);
-  
+
     std::wstring appSupportPath = dataPath;
     appSupportPath +=  L"\\" GROUP_NAME APP_NAME;
 
@@ -105,8 +104,7 @@ CefString ClientApp::AppGetSupportDirectory()
     return CefString(appSupportPath);
 }
 
-
-CefString ClientApp::AppGetDocumentsDirectory()
+CefString AppGetDocumentsDirectory()
 {
     wchar_t dataPath[MAX_UNC_PATH] = {0};
     SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, dataPath);
@@ -117,3 +115,12 @@ CefString ClientApp::AppGetDocumentsDirectory()
 
     return CefString(appUserDocuments);
 }
+
+CefString AppGetCachePath() {
+    std::wstring cachePath = AppGetSupportDirectory();
+    cachePath +=  L"/cef_data";
+
+    return CefString(cachePath);
+}
+
+}  // namespace appshell
