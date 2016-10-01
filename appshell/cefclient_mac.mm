@@ -16,7 +16,6 @@
 #include "client_handler.h"
 #include "appshell/browser/resource_util.h"
 #include "config.h"
-#include "appshell_extensions.h"
 #include "command_callbacks.h"
 #include "appshell/common/client_switches.h"
 #include "native_menu_model.h"
