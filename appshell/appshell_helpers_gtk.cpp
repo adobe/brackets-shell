@@ -25,6 +25,7 @@
 
 #include "appshell/browser/resource.h"
 #include "include/cef_base.h"
+#include "include/cef_version.h"
 
 #include <gtk/gtk.h>
 #include <pwd.h>
@@ -104,6 +105,16 @@ CefString AppGetCachePath() {
     std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
 
     return CefString(cachePath);
+}
+
+CefString AppGetProductVersionString() {
+    // TODO
+    return CefString("");
+}
+
+CefString AppGetChromiumVersionString() {
+    // TODO
+    return CefString("");
 }
 
 }  // namespace appshell

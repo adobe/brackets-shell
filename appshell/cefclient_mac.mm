@@ -920,24 +920,3 @@ int main(int argc, char* argv[]) {
 std::string AppGetWorkingDirectory() {
   return szWorkingDir;
 }
-
-CefString AppGetProductVersionString() {
-  NSMutableString *s = [NSMutableString stringWithString:APP_NAME];
-  [s replaceOccurrencesOfString:@" "
-                     withString:@""
-                        options:NSLiteralSearch
-                          range:NSMakeRange(0, [s length])];
-  [s appendString:@"/"];
-  [s appendString:(NSString*)[[NSBundle mainBundle]
-                              objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]];
-  CefString result = CefString([s UTF8String]);
-  return result;
-}
-
-CefString AppGetChromiumVersionString() {
-  NSMutableString *s = [NSMutableString stringWithFormat:@"Chrome/%d.%d.%d.%d",
-                           cef_version_info(2), cef_version_info(3),
-                           cef_version_info(4), cef_version_info(5)];
-  CefString result = CefString([s UTF8String]);
-  return result;
-}
