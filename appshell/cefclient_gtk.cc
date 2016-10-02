@@ -153,12 +153,13 @@ int main(int argc, char* argv[]) {
   GtkWidget* window;
 
   // Parse command line arguments.
-  AppInitCommandLine(argc, argv);
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->InitFromArgv(argc, argv);
 
   CefSettings settings;
 
   // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
+  AppGetSettings(settings, cmdLine);
 
   settings.no_sandbox = TRUE;
 
@@ -166,9 +167,7 @@ int main(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
-  
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  
+
   if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
     szInitialUrl = cmdLine->GetSwitchValue(client::switches::kStartupPath);
   } else {

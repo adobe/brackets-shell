@@ -686,8 +686,6 @@ extern NSMutableArray* pendingOpenFiles;
   settings.javascript_access_clipboard = STATE_ENABLED;
   settings.javascript_dom_paste = STATE_ENABLED;
 
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-
 #ifdef DARK_INITIAL_PAGE
   // Avoid white flash at startup or refresh by making this the default
   // CSS.
@@ -830,12 +828,13 @@ int main(int argc, char* argv[]) {
   [NSApp setDelegate:delegate];
 
   // Parse command line arguments.
-  AppInitCommandLine(argc, argv);
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->InitFromArgv(argc, argv);
 
   CefSettings settings;
 
  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
+  AppGetSettings(settings, cmdLine);
 
   settings.no_sandbox = YES;
     
@@ -851,8 +850,7 @@ int main(int argc, char* argv[]) {
   CGEventRef event = CGEventCreate(NULL);
   CGEventFlags modifiers = CGEventGetFlags(event);
   CFRelease(event);
-  
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
+
   if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
     CefString cmdLineStartupURL = cmdLine->GetSwitchValue(client::switches::kStartupPath);
     std::string startupURLStr(cmdLineStartupURL);

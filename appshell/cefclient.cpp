@@ -20,7 +20,6 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
-CefRefPtr<CefCommandLine> g_command_line;
 
 CefRefPtr<CefBrowser> AppGetBrowser() {
   if (!g_handler.get())
@@ -34,39 +33,24 @@ CefWindowHandle AppGetMainHwnd() {
   return g_handler->GetMainHwnd();
 }
 
-void AppInitCommandLine(int argc, const char* const* argv) {
-  g_command_line = CefCommandLine::CreateCommandLine();
-#if defined(OS_WIN)
-  g_command_line->InitFromString(::GetCommandLineW());
-#else
-  g_command_line->InitFromArgv(argc, argv);
-#endif
-}
-
-// Returns the application command line object.
-CefRefPtr<CefCommandLine> AppGetCommandLine() {
-  return g_command_line;
-}
-
 // Returns the application settings based on command line arguments.
-void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
-  DCHECK(app.get());
-  DCHECK(g_command_line.get());
-  if (!g_command_line.get())
+void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_line) {
+  DCHECK(command_line.get());
+  if (!command_line.get())
     return;
 
 #if defined(OS_WIN)
   settings.multi_threaded_message_loop =
-      g_command_line->HasSwitch(client::switches::kMultiThreadedMessageLoop);
+      command_line->HasSwitch(client::switches::kMultiThreadedMessageLoop);
 #endif
 
   CefString(&settings.cache_path) =
-      g_command_line->GetSwitchValue(client::switches::kCachePath);
+      command_line->GetSwitchValue(client::switches::kCachePath);
   CefString(&settings.log_file) =
-      g_command_line->GetSwitchValue(client::switches::kLogFile);
+      command_line->GetSwitchValue(client::switches::kLogFile);
 
   {
-    std::string str = g_command_line->GetSwitchValue(client::switches::kLogSeverity);
+    std::string str = command_line->GetSwitchValue(client::switches::kLogSeverity);
 
     // Default to LOGSEVERITY_DISABLE
     settings.log_severity = LOGSEVERITY_DISABLE;
@@ -91,7 +75,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   //CefString(&settings.locale) = appshell::GetCurrentLanguage( );
 
   CefString(&settings.javascript_flags) =
-      g_command_line->GetSwitchValue(client::switches::kJavascriptFlags);
+      command_line->GetSwitchValue(client::switches::kJavascriptFlags);
     
   // Enable dev tools
   settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
