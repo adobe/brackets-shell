@@ -189,7 +189,7 @@ int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line) {
     return 0;
 }
 
-CefString AppGetInitialURL() {
+std::string AppGetInitialURL() {
     return szInitialUrl;
 }
 

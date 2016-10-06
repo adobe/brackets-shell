@@ -23,6 +23,7 @@
 #include "appshell/browser/test_runner.h"
 #include "appshell/common/client_app_other.h"
 #include "appshell/renderer/client_app_renderer.h"
+#include "appshell/appshell_helpers.h"
 #include "appshell_node_process.h"
 
 namespace client {
@@ -113,15 +114,18 @@ int RunMain(int argc, char* argv[]) {
   // Register scheme handlers.
   test_runner::RegisterSchemeHandlers();
 
-  // Create the first window.
-  context->GetRootWindowManager()->CreateRootWindow(
-      true,             // Show controls.
-      settings.windowless_rendering_enabled ? true : false,
-      CefRect(),        // Use default system size.
-      std::string());   // Use default URL.
+  int result = 0;
+  if (appshell::AppInitInitialUrl(command_line) >= 0) {
+    // Create the first window.
+    context->GetRootWindowManager()->CreateRootWindow(
+        false,             // Show controls.
+        settings.windowless_rendering_enabled ? true : false,
+        CefRect(),        // Use default system size.
+        "file://" + appshell::AppGetInitialURL());   // Use default URL.
 
-  // Run the message loop. This will block until Quit() is called.
-  int result = message_loop->Run();
+    // Run the message loop. This will block until Quit() is called.
+    result = message_loop->Run();
+  }
 
   // Shut down CEF.
   context->Shutdown();

@@ -62,7 +62,7 @@ bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString r
 #if !defined(OS_MACOSX)
 
 int AppInitInitialUrl(CefRefPtr<CefCommandLine> command_line);
-CefString AppGetInitialURL();
+std::string AppGetInitialURL();
 
 #endif
 
