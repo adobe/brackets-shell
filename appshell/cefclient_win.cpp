@@ -129,13 +129,13 @@ bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
 
 }
 
-std::wstring GetFilenamesFromCommandLine() {
+std::wstring GetFilenamesFromCommandLine(CefRefPtr<CefCommandLine> command_line) {
   std::wstring result = L"[]";
 
-  if (AppGetCommandLine()->HasArguments()) {
+  if (command_line->HasArguments()) {
     bool firstEntry = true;
     std::vector<CefString> args;
-    AppGetCommandLine()->GetArguments(args);
+    command_line->GetArguments(args);
     std::vector<CefString>::iterator iterator;
     result = L"[";
     for (iterator = args.begin(); iterator != args.end(); iterator++) {
@@ -188,12 +188,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(0, NULL);
+  // Parse command line arguments.
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->InitFromString(::GetCommandLineW());
 
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
-  if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
+  if ((hMutex != NULL) && cmdLine->HasArguments() && (lpCmdLine != NULL)) {
    // for subsequent instances, re-use an already running instance if we're being called to
    //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
    HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
@@ -229,7 +230,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   CefSettings settings;
 
   // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
+  AppGetSettings(settings, cmdLine);
 
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
@@ -239,7 +240,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
 	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(client::switches::kStartupPath).c_str());
   }
@@ -299,7 +299,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Start the node server process
   startNodeProcess();
 
-  gFilesToOpen = GetFilenamesFromCommandLine();
+  gFilesToOpen = GetFilenamesFromCommandLine(cmdLine);
 
   int result = 0;
 

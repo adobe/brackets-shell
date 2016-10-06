@@ -26,14 +26,8 @@ std::string AppGetWorkingDirectory();
 // Returns the starting URL
 CefString AppGetInitialURL();
 
-// Initialize the application command line.
-void AppInitCommandLine(int argc, const char* const* argv);
-
-// Returns the application command line object.
-CefRefPtr<CefCommandLine> AppGetCommandLine();
-
 // Returns the application settings based on command line arguments.
-void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app);
+void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_line);
 
 // Returns the application browser settings based on command line arguments.
 void AppGetBrowserSettings(CefBrowserSettings& settings);
