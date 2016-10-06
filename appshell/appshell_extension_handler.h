@@ -25,6 +25,8 @@
 #include "include/cef_process_message.h"
 #include "include/cef_v8.h"
 
+#include "appshell/appshell_helpers.h"
+
 namespace appshell {
 
 // Forward declarations.
@@ -161,13 +163,13 @@ class AppShellExtensionHandler : public CefV8Handler {
         // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
         // All other messages are passed to the browser process.
         if (name == "GetElapsedMilliseconds") {
-            retval = CefV8Value::CreateDouble(client_app_->GetElapsedMilliseconds());
+            retval = CefV8Value::CreateDouble(GetElapsedMilliseconds());
         } else if (name == "GetCurrentLanguage") {
-            retval = CefV8Value::CreateString(client_app_->GetCurrentLanguage());
+            retval = CefV8Value::CreateString(GetCurrentLanguage());
         } else if (name == "GetApplicationSupportDirectory") {
-            retval = CefV8Value::CreateString(ClientApp::AppGetSupportDirectory());
+            retval = CefV8Value::CreateString(AppGetSupportDirectory());
         } else if (name == "GetUserDocumentsDirectory") {
-            retval = CefV8Value::CreateString(ClientApp::AppGetDocumentsDirectory());
+            retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
         } else if (name == "GetRemoteDebuggingPort") {
             retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
         } else {

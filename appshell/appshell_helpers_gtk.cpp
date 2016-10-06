@@ -21,24 +21,25 @@
  *
  */
 
-#include "client_app.h"
+#include "appshell/appshell_helpers.h"
 
 #include "appshell/browser/resource.h"
 #include "include/cef_base.h"
-#include "config.h"
+#include "include/cef_version.h"
 
 #include <gtk/gtk.h>
 #include <pwd.h>
 #include <algorithm>
 //#include <MMSystem.h>
 //#include <ShlObj.h>
-#include <string>
 #include <glib.h>
 
 extern time_t g_appStartupTime;
 extern char _binary_appshell_appshell_extensions_js_start;
 
-CefString ClientApp::GetCurrentLanguage()
+namespace appshell {
+
+CefString GetCurrentLanguage()
 {
     const char* locconst =  pango_language_to_string( gtk_get_default_language() );
     //Rado: for me it prints "en-us", so I have to strip everything after the "-"
@@ -51,7 +52,7 @@ CefString ClientApp::GetCurrentLanguage()
     return CefString(loc);
 }
 
-std::string ClientApp::GetExtensionJSSource()
+std::string GetExtensionJSSource()
 {
     //# We objcopy the appshell/appshell_extensions.js file, and link it directly into the binary.
     //# See http://www.linuxjournal.com/content/embedding-file-executable-aka-hello-world-version-5967
@@ -76,21 +77,21 @@ std::string ClientApp::GetExtensionJSSource()
     return content;
 }
 
-double ClientApp::GetElapsedMilliseconds()
+double GetElapsedMilliseconds()
 {
     return (time(NULL) - g_appStartupTime);
 }
 
-CefString ClientApp::AppGetSupportDirectory() 
+CefString AppGetSupportDirectory()
 {
     gchar *supportDir = g_strdup_printf("%s/%s", g_get_user_config_dir(), APP_NAME);
     CefString result = CefString(supportDir);
     g_free(supportDir);
-    
+
     return result;
 }
 
-CefString ClientApp::AppGetDocumentsDirectory() 
+CefString AppGetDocumentsDirectory()
 {
     const char *dir = g_get_user_special_dir(G_USER_DIRECTORY_DOCUMENTS);
     if (dir == NULL)  {
@@ -99,3 +100,21 @@ CefString ClientApp::AppGetDocumentsDirectory()
         return CefString(dir);
     }
 }
+
+CefString AppGetCachePath() {
+    std::string cachePath = std::string(AppGetSupportDirectory()) + "/cef_data";
+
+    return CefString(cachePath);
+}
+
+CefString AppGetProductVersionString() {
+    // TODO
+    return CefString("");
+}
+
+CefString AppGetChromiumVersionString() {
+    // TODO
+    return CefString("");
+}
+
+}  // namespace appshell

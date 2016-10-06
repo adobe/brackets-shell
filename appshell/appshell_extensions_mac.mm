@@ -23,7 +23,7 @@
 
 #include "appshell_extensions_platform.h"
 
-#include "client_app.h"
+#include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
 
 #include "GoogleChrome.h"
@@ -50,7 +50,7 @@ NSString *const appId = @"com.google.Chrome";
 // Live Development browser debug paramaters
 int const debugPort = 9222;
 NSString* debugPortCommandlineArguments = [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort];
-NSString* debugProfilePath = [NSString stringWithFormat:@"--user-data-dir=%s/live-dev-profile", ClientApp::AppGetSupportDirectory().ToString().c_str()];
+NSString* debugProfilePath = [NSString stringWithFormat:@"--user-data-dir=%s/live-dev-profile", appshell::AppGetSupportDirectory().ToString().c_str()];
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac

@@ -16,6 +16,7 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/appshell_helpers.h"
 #include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
@@ -111,12 +112,6 @@ std::string AppGetRunningDirectory() {
   }
 }
 
-CefString AppGetCachePath() {
-  std::string cachePath = std::string(ClientApp::AppGetSupportDirectory()) + "/cef_data";
-
-  return CefString(cachePath);
-}
-
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
                         GCallback callback) {
   GtkWidget* entry = gtk_menu_item_new_with_label(text);
@@ -169,7 +164,7 @@ int main(int argc, char* argv[]) {
 
   // Check cache_path setting
   if (CefString(&settings.cache_path).length() == 0) {
-    CefString(&settings.cache_path) = AppGetCachePath();
+    CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
   
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
@@ -270,14 +265,4 @@ int main(int argc, char* argv[]) {
   CefShutdown();
 
   return 0;
-}
-
-CefString AppGetProductVersionString() {
-  // TODO
-  return CefString("");
-}
-
-CefString AppGetChromiumVersionString() {
-  // TODO
-  return CefString("");
 }

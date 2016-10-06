@@ -16,6 +16,7 @@
 #include "include/base/cef_logging.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/appshell_helpers.h"
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
@@ -87,7 +88,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   // Don't update the settings.locale with the locale that we detected from the OS.
   // Otherwise, CEF will use it to find the resources and when it fails in finding resources
   // for some locales that are not available in resources, it crashes.
-  //CefString(&settings.locale) = app->GetCurrentLanguage( );
+  //CefString(&settings.locale) = appshell::GetCurrentLanguage( );
 
   CefString(&settings.javascript_flags) =
       g_command_line->GetSwitchValue(client::switches::kJavascriptFlags);
@@ -95,14 +96,14 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<ClientApp> app) {
   // Enable dev tools
   settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
   
-  std::wstring versionStr = AppGetProductVersionString();
+  std::wstring versionStr = appshell::AppGetProductVersionString();
     
   if (!versionStr.empty()) {
     // Explicitly append the Chromium version to our own product version string
     // since assigning product version always replaces the Chromium version in
     // the User Agent string.
     versionStr.append(L" ");
-    versionStr.append(AppGetChromiumVersionString());
+    versionStr.append(appshell::AppGetChromiumVersionString());
       
     // Set product version, which gets added to the User Agent string
     CefString(&settings.product_version) = versionStr;

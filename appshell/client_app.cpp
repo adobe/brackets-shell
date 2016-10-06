@@ -14,6 +14,7 @@
 #include "include/base/cef_logging.h"
 #include "config.h"
 #include "appshell/appshell_extension_handler.h"
+#include "appshell/appshell_helpers.h"
 
 ClientApp::ClientApp() {
   CreateRenderDelegates(render_delegates_);
@@ -21,7 +22,7 @@ ClientApp::ClientApp() {
 
 void ClientApp::OnWebKitInitialized() {
   // Register the appshell extension.
-  std::string extension_code = GetExtensionJSSource();
+  std::string extension_code = appshell::GetExtensionJSSource();
 
   CefRegisterExtension("appshell", extension_code,
       new appshell::AppShellExtensionHandler(this));
