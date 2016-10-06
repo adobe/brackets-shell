@@ -24,6 +24,7 @@
 
 #include <string>
 
+#include "include/cef_command_line.h"
 #include "include/internal/cef_string.h"
 
 #include "config.h"
@@ -44,5 +45,16 @@ CefString AppGetProductVersionString();
 
 // Returns a string containing "Chrome/" appends with its version (e.g. "Chrome/29.0.1547.65")
 CefString AppGetChromiumVersionString();
+
+#ifdef OS_LINUX
+
+char* AppInitWorkingDirectory();
+std::string AppGetWorkingDirectory();
+std::string AppGetRunningDirectory();
+
+int AppInitInitialURL(CefRefPtr<CefCommandLine> command_line);
+std::string AppGetInitialURL();
+
+#endif
 
 }  // namespace appshell

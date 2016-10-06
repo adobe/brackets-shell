@@ -20,9 +20,6 @@
 #include "appshell_node_process.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
-char szWorkingDir[512];  // The current working directory
-std::string szInitialUrl;
-std::string szRunningDir;
 int add_handler_id;
 bool isReallyClosing = false;
 
@@ -62,55 +59,7 @@ static gboolean HandleQuit(int signatl) {
   destroy();
 }
 
-bool FileExists(std::string path) {
-  struct stat buf;
-  return (stat(path.c_str(), &buf) >= 0) && (S_ISREG(buf.st_mode));
-}
-
-int GetInitialUrl() {
-  GtkWidget *dialog;
-     const char* dialog_title = "Please select the index.html file";
-     GtkFileChooserAction file_or_directory = GTK_FILE_CHOOSER_ACTION_OPEN ;
-     dialog = gtk_file_chooser_dialog_new (dialog_title,
-                          NULL,
-                          file_or_directory,
-                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                          GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                          NULL);
-     
-    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
-      {
-        szInitialUrl = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-        gtk_widget_destroy (dialog);
-        return 0;
-      }
-    return -1;
-}
-
 // Global functions
-
-std::string AppGetWorkingDirectory() {
-  return szWorkingDir;
-}
-
-std::string AppGetRunningDirectory() {
-  if(szRunningDir.length() > 0)
-    return szRunningDir;
-
-  char buf[512];
-  int len = readlink("/proc/self/exe", buf, 512);
-
-  if(len < 0)
-    return AppGetWorkingDirectory();  //# Well, can't think of any real-world case where this would be happen
-
-  for(; len >= 0; len--){
-    if(buf[len] == '/'){
-      buf[len] = '\0';
-      szRunningDir.append(buf);
-      return szRunningDir;
-    }
-  }
-}
 
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
                         GCallback callback) {
@@ -147,7 +96,7 @@ int main(int argc, char* argv[]) {
     return exit_code;
 
   //Retrieve the current working directory
-  if (!getcwd(szWorkingDir, sizeof (szWorkingDir)))
+  if (!appshell::AppInitWorkingDirectory())
     return -1;
 
   GtkWidget* window;
@@ -168,21 +117,8 @@ int main(int argc, char* argv[]) {
     CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
 
-  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
-    szInitialUrl = cmdLine->GetSwitchValue(client::switches::kStartupPath);
-  } else {
-    szInitialUrl = AppGetRunningDirectory();
-    szInitialUrl.append("/dev/src/index.html");
-  
-    if (!FileExists(szInitialUrl)) {
-      szInitialUrl = AppGetRunningDirectory();
-      szInitialUrl.append("/www/index.html");
-  
-      if (!FileExists(szInitialUrl)) {
-        if (GetInitialUrl() < 0)
-          return 0;
-      }
-    }
+  if (appshell::AppInitInitialURL(cmdLine) < 0) {
+    return 0;
   }
 
   // Initialize CEF.
@@ -247,7 +183,7 @@ int main(int argc, char* argv[]) {
   CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://"+szInitialUrl, browserSettings, NULL);
+      "file://" + appshell::AppGetInitialURL(), browserSettings, NULL);
 
   gtk_container_add(GTK_CONTAINER(window), vbox);
   gtk_widget_show_all(GTK_WIDGET(window));

@@ -24,6 +24,7 @@
 #include "appshell/appshell_helpers.h"
 
 #include "appshell/browser/resource.h"
+#include "appshell/common/client_switches.h"
 #include "include/cef_base.h"
 #include "include/cef_version.h"
 
@@ -33,11 +34,16 @@
 //#include <MMSystem.h>
 //#include <ShlObj.h>
 #include <glib.h>
+#include <sys/stat.h>
 
 extern time_t g_appStartupTime;
 extern char _binary_appshell_appshell_extensions_js_start;
 
 namespace appshell {
+
+char szWorkingDir[512];  // The current working directory
+std::string szRunningDir;
+std::string szInitialUrl;
 
 CefString GetCurrentLanguage()
 {
@@ -115,6 +121,86 @@ CefString AppGetProductVersionString() {
 CefString AppGetChromiumVersionString() {
     // TODO
     return CefString("");
+}
+
+char* AppInitWorkingDirectory() {
+    return getcwd(szWorkingDir, sizeof (szWorkingDir));
+}
+
+std::string AppGetWorkingDirectory() {
+    return szWorkingDir;
+}
+
+std::string AppGetRunningDirectory() {
+    if(szRunningDir.length() > 0)
+        return szRunningDir;
+
+    char buf[512];
+    int len = readlink("/proc/self/exe", buf, 512);
+
+    if(len < 0)
+        return AppGetWorkingDirectory();  //# Well, can't think of any real-world case where this would be happen
+
+    for(; len >= 0; len--){
+        if(buf[len] == '/'){
+            buf[len] = '\0';
+            szRunningDir.append(buf);
+            return szRunningDir;
+        }
+    }
+}
+
+bool FileExists(std::string path) {
+    struct stat buf;
+    return (stat(path.c_str(), &buf) >= 0) && (S_ISREG(buf.st_mode));
+}
+
+int GetInitialUrl(std::string& url) {
+    GtkWidget *dialog;
+    const char* dialog_title = "Please select the index.html file";
+    GtkFileChooserAction file_or_directory = GTK_FILE_CHOOSER_ACTION_OPEN;
+    dialog = gtk_file_chooser_dialog_new(dialog_title,
+                                         NULL,
+                                         file_or_directory,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                         NULL);
+
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+        url = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+        gtk_widget_destroy (dialog);
+        return 0;
+    }
+
+    return -1;
+}
+
+int AppInitInitialURL(CefRefPtr<CefCommandLine> command_line) {
+    if (command_line->HasSwitch(client::switches::kStartupPath)) {
+        szInitialUrl = command_line->GetSwitchValue(client::switches::kStartupPath);
+        return 0;
+    }
+
+    std::string url = AppGetRunningDirectory();
+    url.append("/dev/src/index.html");
+
+    if (!FileExists(url)) {
+        url = AppGetRunningDirectory();
+        url.append("/www/index.html");
+
+        if (!FileExists(url)) {
+            if (GetInitialUrl(url) < 0) {
+                return -1;
+            }
+        }
+    }
+
+    szInitialUrl = url;
+    return 0;
+}
+
+std::string AppGetInitialURL() {
+    return szInitialUrl;
 }
 
 }  // namespace appshell
