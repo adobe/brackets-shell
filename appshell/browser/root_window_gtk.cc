@@ -220,7 +220,13 @@ ClientWindowHandle RootWindowGtk::GetWindowHandle() const {
 }
 
 void RootWindowGtk::CreateBrowserWindow(const std::string& startup_url) {
-  browser_window_.reset(new BrowserWindowStdGtk(this, startup_url));
+  // if (with_osr_) {
+  //   OsrRenderer::Settings settings;
+  //   MainContext::Get()->PopulateOsrSettings(&settings);
+  //   browser_window_.reset(new BrowserWindowOsrGtk(this, startup_url, settings));
+  // } else {
+    browser_window_.reset(new BrowserWindowStdGtk(this, startup_url));
+  // }
 }
 
 void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {

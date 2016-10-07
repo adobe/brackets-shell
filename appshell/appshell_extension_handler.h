@@ -26,6 +26,14 @@
 #include "include/cef_v8.h"
 
 #include "appshell/appshell_helpers.h"
+#include "appshell/config.h"
+
+#ifdef OS_LINUX
+#include "appshell/renderer/client_app_renderer.h"
+#define BracketsApp client::ClientAppRenderer
+#else
+#define BracketsApp ClientApp
+#endif
 
 namespace appshell {
 
@@ -148,7 +156,7 @@ void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
 // Handles the native implementation for the appshell extension.
 class AppShellExtensionHandler : public CefV8Handler {
   public:
-    explicit AppShellExtensionHandler(CefRefPtr<ClientApp> client_app)
+    explicit AppShellExtensionHandler(CefRefPtr<BracketsApp> client_app)
       : client_app_(client_app)
       , messageId(0) {
     }
@@ -207,11 +215,12 @@ class AppShellExtensionHandler : public CefV8Handler {
     }
 
   private:
-    CefRefPtr<ClientApp> client_app_;
+    CefRefPtr<BracketsApp> client_app_;
     int32 messageId;
 
     IMPLEMENT_REFCOUNTING(AppShellExtensionHandler);
 };
+
 
 // Simple stack class to ensure calls to Enter and Exit are balanced.
 class StContextScope {
