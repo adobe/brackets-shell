@@ -31,6 +31,8 @@
 #include <MMSystem.h>
 #include <ShlObj.h>
 
+#include <sstream>
+
 extern DWORD g_appStartupTime;
 extern HINSTANCE hInst;
 
