@@ -833,4 +833,9 @@ bool ClientHandler::ExecuteTestMenu(int command_id) {
   return false;
 }
 
+void ClientHandler::DispatchCloseToNextBrowser()
+{
+  MainContext::Get()->GetRootWindowManager()->CloseAllWindows(false);
+}
+
 }  // namespace client

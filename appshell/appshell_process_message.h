@@ -402,7 +402,7 @@ namespace appshell {
 
             // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
             // quit if all browser windows are closed.
-//             handler->DispatchCloseToNextBrowser();
+            handler->DispatchCloseToNextBrowser();
 
         } else if (message_name == "AbortQuit") {
             // Parameters - none
