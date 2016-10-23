@@ -25,6 +25,7 @@
 
 #include "appshell/browser/resource.h"
 #include "appshell/common/client_switches.h"
+#include "appshell/version_linux.h"
 #include "include/cef_base.h"
 #include "include/cef_version.h"
 
@@ -114,13 +115,18 @@ CefString AppGetCachePath() {
 }
 
 CefString AppGetProductVersionString() {
-    // TODO
-    return CefString("");
+    std::string s = APP_NAME "/" APP_VERSION;
+    CefString ret;
+    ret.FromString(s);
+    return ret;
 }
 
 CefString AppGetChromiumVersionString() {
-    // TODO
-    return CefString("");
+    std::wostringstream versionStream(L"");
+    versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
+                  << L"." << cef_version_info(4) << L"." << cef_version_info(5);
+
+    return CefString(versionStream.str());
 }
 
 char* AppInitWorkingDirectory() {
