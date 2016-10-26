@@ -1,38 +1,35 @@
 /*
-* Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
-*  
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"), 
-* to deal in the Software without restriction, including without limitation 
-* the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-* and/or sell copies of the Software, and to permit persons to whom the 
-* Software is furnished to do so, subject to the following conditions:
-*  
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*  
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-* DEALINGS IN THE SOFTWARE.
-* 
-*/ 
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+#include "appshell_node_process.h"
+#include "appshell_node_process_internal.h"
 
 #include <windows.h>
 #include <Shlwapi.h>
 #include <MMSystem.h>
 
-#include "appshell_node_process.h"
-#include "appshell_node_process_internal.h"
-
 #include <strsafe.h> // must be included after STL headers
 
-#ifndef OS_WIN
-#define OS_WIN 1
-#endif
 #include "config.h"
 
 #define BRACKETS_NODE_BUFFER_SIZE 4096
@@ -224,7 +221,7 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 				hNodeReadThread = CreateThread(NULL, 0, NodeReadThread, NULL, 0, NULL);
 
 				// Loop to check if process is still running
-				BOOL bSuccess = FALSE;
+				bSuccess = FALSE;
 				DWORD exitCode = 0;
 				for (;;) 
 				{	

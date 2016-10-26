@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,11 +20,10 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*global module, require*/
+
+"use strict";
 
 module.exports = function (grunt) {
-    "use strict";
-
     var common = require("./common")(grunt),
         semver = require("semver");
 
@@ -48,7 +47,6 @@ module.exports = function (grunt) {
             packageJSON                 = grunt.file.readJSON(packageJsonPath),
             winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
             buildInstallerScriptPath    = "installer/mac/buildInstaller.sh",
-            wxsPath                     = "installer/win/Brackets.wxs",
             versionRcPath               = "appshell/version.rc",
             infoPlistPath               = "appshell/mac/Info.plist",
             release                     = grunt.option("release") || "",

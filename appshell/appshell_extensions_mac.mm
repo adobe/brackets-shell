@@ -1,28 +1,29 @@
 /*
- * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
- *  
+ * Copyright (c) 2012 - present Adobe Systems Incorporated. All rights reserved.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *  
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- * 
- */ 
+ *
+ */
 
 #include "appshell_extensions_platform.h"
-#include "appshell_extensions.h"
+
+#include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
 
 #include "GoogleChrome.h"
@@ -49,7 +50,7 @@ NSString *const appId = @"com.google.Chrome";
 // Live Development browser debug paramaters
 int const debugPort = 9222;
 NSString* debugPortCommandlineArguments = [NSString stringWithFormat:@"--remote-debugging-port=%d", debugPort];
-NSString* debugProfilePath = [NSString stringWithFormat:@"--user-data-dir=%s/live-dev-profile", ClientApp::AppGetSupportDirectory().ToString().c_str()];
+NSString* debugProfilePath = [NSString stringWithFormat:@"--user-data-dir=%s/live-dev-profile", appshell::AppGetSupportDirectory().ToString().c_str()];
 
 ///////////////////////////////////////////////////////////////////////////////
 // LiveBrowserMgrMac
@@ -1052,6 +1053,17 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     return errCode;
 }
 
+// Replace keyStroke with replaceString
+bool fixupKey(ExtensionString& key, ExtensionString keyStroke, ExtensionString replaceString)
+{
+    size_t idx = key.find(keyStroke, 0);
+    if (idx != ExtensionString::npos) {
+        key = key.replace(idx, keyStroke.size(), replaceString);
+        return true;
+    }
+    return false;
+}
+
 // Looks at modifiers and special keys in "key",
 // removes then and returns an unsigned int mask
 // that can be used by setKeyEquivalentModifierMask
@@ -1062,17 +1074,17 @@ NSUInteger processKeyString(ExtensionString& key)
         return 0;
     }
     NSUInteger mask = 0;
-    if (appshell_extensions::fixupKey(key, "Cmd-", "")) {
+    if (fixupKey(key, "Cmd-", "")) {
         mask |= NSCommandKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Ctrl-", "")) {
+    if (fixupKey(key, "Ctrl-", "")) {
         mask |= NSControlKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Shift-", "")) {
+    if (fixupKey(key, "Shift-", "")) {
         mask |= NSShiftKeyMask;
     }
-    if (appshell_extensions::fixupKey(key, "Alt-", "") ||
-        appshell_extensions::fixupKey(key, "Opt-", "")) {
+    if (fixupKey(key, "Alt-", "") ||
+        fixupKey(key, "Opt-", "")) {
         mask |= NSAlternateKeyMask;
     }
 
@@ -1093,23 +1105,23 @@ NSUInteger processKeyString(ExtensionString& key)
     const ExtensionString tab       = (ExtensionString() += NSTabCharacter);
     const ExtensionString enter     = (ExtensionString() += NSEnterCharacter);
     
-    appshell_extensions::fixupKey(key, "PageUp", pageUp);
-    appshell_extensions::fixupKey(key, "PageDown", pageDown);
-    appshell_extensions::fixupKey(key, "Home", home);
-    appshell_extensions::fixupKey(key, "End", end);
-    appshell_extensions::fixupKey(key, "Insert", ins);
-    appshell_extensions::fixupKey(key, "Delete", del);
-    appshell_extensions::fixupKey(key, "Backspace", backspace);
-    appshell_extensions::fixupKey(key, "Space", " ");
-    appshell_extensions::fixupKey(key, "Tab", tab);
-    appshell_extensions::fixupKey(key, "Enter", enter);
-    appshell_extensions::fixupKey(key, "Up", "↑");
-    appshell_extensions::fixupKey(key, "Down", "↓");
-    appshell_extensions::fixupKey(key, "Left", "←");
-    appshell_extensions::fixupKey(key, "Right", "→");
+    fixupKey(key, "PageUp", pageUp);
+    fixupKey(key, "PageDown", pageDown);
+    fixupKey(key, "Home", home);
+    fixupKey(key, "End", end);
+    fixupKey(key, "Insert", ins);
+    fixupKey(key, "Delete", del);
+    fixupKey(key, "Backspace", backspace);
+    fixupKey(key, "Space", " ");
+    fixupKey(key, "Tab", tab);
+    fixupKey(key, "Enter", enter);
+    fixupKey(key, "Up", "↑");
+    fixupKey(key, "Down", "↓");
+    fixupKey(key, "Left", "←");
+    fixupKey(key, "Right", "→");
 
     // from unicode display char to ascii hyphen
-    appshell_extensions::fixupKey(key, "−", "-");
+    fixupKey(key, "−", "-");
 
     // Check for F1 - F15 keys.
     if (key.find("F") != ExtensionString::npos) {
@@ -1119,7 +1131,7 @@ NSUInteger processKeyString(ExtensionString& key)
             if (key.find(fKey) != ExtensionString::npos) {
                 unichar ch = i;
                 NSString *actualKey = [NSString stringWithCharacters: &ch length: 1];
-                appshell_extensions::fixupKey(key, fKey, ExtensionString([actualKey UTF8String]));
+                fixupKey(key, fKey, ExtensionString([actualKey UTF8String]));
                 break;
             }
         }

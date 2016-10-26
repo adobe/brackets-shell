@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
+#include "appshell/browser/resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,6 @@
 #include "windows.h"
 #undef APSTUDIO_HIDDEN_SYMBOLS
 
-#define OS_WIN
 #include "config.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -32,7 +31,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION    	1,7,0,0
+FILEVERSION    	1,8,0,0
 /* PRODUCTVERSION 	1,0,0,0 */
 FILEOS         	VOS__WINDOWS32
 FILETYPE       	VFT_APP
@@ -43,7 +42,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "brackets.io\0"
             VALUE "FileDescription",  "\0"
-            VALUE "FileVersion",      "Release 1.7.0\0"
+            VALUE "FileVersion",      "Release 1.8.0\0"
             VALUE "ProductName",      APP_NAME "\0"
             VALUE "ProductVersion",   "\0"
             VALUE "LegalCopyright",   "(c) 2012 Adobe Systems, Inc.\0"

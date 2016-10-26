@@ -16,9 +16,9 @@
 #include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "config.h"
-#include "resource.h"
-#include "string_util.h"
-#include "client_switches.h"
+#include "appshell/browser/resource.h"
+#include "appshell/common/client_switches.h"
+#include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
 #include "appshell_node_process.h"
 
@@ -129,13 +129,13 @@ bool GetFullPath(const std::wstring& path, std::wstring& oFullPath)
 
 }
 
-std::wstring GetFilenamesFromCommandLine() {
+std::wstring GetFilenamesFromCommandLine(CefRefPtr<CefCommandLine> command_line) {
   std::wstring result = L"[]";
 
-  if (AppGetCommandLine()->HasArguments()) {
+  if (command_line->HasArguments()) {
     bool firstEntry = true;
     std::vector<CefString> args;
-    AppGetCommandLine()->GetArguments(args);
+    command_line->GetArguments(args);
     std::vector<CefString>::iterator iterator;
     result = L"[";
     for (iterator = args.begin(); iterator != args.end(); iterator++) {
@@ -188,12 +188,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (_getcwd(szWorkingDir, MAX_UNC_PATH) == NULL)
     szWorkingDir[0] = 0;
 
-  // Parse command line arguments. The passed in values are ignored on Windows.
-  AppInitCommandLine(0, NULL);
+  // Parse command line arguments.
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->InitFromString(::GetCommandLineW());
 
   // Determine if we should use an already running instance of Brackets.
   HANDLE hMutex = ::OpenMutex(MUTEX_ALL_ACCESS, FALSE, FIRST_INSTANCE_MUTEX_NAME);
-  if ((hMutex != NULL) && AppGetCommandLine()->HasArguments() && (lpCmdLine != NULL)) {
+  if ((hMutex != NULL) && cmdLine->HasArguments() && (lpCmdLine != NULL)) {
    // for subsequent instances, re-use an already running instance if we're being called to
    //   open an existing file on the command-line (eg. Open With.. from Windows Explorer)
    HWND hFirstInstanceWnd = cef_main_window::FindFirstTopLevelInstance();
@@ -229,19 +230,18 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   CefSettings settings;
 
   // Populate the settings based on command line arguments.
-  AppGetSettings(settings, app);
+  AppGetSettings(settings, cmdLine);
 
   // Check command
   if (CefString(&settings.cache_path).length() == 0) {
-	  CefString(&settings.cache_path) = AppGetCachePath();
+	  CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
 
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get(), NULL);
 
-  CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
-  if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
-	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(cefclient::kStartupPath).c_str());
+  if (cmdLine->HasSwitch(client::switches::kStartupPath)) {
+	  wcscpy(szInitialUrl, cmdLine->GetSwitchValue(client::switches::kStartupPath).c_str());
   }
   else {
 	// If the shift key is not pressed, look for the index.html file 
@@ -299,7 +299,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Start the node server process
   startNodeProcess();
 
-  gFilesToOpen = GetFilenamesFromCommandLine();
+  gFilesToOpen = GetFilenamesFromCommandLine(cmdLine);
 
   int result = 0;
 
@@ -355,76 +355,6 @@ std::string AppGetWorkingDirectory() {
   return szWorkingDir;
 }
 
-CefString AppGetCachePath() {
-  std::wstring cachePath = ClientApp::AppGetSupportDirectory();
-  cachePath +=  L"/cef_data";
-
-  return CefString(cachePath);
-}
-
 CefString AppGetInitialURL() {
     return szInitialUrl;    
-}
-
-// Helper function for AppGetProductVersionString. Reads version info from
-// VERSIONINFO and writes it into the passed in std::wstring.
-void GetFileVersionString(std::wstring &retVersion) {
-  DWORD dwSize = 0;
-  BYTE *pVersionInfo = NULL;
-  VS_FIXEDFILEINFO *pFileInfo = NULL;
-  UINT pLenFileInfo = 0;
-
-  HMODULE module = GetModuleHandle(NULL);
-  TCHAR executablePath[MAX_UNC_PATH];
-  GetModuleFileName(module, executablePath, MAX_UNC_PATH);
-
-  dwSize = GetFileVersionInfoSize(executablePath, NULL);
-  if (dwSize == 0) {
-    return;
-  }
-
-  pVersionInfo = new BYTE[dwSize];
-
-  if (!GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo)) 	{
-    delete[] pVersionInfo;
-    return;
-  }
-
-  if (!VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo)) {
-    delete[] pVersionInfo;
-    return;
-  }
-
-  int major  = (pFileInfo->dwFileVersionMS >> 16) & 0xffff ;
-  int minor  = (pFileInfo->dwFileVersionMS) & 0xffff;
-  int hotfix = (pFileInfo->dwFileVersionLS >> 16) & 0xffff;
-  int other  = (pFileInfo->dwFileVersionLS) & 0xffff;
-
-  delete[] pVersionInfo;
-
-  std::wostringstream versionStream(L"");
-  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
-  retVersion = versionStream.str();
-}
-
-CefString AppGetProductVersionString() {
-  std::wstring s(APP_NAME);
-  size_t i = s.find(L" ");
-  while (i != std::wstring::npos) {
-    s.erase(i, 1);
-    i = s.find(L" ");
-  }
-  std::wstring version(L"");
-  GetFileVersionString(version);
-  s.append(L"/");
-  s.append(version);
-  return CefString(s);
-}
-
-CefString AppGetChromiumVersionString() {
-  std::wostringstream versionStream(L"");
-  versionStream << L"Chrome/" << cef_version_info(2) << L"." << cef_version_info(3)
-                << L"." << cef_version_info(4) << L"." << cef_version_info(5);
-
-  return CefString(versionStream.str());
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,15 +20,12 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*jslint vars:true, regexp:true, nomen:true*/
-/*global module, require, process*/
+
+"use strict";
 
 module.exports = function (grunt) {
-    "use strict";
-
     var fs          = require("fs"),
         common      = require("./common")(grunt),
-        q           = require("q"),
         semver      = require("semver"),
         spawn       = common.spawn,
         resolve     = common.resolve,

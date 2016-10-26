@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,14 +20,12 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*jslint vars:true*/
-/*global module, require, process*/
-module.exports = function (grunt) {
-    "use strict";
 
+"use strict";
+
+module.exports = function (grunt) {
     var common          = require("./common")(grunt),
         fs              = require("fs"),
-        child_process   = require("child_process"),
         path            = require("path"),
         q               = require("q"),
         /* win only (lib), mac only (Resources, tools) */
@@ -102,8 +100,6 @@ module.exports = function (grunt) {
 
     // task: cef-clean
     grunt.registerTask("cef-clean", "Removes CEF binaries and linked folders", function () {
-        var path;
-
         // delete dev symlinks from "setup_for_hacking"
         common.deleteFile("Release/dev", { force: true });
         common.deleteFile("Debug/dev", { force: true });
@@ -276,8 +272,7 @@ module.exports = function (grunt) {
             return rename("deps/" + zipName, "deps/cef");
         }).then(function () {
             var memo = path.resolve(process.cwd(), "deps/cef/" + zipName + ".txt"),
-                permissionsPromise,
-                defer = q.defer();
+                permissionsPromise;
 
             if (platform === "mac") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
@@ -334,7 +329,6 @@ module.exports = function (grunt) {
             curlTask    = "curl-dir:" + config,
             setupTask   = "node-" + platform,
             nodeVersion = grunt.config("node.version"),
-            npmVersion  = grunt.config("npm.version"),
             txtName     = "version-" + nodeVersion + ".txt",
             missingDest = false;
 
@@ -375,24 +369,15 @@ module.exports = function (grunt) {
         // requires node to set "nodeSrc" in config
         grunt.task.requires(["node"]);
 
-        var done        = this.async(),
-            nodeDest    = grunt.config("nodeDest"),
-            exeFile     = nodeDest[0],
-            npmFile     = nodeDest[1];
+        var nodeDest    = grunt.config("nodeDest"),
+            exeFile     = nodeDest;
 
         grunt.file.mkdir("deps/node");
 
         // copy node.exe to Brackets-node
         grunt.file.copy(exeFile,  "deps/node/node.exe");
 
-        // unzip NPM
-        unzip(npmFile, "deps/node").then(function () {
-            nodeWriteVersion();
-            done();
-        }, function (err) {
-            grunt.log.error(err);
-            done(false);
-        });
+        nodeWriteVersion();
     });
 
     // task: node-mac
@@ -444,7 +429,7 @@ module.exports = function (grunt) {
             gypCommand;
 
         if (platform === "linux") {
-            gypCommand = "bash -c 'python2 gyp/gyp --depth=.'";
+            gypCommand = "bash -c 'gyp/gyp --depth=.'";
         } else {
             gypCommand = "bash -c 'gyp/gyp appshell.gyp -I common.gypi --depth=.'";
         }

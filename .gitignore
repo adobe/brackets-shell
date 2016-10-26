@@ -6,10 +6,15 @@ xcodebuild/*
 /npm-debug.log
 /downloads
 
-appshell.xcodeproj
-Brackets.vcxproj
-appshell.sln
-libcef_dll_wrapper.vcxproj
+*.xcodeproj
+*.VC.db
+*.VC.VC.opendb
+.vs/
+.vscode/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
 
 *.pbxuser
 *.perspective
@@ -24,18 +29,17 @@ libcef_dll_wrapper.vcxproj
 *.sdf
 *.opensdf
 *.suo
-*.vcxproj.filters
-*.vcxproj.user
 *.log
 *.dmg
 
-Debug
-Release
-Resources
-deps
-include
+/Debug
+/Release
+/Resources
+/deps
+/include
 ipch
-libcef_dll
+/libcef_dll
+/out
 tools
 
 /installer/mac/staging/
@@ -51,8 +55,7 @@ fr-fr.mst
 appshell_extensions_js.o
 Makefile
 appshell.Makefile
-Brackets.target.mk
-libcef_dll_wrapper.target.mk
+*.target.mk
 appshell/gtk
 appshell/gtk/*
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,11 +19,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include "cefclient.h"
+
 #include "cef_main_window.h"
+
+#include "cefclient.h"
 #include "cef_registry.h"
 #include "client_handler.h"
-#include "resource.h"
+#include "appshell/browser/resource.h"
 #include "native_menu_model.h"
 #include "config.h"
 
@@ -225,6 +227,10 @@ BOOL cef_main_window::HandleCreate()
     CefBrowserSettings settings;
 
     settings.web_security = STATE_DISABLED;
+
+    // Necessary to enable document.executeCommand("paste")
+    settings.javascript_access_clipboard = STATE_ENABLED;
+    settings.javascript_dom_paste = STATE_ENABLED;
 
     // Initialize window info to the defaults for a child window
     info.SetAsChild(mWnd, rect);

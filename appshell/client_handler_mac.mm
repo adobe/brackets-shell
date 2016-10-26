@@ -1,13 +1,13 @@
 // Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
-#define OS_MAC
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
 #include "client_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "include/wrapper/cef_helpers.h"
 #include "cefclient.h"
 #include "native_menu_model.h"
 
@@ -36,7 +36,7 @@ extern CefRefPtr<ClientHandler> g_handler;
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {
     // Set the edit window text
@@ -49,7 +49,7 @@ void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   // Set the frame window title bar
   NSView* view = (NSView*)browser->GetHost()->GetWindowHandle();

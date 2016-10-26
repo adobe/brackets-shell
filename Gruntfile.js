@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,13 +20,11 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
-/*jslint regexp:true*/
-/*global module, require, process*/
-module.exports = function (grunt) {
-    "use strict";
 
+"use strict";
+
+module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
-        resolve = common.resolve,
         platform = common.platform(),
         staging;
 
@@ -71,7 +69,7 @@ module.exports = function (grunt) {
             },
             "node-mac": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x86.tar.gz"
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x64.tar.gz"
             },
             /* win */
             "cef-win": {
@@ -84,8 +82,9 @@ module.exports = function (grunt) {
             },
             "node-win": {
                 "dest"      : "<%= downloads %>",
-                "src"       : ["http://nodejs.org/dist/v<%= node.version %>/node.exe",
-                               "http://nodejs.org/dist/npm/npm-<%= npm.version %>.zip"]
+                "src"       : process.arch === "x64" ?
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x64/node.exe" :
+                                "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
             }
         },
         "clean": {
@@ -160,7 +159,10 @@ module.exports = function (grunt) {
                             "Brackets",
                             "Brackets-node",
                             "cef.pak",
-                            "devtools_resources.pak"
+                            "cef_100_percent.pak",
+                            "cef_200_percent.pak",
+                            "devtools_resources.pak",
+                            "icudtl.dat",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
@@ -204,10 +206,14 @@ module.exports = function (grunt) {
                 "dest"      : "deps/cef"
             }
         },
-        "jshint": {
-            "all"           : ["Gruntfile.js", "tasks/**/*.js"],
+        "eslint": {
+            "all"           : [
+                "Gruntfile.js",
+                "tasks/**/*.js",
+                "appshell/node-core/*.js"
+            ],
             "options": {
-                "jshintrc"  : ".jshintrc"
+                "quiet"     : true
             }
         },
         "build": {
@@ -229,15 +235,12 @@ module.exports = function (grunt) {
             "version"       : "3.2623.1397"
         },
         "node": {
-            "version"       : "0.10.24"
-        },
-        "npm": {
-            "version"       : "1.2.11"
+            "version"       : "6.3.1"
         }
     });
 
     grunt.loadTasks("tasks");
-    grunt.loadNpmTasks("grunt-contrib-jshint");
+    grunt.loadNpmTasks("grunt-eslint");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-curl");

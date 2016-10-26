@@ -58,7 +58,6 @@
       'sources': [
         '<@(includes_common)',
         '<@(includes_wrapper)',
-        '<@(appshell_sources_common)',
       ],
       'mac_bundle_resources': [
         '<@(appshell_bundle_resources_mac)',
@@ -126,6 +125,11 @@
               '-lrpcrt4.lib',
               '-lopengl32.lib',
               '-lglu32.lib',
+              '-luser32.lib',
+              '-lcomdlg32.lib',
+              '-lshell32.lib',
+              '-lole32.lib',
+              '-lgdi32.lib',
               '-l$(ConfigurationName)/libcef.lib',
             ],
           },
@@ -195,7 +199,7 @@
           ],
           'copies': [
             {
-              # Add library dependencies to the bundle.
+              # Add libraries and helper app.
               'destination': '<(PRODUCT_DIR)/<(appname).app/Contents/Frameworks',
               'files': [
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
@@ -204,7 +208,7 @@
           ],
           'postbuilds': [
             {
-             'postbuild_name': 'Add framework',
+              'postbuild_name': 'Add framework',
               'action': [
                 'cp',
                 '-Rf',
@@ -273,7 +277,7 @@
             '<@(appshell_sources_mac)',
           ],
         }],
-        ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+        [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
           'actions': [
             {
               'action_name': 'appshell_extensions_js',
@@ -311,15 +315,25 @@
           },
           'copies': [
             {
-              'destination': '<(PRODUCT_DIR)/lib',
+              'destination': '<(PRODUCT_DIR)/files',
               'files': [
-                '<@(appshell_bundle_libraries_linux)',
+                '<@(appshell_bundle_resources_linux)',
               ],
             },
             {
-              'destination': '<(PRODUCT_DIR)',
+              'destination': '<(PRODUCT_DIR)/',
               'files': [
-                '<@(appshell_bundle_resources_linux)'
+                'Resources/cef.pak',
+                'Resources/cef_100_percent.pak',
+                'Resources/cef_200_percent.pak',
+                'Resources/cef_extensions.pak',
+                'Resources/devtools_resources.pak',
+                'Resources/icudtl.dat',
+                'Resources/locales/',
+                '$(BUILDTYPE)/chrome-sandbox',
+                '$(BUILDTYPE)/libcef.so',
+                '$(BUILDTYPE)/natives_blob.bin',
+                '$(BUILDTYPE)/snapshot_blob.bin',
               ],
             },
             {
@@ -336,22 +350,24 @@
               'files': ['appshell/node-core/'],
             },
           ],
+          'dependencies': [
+            'gtk',
+          ],
+          'link_settings': {
+            'ldflags': [
+              '-Wl,-rpath,\$$ORIGIN/',
+              '<(march)'
+            ],
+            'libraries': [
+              "$(BUILDTYPE)/libcef.so",
+              "-lX11",
+              'appshell_extensions_js.o',
+            ],
+          },
           'sources': [
             '<@(includes_linux)',
             '<@(appshell_sources_linux)',
           ],
-          'link_settings': {
-            'ldflags': [
-              '<!@(<(pkg-config) --libs-only-other gtk+-2.0 gthread-2.0)',
-              '-Wl,-rpath,\$$ORIGIN/lib',
-              '<(march)'
-            ],
-            'libraries': [
-              '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0)',
-              '$(BUILDTYPE)/libcef.so',
-              'appshell_extensions_js.o',
-            ],
-          },
         }],
       ],
     },
@@ -388,8 +404,7 @@
       'conditions': [
         ['OS=="linux"', {
           'cflags': [
-          '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
-          '<(march)',
+            '<(march)',
           ],
           'default_configuration': 'Release',
           'configurations': {
@@ -397,7 +412,7 @@
             'Debug': {},
           },
         }],
-        ['OS=="win" and multi_threaded_dll', {
+        [ 'OS=="win" and multi_threaded_dll', {
           'configurations': {
             'Common_Base': {
               'msvs_configuration_attributes': {
@@ -421,8 +436,8 @@
               },
             }
           }
-        }]
-      ]
+        }],
+      ],
     },
   ],
   'conditions': [
@@ -500,6 +515,32 @@
         },  # target appshell_helper_app
       ],
     }],  # OS=="mac"
+    [ 'OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
+      'targets': [
+        {
+          'target_name': 'gtk',
+          'type': 'none',
+          'variables': {
+            # gtk requires gmodule, but it does not list it as a dependency
+            # in some misconfigured systems.
+            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0 gtk+-unix-print-2.0',
+          },
+          'direct_dependent_settings': {
+            'cflags': [
+              '$(shell <(pkg-config) --cflags <(gtk_packages))',
+            ],
+          },
+          'link_settings': {
+            'ldflags': [
+              '$(shell <(pkg-config) --libs-only-L --libs-only-other <(gtk_packages))',
+            ],
+            'libraries': [
+              '$(shell <(pkg-config) --libs-only-l <(gtk_packages))',
+            ],
+          },
+        },
+      ],
+    }],  # OS=="linux" or OS=="freebsd" or OS=="openbsd"
     ['target_arch=="ia32"', {
       'variables': {
         'output_bfd': 'elf32-i386',

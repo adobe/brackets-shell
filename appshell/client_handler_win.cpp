@@ -1,13 +1,14 @@
 // Copyright (c) 2011 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
-#define OS_WIN
+
 #include "config.h"
 #include "client_handler.h"
 #include <string>
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-#include "resource.h"
+#include "include/wrapper/cef_helpers.h"
+#include "appshell/browser/resource.h"
 #include "native_menu_model.h"
 
 #include <ShellAPI.h>
@@ -24,12 +25,12 @@ extern HACCEL hAccelTable;
 void ClientHandler::OnAddressChange(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefString& url) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 }
 
 void ClientHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
                                   const CefString& title) {
-  REQUIRE_UI_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   // Set the frame window title bar
   CefWindowHandle hwnd = browser->GetHost()->GetWindowHandle();

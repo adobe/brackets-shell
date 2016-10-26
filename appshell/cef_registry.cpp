@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
+ * Copyright (c) 2013 - present Adobe Systems Incorporated. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,14 +19,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
+#include "cef_registry.h"
+
 #include <windows.h>
 
-#ifndef OS_WIN
-#define OS_WIN 1
-#endif
-
 #include "config.h"
-#include "util.h"
+#include "include/base/cef_logging.h"
 
 static const wchar_t g_szSoftwareFolder[] = L"Software";
 
@@ -49,7 +48,7 @@ void EnsureTrailingSeparator(LPWSTR pRet)
 void GetKey(LPCWSTR pBase, LPCWSTR pGroup, LPCWSTR pApp, LPCWSTR pFolder, LPWSTR pRet)
 {
     // Check for required params
-    ASSERT(pBase && pApp && pRet);
+    DCHECK(pBase && pApp && pRet);
     if (!pBase || !pApp || !pRet)
         return;
 
@@ -94,8 +93,8 @@ bool GetRegistryInt(LPCWSTR pFolder, LPCWSTR pEntry, int* pDefault, int& ret)
         if (ERROR_SUCCESS == RegQueryValueEx(hKey, pEntry, NULL, &dwType, (LPBYTE)&dwValue, &dwCount))
         {
             result = true;
-            ASSERT(dwType == REG_DWORD);
-            ASSERT(dwCount == sizeof(dwValue));
+            DCHECK(dwType == REG_DWORD);
+            DCHECK(dwCount == sizeof(dwValue));
             ret = (int)dwValue;
         }
         RegCloseKey(hKey);
