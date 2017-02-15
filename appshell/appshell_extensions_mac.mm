@@ -263,6 +263,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
                       @"--disable-default-apps",
                       debugPortCommandlineArguments,
                       debugProfilePath,
+                      @"--disk-cache-size=250000000",
                       urlString,
                       nil];
 
