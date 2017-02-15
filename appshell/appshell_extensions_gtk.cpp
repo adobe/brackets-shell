@@ -64,7 +64,7 @@ int GErrorToErrorCode(GError *gerror) {
 
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
 {
-    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --disable-default-apps --allow-file-access-from-files --temp-profile --user-data-dir=%s --remote-debugging-port=9222";
+    const char *remoteDebuggingFormat = "--no-first-run --no-default-browser-check --disable-default-apps --allow-file-access-from-files --temp-profile --user-data-dir=%s --disk-cache-size=250000000 --remote-debugging-port=9222";
     gchar *remoteDebugging;
     gchar *cmdline;
     int error = ERR_BROWSER_NOT_INSTALLED;
