@@ -98,6 +98,15 @@
             <RegistryValue Root="HKCR" Key="directory\shell\!(loc.ProductName)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%1&quot;"
                                Type="string" />
 
+            <RegistryValue Root="HKCR" Key="directory\background\shell\!(loc.ProductName)" Value="!(loc.ExplorerDirectoryOpenContextMenu)"
+                               Type="string" />
+
+            <RegistryValue Root="HKCR" Key="directory\background\shell\!(loc.ProductName)" Name="Icon" Value="[INSTALLDIR]$(var.ExeName).exe"
+                               Type="string" />
+
+            <RegistryValue Root="HKCR" Key="directory\background\shell\!(loc.ProductName)\command" Value="[INSTALLDIR]$(var.ExeName).exe &quot;%V&quot;"
+                               Type="string" />
+
         </Component>
         
         <!-- Start Menu Shortcuts-->
