@@ -49,6 +49,7 @@ module.exports = function (grunt) {
             buildInstallerScriptPath    = "installer/mac/buildInstaller.sh",
             versionRcPath               = "appshell/version.rc",
             infoPlistPath               = "appshell/mac/Info.plist",
+            linuxVersionFile            = "appshell/version_linux.h",
             release                     = grunt.option("release") || "",
             text,
             newVersion;
@@ -113,5 +114,14 @@ module.exports = function (grunt) {
             "$1" + newVersion.version + "$3"
         );
         grunt.file.write(infoPlistPath, text);
+
+        // 6. Open appshell/version_linux.h and change `APP_VERSION`
+        text = grunt.file.read(linuxVersionFile);
+        text = safeReplace(
+            text,
+            /APP_VERSION "(\d+\.\d+\.\d+\.\d+)"/,
+            'APP_VERSION "' + newVersion.major + "." + newVersion.minor + "." + newVersion.patch + "." + (newVersion.build.length ? newVersion.build : "0") + '"'
+        );
+        grunt.file.write(linuxVersionFile, text);
     });
 };
