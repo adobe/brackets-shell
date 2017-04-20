@@ -36,6 +36,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <gdk/gdkkeysyms.h>
+#include <algorithm>
+#include <sstream>
+#include <vector>
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -758,6 +762,92 @@ static void Callback(GtkMenuItem* menuItem, gpointer userData) {
     }
 }
 
+
+ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
+{
+    ExtensionString result = keyStr;
+
+    // We get a keyStr that looks like "Ctrl-O", which is the format we
+    // need for the accelerator table. For displaying in the menu, though,
+    // we have to change it to "Ctrl+O". Careful not to change the final
+    // character, though, so "Ctrl--" ends up as "Ctrl+-".
+    if (result.size() > 0) {
+        replace(result.begin(), result.end() - 1, '-', '+');
+    }
+    return result;
+}
+
+
+int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionString& key, GdkModifierType* modifier, guint* keyVal, ExtensionString& commandId) {
+    if (key.size()) {
+        GtkAccelGroup *accel_group = NULL;
+        accel_group = gtk_accel_group_new();
+
+        std::vector<std::string> tokens;
+        std::istringstream f(key.c_str());
+        std::string s;
+        while (getline(f, s, '-')) {
+            tokens.push_back(s);
+        }
+        std::string shortcut = "";
+        // convert shortcut format
+        // e.g. Ctrl+A converts to <Ctrl>A whose entry is stored in accelerator table
+        for (int i=0;i<tokens.size();i++) {
+            if (i != tokens.size() - 1) {
+                shortcut += "<";
+            }
+            shortcut += tokens[i];
+            if (i != tokens.size() - 1) {
+                shortcut += ">";
+            }
+        }
+        gchar* val = (gchar*)shortcut.c_str();
+        gtk_accelerator_parse (val, keyVal, modifier);
+
+        // Fallback
+        if (!(*keyVal)) {
+            for (int i=0;i<tokens.size();i++) {
+                if (tokens[i] == "Ctrl") {
+                    *modifier = GdkModifierType(*modifier | GDK_CONTROL_MASK);
+                } else if (tokens[i] == "Alt") {
+                    *modifier = GdkModifierType(*modifier | GDK_MOD1_MASK);
+                } else if (tokens[i] == "Shift") {
+                    *modifier = GdkModifierType(*modifier | GDK_SHIFT_MASK);
+                } else if (tokens[i] == "Enter") {
+                    *keyVal = GDK_KEY_KP_Enter;
+                } else if (tokens[i] == "Up" || tokens[i] == "\u2191") {
+                    *keyVal = GDK_KEY_uparrow;
+                } else if (tokens[i] == "Down" || tokens[i] == "\u2193") {
+                    *keyVal = GDK_KEY_downarrow;
+                } else if (tokens[i] == "Right") {
+                    *keyVal = GDK_KEY_rightarrow;
+                } else if (tokens[i] == "Left") {
+                    *keyVal = GDK_KEY_leftarrow;
+                } else if (tokens[i] == "Space") {
+                    *keyVal = GDK_KEY_KP_Space;
+                } else if (tokens[i] == "PageUp") {
+                    *keyVal = GDK_KEY_Page_Up;
+                } else if (tokens[i] == "PageDown") {
+                    *keyVal = GDK_KEY_Page_Down;
+                } else if (tokens[i] == "[" || tokens[i] == "]" || tokens[i] == "+" || tokens[i] == "." || tokens[i] == "," || tokens[i] == "\\") {
+                    *keyVal = tokens[i][0];
+                } else if (tokens[i] == "−") {
+                    *keyVal = GDK_KEY_minus;
+                }
+            }
+        }
+        if (*keyVal) {
+            gtk_widget_add_accelerator(entry, "activate", accel_group, *keyVal, *modifier, GTK_ACCEL_VISIBLE);
+        } else if (shortcut.size()) {
+            ExtensionString menuTitle;
+            GetMenuTitle(browser, commandId, menuTitle);
+            menuTitle +=  "\t( " + shortcut + " )";
+            gtk_menu_item_set_label(GTK_MENU_ITEM(entry), menuTitle.c_str());
+        }
+    }
+    return NO_ERROR;
+}
+
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
                   ExtensionString positionString, ExtensionString relativeId)
@@ -781,7 +871,11 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
     g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+    GdkModifierType modifier = GdkModifierType(0);
+    guint keyVal = 0;
+    ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
+    ParseShortcut(browser, entry, key, &modifier, &keyVal, commandId);
     GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
     int position = GetPosition(positionString, relativeId, menuWidget, model);
@@ -824,6 +918,19 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     if (tag == kTagNotFound)
         return ERR_NOT_FOUND;
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    ExtensionString shortcut;
+    GetMenuTitle(browser, commandId, shortcut);
+    size_t pos = shortcut.find("\t");
+    if (pos != -1) {
+        shortcut = shortcut.substr(pos);
+    } else {
+        shortcut = "";
+    }
+
+    ExtensionString newTitle = menuTitle;
+    if (shortcut.length() > 0) {
+         newTitle += shortcut;
+    }
     gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), menuTitle.c_str());
     return NO_ERROR;
 }
@@ -841,6 +948,16 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
 
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* entry = (GtkWidget*) model.getOsItem(tag);
+    GdkModifierType modifier = GdkModifierType(0);
+    guint keyVal = 0;
+    ParseShortcut(browser, entry, shortcut, &modifier, &keyVal, commandId);
+
     return NO_ERROR;
 }
 
