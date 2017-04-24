@@ -1818,6 +1818,11 @@ int GetMenuItemPosition(HMENU hMenu, UINT commandID)
     return -1;
 }
 
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    return NO_ERROR;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
     static WCHAR titleBuf[MAX_LOADSTRING];
 

@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -763,7 +764,7 @@ static void Callback(GtkMenuItem* menuItem, gpointer userData) {
 }
 
 
-ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
+static ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
 {
     ExtensionString result = keyStr;
 
@@ -911,6 +912,19 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
 
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index)
 {
+    return NO_ERROR;
+}
+
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    // TODO: Implement functionality for checked
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    gtk_widget_set_sensitive(menuItem, enabled);
     return NO_ERROR;
 }
 
