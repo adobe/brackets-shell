@@ -778,13 +778,13 @@ ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
 }
 
 
-int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionString& key, GdkModifierType* modifier, guint* keyVal, ExtensionString& commandId) {
+static int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionString& key, GdkModifierType* modifier, guint* keyVal, ExtensionString& commandId) {
     if (key.size()) {
         GtkAccelGroup *accel_group = NULL;
         accel_group = gtk_accel_group_new();
 
         std::vector<std::string> tokens;
-        std::istringstream f(key.c_str());
+        std::istringstream f(key);
         std::string s;
         while (getline(f, s, '-')) {
             tokens.push_back(s);
@@ -802,7 +802,7 @@ int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionSt
             }
         }
         gchar* val = (gchar*)shortcut.c_str();
-        gtk_accelerator_parse (val, keyVal, modifier);
+        gtk_accelerator_parse(val, keyVal, modifier);
 
         // Fallback
         if (!(*keyVal)) {
@@ -829,7 +829,7 @@ int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionSt
                     *keyVal = GDK_KEY_Page_Up;
                 } else if (tokens[i] == "PageDown") {
                     *keyVal = GDK_KEY_Page_Down;
-                } else if (tokens[i] == "[" || tokens[i] == "]" || tokens[i] == "+" || tokens[i] == "." || tokens[i] == "," || tokens[i] == "\\") {
+                } else if (tokens[i] == "[" || tokens[i] == "]" || tokens[i] == "+" || tokens[i] == "." || tokens[i] == "," || tokens[i] == "\\" || tokens[i] == "/" || tokens[i] == "`") {
                     *keyVal = tokens[i][0];
                 } else if (tokens[i] == "−") {
                     *keyVal = GDK_KEY_minus;
@@ -839,9 +839,12 @@ int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionSt
         if (*keyVal) {
             gtk_widget_add_accelerator(entry, "activate", accel_group, *keyVal, *modifier, GTK_ACCEL_VISIBLE);
         } else if (shortcut.size()) {
+            // If fallback also fails, then
+            // we append the shorcut to menu title
+            // e.g. MENU_TITLE (Ctrl + A)
             ExtensionString menuTitle;
             GetMenuTitle(browser, commandId, menuTitle);
-            menuTitle +=  "\t( " + shortcut + " )";
+            menuTitle +=  "\t( " + GetDisplayKeyString(key) + " )";
             gtk_menu_item_set_label(GTK_MENU_ITEM(entry), menuTitle.c_str());
         }
     }
@@ -931,7 +934,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
     if (shortcut.length() > 0) {
          newTitle += shortcut;
     }
-    gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), menuTitle.c_str());
+    gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), newTitle.c_str());
     return NO_ERROR;
 }
 
