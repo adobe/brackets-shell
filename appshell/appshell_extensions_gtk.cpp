@@ -686,7 +686,7 @@ static int GetPosition(const ExtensionString& positionString, const ExtensionStr
         return -1;
     else if (positionString == "first")
         return 0;
-    else if (relativeId.size() > 0) {
+    else if (!relativeId.empty()) {
         int relativeTag = model.getTag(relativeId);
         GtkWidget* relativeMenuItem = (GtkWidget*) model.getOsItem(relativeTag);
         int position = 0;
