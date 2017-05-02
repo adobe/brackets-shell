@@ -42,6 +42,33 @@
 #include <vector>
 #include <iostream>
 
+// Modifiers
+#define MODIFIER_CONTROL "Ctrl"
+#define MODIFIER_ALT "Alt"
+#define MODIFIER_SHIFT "Shift"
+
+// Keys
+#define KEY_ENTER "Enter"
+#define KEY_UP_ARROW "Up"
+#define KEY_UNICODE_UP_ARROW "\u2191"
+#define KEY_DOWN_ARROW "Down"
+#define KEY_UNICODE_DOWN_ARROW "\u2193"
+#define KEY_RIGHT_ARROW "Right"
+#define KEY_LEFT_ARROW "Left"
+#define KEY_SPACE "Space"
+#define KEY_PAGE_UP "PageUp"
+#define KEY_PAGE_DOWN "PageDown"
+#define KEY_OPEN_SQUARE_BRACE "["
+#define KEY_CLOSE_SQUARE_BRACE "]"
+#define KEY_PLUS "+"
+#define KEY_MINUS "−"
+#define KEY_DOT "."
+#define KEY_BACK_SLASH "\\"
+#define KEY_SLASH "/"
+#define KEY_BACK_QUOTE "`"
+#define KEY_COMMA ","
+
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Supported browsers (order matters):
@@ -795,12 +822,13 @@ static int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, Exte
         std::string shortcut = "";
         // convert shortcut format
         // e.g. Ctrl+A converts to <Ctrl>A whose entry is stored in accelerator table
-        for (int i=0;i<tokens.size();i++) {
-            if (i != tokens.size() - 1) {
+        int numTokens = tokens.size();
+        for (int i=0;i<numTokens;i++) {
+            if (i != numTokens - 1) {
                 shortcut += "<";
             }
             shortcut += tokens[i];
-            if (i != tokens.size() - 1) {
+            if (i != numTokens - 1) {
                 shortcut += ">";
             }
         }
@@ -809,32 +837,32 @@ static int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, Exte
 
         // Fallback
         if (!(keyVal)) {
-            for (int i=0;i<tokens.size();i++) {
-                if (tokens[i] == "Ctrl") {
+            for (int i=0;i<numTokens;i++) {
+                if (tokens[i] == MODIFIER_CONTROL) {
                     modifier = GdkModifierType(modifier | GDK_CONTROL_MASK);
-                } else if (tokens[i] == "Alt") {
+                } else if (tokens[i] == MODIFIER_ALT) {
                     modifier = GdkModifierType(modifier | GDK_MOD1_MASK);
-                } else if (tokens[i] == "Shift") {
+                } else if (tokens[i] == MODIFIER_SHIFT) {
                     modifier = GdkModifierType(modifier | GDK_SHIFT_MASK);
-                } else if (tokens[i] == "Enter") {
+                } else if (tokens[i] == KEY_ENTER) {
                     keyVal = GDK_KEY_KP_Enter;
-                } else if (tokens[i] == "Up" || tokens[i] == "\u2191") {
+                } else if (tokens[i] == KEY_UP_ARROW || tokens[i] == KEY_UNICODE_UP_ARROW) {
                     keyVal = GDK_KEY_uparrow;
-                } else if (tokens[i] == "Down" || tokens[i] == "\u2193") {
+                } else if (tokens[i] == KEY_DOWN_ARROW || tokens[i] == KEY_UNICODE_DOWN_ARROW) {
                     keyVal = GDK_KEY_downarrow;
-                } else if (tokens[i] == "Right") {
+                } else if (tokens[i] == KEY_RIGHT_ARROW) {
                     keyVal = GDK_KEY_rightarrow;
-                } else if (tokens[i] == "Left") {
+                } else if (tokens[i] == KEY_LEFT_ARROW) {
                     keyVal = GDK_KEY_leftarrow;
-                } else if (tokens[i] == "Space") {
+                } else if (tokens[i] == KEY_SPACE) {
                     keyVal = GDK_KEY_KP_Space;
-                } else if (tokens[i] == "PageUp") {
+                } else if (tokens[i] == KEY_PAGE_UP) {
                     keyVal = GDK_KEY_Page_Up;
-                } else if (tokens[i] == "PageDown") {
+                } else if (tokens[i] == KEY_PAGE_DOWN) {
                     keyVal = GDK_KEY_Page_Down;
-                } else if (tokens[i] == "[" || tokens[i] == "]" || tokens[i] == "+" || tokens[i] == "." || tokens[i] == "," || tokens[i] == "\\" || tokens[i] == "/" || tokens[i] == "`") {
+                } else if (tokens[i] == KEY_OPEN_SQUARE_BRACE || tokens[i] == KEY_CLOSE_SQUARE_BRACE || tokens[i] == KEY_PLUS || tokens[i] == KEY_DOT || tokens[i] == KEY_COMMA || tokens[i] == KEY_BACK_SLASH || tokens[i] == KEY_SLASH || tokens[i] == KEY_BACK_QUOTE) {
                     keyVal = tokens[i][0];
-                } else if (tokens[i] == "−") {
+                } else if (tokens[i] == KEY_MINUS) {
                     keyVal = GDK_KEY_minus;
                 }
             }
