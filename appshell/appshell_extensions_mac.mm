@@ -1229,6 +1229,11 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    return NO_ERROR;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
     NSString* itemTitleStr = [[[NSString alloc] initWithUTF8String:itemTitle.c_str()] autorelease];
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
