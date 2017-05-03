@@ -27,7 +27,7 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include "appshell_extensions.h"
-#include "appshell_extensions_platform.h"
+#include "native_menu_model.h"
 #include "client_handler.h"
 
 #include <errno.h>
@@ -37,8 +37,40 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <gdk/gdkkeysyms.h>
+#include <algorithm>
+#include <sstream>
+#include <vector>
+#include <iostream>
 
-GtkWidget* _menuWidget;
+// Modifiers
+#define MODIFIER_CONTROL "Ctrl"
+#define MODIFIER_ALT "Alt"
+#define MODIFIER_SHIFT "Shift"
+
+// Keys
+#define KEY_ENTER "Enter"
+#define KEY_UP_ARROW "Up"
+#define KEY_UNICODE_UP_ARROW "\u2191"
+#define KEY_DOWN_ARROW "Down"
+#define KEY_UNICODE_DOWN_ARROW "\u2193"
+#define KEY_RIGHT_ARROW "Right"
+#define KEY_LEFT_ARROW "Left"
+#define KEY_SPACE "Space"
+#define KEY_PAGE_UP "PageUp"
+#define KEY_PAGE_DOWN "PageDown"
+#define KEY_OPEN_SQUARE_BRACE "["
+#define KEY_CLOSE_SQUARE_BRACE "]"
+#define KEY_PLUS "+"
+#define KEY_MINUS "−"
+#define KEY_DOT "."
+#define KEY_BACK_SLASH "\\"
+#define KEY_SLASH "/"
+#define KEY_BACK_QUOTE "`"
+#define KEY_COMMA ","
+
+
+extern CefRefPtr<ClientHandler> g_handler;
 
 // Supported browsers (order matters):
 //   - google-chorme 
@@ -737,57 +769,237 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
 {
 }
 
-GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
+static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
 {
     GtkWidget* window = (GtkWidget*)getMenuParent(browser);
     GtkWidget* widget;
     GList *children, *iter;
+    GtkWidget* menuBar = NULL;
 
     children = gtk_container_get_children(GTK_CONTAINER(window));
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_MENU_BAR(widget))
-            return widget;
+        if (GTK_IS_MENU_BAR(widget)) {
+            menuBar = widget;
+            break;
+        }
     }
 
-    return NULL;
+    g_list_free(children);
+
+    return menuBar;
+}
+
+static int GetPosition(const ExtensionString& positionString, const ExtensionString& relativeId,
+                       GtkWidget* container, NativeMenuModel& model)
+{
+    if (positionString == "" || positionString == "last")
+        return -1;
+    else if (positionString == "first")
+        return 0;
+    else if (!relativeId.empty()) {
+        int relativeTag = model.getTag(relativeId);
+        GtkWidget* relativeMenuItem = (GtkWidget*) model.getOsItem(relativeTag);
+        int position = 0;
+        GList* children = gtk_container_get_children(GTK_CONTAINER(container));
+        GList* iter;
+        for (iter = children; iter != NULL; iter = g_list_next(iter)) {
+            if (iter->data == relativeMenuItem)
+                break;
+            position++;
+        }
+        if (iter == NULL)
+            position = -1;
+        else if (positionString == "before")
+            ;
+        else if (positionString == "after")
+            position++;
+        else if (positionString == "firstInSection") {
+            for (; iter != NULL; iter = g_list_previous(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position--;
+            }
+            position++;
+        }
+        else if (positionString == "lastInSection") {
+            for (; iter != NULL; iter = g_list_next(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position++;
+            }
+        }
+        else
+            position = -1;
+        g_list_free(children);
+        return position;
+    }
+    else
+        return -1;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
-              ExtensionString position, ExtensionString relativeId)
+              ExtensionString positionString, ExtensionString relativeId)
 {
-    // if (tag == kTagNotFound) {
-    //     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
-    // } else {
-    //     // menu already there
-    //     return NO_ERROR;
-    // }
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        tag = model.getOrCreateTag(command, ExtensionString());
+    } else {
+        // menu is already there
+        return NO_ERROR;
+    }
 
     GtkWidget* menuBar = GetMenuBar(browser);
     GtkWidget* menuWidget = gtk_menu_new();
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    model.setOsItem(tag, menuHeader);
+    int position = GetPosition(positionString, relativeId, menuBar, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuBar), menuHeader, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
     gtk_widget_show(menuHeader);
-
-    // FIXME add lookup for menu widgets
-    _menuWidget = menuWidget;
     
     return NO_ERROR;
 }
 
-void FakeCallback() {
+static void Callback(GtkMenuItem* menuItem, gpointer userData) {
+    if (g_handler.get() && g_handler->GetBrowserId()) {
+        int tag = GPOINTER_TO_INT(userData);
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+        g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+    }
+}
+
+
+static ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
+{
+    ExtensionString result = keyStr;
+
+    // We get a keyStr that looks like "Ctrl-O", which is the format we
+    // need for the accelerator table. For displaying in the menu, though,
+    // we have to change it to "Ctrl+O". Careful not to change the final
+    // character, though, so "Ctrl--" ends up as "Ctrl+-".
+    if (result.size() > 0) {
+        replace(result.begin(), result.end() - 1, '-', '+');
+    }
+    return result;
+}
+
+
+static int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionString& key, ExtensionString& commandId) {
+    if (key.size()) {
+        GdkModifierType modifier = GdkModifierType(0);
+        guint keyVal = 0;
+        GtkAccelGroup *accel_group = NULL;
+        accel_group = gtk_accel_group_new();
+
+        std::vector<std::string> tokens;
+        std::istringstream f(key);
+        std::string s;
+        while (getline(f, s, '-')) {
+            tokens.push_back(s);
+        }
+        std::string shortcut = "";
+        // convert shortcut format
+        // e.g. Ctrl+A converts to <Ctrl>A whose entry is stored in accelerator table
+        int numTokens = tokens.size();
+        for (int i=0;i<numTokens;i++) {
+            if (i != numTokens - 1) {
+                shortcut += "<";
+            }
+            shortcut += tokens[i];
+            if (i != numTokens - 1) {
+                shortcut += ">";
+            }
+        }
+        gchar* val = (gchar*)shortcut.c_str();
+        gtk_accelerator_parse(val, &keyVal, &modifier);
+
+        // Fallback
+        if (!(keyVal)) {
+            for (int i=0;i<numTokens;i++) {
+                if (tokens[i] == MODIFIER_CONTROL) {
+                    modifier = GdkModifierType(modifier | GDK_CONTROL_MASK);
+                } else if (tokens[i] == MODIFIER_ALT) {
+                    modifier = GdkModifierType(modifier | GDK_MOD1_MASK);
+                } else if (tokens[i] == MODIFIER_SHIFT) {
+                    modifier = GdkModifierType(modifier | GDK_SHIFT_MASK);
+                } else if (tokens[i] == KEY_ENTER) {
+                    keyVal = GDK_KEY_KP_Enter;
+                } else if (tokens[i] == KEY_UP_ARROW || tokens[i] == KEY_UNICODE_UP_ARROW) {
+                    keyVal = GDK_KEY_uparrow;
+                } else if (tokens[i] == KEY_DOWN_ARROW || tokens[i] == KEY_UNICODE_DOWN_ARROW) {
+                    keyVal = GDK_KEY_downarrow;
+                } else if (tokens[i] == KEY_RIGHT_ARROW) {
+                    keyVal = GDK_KEY_rightarrow;
+                } else if (tokens[i] == KEY_LEFT_ARROW) {
+                    keyVal = GDK_KEY_leftarrow;
+                } else if (tokens[i] == KEY_SPACE) {
+                    keyVal = GDK_KEY_KP_Space;
+                } else if (tokens[i] == KEY_PAGE_UP) {
+                    keyVal = GDK_KEY_Page_Up;
+                } else if (tokens[i] == KEY_PAGE_DOWN) {
+                    keyVal = GDK_KEY_Page_Down;
+                } else if (tokens[i] == KEY_OPEN_SQUARE_BRACE || tokens[i] == KEY_CLOSE_SQUARE_BRACE || tokens[i] == KEY_PLUS || tokens[i] == KEY_DOT || tokens[i] == KEY_COMMA || tokens[i] == KEY_BACK_SLASH || tokens[i] == KEY_SLASH || tokens[i] == KEY_BACK_QUOTE) {
+                    keyVal = tokens[i][0];
+                } else if (tokens[i] == KEY_MINUS) {
+                    keyVal = GDK_KEY_minus;
+                }
+            }
+        }
+        if (keyVal) {
+            gtk_widget_add_accelerator(entry, "activate", accel_group, keyVal, modifier, GTK_ACCEL_VISIBLE);
+        } else if (shortcut.size()) {
+            // If fallback also fails, then
+            // we append the shorcut to menu title
+            // e.g. MENU_TITLE (Ctrl + A)
+            ExtensionString menuTitle;
+            GetMenuTitle(browser, commandId, menuTitle);
+            menuTitle +=  "\t( " + GetDisplayKeyString(key) + " )";
+            gtk_menu_item_set_label(GTK_MENU_ITEM(entry), menuTitle.c_str());
+        }
+    }
+    return NO_ERROR;
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
-                  ExtensionString position, ExtensionString relativeId)
+                  ExtensionString positionString, ExtensionString relativeId)
 {
-    GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", FakeCallback, NULL);
-    // FIXME add lookup for menu widgets
-    gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int parentTag = model.getTag(parentCommand);
+    if (parentTag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        tag = model.getOrCreateTag(command, parentCommand);
+    } else {
+        return NO_ERROR;
+    }
+
+    GtkWidget* entry;
+    if (itemTitle == "---")
+        entry = gtk_separator_menu_item_new();
+    else
+        entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+    g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+    ExtensionString commandId = model.getCommandId(tag);
+    model.setOsItem(tag, entry);
+    ParseShortcut(browser, entry, key, commandId);
+    GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
+    GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
+    int position = GetPosition(positionString, relativeId, menuWidget, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuWidget), entry, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuWidget), entry);
     gtk_widget_show(entry);
 
     return NO_ERROR;
@@ -795,11 +1007,19 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
-    return NO_ERROR;
+    // works for menu and menu item
+    return RemoveMenuItem(browser, commandId);
 }
 
 int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    model.removeMenuItem(commandId);
+    gtk_widget_destroy(menuItem);
     return NO_ERROR;
 }
 
@@ -808,18 +1028,63 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    // TODO: Implement functionality for checked
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    gtk_widget_set_sensitive(menuItem, enabled);
+    return NO_ERROR;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    ExtensionString shortcut;
+    GetMenuTitle(browser, commandId, shortcut);
+    size_t pos = shortcut.find("\t");
+    if (pos != -1) {
+        shortcut = shortcut.substr(pos);
+    } else {
+        shortcut = "";
+    }
+
+    ExtensionString newTitle = menuTitle;
+    if (shortcut.length() > 0) {
+         newTitle += shortcut;
+    }
+    gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), newTitle.c_str());
     return NO_ERROR;
 }
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    menuTitle = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
     return NO_ERROR;
 }
 
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* entry = (GtkWidget*) model.getOsItem(tag);
+    ParseShortcut(browser, entry, shortcut, commandId);
     return NO_ERROR;
 }
 
