@@ -1781,6 +1781,7 @@
         ],
         'include_dirs': [
           '<(DEPTH)/third_party/wtl/include',
+          '<(DEPTH)/ThirdParty/icu/include',
         ],
         'conditions': [
           ['win_z7!=0', {

@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include "config.h"
+#include <codecvt>
+#include <unicode/ucsdet.h>
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
@@ -817,6 +819,158 @@ bool quickTestBufferForUTF8(UTFValidationState& validationState)
 }
 
 
+void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+	const UCharsetMatch* charsetMatch_;
+	UErrorCode icuError = U_ZERO_ERROR;
+
+	UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to open detector";
+
+	// send text
+	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to set text";
+
+	// detect language
+	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to detect charset";
+
+	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+	detectedCharSet = detectedCharsetName;
+
+	// Get Language Name
+	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+	// Get Confidence
+	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+}
+
+typedef std::map<std::string, long> CharSetMap;
+
+
+// Mapping of CharSet to CodePage
+CharSetMap charSetMap =
+{
+	// Below mappings are listed on website
+	{ "ISO-2022-JP", 50220 },
+	{ "ISO-8859-6", 28596 },
+	{ "ISO-2022-CN", 50227 },
+	{ "ISO-2022-KR", 50225 },
+	{ "GB18030", 54936 },
+	{ "BIG5", 950 },
+	{ "EUC-JP", 51932 },
+	{ "EUC-KR", 949 },
+	{ "ISO-8859-1", 28591 },
+	{ "ISO-8859-2", 28592 },
+	{ "ISO-8859-5", 28595 },
+	{ "ISO-8859-6", 28596 },
+	{ "ISO-8859-7", 28597 },
+	{ "ISO-8859-8", 28598 },
+	{ "ISO-8859-9", 28599 },
+	{ "windows-1250", 1250 },
+	{ "windows-1251", 1251 },
+	{ "Windows-1252", 1252 },
+	{ "windows-1253", 1253 },
+	{ "windows-1254", 1254 },
+	{ "windows-1255", 1255 },
+	{ "windows-1256", 1256 },
+	{ "KOI8-R", 20866 },
+	{ "IBM420", 420 },
+	{ "IBM424", 424 },
+
+	// These are also supported 
+	{ "ISO-8859-8-I", 38598 },
+	{ "shift_jis", 932 },
+	{ "ISO-8859-3", 28593 },
+	{ "ISO-8859-4", 28594 }
+};
+
+
+static std::wstring CharSetToWide(const std::string &aString, long codePage)
+{
+#ifdef  _MSC_VER
+	int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
+		0,
+		aString.data(),
+		aString.size(),
+		NULL,
+		NULL);
+
+	int resultByteSize = aUTF16Length * sizeof(wchar_t);
+	wchar_t *buf = (wchar_t *)malloc(resultByteSize);
+
+	// codePage -> UTF-16
+	int wcharsWritten = ::MultiByteToWideChar(codePage,
+		0,
+		aString.data(),
+		aString.size(),
+		buf,
+		aUTF16Length);
+
+	assert(wcharsWritten == aUTF16Length);
+
+	std::wstring aUTF16string(buf, wcharsWritten);
+
+	free(buf);
+
+	return aUTF16string;
+#else
+	utf16string aUTF16string;
+
+	TECObjectRef converter;
+
+	TextEncoding utf16Encoding = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicode16BitFormat);
+	OSStatus err = toUTF16Converters.GetConverter(codePage, codePage, utf16Encoding, converter);
+
+	if (err == noErr)
+	{
+		size_t bytesToConvert = aString.size() * sizeof(aString[0]);
+		size_t inOffset = 0; // currently, in bytes
+		UTF16CHAR buf[512];
+		ByteCount bytesRead = 0;
+		ByteCount bytesWritten = 0;
+
+		while (err == noErr && bytesToConvert > 0)
+		{
+			err = TECConvertText(converter,
+				ConstTextPtr(aString.data()) + inOffset,
+				bytesToConvert,
+				&bytesRead,
+				(TextPtr)buf,
+				sizeof(buf),
+				&bytesWritten);
+
+			if (err == kTECOutputBufferFullStatus || err == kTECUsedFallbacksStatus)
+				err = noErr;
+
+			inOffset += bytesRead;
+			bytesToConvert -= bytesRead;
+
+			aUTF16string.append(buf, bytesWritten / sizeof(UTF16CHAR));
+		}
+
+		if (err == noErr)
+			err = TECFlushText(converter,
+			(TextPtr)buf,
+				sizeof(buf),
+				&bytesWritten);
+
+		aUTF16string.append(buf, bytesWritten / sizeof(UTF16CHAR));
+
+		toUTF16Converters.SaveConverter(codePage, converter);
+	}
+
+#if 0 // TODO -- figure out how to handle errors in this API
+	if (err != noErr)
+		throw NetIOException(NetIOException::UNKNOWN); // TODO
+#endif
+
+	return aUTF16string;
+#endif
+}
+
+
 int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
 {
     if (encoding != L"utf8")
@@ -889,37 +1043,63 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
             }
         }
 
-        if (error == NO_ERROR) {
-            // either we did a quick test and we think it's UTF-8 or 
-            //  the file is small enough that we didn't spend the time
-            //  to do a quick test so alloc the memory to read the entire
-            //  file into memory and test it again...
-            buffer = (char*)malloc(dwFileSize);
-            if (buffer) {
+		if (error == NO_ERROR) {
+			// either we did a quick test and we think it's UTF-8 or 
+			//  the file is small enough that we didn't spend the time
+			//  to do a quick test so alloc the memory to read the entire
+			//  file into memory and test it again...
+			buffer = (char*)malloc(dwFileSize);
+			if (buffer) {
 
-                validationState.data = buffer;
-                validationState.dataLen = dwFileSize;
-                validationState.preserveBOM = false;
+				validationState.data = buffer;
+				validationState.dataLen = dwFileSize;
+				validationState.preserveBOM = true;
 
-                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-                    if (!GetBufferAsUTF8(validationState)) {
-                        error = ERR_UNSUPPORTED_ENCODING;
-                    } else {
-                        contents = std::string(buffer, validationState.dataLen);
-                    }        
-                } else {
-                    error = ConvertWinErrorCode(GetLastError(), false);
-                }
-                free(buffer);
+				if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+					contents = std::string(buffer, validationState.dataLen);
+					if (!GetBufferAsUTF8(validationState)) {
+						std::string detectedCharSet;
+						try {
+							GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+							CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
+							if (iter == charSetMap.end()) {
+								std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+								iter = charSetMap.find(detectedCharSet);
+								error = ERR_UNSUPPORTED_ENCODING;
+							}
 
-            }
-            else { 
-                error = ERR_UNKNOWN;
-            }
-        }
-    }
-    CloseHandle(hFile);
-    return error; 
+							if (iter == charSetMap.end()) {
+								error = ERR_UNSUPPORTED_ENCODING;
+							}
+							else {
+								try {
+									std::wstring content = CharSetToWide(contents, iter->second);
+									std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+									contents = conv.to_bytes(content);
+									error = NO_ERROR;
+								}
+								catch (...) {
+									error = ERR_UNSUPPORTED_ENCODING;
+								}
+							}
+						} catch (...) {
+							error = ERR_UNSUPPORTED_ENCODING;
+						}
+					}
+				}
+				else {
+					error = ConvertWinErrorCode(GetLastError(), false);
+				}
+				free(buffer);
+
+			}
+			else {
+				error = ERR_UNKNOWN;
+			}
+		}
+	}
+	CloseHandle(hFile);
+	return error;
 }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)

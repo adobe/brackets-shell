@@ -130,6 +130,8 @@
               '-lshell32.lib',
               '-lole32.lib',
               '-lgdi32.lib',
+              '-lThirdParty/icu/lib/icuin.lib',
+              '-lThirdParty/icu/lib/icuuc.lib',
               '-l$(ConfigurationName)/libcef.lib',
             ],
           },
@@ -169,6 +171,11 @@
               # Copy windows command line script
               'destination': '<(PRODUCT_DIR)command',
               'files': ['scripts/brackets.bat', 'scripts/brackets'],
+            },
+            {
+              # Copy ICU dlls
+              'destination': '<(PRODUCT_DIR)',
+              'files': ['ThirdParty/icu/bin/icuuc48.dll', 'ThirdParty/icu/bin/icuin48.dll'],
             }
           ],
         }],
