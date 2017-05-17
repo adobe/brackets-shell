@@ -42,6 +42,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <unicode/ucsdet.h>
 
 // Modifiers
 #define MODIFIER_CONTROL "Ctrl"
@@ -407,12 +408,38 @@ bool has_utf32le_BOM(gchar* data, gsize length)
 }
 
 
-bool has_utf16_32_BOM(gchar* data, gsize length) 
+bool has_utf_32_BOM(gchar* data, gsize length) 
 {
     return (has_utf32be_BOM(data ,length) ||
-            has_utf32le_BOM(data ,length) ||
-            has_utf16be_BOM(data ,length) ||
-            has_utf16le_BOM(data ,length) );
+            has_utf32le_BOM(data ,length));
+}
+
+
+void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+	const UCharsetMatch* charsetMatch_;
+	UErrorCode icuError = U_ZERO_ERROR;
+
+	UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to open detector";
+
+	// send text
+	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to set text";
+
+	// detect language
+	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to detect charset";
+
+	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+	detectedCharSet = detectedCharsetName;
+
+	// Get Language Name
+	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+	// Get Confidence
+	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
 }
 
 
@@ -433,18 +460,40 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
             error = ERR_CANT_READ;
         }
     } else {
-        if (has_utf16_32_BOM(file_get_contents, len)) {
+        if (has_utf_32_BOM(file_get_contents, len)) {
             error = ERR_UNSUPPORTED_ENCODING;
         } else  if (has_utf8_BOM(file_get_contents, len)) {
             contents.assign(file_get_contents + utf8_BOM_Len, len);        
         } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
-            error = ERR_UNSUPPORTED_ENCODING;
+            contents.assign(file_get_contents, len);
+            std::string detectedCharSet;
+            try {
+                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
+
+                // Converting to Wide char
+                int32_t sz = ustr.length() * 2;
+
+                char* dest = new char[sizeof (*dest) * sz];
+                UErrorCode status = U_ZERO_ERROR;
+                ustr.extract(dest, sz, NULL, status);
+                if (status == U_ZERO_ERROR) {
+                    contents = dest;
+                    delete dest;
+                    error = NO_ERROR;
+                }
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
+            }
         } else {
             contents.assign(file_get_contents, len);
         }
         g_free(file_get_contents);
     }
-
     return error;
 }
 
