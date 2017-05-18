@@ -124,7 +124,7 @@ SPACE_REPLACEMENT = '?'
 
 
 LINK_COMMANDS_LINUX = """\
-quiet_cmd_alink = AR($(TOOLSET))
+quiet_cmd_alink = AR($(TOOLSET)) $@
 cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 quiet_cmd_alink_thin = AR($(TOOLSET)) $@
