@@ -124,8 +124,8 @@ SPACE_REPLACEMENT = '?'
 
 
 LINK_COMMANDS_LINUX = """\
-quiet_cmd_alink = AR($(TOOLSET)) $@ `pkg-config --libs --cflags icu-uc icu-io`
-cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^) `pkg-config --libs --cflags icu-uc icu-io`
+quiet_cmd_alink = AR($(TOOLSET))
+cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 quiet_cmd_alink_thin = AR($(TOOLSET)) $@
 cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crsT $@ $(filter %.o,$^)
