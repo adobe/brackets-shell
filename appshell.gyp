@@ -130,8 +130,8 @@
               '-lshell32.lib',
               '-lole32.lib',
               '-lgdi32.lib',
-              '-lThirdParty/icu/lib/icuin.lib',
-              '-lThirdParty/icu/lib/icuuc.lib',
+              '-ldeps/icu/lib/icuin.lib',
+              '-ldeps/icu/lib/icuuc.lib',
               '-l$(ConfigurationName)/libcef.lib',
             ],
           },
@@ -175,7 +175,7 @@
             {
               # Copy ICU dlls
               'destination': '<(PRODUCT_DIR)',
-              'files': ['ThirdParty/icu/bin/icuuc59.dll', 'ThirdParty/icu/bin/icuin59.dll', 'ThirdParty/icu/bin/icudt59.dll'],
+              'files': ['deps/icu/bin/icuuc59.dll', 'deps/icu/bin/icuin59.dll', 'deps/icu/bin/icudt59.dll'],
             }
           ],
         }],
