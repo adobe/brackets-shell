@@ -175,7 +175,7 @@
             {
               # Copy ICU dlls
               'destination': '<(PRODUCT_DIR)',
-              'files': ['ThirdParty/icu/bin/icuuc48.dll', 'ThirdParty/icu/bin/icuin48.dll'],
+              'files': ['ThirdParty/icu/bin/icuuc59.dll', 'ThirdParty/icu/bin/icuin59.dll', 'ThirdParty/icu/bin/icudt59.dll'],
             }
           ],
         }],
