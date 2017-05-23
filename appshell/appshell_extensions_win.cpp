@@ -1112,14 +1112,16 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ConvertWinErrorCode(GetLastError(), false); 
 
     // TODO (issue 67) -  Should write to temp file
-	std::wstring content = StringToWString(contents);
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-	CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
-	if (iter != charSetMap.end()) {
-		contents = WideToCharSet(content, iter->second);
-	}
-	else {
-		return ERR_UNSUPPORTED_ENCODING;
+	if (encoding != L"utf8") {
+		std::wstring content = StringToWString(contents);
+		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+		CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
+		if (iter != charSetMap.end()) {
+			contents = WideToCharSet(content, iter->second);
+		}
+		else {
+			return ERR_UNSUPPORTED_ENCODING;
+		}
 	}
 	
 
