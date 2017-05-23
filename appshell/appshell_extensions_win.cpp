@@ -889,7 +889,6 @@ CharSetMap charSetMap =
 
 static std::wstring CharSetToWide(const std::string &aString, long codePage)
 {
-#ifdef  _MSC_VER
 	int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
 		0,
 		aString.data(),
@@ -915,63 +914,18 @@ static std::wstring CharSetToWide(const std::string &aString, long codePage)
 	free(buf);
 
 	return aUTF16string;
-#else
-	utf16string aUTF16string;
+}
 
-	TECObjectRef converter;
+std::wstring StringToWString(const std::string& str)
+{
+	using convert_typeX = std::codecvt_utf8<wchar_t>;
+	std::wstring_convert<convert_typeX, wchar_t> converterX;
 
-	TextEncoding utf16Encoding = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicode16BitFormat);
-	OSStatus err = toUTF16Converters.GetConverter(codePage, codePage, utf16Encoding, converter);
-
-	if (err == noErr)
-	{
-		size_t bytesToConvert = aString.size() * sizeof(aString[0]);
-		size_t inOffset = 0; // currently, in bytes
-		UTF16CHAR buf[512];
-		ByteCount bytesRead = 0;
-		ByteCount bytesWritten = 0;
-
-		while (err == noErr && bytesToConvert > 0)
-		{
-			err = TECConvertText(converter,
-				ConstTextPtr(aString.data()) + inOffset,
-				bytesToConvert,
-				&bytesRead,
-				(TextPtr)buf,
-				sizeof(buf),
-				&bytesWritten);
-
-			if (err == kTECOutputBufferFullStatus || err == kTECUsedFallbacksStatus)
-				err = noErr;
-
-			inOffset += bytesRead;
-			bytesToConvert -= bytesRead;
-
-			aUTF16string.append(buf, bytesWritten / sizeof(UTF16CHAR));
-		}
-
-		if (err == noErr)
-			err = TECFlushText(converter,
-			(TextPtr)buf,
-				sizeof(buf),
-				&bytesWritten);
-
-		aUTF16string.append(buf, bytesWritten / sizeof(UTF16CHAR));
-
-		toUTF16Converters.SaveConverter(codePage, converter);
-	}
-
-#if 0 // TODO -- figure out how to handle errors in this API
-	if (err != noErr)
-		throw NetIOException(NetIOException::UNKNOWN); // TODO
-#endif
-
-	return aUTF16string;
-#endif
+	return converterX.from_bytes(str);
 }
 
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
     if (encoding != L"utf8")
         return ERR_UNSUPPORTED_ENCODING;
@@ -1076,6 +1030,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 									std::wstring content = CharSetToWide(contents, iter->second);
 									std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 									contents = conv.to_bytes(content);
+									encoding = StringToWString(detectedCharSet);
 									error = NO_ERROR;
 								}
 								catch (...) {
@@ -1102,11 +1057,52 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 	return error;
 }
 
+
+static std::string WideToCharSet(const std::wstring &aUTF16string, long codePage)
+{
+	if (aUTF16string.size() > 0)
+	{
+		// convert UTF-16 to UTF-8; first get destination buffer length
+		int aUTF8Length = ::WideCharToMultiByte(codePage,
+			0,
+			aUTF16string.data(),
+			aUTF16string.size(),
+			NULL,
+			0,
+			NULL,
+			NULL);
+
+		char *buf = (char *)malloc(aUTF8Length);
+
+		// UTF-16 -> UTF-8 conversion
+		int bytesWritten = ::WideCharToMultiByte(codePage,
+			0,
+			aUTF16string.data(),
+			aUTF16string.size(),
+			buf,
+			aUTF8Length,
+			NULL,
+			NULL);
+
+		assert(bytesWritten == aUTF8Length);
+
+		std::string result(buf, bytesWritten);
+
+		free(buf);
+
+		return result;
+	}
+	else
+	{
+		std::string result; // 0 length begets empty result
+		return result;
+	}
+}
+
+
+
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    if (encoding != L"utf8")
-        return ERR_UNSUPPORTED_ENCODING;
-
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
         FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     DWORD dwBytesWritten;
@@ -1115,7 +1111,18 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     if (INVALID_HANDLE_VALUE == hFile)
         return ConvertWinErrorCode(GetLastError(), false); 
 
-    // TODO (issue 67) -  Should write to temp file and handle encoding
+    // TODO (issue 67) -  Should write to temp file
+	std::wstring content = StringToWString(contents);
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+	CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
+	if (iter != charSetMap.end()) {
+		contents = WideToCharSet(content, iter->second);
+	}
+	else {
+		return ERR_UNSUPPORTED_ENCODING;
+	}
+	
+
     if (!WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL)) {
         error = ConvertWinErrorCode(GetLastError(), false);
     }

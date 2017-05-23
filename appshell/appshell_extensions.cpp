@@ -309,6 +309,7 @@ public:
                 
                 // Set response args for this function
                 responseArgs->SetString(2, contents);
+				responseArgs->SetString(3, encoding);
             }
         } else if (message_name == "WriteFile") {
             // Parameters:
