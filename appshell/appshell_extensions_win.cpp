@@ -1035,6 +1035,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 									std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 									contents = conv.to_bytes(content);
 									encoding = StringToWString(detectedCharSet);
+									if (!contents.size()) {
+										error = ERR_UNSUPPORTED_ENCODING;
+									}
 									error = NO_ERROR;
 								}
 								catch (...) {
@@ -1056,9 +1059,6 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 				error = ERR_UNKNOWN;
 			}
 		}
-	}
-	if (!contents.size()) {
-		error = ERR_UNSUPPORTED_ENCODING;
 	}
 	CloseHandle(hFile);
 	return error;
