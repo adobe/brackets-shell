@@ -881,7 +881,7 @@ CharSetMap charSetMap =
 
 	// These are also supported 
 	{ "ISO-8859-8-I", 38598 },
-	{ "shift_jis", 932 },
+	{ "SHIFT_JIS", 932 },
 	{ "ISO-8859-3", 28593 },
 	{ "ISO-8859-4", 28594 }
 };
