@@ -886,8 +886,8 @@ CharSetMap charSetMap =
 	{ "ISO-8859-4", 28594 },
 	{ "UTF-16", 1200 },
 	{ "UTF-16BE", 1201},
-	{ "windows-1257", 1257 },
-	{ "windows-1258", 1258 }
+	{ "WINDOWS-1257", 1257 },
+	{ "WINDOWS-1258", 1258 }
 };
 
 
