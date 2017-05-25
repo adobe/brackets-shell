@@ -868,13 +868,13 @@ CharSetMap charSetMap =
 	{ "ISO-8859-7", 28597 },
 	{ "ISO-8859-8", 28598 },
 	{ "ISO-8859-9", 28599 },
-	{ "windows-1250", 1250 },
-	{ "windows-1251", 1251 },
-	{ "Windows-1252", 1252 },
-	{ "windows-1253", 1253 },
-	{ "windows-1254", 1254 },
-	{ "windows-1255", 1255 },
-	{ "windows-1256", 1256 },
+	{ "WINDOWS-1250", 1250 },
+	{ "WINDOWS-1251", 1251 },
+	{ "WINDOWS-1252", 1252 },
+	{ "WINDOWS-1253", 1253 },
+	{ "WINDOWS-1254", 1254 },
+	{ "WINDOWS-1255", 1255 },
+	{ "WINDOWS-1256", 1256 },
 	{ "KOI8-R", 20866 },
 	{ "IBM420", 420 },
 	{ "IBM424", 424 },
@@ -883,7 +883,11 @@ CharSetMap charSetMap =
 	{ "ISO-8859-8-I", 38598 },
 	{ "SHIFT_JIS", 932 },
 	{ "ISO-8859-3", 28593 },
-	{ "ISO-8859-4", 28594 }
+	{ "ISO-8859-4", 28594 },
+	{ "UTF-16", 1200 },
+	{ "UTF-16BE", 1201},
+	{ "windows-1257", 1257 },
+	{ "windows-1258", 1258 }
 };
 
 
@@ -1052,6 +1056,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 				error = ERR_UNKNOWN;
 			}
 		}
+	}
+	if (!contents.size()) {
+		error = ERR_UNSUPPORTED_ENCODING;
 	}
 	CloseHandle(hFile);
 	return error;
