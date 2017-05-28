@@ -98,7 +98,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName);
 
 int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath);
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents);
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding);
 

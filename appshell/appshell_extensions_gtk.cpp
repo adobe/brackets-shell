@@ -43,6 +43,7 @@
 #include <vector>
 #include <iostream>
 #include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
 
 // Modifiers
 #define MODIFIER_CONTROL "Ctrl"
@@ -443,7 +444,8 @@ void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &d
 }
 
 
-int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+
+int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
     if (encoding != "utf8") {
         return ERR_UNSUPPORTED_ENCODING;
@@ -471,7 +473,6 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
                 GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-
                 // Converting to Wide char
                 int32_t sz = ustr.length() * 2;
 
@@ -480,7 +481,8 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
                 ustr.extract(dest, sz, NULL, status);
                 if (status == U_ZERO_ERROR) {
                     contents = dest;
-                    delete dest;
+                    encoding = detectedCharSet;
+                    delete[] dest;
                     error = NO_ERROR;
                 }
                 else {
@@ -504,13 +506,22 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     const char *filenameStr = filename.c_str();    
     int error = NO_ERROR;
     GError *gerror = NULL;
-
-    if (encoding != "utf8") {
-        return ERR_UNSUPPORTED_ENCODING;
-    } else if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
+    if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
         return ERR_CANT_WRITE;
     }
-    
+
+    if (encoding != "utf8") {
+        UErrorCode status = U_ZERO_ERROR;
+        UConverter *conv = ucnv_open(encoding.c_str(), &status);
+        UnicodeString ustr(contents.c_str());
+        int targetLen = ustr.extract(NULL, 0, conv, status);
+        char* target = (char*)malloc(targetLen);
+        ustr.extract(target, targetLen, conv, status);
+        contents = target;
+        delete[] target;
+        ucnv_close(conv);
+    }
+
     FILE* file = fopen(filenameStr, "w");
     if (file) {
         size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
