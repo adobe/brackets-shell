@@ -479,7 +479,7 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
                 char* dest = new char[sizeof (*dest) * sz];
                 UErrorCode status = U_ZERO_ERROR;
                 ustr.extract(dest, sz, NULL, status);
-                if (status == U_ZERO_ERROR) {
+                if (U_SUCCESS(status)) {
                     contents = dest;
                     encoding = detectedCharSet;
                     delete[] dest;
@@ -513,23 +513,19 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     if (encoding != "utf8") {
         UErrorCode status = U_ZERO_ERROR;
         UConverter *conv = ucnv_open(encoding.c_str(), &status);
-        if (status == U_ZERO_ERROR) {
-            UnicodeString ustr(contents.c_str());
-            int targetLen = ustr.extract(NULL, 0, conv, status);
-            if (status == U_ZERO_ERROR) {
-                char* target = (char*)malloc(targetLen);
-                ustr.extract(target, targetLen, conv, status);
-                contents = target;
-                delete[] target;
-                ucnv_close(conv);
-            }
-            else {
-                return ERR_CANT_WRITE;
-            }
-        }
-        else {
+        if (U_FAILURE(status)) {
             return ERR_CANT_WRITE;
         }
+        UnicodeString ustr(contents.c_str());
+        int targetLen = ustr.extract(NULL, 0, conv, status);
+        if (U_FAILURE(status)) {
+            return ERR_CANT_WRITE;
+        }
+        char* target = (char*)malloc(targetLen);
+        ustr.extract(target, targetLen, conv, status);
+        contents = target;
+        delete[] target;
+        ucnv_close(conv);
     }
 
     FILE* file = fopen(filenameStr, "w");
