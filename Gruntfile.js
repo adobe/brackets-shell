@@ -245,7 +245,7 @@ module.exports = function (grunt) {
         },
         "icu": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
-            "version"       : "59"
+            "version"       : "58"
         }
     });
 

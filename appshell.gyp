@@ -175,7 +175,7 @@
             {
               # Copy ICU dlls
               'destination': '<(PRODUCT_DIR)',
-              'files': ['deps/icu/bin/icuuc59.dll', 'deps/icu/bin/icuin59.dll', 'deps/icu/bin/icudt59.dll'],
+              'files': ['deps/icu/bin/icuuc58.dll', 'deps/icu/bin/icuin58.dll', 'deps/icu/bin/icudt58.dll'],
             }
           ],
         }],
