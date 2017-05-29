@@ -518,7 +518,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         }
         UnicodeString ustr(contents.c_str());
         int targetLen = ustr.extract(NULL, 0, conv, status);
-        if (U_FAILURE(status)) {
+        if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
         char* target = (char*)malloc(targetLen);
