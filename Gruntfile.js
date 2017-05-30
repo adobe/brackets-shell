@@ -71,6 +71,10 @@ module.exports = function (grunt) {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x64.tar.gz"
             },
+            "icu-mac": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_macosx64.zip"
+            },
             /* win */
             "cef-win": {
                 "dest"      : "<%= downloads %>",
