@@ -624,7 +624,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
