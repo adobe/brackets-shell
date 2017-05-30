@@ -213,15 +213,6 @@
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
               ],
             },
-            {
-              'destination': '<(PRODUCT_DIR)',
-              'files': [
-                'deps/icu/lib/libicuuc.a',
-                'deps/icu/lib/libicuio.a',
-                'deps/icu/lib/libicui18n.a',
-                'deps/icu/lib/libicudata.a',
-              ],
-            },
           ],
           'postbuilds': [
             {
