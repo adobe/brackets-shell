@@ -695,6 +695,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                 ustr.extract(dest, sz, NULL, status);
                 if (status == U_ZERO_ERROR) {
                     contents = dest;
+                    encoding = detectedCharSet;
                     delete[] dest;
                     return NO_ERROR;
                 }
@@ -715,27 +716,39 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
-    NSStringEncoding enc;
+    const char *filenameStr = filename.c_str();
     NSError* error = nil;
     
-    if (encoding == "utf8")
-        enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding != "utf8") {
+        UErrorCode status = U_ZERO_ERROR;
+        UConverter *conv = ucnv_open(encoding.c_str(), &status);
+        if (U_FAILURE(status)) {
+            return ERR_CANT_WRITE;
+        }
+        UnicodeString ustr(contents.c_str());
+        int targetLen = ustr.extract(NULL, 0, conv, status);
+        if(status != U_BUFFER_OVERFLOW_ERROR) {
+            return ERR_CANT_WRITE;
+        }
+        char* target = (char*)malloc(targetLen);
+        status = U_ZERO_ERROR;
+        ustr.extract(target, targetLen, conv, status);
+        contents = target;
+        delete[] target;
+        ucnv_close(conv);
+    }
     
-    const NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
-    NSUInteger len = [encodedContents length];
-    NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
-    
-    [oStream open];
-    NSInteger res = [oStream write:(const uint8_t*)[encodedContents bytes] maxLength:len];
-    [oStream close];
-    
-    if (res == -1) {
-        error = [oStream streamError];
-    }  
+    FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(char), contents.length(), file);
+        if (size != contents.length()) {
+            return ERR_CANT_WRITE;
+        }
+        
+        fclose(file);
+    } else {
+        return ERR_CANT_WRITE;
+    }
     
     return ConvertNSErrorCode(error, false);
 }
