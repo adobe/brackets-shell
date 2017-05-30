@@ -32,6 +32,9 @@
 #include <sys/sysctl.h>
 
 #include <sstream>
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+#include <fstream>
 
 NSMutableArray* pendingOpenFiles;
 
@@ -143,6 +146,33 @@ void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
         [m_closeLiveBrowserTimeoutTimer release];
         m_closeLiveBrowserTimeoutTimer = nil;
     }
+}
+
+void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+    const UCharsetMatch* charsetMatch_;
+    UErrorCode icuError = U_ZERO_ERROR;
+    
+    UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to open detector";
+    
+    // send text
+    ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to set text";
+    
+    //detect language
+    charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to detect charset";
+    
+    const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+    detectedCharSet = detectedCharsetName;
+    
+    // Get Language Name
+    //const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+    // Get Confidence
+    //int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
 }
 
 void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
@@ -642,6 +672,42 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     {
         contents = [fileContents UTF8String];
         return NO_ERROR;
+    } else {
+        std::ifstream file(filename.c_str());
+        std::string str;
+        while (std::getline(file, str))
+        {
+            contents += str;
+            contents.push_back('\n');
+        }
+        std::string detectedCharSet;
+        try {
+            GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+            if (detectedCharSet.size()) {
+                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
+                
+                // Converting to Wide char
+                int32_t sz = ustr.length() * 2;
+                
+                char* dest = new char[sizeof (*dest) * sz];
+                UErrorCode status = U_ZERO_ERROR;
+                ustr.extract(dest, sz, NULL, status);
+                if (status == U_ZERO_ERROR) {
+                    contents = dest;
+                    delete[] dest;
+                    return NO_ERROR;
+                }
+                else {
+                    return ERR_UNSUPPORTED_ENCODING;
+                }
+            }
+            else {
+                return ERR_UNSUPPORTED_ENCODING;
+            }
+        } catch (...) {
+            return ERR_UNSUPPORTED_ENCODING;
+        }
     }
     
     return ConvertNSErrorCode(error, true);
