@@ -213,6 +213,15 @@
                 '<(PRODUCT_DIR)/<(appname) Helper.app',
               ],
             },
+            {
+              'destination': '<(PRODUCT_DIR)',
+              'files': [
+                'deps/icu/lib/libicuuc.a',
+                'deps/icu/lib/libicuio.a',
+                'deps/icu/lib/libicui18n.a',
+                'deps/icu/lib/libicudata.a',
+              ],
+            },
           ],
           'postbuilds': [
             {
@@ -278,10 +287,10 @@
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
-              'deps/icu/lib/libicuuc.a',
-              'deps/icu/lib/libicuio.a',
-              'deps/icu/lib/libicui18n.a',
-              'deps/icu/lib/libicudata.a',
+              'libicuuc.a',
+              'libicuio.a',
+              'libicui18n.a',
+              'libicudata.a',
             ],
           },
           'sources': [
@@ -478,10 +487,10 @@
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
-              'deps/icu/lib/libicuuc.a',
-              'deps/icu/lib/libicuio.a',
-              'deps/icu/lib/libicui18n.a',
-              'deps/icu/lib/libicudata.a',
+              'libicuuc.a',
+              'libicuio.a',
+              'libicui18n.a',
+              'libicudata.a',
             ],
           },
           'sources': [
