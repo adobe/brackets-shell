@@ -244,6 +244,7 @@
           ],
           'include_dirs': [
             '.',
+            'deps/icu/include',
           ],
           'default_configuration': 'Release',
           'configurations': {
@@ -263,7 +264,7 @@
                 '<@(appshell_bundle_resources_linux)'
               ],
             },
-            {
+            { 
               # Copy node executable to the output directory
               'destination': '<(PRODUCT_DIR)',
               'files': ['deps/node/bin/Brackets-node'],
@@ -289,9 +290,13 @@
             ],
             'libraries': [
               '<!@(<(pkg-config) --libs-only-l gtk+-2.0 gthread-2.0 glib-2.0)',
-              '<!@(<(pkg-config) --libs --cflags icu-uc icu-io)',
               '$(BUILDTYPE)/libcef.so',
               'appshell_extensions_js.o',
+              'deps/icu/lib/libicuuc.a',
+              'deps/icu/lib/libicuio.a',
+              'deps/icu/lib/libicui18n.a',
+              'deps/icu/lib/libicudata.a',
+              '-ldl',
             ],
           },
         }],
