@@ -63,7 +63,8 @@ module.exports = function (grunt) {
             "icu-linux32": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
-            },"icu-linux64": {
+            },
+            "icu-linux64": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
             },
@@ -212,7 +213,7 @@ module.exports = function (grunt) {
             "icu": {
                 "src"       : "<%= icu_zip %>",
                 "dest"      : "deps/icu"
-            }		              
+            }
         },
         "build": {
             "name"              : "Brackets",
@@ -238,7 +239,7 @@ module.exports = function (grunt) {
         "icu": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
             "version"       : "58"
-        }		          
+        }
     });
 
     grunt.loadTasks("tasks");

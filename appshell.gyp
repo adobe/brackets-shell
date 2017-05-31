@@ -264,7 +264,7 @@
                 '<@(appshell_bundle_resources_linux)'
               ],
             },
-            { 
+            {
               # Copy node executable to the output directory
               'destination': '<(PRODUCT_DIR)',
               'files': ['deps/node/bin/Brackets-node'],
