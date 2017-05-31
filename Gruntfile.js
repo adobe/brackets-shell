@@ -120,6 +120,9 @@ module.exports = function (grunt) {
                             "devtools_resources.pak",
                             "icudtl.dat",
                             "libcef.dll",
+                            "icuuc58.dll",
+                            "icuin58.dll",
+                            "icudt58.dll",
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "command/**"
