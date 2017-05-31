@@ -126,7 +126,7 @@ module.exports = function (grunt) {
     
     // task: icu
     grunt.registerTask("icu", "Download and setup ICU", function () {
-        if (platform === "win") {
+        if (platform === "win" || platform === "mac") {
             var config   = "icu-" + platform + common.arch(),
                 zipSrc   = grunt.config("curl-dir." + config + ".src"),
                 zipName  = path.basename(zipSrc),
@@ -374,7 +374,7 @@ module.exports = function (grunt) {
         }).then(function () {
             var memo = path.resolve(process.cwd(), "deps/icu/" + zipName + ".txt"),
                 permissionsPromise;
-    
+            
             permissionsPromise = q.resolve();
 
             return permissionsPromise.then(function () {

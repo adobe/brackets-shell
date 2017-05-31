@@ -32,6 +32,9 @@
 #include <sys/sysctl.h>
 
 #include <sstream>
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+#include <fstream>
 
 NSMutableArray* pendingOpenFiles;
 
@@ -143,6 +146,33 @@ void LiveBrowserMgrMac::CloseLiveBrowserKillTimers()
         [m_closeLiveBrowserTimeoutTimer release];
         m_closeLiveBrowserTimeoutTimer = nil;
     }
+}
+
+void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+    const UCharsetMatch* charsetMatch_;
+    UErrorCode icuError = U_ZERO_ERROR;
+    
+    UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to open detector";
+    
+    // send text
+    ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to set text";
+    
+    //detect language
+    charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to detect charset";
+    
+    const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+    detectedCharSet = detectedCharsetName;
+    
+    // Get Language Name
+    //const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+    // Get Confidence
+    //int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
 }
 
 void LiveBrowserMgrMac::CloseLiveBrowserFireCallback(int valToSend)
@@ -624,7 +654,7 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
@@ -642,6 +672,43 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
     {
         contents = [fileContents UTF8String];
         return NO_ERROR;
+    } else {
+        std::ifstream file(filename.c_str());
+        std::string str;
+        while (std::getline(file, str))
+        {
+            contents += str;
+            contents.push_back('\n');
+        }
+        std::string detectedCharSet;
+        try {
+            GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+            if (detectedCharSet.size()) {
+                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
+                
+                // Converting to Wide char
+                int32_t sz = ustr.length() * 2;
+                
+                char* dest = new char[sizeof (*dest) * sz];
+                UErrorCode status = U_ZERO_ERROR;
+                ustr.extract(dest, sz, NULL, status);
+                if (status == U_ZERO_ERROR) {
+                    contents = dest;
+                    encoding = detectedCharSet;
+                    delete[] dest;
+                    return NO_ERROR;
+                }
+                else {
+                    return ERR_UNSUPPORTED_ENCODING;
+                }
+            }
+            else {
+                return ERR_UNSUPPORTED_ENCODING;
+            }
+        } catch (...) {
+            return ERR_UNSUPPORTED_ENCODING;
+        }
     }
     
     return ConvertNSErrorCode(error, true);
@@ -649,27 +716,39 @@ int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
-    NSStringEncoding enc;
+    const char *filenameStr = filename.c_str();
     NSError* error = nil;
     
-    if (encoding == "utf8")
-        enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding != "utf8") {
+        UErrorCode status = U_ZERO_ERROR;
+        UConverter *conv = ucnv_open(encoding.c_str(), &status);
+        if (U_FAILURE(status)) {
+            return ERR_CANT_WRITE;
+        }
+        UnicodeString ustr(contents.c_str());
+        int targetLen = ustr.extract(NULL, 0, conv, status);
+        if(status != U_BUFFER_OVERFLOW_ERROR) {
+            return ERR_CANT_WRITE;
+        }
+        char* target = (char*)malloc(targetLen);
+        status = U_ZERO_ERROR;
+        ustr.extract(target, targetLen, conv, status);
+        contents = target;
+        delete[] target;
+        ucnv_close(conv);
+    }
     
-    const NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
-    NSUInteger len = [encodedContents length];
-    NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
-    
-    [oStream open];
-    NSInteger res = [oStream write:(const uint8_t*)[encodedContents bytes] maxLength:len];
-    [oStream close];
-    
-    if (res == -1) {
-        error = [oStream streamError];
-    }  
+    FILE* file = fopen(filenameStr, "w");
+    if (file) {
+        size_t size = fwrite(contents.c_str(), sizeof(char), contents.length(), file);
+        if (size != contents.length()) {
+            return ERR_CANT_WRITE;
+        }
+        
+        fclose(file);
+    } else {
+        return ERR_CANT_WRITE;
+    }
     
     return ConvertNSErrorCode(error, false);
 }

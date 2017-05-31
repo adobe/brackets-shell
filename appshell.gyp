@@ -54,6 +54,7 @@
       ],
       'include_dirs': [
         '.',
+        'deps/icu/include',
       ],
       'sources': [
         '<@(includes_common)',
@@ -277,6 +278,10 @@
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
+              'deps/icu/lib/libicuuc.a',
+              'deps/icu/lib/libicuio.a',
+              'deps/icu/lib/libicui18n.a',
+              'deps/icu/lib/libicudata.a',
             ],
           },
           'sources': [
@@ -464,6 +469,7 @@
           ],
           'include_dirs': [
             '.',
+            'deps/icu/include'
           ],
           'link_settings': {
             'libraries': [
@@ -472,6 +478,10 @@
               '$(SDKROOT)/System/Library/Frameworks/ScriptingBridge.framework',
               '$(SDKROOT)/System/Library/Frameworks/Security.framework',
               '$(CONFIGURATION)/<(framework_name).framework/<(framework_name)',
+              'deps/icu/lib/libicuuc.a',
+              'deps/icu/lib/libicuio.a',
+              'deps/icu/lib/libicui18n.a',
+              'deps/icu/lib/libicudata.a',
             ],
           },
           'sources': [
