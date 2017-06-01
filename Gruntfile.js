@@ -62,7 +62,7 @@ module.exports = function (grunt) {
             },
             "icu-linux32": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux32_release.zip"
             },
             "icu-linux64": {
                 "dest"      : "<%= downloads %>",
