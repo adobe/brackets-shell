@@ -636,6 +636,7 @@ public:
                 bool enabled = argList->GetBool(2);
                 bool checked = argList->GetBool(3);
                 error = NativeMenuModel::getInstance(getMenuParent(browser)).setMenuItemState(command, enabled, checked);
+                MenuItemStateChanged(browser, command);
             }
         } else if (message_name == "SetMenuTitle") {
             // Parameters:

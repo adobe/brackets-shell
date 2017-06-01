@@ -804,6 +804,11 @@ int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& comma
     return NO_ERROR;
 }
 
+void MenuItemStateChanged(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+    
+}
+
 int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index)
 {
     return NO_ERROR;
