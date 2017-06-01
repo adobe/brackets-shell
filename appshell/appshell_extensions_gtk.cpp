@@ -535,12 +535,9 @@ void CloseWindow(CefRefPtr<CefBrowser> browser)
 {
     if (browser.get()) {
         isReallyClosing = true;
-        // //# Hack because CEF's CloseBrowser() is bad. Should emit delete_event instead of directly destroying widget
-        // GtkWidget* hwnd = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle() );
-        // if(gtk_widget_is_toplevel (hwnd))
-        //     gtk_signal_emit_by_name(GTK_OBJECT(hwnd), "delete_event");
-        // else
-            browser->GetHost()->CloseBrowser(true);
+        GtkWidget* widget = gtk_widget_get_toplevel (browser->GetHost()->GetWindowHandle());
+        browser->GetHost()->CloseBrowser(true);
+        gtk_signal_emit_by_name(GTK_OBJECT(widget), "delete_event"); 
     }
 }
 
