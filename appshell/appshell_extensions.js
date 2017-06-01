@@ -870,7 +870,19 @@ if (!appshell.app) {
         InstallCommandLineTools(callback);
      };
  
- 
+         /**
+         * Install command line scripts to make Brackets launchable from command line.
+         * Right now usage is restricted to MAC only.
+         *
+         * @param {number}
+         *
+         * @return int. The remote debugging port used by the appshell.
+         */
+     native function GetMachineHash();
+         appshell.app.getMachineHash = function (callback) {
+             console.log('Hey I have been called.');
+             GetMachineHash(callback || _dummyCallback);
+     };
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
 })();

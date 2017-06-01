@@ -30,6 +30,165 @@
 
 #include <algorithm>
 
+#include <windows.h>
+#include <intrin.h>
+#include <iphlpapi.h>
+
+typedef uint8_t   u8;
+typedef uint16_t  u16;
+typedef uint32_t  u32;
+
+void getMacHash(u16& mac1, u16& mac2);
+u16 getVolumeHash();
+u16 getCpuHash();
+const char* getMachineName();
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void smear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = i; j < 5; j++)
+			if (i != j)
+				id[i] ^= id[j];
+
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+}
+
+static void unsmear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = 0; j < i; j++)
+			if (i != j)
+				id[4 - i] ^= id[4 - j];
+}
+
+static u16* computeSystemUniqueId()
+{
+	static u16 id[5];
+	static bool computed = false;
+
+	if (computed) return id;
+
+	// produce a number that uniquely identifies this system.
+	id[0] = getCpuHash();
+	id[1] = getVolumeHash();
+	getMacHash(id[2], id[3]);
+
+	// fifth block is some checkdigits
+	id[4] = 0;
+	for (u32 i = 0; i < 4; i++)
+		id[4] += id[i];
+
+	smear(id);
+
+	computed = true;
+	return id;
+}
+
+std::string getSystemUniqueId()
+{
+	// get the name of the computer
+	std::string buf;
+	//buf  = getMachineName();
+
+	u16* id = computeSystemUniqueId();
+	for (u32 i = 0; i < 5; i++)
+	{
+		char num[16];
+		snprintf(num, 16, "%x", id[i]);
+		if (i > 0) {
+			buf = buf + "-";
+		}
+		switch (strlen(num))
+		{
+		case 1: buf = buf + "000"; break;
+		case 2: buf = buf + "00";  break;
+		case 3: buf = buf + "0";   break;
+		}
+		buf = buf + num;
+	}
+
+	return buf;
+
+	//const char* p = buf.c_str();
+	
+	//while (*p) { *p = toupper(*p); p++; }
+
+	//return KxSymbol(buf.getBuffer()).string();
+}
+
+ // we just need this for purposes of unique machine id. 
+ // So any one or two mac's is fine.
+u16 hashMacAddress(PIP_ADAPTER_INFO info)
+{
+	u16 hash = 0;
+	for (u32 i = 0; i < info->AddressLength; i++)
+	{
+		hash += (info->Address[i] << ((i & 1) * 8));
+	}
+	return hash;
+}
+
+void getMacHash(u16& mac1, u16& mac2)
+{
+	IP_ADAPTER_INFO AdapterInfo[32];
+	DWORD dwBufLen = sizeof(AdapterInfo);
+
+	DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+	if (dwStatus != ERROR_SUCCESS)
+		return; // no adapters.
+
+	PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+	mac1 = hashMacAddress(pAdapterInfo);
+	if (pAdapterInfo->Next)
+		mac2 = hashMacAddress(pAdapterInfo->Next);
+
+	// sort the mac addresses. We don't want to invalidate
+	// both macs if they just change order.
+	if (mac1 > mac2)
+	{
+		u16 tmp = mac2;
+		mac2 = mac1;
+		mac1 = tmp;
+	}
+}
+
+u16 getVolumeHash()
+{
+	DWORD serialNum = 0;
+
+	// Determine if this volume uses an NTFS file system.
+	GetVolumeInformation(/*L"c:\\"*/ NULL, NULL, 0, &serialNum, NULL, NULL, NULL, 0);
+	u16 hash = (u16)((serialNum + (serialNum >> 16)) & 0xFFFF);
+
+	return hash;
+}
+
+u16 getCpuHash()
+{
+	int cpuinfo[4] = { 0, 0, 0, 0 };
+	__cpuid(cpuinfo, 0);
+	u16 hash = 0;
+	u16* ptr = (u16*)(&cpuinfo[0]);
+	for (u32 i = 0; i < 8; i++)
+		hash += ptr[i];
+
+	return hash;
+}
+
+const char* getMachineName()
+{
+	static char computerName[1024];
+	DWORD size = 1024;
+	GetComputerNameA(computerName, &size);
+	return &(computerName[0]);
+}
+
 extern std::vector<CefString> gDroppedFiles;
 
 namespace appshell_extensions {
@@ -718,7 +877,13 @@ public:
             double zoomLevel = browser->GetHost()->GetZoomLevel();
 
             responseArgs->SetDouble(2, zoomLevel);
-        } else if (message_name == "SetZoomLevel") {
+		} else if (message_name == "GetMachineHash") {
+			// Parameters:
+			//  0: int32 - callback id
+			//double zoomLevel = browser->GetHost()->GetZoomLevel();
+			
+			responseArgs->SetString(2, getSystemUniqueId());
+		} else if (message_name == "SetZoomLevel") {
             // Parameters:
             //  0: int32 - callback id
             //  1: int32 - zoom level
