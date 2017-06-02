@@ -35,6 +35,10 @@
 #include <Shobjidl.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <windows.h>
+#include <intrin.h>
+#include <iphlpapi.h>
+
 #include "config.h"
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
@@ -2005,6 +2009,129 @@ void DragWindow(CefRefPtr<CefBrowser> browser) {
     HWND browserHwnd = (HWND)getMenuParent(browser);
     SendMessage(browserHwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 }
-    
 
+// Courtesy: Rafael.
+// https://oroboro.com/unique-machine-fingerprint/
 
+// we just need this for purposes of unique machine id. 
+// So any one or two mac's is fine.
+u16 HasMacAddress(PIP_ADAPTER_INFO info)
+{
+	u16 hash = 0;
+	for (u32 i = 0; i < info->AddressLength; i++)
+	{
+		hash += (info->Address[i] << ((i & 1) * 8));
+	}
+	return hash;
+}
+
+void GetMacHash(u16& mac1, u16& mac2)
+{
+	IP_ADAPTER_INFO AdapterInfo[32];
+	DWORD dwBufLen = sizeof(AdapterInfo);
+
+	DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+	if (dwStatus != ERROR_SUCCESS)
+		return; // no adapters.
+
+	PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+	mac1 = HasMacAddress(pAdapterInfo);
+	if (pAdapterInfo->Next)
+		mac2 = HasMacAddress(pAdapterInfo->Next);
+
+	// sort the mac addresses. We don't want to invalidate
+	// both macs if they just change order.
+	if (mac1 > mac2)
+	{
+		u16 tmp = mac2;
+		mac2 = mac1;
+		mac1 = tmp;
+	}
+}
+
+u16 GetVolumeHash()
+{
+	DWORD serialNum = 0;
+	
+	char buffer[1024] = { 0 };
+	GetWindowsDirectoryA(buffer, 1024);
+
+	// Determine if this volume uses an NTFS file system.
+	GetVolumeInformation(NULL, NULL, 0, &serialNum, NULL, NULL, NULL, 0);
+	u16 hash = (u16)((serialNum + (serialNum >> 16)) & 0xFFFF);
+
+	return hash;
+}
+
+u16 GetCPUHash()
+{
+	int cpuinfo[4] = { 0, 0, 0, 0 };
+	__cpuid(cpuinfo, 0);
+	u16 hash = 0;
+	u16* ptr = (u16*)(&cpuinfo[0]);
+	for (u32 i = 0; i < 8; i++)
+		hash += ptr[i];
+
+	return hash;
+}
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void Smear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = i; j < 5; j++)
+			if (i != j)
+				id[i] ^= id[j];
+
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+}
+
+static u16* ComputeSystemUniqueID()
+{
+	static u16 id[5];
+	static bool computed = false;
+
+	if (computed) return id;
+
+	// produce a number that uniquely identifies this system.
+	id[0] = GetCPUHash();
+	id[1] = GetVolumeHash();
+	GetMacHash(id[2], id[3]);
+
+	// fifth block is some check digits
+	id[4] = 0;
+	for (u32 i = 0; i < 4; i++)
+		id[4] += id[i];
+
+	Smear(id);
+
+	computed = true;
+	return id;
+}
+
+std::string GetSystemUniqueID()
+{
+	// get the name of the computer
+	std::string buf;
+
+	u16* id = ComputeSystemUniqueID();
+	for (u32 i = 0; i < 5; i++)
+	{
+		char num[16];
+		snprintf(num, 16, "%x", id[i]);
+		if (i > 0) {
+			buf = buf + "-";
+		}
+		switch (strlen(num))
+		{
+		case 1: buf = buf + "000"; break;
+		case 2: buf = buf + "00";  break;
+		case 3: buf = buf + "0";   break;
+		}
+		buf = buf + num;
+	}
+	
+	return buf;
+}

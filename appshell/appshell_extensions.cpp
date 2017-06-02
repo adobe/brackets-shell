@@ -752,7 +752,13 @@ public:
                 error = InstallCommandLineTools();
             }
 
-        } else {
+		} else if (message_name == "GetMachineHash") {
+			// Parameters:
+			//  0: int32 - callback id
+
+			responseArgs->SetString(2, GetSystemUniqueID());
+		}
+		else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }

@@ -33,6 +33,26 @@
 
 #include <sstream>
 
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <net/if_dl.h>
+#include <ifaddrs.h>
+#include <net/if_types.h>
+#include <sys/resource.h>
+#include <sys/utsname.h>
+#include <mach-o/arch.h>
+
 NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
@@ -1674,4 +1694,156 @@ ERROR_B:
     free(procargs);
 ERROR_A:
     return ERR_UNKNOWN;
+}
+
+//---------------------------------get MAC addresses ---------------------------------
+// we just need this for purposes of unique machine id. So any one or two
+// mac's is fine.
+u16 HashMacAddress( u8* mac )
+{
+    u16 hash = 0;
+    
+    for ( u32 i = 0; i < 6; i++ )
+    {
+        hash += ( mac[i] << (( i & 1 ) * 8 ));
+    }
+    return hash;
+}
+
+void GetMacHash( u16& mac1, u16& mac2 )
+{
+    mac1 = 0;
+    mac2 = 0;
+    
+    
+    struct ifaddrs* ifaphead;
+    if ( getifaddrs( &ifaphead ) != 0 )
+        return;
+    
+    // iterate over the net interfaces
+    bool foundMac1 = false;
+    struct ifaddrs* ifap;
+    for ( ifap = ifaphead; ifap; ifap = ifap->ifa_next )
+    {
+        struct sockaddr_dl* sdl = (struct sockaddr_dl*)ifap->ifa_addr;
+        if ( sdl && ( sdl->sdl_family == AF_LINK ) && ( sdl->sdl_type == IFT_ETHER ))
+        {
+            if ( !foundMac1 )
+            {
+                foundMac1 = true;
+                mac1 = HashMacAddress( (u8*)(LLADDR(sdl))); //sdl->sdl_data) + sdl->sdl_nlen) );
+            } else {
+                mac2 = HashMacAddress( (u8*)(LLADDR(sdl))); //sdl->sdl_data) + sdl->sdl_nlen) );
+                break;
+            }
+        }
+    }
+    
+    freeifaddrs( ifaphead );
+    
+    
+    // sort the mac addresses. We don't want to invalidate
+    // both macs if they just change order.
+    if ( mac1 > mac2 )
+    {
+        u16 tmp = mac2;
+        mac2 = mac1;
+        mac1 = tmp;
+    }
+}
+
+u16 GetVolumeHash()
+{
+    // we don't have a 'volume serial number' like on windows.
+    // Lets hash the system name instead.
+    u8* sysname = (u8*)GetMachineName();
+    u16 hash = 0;
+    
+    for ( u32 i = 0; sysname[i]; i++ )
+        hash += ( sysname[i] << (( i & 1 ) * 8 ));
+    
+    return hash;
+}
+
+u16 GetCPUHash()
+{
+    const NXArchInfo* info = NXGetLocalArchInfo();
+    u16 val = 0;
+    val += (u16)info->cputype;
+    val += (u16)info->cpusubtype;
+    return val;
+}
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void Smear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = i; j < 5; j++)
+			if (i != j)
+				id[i] ^= id[j];
+
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+}
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void Smear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = i; j < 5; j++)
+			if (i != j)
+				id[i] ^= id[j];
+
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+}
+
+static u16* ComputeSystemUniqueID()
+{
+	static u16 id[5];
+	static bool computed = false;
+
+	if (computed) return id;
+
+	// produce a number that uniquely identifies this system.
+	id[0] = GetCPUHash();
+	id[1] = GetVolumeHash();
+	GetMacHash(id[2], id[3]);
+
+	// fifth block is some check digits
+	id[4] = 0;
+	for (u32 i = 0; i < 4; i++)
+		id[4] += id[i];
+
+	Smear(id);
+
+	computed = true;
+	return id;
+}
+
+std::string GetSystemUniqueID()
+{
+	// get the name of the computer
+	std::string buf;
+
+	u16* id = ComputeSystemUniqueID();
+	for (u32 i = 0; i < 5; i++)
+	{
+		char num[16];
+		snprintf(num, 16, "%x", id[i]);
+		if (i > 0) {
+			buf = buf + "-";
+		}
+		switch (strlen(num))
+		{
+		case 1: buf = buf + "000"; break;
+		case 2: buf = buf + "00";  break;
+		case 3: buf = buf + "0";   break;
+		}
+		buf = buf + num;
+	}
+	
+	return buf;
 }
