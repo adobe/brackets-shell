@@ -29,6 +29,7 @@
 #include <string>
 
 #include "config.h"
+#include <unicode/ucsdet.h>
 
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
@@ -82,6 +83,36 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
 }
 inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #endif
+
+
+
+
+inline void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+	const UCharsetMatch* charsetMatch_;
+	UErrorCode icuError = U_ZERO_ERROR;
+
+	UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to open detector";
+
+	// send text
+	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to set text";
+
+	// detect language
+	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+	if (U_FAILURE(icuError))
+		throw "Failed to detect charset";
+
+	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+	detectedCharSet = detectedCharsetName;
+
+	// Get Language Name
+	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+	// Get Confidence
+	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+}
 
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm

@@ -818,41 +818,13 @@ bool quickTestBufferForUTF8(UTFValidationState& validationState)
     return (GetBufferAsUTF8(validationState));
 }
 
-
-void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
-	const UCharsetMatch* charsetMatch_;
-	UErrorCode icuError = U_ZERO_ERROR;
-
-	UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to open detector";
-
-	// send text
-	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to set text";
-
-	// detect language
-	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to detect charset";
-
-	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
-	detectedCharSet = detectedCharsetName;
-
-	// Get Language Name
-	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
-	// Get Confidence
-	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
-}
-
 typedef std::map<std::string, long> CharSetMap;
-
 
 // Mapping of CharSet to CodePage
 CharSetMap charSetMap =
 {
 	// Below mappings are listed on website
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
 	{ "ISO-2022-JP", 50220 },
 	{ "ISO-8859-6", 28596 },
 	{ "ISO-2022-CN", 50227 },
