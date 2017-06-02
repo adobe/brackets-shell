@@ -37,7 +37,6 @@
 #include <sys/stat.h>
 #include "config.h"
 #include <codecvt>
-#include <unicode/ucsdet.h>
 #define CLOSING_PROP L"CLOSING"
 #define UNICODE_MINUS 0x2212
 #define UNICODE_LEFT_ARROW 0x2190
