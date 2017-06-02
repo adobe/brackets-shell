@@ -823,95 +823,95 @@ typedef std::map<std::string, long> CharSetMap;
 // Mapping of CharSet to CodePage
 CharSetMap charSetMap =
 {
-	// Below mappings are listed on website
-	// https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
-	{ "ISO-2022-JP", 50220 },
-	{ "ISO-8859-6", 28596 },
-	{ "ISO-2022-CN", 50227 },
-	{ "ISO-2022-KR", 50225 },
-	{ "GB18030", 54936 },
-	{ "BIG5", 950 },
-	{ "EUC-JP", 20932 },
-	{ "euc-jp", 51932 },
-	{ "EUC-KR", 949 },
-	{ "ISO-8859-1", 28591 },
-	{ "ISO-8859-2", 28592 },
-	{ "ISO-8859-5", 28595 },
-	{ "ISO-8859-6", 28596 },
-	{ "ISO-8859-7", 28597 },
-	{ "ISO-8859-8", 28598 },
-	{ "ISO-8859-9", 28599 },
-	{ "WINDOWS-1250", 1250 },
-	{ "WINDOWS-1251", 1251 },
-	{ "WINDOWS-1252", 1252 },
-	{ "WINDOWS-1253", 1253 },
-	{ "WINDOWS-1254", 1254 },
-	{ "WINDOWS-1255", 1255 },
-	{ "WINDOWS-1256", 1256 },
-	{ "KOI8-R", 20866 },
-	{ "IBM420", 420 },
-	{ "IBM424", 424 },
+    // Below mappings are listed on website
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
+    { "ISO-2022-JP", 50220 },
+    { "ISO-8859-6", 28596 },
+    { "ISO-2022-CN", 50227 },
+    { "ISO-2022-KR", 50225 },
+    { "GB18030", 54936 },
+    { "BIG5", 950 },
+    { "EUC-JP", 20932 },
+    { "euc-jp", 51932 },
+    { "EUC-KR", 949 },
+    { "ISO-8859-1", 28591 },
+    { "ISO-8859-2", 28592 },
+    { "ISO-8859-5", 28595 },
+    { "ISO-8859-6", 28596 },
+    { "ISO-8859-7", 28597 },
+    { "ISO-8859-8", 28598 },
+    { "ISO-8859-9", 28599 },
+    { "WINDOWS-1250", 1250 },
+    { "WINDOWS-1251", 1251 },
+    { "WINDOWS-1252", 1252 },
+    { "WINDOWS-1253", 1253 },
+    { "WINDOWS-1254", 1254 },
+    { "WINDOWS-1255", 1255 },
+    { "WINDOWS-1256", 1256 },
+    { "KOI8-R", 20866 },
+    { "IBM420", 420 },
+    { "IBM424", 424 },
 
-	// These are also supported 
-	{ "ISO-8859-8-I", 38598 },
-	{ "SHIFT_JIS", 932 },
-	{ "ISO-8859-3", 28593 },
-	{ "ISO-8859-4", 28594 },
-	{ "UTF-16", 1200 },
-	{ "UTF-16BE", 1201},
-	{ "WINDOWS-1257", 1257 },
-	{ "WINDOWS-1258", 1258 },
-	{ "GB2312", 936 },
-	{ "HZ-GB-2312", 52936 },
-	{ "WINDOWS-874", 874 },
-	{ "CP866", 866 },
-	{ "IBM852", 852 }
+    // These are also supported 
+    { "ISO-8859-8-I", 38598 },
+    { "SHIFT_JIS", 932 },
+    { "ISO-8859-3", 28593 },
+    { "ISO-8859-4", 28594 },
+    { "UTF-16", 1200 },
+    { "UTF-16BE", 1201},
+    { "WINDOWS-1257", 1257 },
+    { "WINDOWS-1258", 1258 },
+    { "GB2312", 936 },
+    { "HZ-GB-2312", 52936 },
+    { "WINDOWS-874", 874 },
+    { "CP866", 866 },
+    { "IBM852", 852 }
 };
 
 
 static std::wstring CharSetToWide(const std::string &aString, long codePage)
 {
-	int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
-		0,
-		aString.data(),
-		aString.size(),
-		NULL,
-		NULL);
+    int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
+        0,
+        aString.data(),
+        aString.size(),
+        NULL,
+        NULL);
 
-	int resultByteSize = aUTF16Length * sizeof(wchar_t);
-	wchar_t *buf = (wchar_t *)malloc(resultByteSize);
+    int resultByteSize = aUTF16Length * sizeof(wchar_t);
+    wchar_t *buf = (wchar_t *)malloc(resultByteSize);
 
-	// codePage -> UTF-16
-	int wcharsWritten = ::MultiByteToWideChar(codePage,
-		0,
-		aString.data(),
-		aString.size(),
-		buf,
-		aUTF16Length);
+    // codePage -> UTF-16
+    int wcharsWritten = ::MultiByteToWideChar(codePage,
+        0,
+        aString.data(),
+        aString.size(),
+        buf,
+        aUTF16Length);
 
-	assert(wcharsWritten == aUTF16Length);
+    assert(wcharsWritten == aUTF16Length);
 
-	std::wstring aUTF16string(buf, wcharsWritten);
+    std::wstring aUTF16string(buf, wcharsWritten);
 
-	free(buf);
+    free(buf);
 
-	return aUTF16string;
+    return aUTF16string;
 }
 
 std::wstring StringToWString(const std::string& str)
 {
-	using convert_typeX = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_typeX, wchar_t> converterX;
+    using convert_typeX = std::codecvt_utf8<wchar_t>;
+    std::wstring_convert<convert_typeX, wchar_t> converterX;
 
-	return converterX.from_bytes(str);
+    return converterX.from_bytes(str);
 }
 
 
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
-	if (encoding == L"utf8") {
-		encoding = L"UTF-8";
-	}
+    if (encoding == L"utf8") {
+        encoding = L"UTF-8";
+    }
     DWORD dwAttr;
     dwAttr = GetFileAttributes(filename.c_str());
     if (INVALID_FILE_ATTRIBUTES == dwAttr)
@@ -979,116 +979,116 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             }
         }
 
-		if (error == NO_ERROR) {
-			// either we did a quick test and we think it's UTF-8 or 
-			//  the file is small enough that we didn't spend the time
-			//  to do a quick test so alloc the memory to read the entire
-			//  file into memory and test it again...
-			buffer = (char*)malloc(dwFileSize);
-			if (buffer) {
+        if (error == NO_ERROR) {
+            // either we did a quick test and we think it's UTF-8 or 
+            //  the file is small enough that we didn't spend the time
+            //  to do a quick test so alloc the memory to read the entire
+            //  file into memory and test it again...
+            buffer = (char*)malloc(dwFileSize);
+            if (buffer) {
 
-				validationState.data = buffer;
-				validationState.dataLen = dwFileSize;
-				validationState.preserveBOM = true;
+                validationState.data = buffer;
+                validationState.dataLen = dwFileSize;
+                validationState.preserveBOM = true;
 
-				if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-					contents = std::string(buffer, validationState.dataLen);
-					if (encoding != L"UTF-8"|| !GetBufferAsUTF8(validationState)) {
-						std::string detectedCharSet;
-						try {
-							if (encoding == L"UTF-8") {
-								GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
-							}
-							else {
-								std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-								detectedCharSet = conv.to_bytes(encoding);
-							}
-							std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-							CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
+                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
+                    contents = std::string(buffer, validationState.dataLen);
+                    if (encoding != L"UTF-8"|| !GetBufferAsUTF8(validationState)) {
+                        std::string detectedCharSet;
+                        try {
+                            if (encoding == L"UTF-8") {
+                                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                            }
+                            else {
+                                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+                                detectedCharSet = conv.to_bytes(encoding);
+                            }
+                            std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                            CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
 
-							if (iter == charSetMap.end()) {
-								error = ERR_UNSUPPORTED_ENCODING;
-							}
-							else {
-								try {
-									std::wstring content = CharSetToWide(contents, iter->second);
-									std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-									contents = conv.to_bytes(content);
-									encoding = StringToWString(detectedCharSet);
-									error = NO_ERROR;
-								}
-								catch (...) {
-									error = ERR_UNSUPPORTED_ENCODING;
-								}
-							}
-						} catch (...) {
-							error = ERR_UNSUPPORTED_ENCODING;
-						}
-					}
-				}
-				else {
-					error = ConvertWinErrorCode(GetLastError(), false);
-				}
-				free(buffer);
-			}
-			else {
-				error = ERR_UNKNOWN;
-			}
-		}
-	}
-	CloseHandle(hFile);
-	return error;
+                            if (iter == charSetMap.end()) {
+                                error = ERR_UNSUPPORTED_ENCODING;
+                            }
+                            else {
+                                try {
+                                    std::wstring content = CharSetToWide(contents, iter->second);
+                                    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+                                    contents = conv.to_bytes(content);
+                                    encoding = StringToWString(detectedCharSet);
+                                    error = NO_ERROR;
+                                }
+                                catch (...) {
+                                    error = ERR_UNSUPPORTED_ENCODING;
+                                }
+                            }
+                        } catch (...) {
+                            error = ERR_UNSUPPORTED_ENCODING;
+                        }
+                    }
+                }
+                else {
+                    error = ConvertWinErrorCode(GetLastError(), false);
+                }
+                free(buffer);
+            }
+            else {
+                error = ERR_UNKNOWN;
+            }
+        }
+    }
+    CloseHandle(hFile);
+    return error;
 }
 
 
 static std::string WideToCharSet(const std::wstring &aUTF16string, long codePage)
 {
-	if (aUTF16string.size() > 0)
-	{
-		// convert UTF-16 to UTF-8; first get destination buffer length
-		int aUTF8Length = ::WideCharToMultiByte(codePage,
-			0,
-			aUTF16string.data(),
-			aUTF16string.size(),
-			NULL,
-			0,
-			NULL,
-			NULL);
+    if (aUTF16string.size() > 0)
+    {
+        // convert UTF-16 to UTF-8; first get destination buffer length
+        int aUTF8Length = ::WideCharToMultiByte(codePage,
+            0,
+            aUTF16string.data(),
+            aUTF16string.size(),
+            NULL,
+            0,
+            NULL,
+            NULL);
 
-		char *buf = (char *)malloc(aUTF8Length);
+        char *buf = (char *)malloc(aUTF8Length);
 
-		// UTF-16 -> UTF-8 conversion
-		int bytesWritten = ::WideCharToMultiByte(codePage,
-			0,
-			aUTF16string.data(),
-			aUTF16string.size(),
-			buf,
-			aUTF8Length,
-			NULL,
-			NULL);
+        // UTF-16 -> UTF-8 conversion
+        int bytesWritten = ::WideCharToMultiByte(codePage,
+            0,
+            aUTF16string.data(),
+            aUTF16string.size(),
+            buf,
+            aUTF8Length,
+            NULL,
+            NULL);
 
-		assert(bytesWritten == aUTF8Length);
+        assert(bytesWritten == aUTF8Length);
 
-		std::string result(buf, bytesWritten);
+        std::string result(buf, bytesWritten);
 
-		free(buf);
+        free(buf);
 
-		return result;
-	}
-	else
-	{
-		std::string result; // 0 length begets empty result
-		return result;
-	}
+        return result;
+    }
+    else
+    {
+        std::string result; // 0 length begets empty result
+        return result;
+    }
 }
 
 
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-	if (encoding == L"utf8") {
-		encoding = L"UTF-8";
-	}
+    if (encoding == L"utf8") {
+        encoding = L"UTF-8";
+    }
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
         FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     DWORD dwBytesWritten;
@@ -1098,18 +1098,18 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ConvertWinErrorCode(GetLastError(), false); 
 
     // TODO (issue 67) -  Should write to temp file
-	if (encoding != L"UTF-8") {
-		std::wstring content = StringToWString(contents);
-		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-		CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
-		if (iter != charSetMap.end()) {
-			contents = WideToCharSet(content, iter->second);
-		}
-		else {
-			return ERR_UNSUPPORTED_ENCODING;
-		}
-	}
-	
+    if (encoding != L"UTF-8") {
+        std::wstring content = StringToWString(contents);
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+        CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
+        if (iter != charSetMap.end()) {
+            contents = WideToCharSet(content, iter->second);
+        }
+        else {
+            return ERR_UNSUPPORTED_ENCODING;
+        }
+    }
+    
 
     if (!WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL)) {
         error = ConvertWinErrorCode(GetLastError(), false);
