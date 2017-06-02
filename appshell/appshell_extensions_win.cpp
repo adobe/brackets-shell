@@ -909,7 +909,9 @@ std::wstring StringToWString(const std::string& str)
 
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
-
+	if (encoding == L"utf8") {
+		encoding = L"UTF-8";
+	}
     DWORD dwAttr;
     dwAttr = GetFileAttributes(filename.c_str());
     if (INVALID_FILE_ATTRIBUTES == dwAttr)
@@ -991,22 +993,18 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 
 				if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
 					contents = std::string(buffer, validationState.dataLen);
-					if ((encoding != L"UTF-8" && encoding != L"utf8") || !GetBufferAsUTF8(validationState)) {
+					if (encoding != L"UTF-8"|| !GetBufferAsUTF8(validationState)) {
 						std::string detectedCharSet;
 						try {
-							if (encoding == L"utf8" || encoding == L"UTF-8") {
+							if (encoding == L"UTF-8") {
 								GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
 							}
 							else {
 								std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 								detectedCharSet = conv.to_bytes(encoding);
 							}
+							std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
 							CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
-							if (iter == charSetMap.end()) {
-								std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-								iter = charSetMap.find(detectedCharSet);
-								error = ERR_UNSUPPORTED_ENCODING;
-							}
 
 							if (iter == charSetMap.end()) {
 								error = ERR_UNSUPPORTED_ENCODING;
@@ -1027,16 +1025,11 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 							error = ERR_UNSUPPORTED_ENCODING;
 						}
 					}
-					else {
-						// Name to show in dropdown
-						encoding = L"UTF-8";
-					}
 				}
 				else {
 					error = ConvertWinErrorCode(GetLastError(), false);
 				}
 				free(buffer);
-
 			}
 			else {
 				error = ERR_UNKNOWN;
@@ -1093,6 +1086,9 @@ static std::string WideToCharSet(const std::wstring &aUTF16string, long codePage
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
+	if (encoding == L"utf8") {
+		encoding = L"UTF-8";
+	}
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
         FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     DWORD dwBytesWritten;
@@ -1102,7 +1098,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ConvertWinErrorCode(GetLastError(), false); 
 
     // TODO (issue 67) -  Should write to temp file
-	if (encoding != L"utf8" && encoding != L"UTF-8") {
+	if (encoding != L"UTF-8") {
 		std::wstring content = StringToWString(contents);
 		std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 		CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
