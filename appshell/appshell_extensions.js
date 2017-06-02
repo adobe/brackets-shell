@@ -807,6 +807,55 @@ if (!appshell.app) {
     appshell.app.dragWindow = function () {
         DragWindow();
     };
+
+    /**
+     * Get the browser zoom level
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function GetZoomLevel();
+    appshell.app.getZoomLevel = function (callback) {
+        GetZoomLevel(callback || _dummyCallback);
+    };
+
+    /**
+     * Set the browser zoom level
+     *
+     * @param {number} 
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function SetZoomLevel();
+    appshell.app.setZoomLevel = function (zoomLevel, callback) {
+        SetZoomLevel(callback || _dummyCallback, zoomLevel);
+    };
+
+    /**
+     * Install command line scripts to make Brackets launchable from command line.
+     * Right now usage is restricted to MAC only.
+     *
+     * @param {number}
+     *
+     * @return none.
+     */
+     native function InstallCommandLineTools();
+     appshell.app.installCommandLine = function (callback) {
+        InstallCommandLineTools(callback);
+     };
+
+     /**
+      * Get hash of the machine based on various  
+      *
+      *
+      * @param {number}
+      *
+      * @return none.
+      */
+     native function GetMachineHash();
+     appshell.app.getMachineHash = function (callback) {
+         GetMachineHash(callback || _dummyCallback);
+     };
+
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;
