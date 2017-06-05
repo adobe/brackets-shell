@@ -447,8 +447,8 @@ void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &d
 
 int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
-    if (encoding != "utf8") {
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
     }
 
     int error = NO_ERROR;
@@ -466,11 +466,16 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
             error = ERR_UNSUPPORTED_ENCODING;
         } else  if (has_utf8_BOM(file_get_contents, len)) {
             contents.assign(file_get_contents + utf8_BOM_Len, len);        
-        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror) || encoding != "UTF-8") {
             contents.assign(file_get_contents, len);
             std::string detectedCharSet;
             try {
-                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                if (encoding == "UTF-8") {
+                    GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                }
+                else {
+                    detectedCharSet = encoding;
+                }
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
                 // Converting to Wide char
