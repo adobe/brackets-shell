@@ -871,12 +871,12 @@ if (!appshell.app) {
      };
 
      /**
-      * Get hash of the machine based on various  
+      * Get hash of the machine based on various parameters like
+      * network interfaces, CPU ID, volume serial number e.t.c
       *
+      * @param {none}
       *
-      * @param {number}
-      *
-      * @return none.
+      * @return None. This is an asynchronous call that sends all return information to the callback.
       */
      native function GetMachineHash();
      appshell.app.getMachineHash = function (callback) {
