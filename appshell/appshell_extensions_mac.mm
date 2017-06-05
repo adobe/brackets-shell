@@ -629,17 +629,19 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
 
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
     NSStringEncoding enc;
     NSError* error = nil;
     
-    if (encoding == "utf8")
+    NSString* fileContents = nil;
+    if (encoding == "UTF-8") {
         enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING; 
-    
-    NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
+    }
     
     if (fileContents) 
     {
@@ -655,7 +657,12 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
         }
         std::string detectedCharSet;
         try {
-            GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+            if (encoding == "UTF-8") {
+                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+            }
+            else {
+                detectedCharSet = encoding;
+            }
             if (detectedCharSet.size()) {
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
