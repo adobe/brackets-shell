@@ -666,17 +666,19 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             if (detectedCharSet.size()) {
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-                
-                // Converting to Wide char
-                int32_t sz = ustr.length() * 2;
-                
-                char* dest = new char[sizeof (*dest) * sz];
                 UErrorCode status = U_ZERO_ERROR;
-                ustr.extract(dest, sz, NULL, status);
-                if (status == U_ZERO_ERROR) {
-                    contents = dest;
+                int targetLen = ustr.extract(NULL, 0, NULL, status);
+                if(status != U_BUFFER_OVERFLOW_ERROR) {
+                    return ERR_CANT_WRITE;
+                }
+                char* target = (char*)malloc(targetLen + 1);
+                status = U_ZERO_ERROR;
+                ustr.extract(target, targetLen, NULL, status);
+                target[targetLen] = '\0';
+                if (U_SUCCESS(status)) {
+                    contents.assign(target, targetLen);
                     encoding = detectedCharSet;
-                    delete[] dest;
+                    delete[] target;
                     return NO_ERROR;
                 }
                 else {
@@ -698,8 +700,11 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
 {
     const char *filenameStr = filename.c_str();
     NSError* error = nil;
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     
-    if (encoding != "utf8") {
+    if (encoding != "UTF-8") {
         UErrorCode status = U_ZERO_ERROR;
         UConverter *conv = ucnv_open(encoding.c_str(), &status);
         if (U_FAILURE(status)) {
@@ -710,10 +715,11 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
-        char* target = (char*)malloc(targetLen);
+        char* target = (char*)malloc(targetLen + 1);
         status = U_ZERO_ERROR;
         ustr.extract(target, targetLen, conv, status);
-        contents = target;
+        target[targetLen] = '\0';
+        contents.assign(target, targetLen);
         delete[] target;
         ucnv_close(conv);
     }
