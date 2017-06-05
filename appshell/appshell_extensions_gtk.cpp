@@ -478,20 +478,23 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
                 }
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-                // Converting to Wide char
-                int32_t sz = ustr.length() * 2;
-
-                char* dest = new char[sizeof (*dest) * sz];
                 UErrorCode status = U_ZERO_ERROR;
-                ustr.extract(dest, sz, NULL, status);
+                int targetLen = ustr.extract(NULL, 0, NULL, status);
+                if(status != U_BUFFER_OVERFLOW_ERROR) {
+                    return ERR_CANT_WRITE;
+                }
+                char* target = (char*)malloc(targetLen + 1);
+                status = U_ZERO_ERROR;
+                ustr.extract(target, targetLen, NULL, status);
+                target[targetLen] = '\0';
                 if (U_SUCCESS(status)) {
-                    contents = dest;
+                    contents.assign(target, targetLen);
                     encoding = detectedCharSet;
-                    delete[] dest;
-                    error = NO_ERROR;
+                    delete[] target;
+                    return NO_ERROR;
                 }
                 else {
-                    error = ERR_UNSUPPORTED_ENCODING;
+                    return ERR_UNSUPPORTED_ENCODING;
                 }
             } catch (...) {
                 error = ERR_UNSUPPORTED_ENCODING;
@@ -526,9 +529,11 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
-        char* target = (char*)malloc(targetLen);
+        char* target = (char*)malloc(targetLen + 1);
+        status = U_ZERO_ERROR;
         ustr.extract(target, targetLen, conv, status);
-        contents = target;
+        target[targetLen] = '\0';
+        contents.assign(target, targetLen);
         delete[] target;
         ucnv_close(conv);
     }
