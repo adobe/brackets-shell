@@ -1459,9 +1459,14 @@ ERROR_A:
     return ERR_UNKNOWN;
 }
 
+
+// The below code is from https://oroboro.com/unique-machine-fingerprint/ and modified
+// Original Author: Rafael
+
 //---------------------------------get MAC addresses ---------------------------------
 // we just need this for purposes of unique machine id. So any one or two
 // mac's is fine.
+
 u16 HashMacAddress( u8* mac )
 {
     u16 hash = 0;
@@ -1515,6 +1520,19 @@ void GetMacHash( u16& mac1, u16& mac2 )
     }
 }
 
+const char* GetMachineName()
+{
+    static struct utsname u;
+
+    if ( uname( &u ) < 0 )
+    {
+        assert(0);
+        return "unknown";
+    }
+
+    return u.nodename;
+}
+
 u16 GetVolumeHash()
 {
     // we don't have a 'volume serial number' like on windows.
@@ -1535,19 +1553,6 @@ u16 GetCPUHash()
     val += (u16)info->cputype;
     val += (u16)info->cpusubtype;
     return val;
-}
-
-u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
-
-static void Smear(u16* id)
-{
-	for (u32 i = 0; i < 5; i++)
-		for (u32 j = i; j < 5; j++)
-			if (i != j)
-				id[i] ^= id[j];
-
-	for (u32 i = 0; i < 5; i++)
-		id[i] ^= mask[i];
 }
 
 u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
