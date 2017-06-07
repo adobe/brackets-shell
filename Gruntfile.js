@@ -26,6 +26,8 @@
 module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
+        os = require('os'),
+        architecture = os.arch(),
         staging;
 
     if (platform === "mac") {
@@ -34,6 +36,14 @@ module.exports = function (grunt) {
         staging = "installer/win/staging";
     } else {
         staging = "installer/linux/debian/package-root/opt/brackets";
+    }
+
+    if (architecture === "x64") {
+        libgcrypt = "x64/libgcrypt.11.so";
+    } else if (architecture === "ia32") {
+        libgcrypt = "ia32/libgcrypt.11.so";
+    } else {
+        libgcrypt = "";
     }
 
     grunt.initConfig({
@@ -169,7 +179,8 @@ module.exports = function (grunt) {
                         "cwd"       : "installer/linux/debian/",
                         "src"       : [
                             "brackets.desktop",
-                            "brackets"
+                            "brackets",
+                            libgcrypt
                         ],
                         "dest"      : "<%= build.staging %>"
                     }
