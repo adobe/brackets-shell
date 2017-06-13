@@ -825,7 +825,6 @@ CharSetMap charSetMap =
     // Below mappings are listed on website
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
     { "ISO-2022-JP", 50220 },
-    { "ISO-8859-6", 28596 },
     { "ISO-2022-CN", 50227 },
     { "ISO-2022-KR", 50225 },
     { "GB18030", 54936 },
@@ -856,7 +855,7 @@ CharSetMap charSetMap =
     { "SHIFT_JIS", 932 },
     { "ISO-8859-3", 28593 },
     { "ISO-8859-4", 28594 },
-    { "UTF-16", 1200 },
+    { "UTF-16LE", 1200 },
     { "UTF-16BE", 1201},
     { "WINDOWS-1257", 1257 },
     { "WINDOWS-1258", 1258 },
@@ -864,7 +863,11 @@ CharSetMap charSetMap =
     { "HZ-GB-2312", 52936 },
     { "WINDOWS-874", 874 },
     { "CP866", 866 },
-    { "IBM852", 852 }
+    { "IBM852", 852 },
+    { "DOS-862", 862 },
+    { "DOS-720", 720 },
+    { "KOI8-RU", 21866 },
+    { "ASMO-708", 708 }
 };
 
 
@@ -933,50 +936,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
         contents = "";
     } else {
         DWORD dwBytesRead;
-        
-        // first just read a few bytes of the file
-        //  to check for a binary or text format 
-        //  that we can't handle
-
-        // we just want to read enough to satisfy the
-        //  UTF-16 or UTF-32 test with or without a BOM
-        // the UTF-8 test could result in a false-positive
-        //  but we'll check again with all bits if we 
-        //  think it's UTF-8 based on just a few characters
-        
-        // if we're going to read fewer bytes than our
-        //  quick test then we skip the quick test and just
-        //  do the full test below since it will be fewer reads
-
-        // We need a buffer that can handle UTF16 or UTF32 with or without a BOM 
-        //  but with enough that we can test for true UTF data to test against 
-        //  without reading partial character streams roughly 1000 characters 
-        //  at UTF32 should do it:
-        // 1000 chars + 32-bit BOM (UTF-32) = 4004 bytes 
-        // 1001 chars without BOM  (UTF-32) = 4004 bytes 
-        // 2001 chars + 16 bit BOM (UTF-16) = 4004 bytes 
-        // 2002 chars without BOM  (UTF-16) = 4004 bytes 
-        const DWORD quickTestSize = 4004; 
-        static char quickTestBuffer[quickTestSize+1];
 
         UTFValidationState validationState;
-
-        validationState.data = quickTestBuffer;
-        validationState.dataLen = quickTestSize;
-
-        if (dwFileSize > quickTestSize) {
-            ZeroMemory(quickTestBuffer, sizeof(quickTestBuffer));
-            if (ReadFile(hFile, quickTestBuffer, quickTestSize, &dwBytesRead, NULL)) {
-                if (!quickTestBufferForUTF8(validationState)) {
-                    error = ERR_UNSUPPORTED_ENCODING;
-                }
-                else {
-                    // reset the file pointer back to beginning
-                    //  since we're going to re-read the file wi
-                    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
-                }
-            }
-        }
 
         if (error == NO_ERROR) {
             // either we did a quick test and we think it's UTF-8 or 
