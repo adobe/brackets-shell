@@ -2027,14 +2027,14 @@ u16 HasMacAddress(PIP_ADAPTER_INFO info)
 
 void GetMacHash(u16& mac1, u16& mac2)
 {
-	IP_ADAPTER_INFO AdapterInfo[32];
-	DWORD dwBufLen = sizeof(AdapterInfo);
+	IP_ADAPTER_INFO adapterInfo[32];
+	DWORD dwBufLen = sizeof(adapterInfo);
 
-	DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufLen);
+	DWORD dwStatus = GetAdaptersInfo(adapterInfo, &dwBufLen);
 	if (dwStatus != ERROR_SUCCESS)
 		return; // no adapters.
 
-	PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
+	PIP_ADAPTER_INFO pAdapterInfo = adapterInfo;
 	mac1 = HasMacAddress(pAdapterInfo);
 	if (pAdapterInfo->Next)
 		mac2 = HasMacAddress(pAdapterInfo->Next);
@@ -2090,7 +2090,7 @@ static void Smear(u16* id)
 
 static u16* ComputeSystemUniqueID()
 {
-	static u16 id[5];
+	static u16 id[5] = { 0 };
 	static bool computed = false;
 
 	if (computed) return id;

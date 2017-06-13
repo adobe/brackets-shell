@@ -1807,7 +1807,7 @@ static void Smear(u16* id)
 
 static u16* ComputeSystemUniqueID()
 {
-	static u16 id[5];
+	static u16 id[5] = {0};
 	static bool computed = false;
 
 	if (computed) return id;
