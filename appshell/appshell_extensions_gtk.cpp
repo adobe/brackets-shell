@@ -479,7 +479,8 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
                 UErrorCode status = U_ZERO_ERROR;
-                int targetLen = ustr.extract(NULL, 0, NULL, status);
+                UConverter *conv = NULL;
+                int targetLen = ustr.extract(NULL, 0, conv, status);
                 if(status != U_BUFFER_OVERFLOW_ERROR) {
                     return ERR_CANT_WRITE;
                 }
