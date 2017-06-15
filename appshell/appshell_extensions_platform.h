@@ -59,6 +59,10 @@ static const int ERR_CL_TOOLS_NOTSUPPORTED  = 17;
 
 static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
+typedef uint8_t   u8;
+typedef uint16_t  u16;
+typedef uint32_t  u32;
+
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;
 inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
@@ -176,3 +180,5 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index);
 
 void DragWindow(CefRefPtr<CefBrowser> browser);
+
+std::string GetSystemUniqueID();
