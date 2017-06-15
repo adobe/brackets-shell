@@ -649,12 +649,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
         return NO_ERROR;
     } else {
         std::ifstream file(filename.c_str());
-        std::string str;
-        while (std::getline(file, str))
-        {
-            contents += str;
-            contents.push_back('\n');
-        }
+        std::stringstream ss;
+        ss << file.rdbuf();
+        contents = ss.str();
         std::string detectedCharSet;
         try {
             if (encoding == "UTF-8") {
