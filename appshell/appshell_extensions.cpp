@@ -685,7 +685,40 @@ public:
         } else if (message_name == "DragWindow") {     
             // Parameters: none       
             DragWindow(browser);
-        } 
+        } else if (message_name == "GetZoomLevel") {
+            // Parameters:
+            //  0: int32 - callback id
+            double zoomLevel = browser->GetHost()->GetZoomLevel();
+
+            responseArgs->SetDouble(2, zoomLevel);
+        } else if (message_name == "SetZoomLevel") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: int32 - zoom level
+
+            if (argList->GetSize() != 2 ||
+                !(argList->GetType(1) == VTYPE_INT || argList->GetType(1) == VTYPE_DOUBLE)) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            if (error == NO_ERROR) {
+                // cast to double
+                double zoomLevel = 1;
+                
+                if (argList->GetType(1) == VTYPE_DOUBLE) {
+                    zoomLevel = argList->GetDouble(1);
+                } else {
+                    zoomLevel = argList->GetInt(1);
+                }
+
+                browser->GetHost()->SetZoomLevel(zoomLevel);
+            }
+        }
+        else if (message_name == "GetMachineHash") {
+            // Parameters:
+            //  0: int32 - callback id
+            responseArgs->SetString(2, GetSystemUniqueID());
+        }
         else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
