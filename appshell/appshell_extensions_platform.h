@@ -46,9 +46,16 @@ static const int ERR_FILE_EXISTS            = 10;
 static const int ERR_BROWSER_NOT_INSTALLED  = 11;
 static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
+#if defined(OS_LINUX)
+typedef signed char    s8;
+typedef unsigned char  u8;
+typedef unsigned short u16;
+typedef unsigned int   u32;
+#else
 typedef uint8_t   u8;
 typedef uint16_t  u16;
 typedef uint32_t  u32;
+#endif
 
 #if defined(OS_WIN)
 typedef std::wstring ExtensionString;

@@ -51,6 +51,7 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <sys/utsname.h>
 
 #include <sys/types.h>
 #include <linux/if.h>
