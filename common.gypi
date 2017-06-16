@@ -3592,6 +3592,7 @@
               'winmm.lib',
               'shlwapi.lib',
               'advapi32.lib',
+              'iphlpapi.lib',
             ],
 
             'conditions': [
