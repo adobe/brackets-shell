@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "include/base/cef_bind.h"
+#include "include/wrapper/cef_message_router.h"
 #include "include/wrapper/cef_stream_resource_handler.h"
 #include "appshell/browser/main_message_loop.h"
 
