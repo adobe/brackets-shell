@@ -680,7 +680,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             else {
                 detectedCharSet = encoding;
             }
-            if (detectedCharSet.size()) {
+            if (!detectedCharSet.empty()) {
                 std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                 UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
                 UErrorCode status = U_ZERO_ERROR;
@@ -688,7 +688,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                 if(status != U_BUFFER_OVERFLOW_ERROR) {
                     return ERR_CANT_WRITE;
                 }
-                char* target = (char*)malloc(targetLen + 1);
+                char* target = new char[targetLen + 1]();
                 status = U_ZERO_ERROR;
                 ustr.extract(target, targetLen, NULL, status);
                 target[targetLen] = '\0';
@@ -699,6 +699,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                     return NO_ERROR;
                 }
                 else {
+                    delete[] target;
                     return ERR_UNSUPPORTED_ENCODING;
                 }
             }
@@ -732,7 +733,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
-        char* target = (char*)malloc(targetLen + 1);
+        char* target = new char[targetLen + 1]();
         status = U_ZERO_ERROR;
         ustr.extract(target, targetLen, conv, status);
         target[targetLen] = '\0';
@@ -741,17 +742,10 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         ucnv_close(conv);
     }
     
-    FILE* file = fopen(filenameStr, "w");
-    if (file) {
-        size_t size = fwrite(contents.c_str(), sizeof(char), contents.length(), file);
-        if (size != contents.length()) {
-            return ERR_CANT_WRITE;
-        }
-        
-        fclose(file);
-    } else {
-        return ERR_CANT_WRITE;
-    }
+    std::ofstream file;
+    file.open (filenameStr);
+    file << contents;
+    file.close();
     
     return ConvertNSErrorCode(error, false);
 }
