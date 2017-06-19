@@ -181,6 +181,7 @@
       'appshell/appshell_extensions.cpp',
       'appshell/appshell_extensions.h',
       'appshell/appshell_extensions_platform.h',
+      'appshell/appshell_extensions_platform.cpp',
       'appshell/appshell_extensions.js',
       'appshell/appshell_helpers.h',
       'appshell/appshell_node_process.h',
