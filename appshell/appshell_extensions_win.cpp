@@ -834,7 +834,6 @@ CharSetMap charSetMap =
     { "GB18030", 54936 },
     { "BIG5", 950 },
     { "EUC-JP", 20932 },
-    { "euc-jp", 51932 },
     { "EUC-KR", 949 },
     { "ISO-8859-1", 28591 },
     { "ISO-8859-2", 28592 },
@@ -881,7 +880,7 @@ CharSetMap charSetMap =
 };
 
 
-static std::wstring CharSetToWide(const std::string &aString, long codePage)
+static void CharSetToWide(const std::string &aString, long codePage, std::wstring &content)
 {
     int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
         0,
@@ -891,23 +890,19 @@ static std::wstring CharSetToWide(const std::string &aString, long codePage)
         NULL);
 
     int resultByteSize = aUTF16Length * sizeof(wchar_t);
-    wchar_t *buf = (wchar_t *)malloc(resultByteSize);
+    std::auto_ptr<wchar_t> buf(new wchar_t[resultByteSize]());
 
     // codePage -> UTF-16
     int wcharsWritten = ::MultiByteToWideChar(codePage,
         0,
         aString.data(),
         aString.size(),
-        buf,
+        buf.get(),
         aUTF16Length);
 
     assert(wcharsWritten == aUTF16Length);
 
-    std::wstring aUTF16string(buf, wcharsWritten);
-
-    free(buf);
-
-    return aUTF16string;
+    content.assign(buf.get(), wcharsWritten);
 }
 
 std::wstring StringToWString(const std::string& str)
@@ -959,7 +954,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 
                 validationState.data = buffer;
                 validationState.dataLen = dwFileSize;
-                validationState.preserveBOM = true;
+                validationState.preserveBOM = false;
 
                 if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
                     contents = std::string(buffer, validationState.dataLen);
@@ -981,7 +976,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                             }
                             else {
                                 try {
-                                    std::wstring content = CharSetToWide(contents, iter->second);
+                                    std::wstring content;
+                                    CharSetToWide(contents, iter->second, content);
                                     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
                                     contents = conv.to_bytes(content);
                                     encoding = StringToWString(detectedCharSet);
@@ -1011,8 +1007,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 }
 
 
-static std::string WideToCharSet(const std::wstring &aUTF16string, long codePage)
+static void WideToCharSet(const std::wstring &aUTF16string, long codePage, std::string &contents)
 {
+    contents = "";
     if (aUTF16string.size() > 0)
     {
         // convert UTF-16 to UTF-8; first get destination buffer length
@@ -1025,30 +1022,21 @@ static std::string WideToCharSet(const std::wstring &aUTF16string, long codePage
             NULL,
             NULL);
 
-        char *buf = (char *)malloc(aUTF8Length);
+        std::auto_ptr<char> buf(new char[aUTF8Length]());
 
         // UTF-16 -> UTF-8 conversion
         int bytesWritten = ::WideCharToMultiByte(codePage,
             0,
             aUTF16string.data(),
             aUTF16string.size(),
-            buf,
+            buf.get(),
             aUTF8Length,
             NULL,
             NULL);
 
         assert(bytesWritten == aUTF8Length);
 
-        std::string result(buf, bytesWritten);
-
-        free(buf);
-
-        return result;
-    }
-    else
-    {
-        std::string result; // 0 length begets empty result
-        return result;
+        contents.assign(buf.get(), bytesWritten);
     }
 }
 
@@ -1073,7 +1061,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
         CharSetMap::iterator iter = charSetMap.find(conv.to_bytes(encoding));
         if (iter != charSetMap.end()) {
-            contents = WideToCharSet(content, iter->second);
+            WideToCharSet(content, iter->second, contents);
         }
         else {
             return ERR_UNSUPPORTED_ENCODING;

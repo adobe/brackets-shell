@@ -2,6 +2,7 @@
 #include <unicode/ucsdet.h>
 
 void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
+	detectedCharSet = "";
 	const UCharsetMatch* charsetMatch_;
 	UErrorCode icuError = U_ZERO_ERROR;
 
@@ -26,4 +27,5 @@ void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &d
 	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
 	// Get Confidence
 	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+	ucsdet_close(charsetDetector_);
 }
