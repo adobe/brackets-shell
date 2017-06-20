@@ -668,46 +668,48 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
         contents = [fileContents UTF8String];
         return NO_ERROR;
     } else {
-        std::ifstream file(filename.c_str());
-        std::stringstream ss;
-        ss << file.rdbuf();
-        contents = ss.str();
-        std::string detectedCharSet;
         try {
-            if (encoding == "UTF-8") {
-                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
-            }
-            else {
-                detectedCharSet = encoding;
-            }
-            if (!detectedCharSet.empty()) {
-                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-                UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-                UErrorCode status = U_ZERO_ERROR;
-                int targetLen = ustr.extract(NULL, 0, NULL, status);
-                if(status != U_BUFFER_OVERFLOW_ERROR) {
-                    return ERR_CANT_WRITE;
-                }
-                char* target = new char[targetLen + 1]();
-                status = U_ZERO_ERROR;
-                ustr.extract(target, targetLen, NULL, status);
-                target[targetLen] = '\0';
-                if (U_SUCCESS(status)) {
-                    contents.assign(target, targetLen);
-                    encoding = detectedCharSet;
-                    delete[] target;
-                    return NO_ERROR;
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
                 }
                 else {
-                    delete[] target;
+                    detectedCharSet = encoding;
+                }
+                if (!detectedCharSet.empty()) {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
+                    UErrorCode status = U_ZERO_ERROR;
+                    int targetLen = ustr.extract(NULL, 0, NULL, status);
+                    if(status != U_BUFFER_OVERFLOW_ERROR) {
+                        return ERR_UNSUPPORTED_ENCODING;
+                    }
+                    std::auto_ptr<char> target(new char[targetLen + 1]());
+                    status = U_ZERO_ERROR;
+                    ustr.extract(target.get(), targetLen, NULL, status);
+                    target.get()[targetLen] = '\0';
+                    if (U_SUCCESS(status)) {
+                        contents.assign(target.get(), targetLen);
+                        encoding = detectedCharSet;
+                        return NO_ERROR;
+                    }
+                    else {
+                        return ERR_UNSUPPORTED_ENCODING;
+                    }
+                }
+                else {
                     return ERR_UNSUPPORTED_ENCODING;
                 }
-            }
-            else {
+            } catch (...) {
                 return ERR_UNSUPPORTED_ENCODING;
             }
         } catch (...) {
-            return ERR_UNSUPPORTED_ENCODING;
+            return ERR_CANT_READ;
         }
     }
     
@@ -733,19 +735,22 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
-        char* target = new char[targetLen + 1]();
+        std::auto_ptr<char> target(new char[targetLen + 1]());
         status = U_ZERO_ERROR;
-        ustr.extract(target, targetLen, conv, status);
-        target[targetLen] = '\0';
-        contents.assign(target, targetLen);
-        delete[] target;
+        ustr.extract(target.get(), targetLen, conv, status);
+        target.get()[targetLen] = '\0';
+        contents.assign(target.get(), targetLen);
         ucnv_close(conv);
     }
     
-    std::ofstream file;
-    file.open (filenameStr);
-    file << contents;
-    file.close();
+    try {
+        std::ofstream file;
+        file.open (filenameStr);
+        file << contents;
+        file.close();
+    } catch (...) {
+        return ERR_CANT_WRITE;
+    }
     
     return ConvertNSErrorCode(error, false);
 }
