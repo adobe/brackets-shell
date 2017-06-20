@@ -962,7 +962,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                         std::string detectedCharSet;
                         try {
                             if (encoding == L"UTF-8") {
-                                GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                                CharSetDetect ICUDetector = CharSetDetect();
+                                ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                             }
                             else {
                                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
@@ -1047,15 +1048,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     if (encoding == L"utf8") {
         encoding = L"UTF-8";
     }
-    HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
-        FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    DWORD dwBytesWritten;
     int error = NO_ERROR;
-
-    if (INVALID_HANDLE_VALUE == hFile)
-        return ConvertWinErrorCode(GetLastError(), false); 
-
-    // TODO (issue 67) -  Should write to temp file
     if (encoding != L"UTF-8") {
         std::wstring content = StringToWString(contents);
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
@@ -1064,11 +1057,19 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             WideToCharSet(content, iter->second, contents);
         }
         else {
-            return ERR_UNSUPPORTED_ENCODING;
+            error = ERR_UNSUPPORTED_ENCODING;
         }
     }
+
+    HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
+        FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    DWORD dwBytesWritten;
     
 
+    if (INVALID_HANDLE_VALUE == hFile)
+        return ConvertWinErrorCode(GetLastError(), false);
+
+    // TODO (issue 67) -  Should write to temp file
     if (!WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL)) {
         error = ConvertWinErrorCode(GetLastError(), false);
     }

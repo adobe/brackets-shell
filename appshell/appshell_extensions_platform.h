@@ -29,6 +29,7 @@
 #include <string>
 
 #include "config.h"
+#include <unicode/ucsdet.h>
 
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
@@ -87,7 +88,15 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
 inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #endif
 
-void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
+class CharSetDetect
+{
+	UCharsetDetector* charsetDetector_;
+	UErrorCode icuError;
+public:
+	CharSetDetect();
+	~CharSetDetect();
+	void operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
+};
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
