@@ -676,7 +676,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             std::string detectedCharSet;
             try {
                 if (encoding == "UTF-8") {
-                    GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                 }
                 else {
                     detectedCharSet = encoding;
@@ -719,28 +720,18 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
     const char *filenameStr = filename.c_str();
-    NSError* error = nil;
+    int32 error = NO_ERROR;
     if (encoding == "utf8") {
         encoding = "UTF-8";
     }
     
     if (encoding != "UTF-8") {
-        UErrorCode status = U_ZERO_ERROR;
-        UConverter *conv = ucnv_open(encoding.c_str(), &status);
-        if (U_FAILURE(status)) {
-            return ERR_CANT_WRITE;
+        try {
+            CharSetConvert ICUConverter(encoding);
+            ICUConverter(contents);
+        } catch (...) {
+            error = ERR_CANT_READ;
         }
-        UnicodeString ustr(contents.c_str());
-        int targetLen = ustr.extract(NULL, 0, conv, status);
-        if(status != U_BUFFER_OVERFLOW_ERROR) {
-            return ERR_CANT_WRITE;
-        }
-        std::auto_ptr<char> target(new char[targetLen + 1]());
-        status = U_ZERO_ERROR;
-        ustr.extract(target.get(), targetLen, conv, status);
-        target.get()[targetLen] = '\0';
-        contents.assign(target.get(), targetLen);
-        ucnv_close(conv);
     }
     
     try {
@@ -752,7 +743,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ERR_CANT_WRITE;
     }
     
-    return ConvertNSErrorCode(error, false);
+    return error;
 }
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode)

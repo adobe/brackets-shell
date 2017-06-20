@@ -1,5 +1,6 @@
 #include "appshell/appshell_extensions_platform.h"
 #include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
 
 CharSetDetect::CharSetDetect() {
 	charsetDetector_ = NULL;
@@ -36,4 +37,31 @@ void CharSetDetect::operator()(const char* bufferData, size_t bufferLength, std:
 	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
 	// Get Confidence
 	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+}
+
+CharSetConvert::CharSetConvert(std::string encoding) {
+    status = U_ZERO_ERROR;
+    conv = ucnv_open(encoding.c_str(), &status);
+    if (U_FAILURE(status)) {
+        throw "Unable to open Converter";
+    }
+}
+
+CharSetConvert::~CharSetConvert() {
+    if (conv) {
+        ucnv_close(conv);
+    }
+}
+
+void CharSetConvert::operator()(std::string &contents) {
+    UnicodeString ustr(contents.c_str());
+    int targetLen = ustr.extract(NULL, 0, conv, status);
+    if(status != U_BUFFER_OVERFLOW_ERROR) {
+        throw "Unable to convert encoding";
+    }
+    std::auto_ptr<char> target(new char[targetLen + 1]());
+    status = U_ZERO_ERROR;
+    ustr.extract(target.get(), targetLen, conv, status);
+    target.get()[targetLen] = '\0';
+    contents.assign(target.get(), targetLen);
 }

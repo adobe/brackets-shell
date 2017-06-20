@@ -98,6 +98,16 @@ public:
 	void operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
 };
 
+class CharSetConvert
+{
+    UErrorCode status;
+    UConverter *conv;
+public:
+    CharSetConvert(std::string encoding);
+    ~CharSetConvert();
+    void operator()(std::string &contents);
+};
+
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
