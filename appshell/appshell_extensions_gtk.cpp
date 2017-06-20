@@ -42,6 +42,8 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <fstream>
 
 #include <unicode/ucsdet.h>
 #include <unicode/ucnv.h>
@@ -434,30 +436,32 @@ bool has_utf_32_BOM(gchar* data, gsize length)
 
 
 void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
-	const UCharsetMatch* charsetMatch_;
-	UErrorCode icuError = U_ZERO_ERROR;
+    detectedCharSet = "";
+    const UCharsetMatch* charsetMatch_;
+    UErrorCode icuError = U_ZERO_ERROR;
 
-	UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to open detector";
+    UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to open detector";
 
-	// send text
-	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to set text";
+    // send text
+    ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to set text";
 
-	// detect language
-	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
-	if (U_FAILURE(icuError))
-		throw "Failed to detect charset";
+    // detect language
+    charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
+    if (U_FAILURE(icuError))
+        throw "Failed to detect charset";
 
-	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
-	detectedCharSet = detectedCharsetName;
+    const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+    detectedCharSet = detectedCharsetName;
 
-	// Get Language Name
-	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
-	// Get Confidence
-	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+    // Get Language Name
+    const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+    // Get Confidence
+    int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+    ucsdet_close(charsetDetector_);
 }
 
 
@@ -499,16 +503,15 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
                 UConverter *conv = NULL;
                 int targetLen = ustr.extract(NULL, 0, conv, status);
                 if(status != U_BUFFER_OVERFLOW_ERROR) {
-                    return ERR_CANT_WRITE;
+                    return ERR_UNSUPPORTED_ENCODING;
                 }
-                char* target = (char*)malloc(targetLen + 1);
+                std::auto_ptr<char> target(new char[targetLen + 1]());
                 status = U_ZERO_ERROR;
-                ustr.extract(target, targetLen, NULL, status);
-                target[targetLen] = '\0';
+                ustr.extract(target.get(), targetLen, NULL, status);
+                target.get()[targetLen] = '\0';
                 if (U_SUCCESS(status)) {
-                    contents.assign(target, targetLen);
+                    contents.assign(target.get(), targetLen);
                     encoding = detectedCharSet;
-                    delete[] target;
                     return NO_ERROR;
                 }
                 else {
@@ -547,25 +550,21 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         if(status != U_BUFFER_OVERFLOW_ERROR) {
             return ERR_CANT_WRITE;
         }
-        char* target = (char*)malloc(targetLen + 1);
+        std::auto_ptr<char> target(new char[targetLen + 1]());
         status = U_ZERO_ERROR;
-        ustr.extract(target, targetLen, conv, status);
-        target[targetLen] = '\0';
-        contents.assign(target, targetLen);
-        delete[] target;
+        ustr.extract(target.get(), targetLen, conv, status);
+        target.get()[targetLen] = '\0';
+        contents.assign(target.get(), targetLen);
         ucnv_close(conv);
     }
 
-    FILE* file = fopen(filenameStr, "w");
-    if (file) {
-        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
-        if (size != contents.length()) {
-            error = ERR_CANT_WRITE;
-        }
-
-        fclose(file);
-    } else {
-        return ConvertLinuxErrorCode(errno);
+    try {
+        std::ofstream file;
+        file.open (filenameStr);
+        file << contents;
+        file.close();
+    } catch (...) {
+        return ERR_CANT_WRITE;
     }
 
     return error;
