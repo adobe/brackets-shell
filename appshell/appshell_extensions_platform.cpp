@@ -39,7 +39,7 @@ void CharSetDetect::operator()(const char* bufferData, size_t bufferLength, std:
 	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
 }
 
-CharSetConvert::CharSetConvert(std::string encoding) {
+CharSetEncode::CharSetEncode(std::string encoding) {
     status = U_ZERO_ERROR;
     conv = ucnv_open(encoding.c_str(), &status);
     if (U_FAILURE(status)) {
@@ -47,13 +47,13 @@ CharSetConvert::CharSetConvert(std::string encoding) {
     }
 }
 
-CharSetConvert::~CharSetConvert() {
+CharSetEncode::~CharSetEncode() {
     if (conv) {
         ucnv_close(conv);
     }
 }
 
-void CharSetConvert::operator()(std::string &contents) {
+void CharSetEncode::operator()(std::string &contents) {
     UnicodeString ustr(contents.c_str());
     int targetLen = ustr.extract(NULL, 0, conv, status);
     if(status != U_BUFFER_OVERFLOW_ERROR) {
