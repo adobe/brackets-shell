@@ -492,30 +492,19 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
             std::string detectedCharSet;
             try {
                 if (encoding == "UTF-8") {
-                    GetCharsetMatch(contents.c_str(), contents.size(), detectedCharSet);
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                 }
                 else {
                     detectedCharSet = encoding;
                 }
-                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-                UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-                UErrorCode status = U_ZERO_ERROR;
-                UConverter *conv = NULL;
-                int targetLen = ustr.extract(NULL, 0, conv, status);
-                if(status != U_BUFFER_OVERFLOW_ERROR) {
-                    return ERR_UNSUPPORTED_ENCODING;
-                }
-                std::auto_ptr<char> target(new char[targetLen + 1]());
-                status = U_ZERO_ERROR;
-                ustr.extract(target.get(), targetLen, NULL, status);
-                target.get()[targetLen] = '\0';
-                if (U_SUCCESS(status)) {
-                    contents.assign(target.get(), targetLen);
+                if (!detectedCharSet.empty()) {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
                     encoding = detectedCharSet;
-                    return NO_ERROR;
                 }
                 else {
-                    return ERR_UNSUPPORTED_ENCODING;
+                    error = ERR_UNSUPPORTED_ENCODING;
                 }
             } catch (...) {
                 error = ERR_UNSUPPORTED_ENCODING;
@@ -540,22 +529,12 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     }
 
     if (encoding != "utf8") {
-        UErrorCode status = U_ZERO_ERROR;
-        UConverter *conv = ucnv_open(encoding.c_str(), &status);
-        if (U_FAILURE(status)) {
-            return ERR_CANT_WRITE;
+        try {
+            CharSetEncode ICUEncoder(encoding);
+            ICUEncoder(contents);
+        } catch (...) {
+            error = ERR_CANT_READ;
         }
-        UnicodeString ustr(contents.c_str());
-        int targetLen = ustr.extract(NULL, 0, conv, status);
-        if(status != U_BUFFER_OVERFLOW_ERROR) {
-            return ERR_CANT_WRITE;
-        }
-        std::auto_ptr<char> target(new char[targetLen + 1]());
-        status = U_ZERO_ERROR;
-        ustr.extract(target.get(), targetLen, conv, status);
-        target.get()[targetLen] = '\0';
-        contents.assign(target.get(), targetLen);
-        ucnv_close(conv);
     }
 
     try {

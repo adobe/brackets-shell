@@ -25,6 +25,7 @@
 
 #include "include/cef_browser.h"
 #include "include/cef_v8.h"
+#include <unicode/ucsdet.h>
 
 #include <string>
 
@@ -76,6 +77,31 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
         GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
         GTK_TYPE_VBOX);
 }
+#endif
+
+
+class CharSetDetect
+{
+	UCharsetDetector* charsetDetector_;
+	UErrorCode icuError;
+public:
+	CharSetDetect();
+	~CharSetDetect();
+	void operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
+};
+
+class CharSetEncode
+{
+    UErrorCode status;
+    UConverter *conv;
+public:
+    CharSetEncode(std::string encoding);
+    ~CharSetEncode();
+    void operator()(std::string &contents);
+};
+
+#if defined(OS_MACOSX) || defined(OS_LINUX)
+void DecodeContents(std::string &contents, std::string encoding);
 #endif
 
 
