@@ -655,15 +655,16 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
     NSStringEncoding enc;
-    NSError* error = nil;
+    int32 error = NO_ERROR;
     
     NSString* fileContents = nil;
     if (encoding == "UTF-8") {
         enc = NSUTF8StringEncoding;
-        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
+        NSError* NSerror = nil;
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&NSerror];
     }
     
-    if (fileContents) 
+    if (fileContents)
     {
         contents = [fileContents UTF8String];
         return NO_ERROR;
@@ -684,37 +685,21 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                 }
                 if (!detectedCharSet.empty()) {
                     std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-                    UnicodeString ustr(contents.c_str(), detectedCharSet.c_str());
-                    UErrorCode status = U_ZERO_ERROR;
-                    int targetLen = ustr.extract(NULL, 0, NULL, status);
-                    if(status != U_BUFFER_OVERFLOW_ERROR) {
-                        return ERR_UNSUPPORTED_ENCODING;
-                    }
-                    std::auto_ptr<char> target(new char[targetLen + 1]());
-                    status = U_ZERO_ERROR;
-                    ustr.extract(target.get(), targetLen, NULL, status);
-                    target.get()[targetLen] = '\0';
-                    if (U_SUCCESS(status)) {
-                        contents.assign(target.get(), targetLen);
-                        encoding = detectedCharSet;
-                        return NO_ERROR;
-                    }
-                    else {
-                        return ERR_UNSUPPORTED_ENCODING;
-                    }
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
                 }
                 else {
-                    return ERR_UNSUPPORTED_ENCODING;
+                    error = ERR_UNSUPPORTED_ENCODING;
                 }
             } catch (...) {
-                return ERR_UNSUPPORTED_ENCODING;
+                error = ERR_UNSUPPORTED_ENCODING;
             }
         } catch (...) {
-            return ERR_CANT_READ;
+            error = ERR_CANT_READ;
         }
     }
     
-    return ConvertNSErrorCode(error, true);
+    return error;
 }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)

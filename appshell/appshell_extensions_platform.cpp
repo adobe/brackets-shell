@@ -65,3 +65,22 @@ void CharSetEncode::operator()(std::string &contents) {
     target.get()[targetLen] = '\0';
     contents.assign(target.get(), targetLen);
 }
+
+void DecodeContents(std::string &contents, std::string encoding) {
+    UnicodeString ustr(contents.c_str(), encoding.c_str());
+    UErrorCode status = U_ZERO_ERROR;
+    int targetLen = ustr.extract(NULL, 0, NULL, status);
+    if(status != U_BUFFER_OVERFLOW_ERROR) {
+        throw "Unable to decode contents";
+    }
+    std::auto_ptr<char> target(new char[targetLen + 1]());
+    status = U_ZERO_ERROR;
+    ustr.extract(target.get(), targetLen, NULL, status);
+    target.get()[targetLen] = '\0';
+    if (U_SUCCESS(status)) {
+        contents.assign(target.get(), targetLen);
+    }
+    else {
+        throw "Unable to decode contents";
+    }
+}
