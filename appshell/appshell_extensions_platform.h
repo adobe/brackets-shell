@@ -98,15 +98,17 @@ public:
 	void operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
 };
 
-class CharSetConvert
+class CharSetEncode
 {
     UErrorCode status;
     UConverter *conv;
 public:
-    CharSetConvert(std::string encoding);
-    ~CharSetConvert();
+    CharSetEncode(std::string encoding);
+    ~CharSetEncode();
     void operator()(std::string &contents);
 };
+
+void DecodeContents(std::string &contents, std::string encoding);
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp

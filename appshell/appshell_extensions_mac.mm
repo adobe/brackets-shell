@@ -727,8 +727,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     
     if (encoding != "UTF-8") {
         try {
-            CharSetConvert ICUConverter(encoding);
-            ICUConverter(contents);
+            CharSetEncode ICUEncoder(encoding);
+            ICUEncoder(contents);
         } catch (...) {
             error = ERR_CANT_READ;
         }
