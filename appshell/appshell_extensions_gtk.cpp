@@ -435,37 +435,6 @@ bool has_utf_32_BOM(gchar* data, gsize length)
 }
 
 
-void GetCharsetMatch(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
-    detectedCharSet = "";
-    const UCharsetMatch* charsetMatch_;
-    UErrorCode icuError = U_ZERO_ERROR;
-
-    UCharsetDetector* charsetDetector_ = ucsdet_open(&icuError);
-    if (U_FAILURE(icuError))
-        throw "Failed to open detector";
-
-    // send text
-    ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
-    if (U_FAILURE(icuError))
-        throw "Failed to set text";
-
-    // detect language
-    charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
-    if (U_FAILURE(icuError))
-        throw "Failed to detect charset";
-
-    const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
-    detectedCharSet = detectedCharsetName;
-
-    // Get Language Name
-    const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
-    // Get Confidence
-    int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
-    ucsdet_close(charsetDetector_);
-}
-
-
-
 int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
     if (encoding == "utf8") {
@@ -527,8 +496,11 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
         return ERR_CANT_WRITE;
     }
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
 
-    if (encoding != "utf8") {
+    if (encoding != "UTF-8") {
         try {
             CharSetEncode ICUEncoder(encoding);
             ICUEncoder(contents);
