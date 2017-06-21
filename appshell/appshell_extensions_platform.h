@@ -82,8 +82,8 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
 
 class CharSetDetect
 {
-	UCharsetDetector* charsetDetector_;
-	UErrorCode icuError;
+	UCharsetDetector* m_charsetDetector_;
+	UErrorCode m_icuError;
 public:
 	CharSetDetect();
 	~CharSetDetect();
@@ -92,8 +92,8 @@ public:
 
 class CharSetEncode
 {
-    UErrorCode status;
-    UConverter *conv;
+    UErrorCode m_status;
+    UConverter *m_conv;
 public:
     CharSetEncode(std::string encoding);
     ~CharSetEncode();
@@ -101,7 +101,7 @@ public:
 };
 
 #if defined(OS_MACOSX) || defined(OS_LINUX)
-void DecodeContents(std::string &contents, std::string encoding);
+void DecodeContents(std::string &contents, const std::string& encoding);
 #endif
 
 

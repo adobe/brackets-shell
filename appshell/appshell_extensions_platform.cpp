@@ -4,71 +4,73 @@
 #include <memory>
 
 CharSetDetect::CharSetDetect() {
-	charsetDetector_ = NULL;
-	icuError = U_ZERO_ERROR;
-	charsetDetector_ = ucsdet_open(&icuError);
-	if (U_FAILURE(icuError))
+	m_charsetDetector_ = NULL;
+	m_icuError = U_ZERO_ERROR;
+	m_charsetDetector_ = ucsdet_open(&m_icuError);
+	if (U_FAILURE(m_icuError))
 		throw "Failed to open detector";
 }
 
 CharSetDetect::~CharSetDetect() {
-	if (charsetDetector_) {
-		ucsdet_close(charsetDetector_);
+	if (m_charsetDetector_ && U_SUCCESS(m_icuError)) {
+		ucsdet_close(m_charsetDetector_);
 	}
 }
 
 void CharSetDetect::operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet) {
 	detectedCharSet = "";
+    UErrorCode error = U_ZERO_ERROR;
 	const UCharsetMatch* charsetMatch_;
 
 	// send text
-	ucsdet_setText(charsetDetector_, bufferData, bufferLength, &icuError);
-	if (U_FAILURE(icuError))
+	ucsdet_setText(m_charsetDetector_, bufferData, bufferLength, &error);
+	if (U_FAILURE(error))
 		throw "Failed to set text";
 
 	// detect language
-	charsetMatch_ = ucsdet_detect(charsetDetector_, &icuError);
-	if (U_FAILURE(icuError))
+	charsetMatch_ = ucsdet_detect(m_charsetDetector_, &error);
+	if (U_FAILURE(error))
 		throw "Failed to detect CharSet";
 
-	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &icuError);
+	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &error);
 	detectedCharSet = detectedCharsetName;
 
 	// Get Language Name
-	const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &icuError);
+	//const char* detectedLanguage = ucsdet_getLanguage(charsetMatch_, &error);
 	// Get Confidence
-	int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &icuError);
+	//int32_t detectionConfidence = ucsdet_getConfidence(charsetMatch_, &error);
 }
 
 CharSetEncode::CharSetEncode(std::string encoding) {
-    status = U_ZERO_ERROR;
-    conv = ucnv_open(encoding.c_str(), &status);
-    if (U_FAILURE(status)) {
+    m_status = U_ZERO_ERROR;
+    m_conv = ucnv_open(encoding.c_str(), &m_status);
+    if (U_FAILURE(m_status)) {
         throw "Unable to open Converter";
     }
 }
 
 CharSetEncode::~CharSetEncode() {
-    if (conv) {
-        ucnv_close(conv);
+    if (m_conv && U_SUCCESS(m_status)) {
+        ucnv_close(m_conv);
     }
 }
 
 void CharSetEncode::operator()(std::string &contents) {
     UnicodeString ustr(contents.c_str());
-    int targetLen = ustr.extract(NULL, 0, conv, status);
-    if(status != U_BUFFER_OVERFLOW_ERROR) {
+    UErrorCode error;
+    int targetLen = ustr.extract(NULL, 0, m_conv, error);
+    if(error != U_BUFFER_OVERFLOW_ERROR) {
         throw "Unable to convert encoding";
     }
-    std::auto_ptr<char> target(new char[targetLen + 1]());
-    status = U_ZERO_ERROR;
-    ustr.extract(target.get(), targetLen, conv, status);
+    std::auto_ptr<char> target(new  char[targetLen + 1]());
+    error = U_ZERO_ERROR;
+    ustr.extract(target.get(), targetLen, m_conv, error);
     target.get()[targetLen] = '\0';
     contents.assign(target.get(), targetLen);
 }
 
 #if defined(OS_MACOSX) || defined(OS_LINUX)
-void DecodeContents(std::string &contents, std::string encoding) {
+void DecodeContents(std::string &contents, const std::string& encoding) {
     UnicodeString ustr(contents.c_str(), encoding.c_str());
     UErrorCode status = U_ZERO_ERROR;
     int targetLen = ustr.extract(NULL, 0, NULL, status);
