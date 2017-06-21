@@ -916,7 +916,7 @@ std::wstring StringToWString(const std::string& str)
 class ReadFileHandle {
 	HANDLE hFile;
 public:
-	ReadFileHandle(std::wstring filename) {
+	ReadFileHandle(const std::wstring& filename) {
 		hFile = CreateFile(filename.c_str(), GENERIC_READ,
 			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (INVALID_HANDLE_VALUE == hFile)
