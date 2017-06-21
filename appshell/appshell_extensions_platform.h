@@ -108,7 +108,9 @@ public:
     void operator()(std::string &contents);
 };
 
+#if defined(OS_MACOSX) || defined(OS_LINUX)
 void DecodeContents(std::string &contents, std::string encoding);
+#endif
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp

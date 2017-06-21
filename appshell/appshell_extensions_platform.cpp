@@ -66,6 +66,7 @@ void CharSetEncode::operator()(std::string &contents) {
     contents.assign(target.get(), targetLen);
 }
 
+#if defined(OS_MACOSX) || defined(OS_LINUX)
 void DecodeContents(std::string &contents, std::string encoding) {
     UnicodeString ustr(contents.c_str(), encoding.c_str());
     UErrorCode status = U_ZERO_ERROR;
@@ -84,3 +85,4 @@ void DecodeContents(std::string &contents, std::string encoding) {
         throw "Unable to decode contents";
     }
 }
+#endif
