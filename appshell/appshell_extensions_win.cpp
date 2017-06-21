@@ -913,6 +913,25 @@ std::wstring StringToWString(const std::string& str)
     return converterX.from_bytes(str);
 }
 
+class ReadFileHandle {
+	HANDLE hFile;
+public:
+	ReadFileHandle(std::wstring filename) {
+		hFile = CreateFile(filename.c_str(), GENERIC_READ,
+			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (INVALID_HANDLE_VALUE == hFile)
+			throw "Could not initialize read handle";
+	}
+	~ReadFileHandle() {
+		if (hFile)
+			CloseHandle(hFile);
+	}
+	operator HANDLE() {
+		return hFile;
+	}
+};
+
+
 
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
@@ -927,14 +946,10 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     if (dwAttr & FILE_ATTRIBUTE_DIRECTORY)
         return ERR_CANT_READ;
 
-    HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ,
-        FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ReadFileHandle readFileHandle(filename);
+    HANDLE hFile = readFileHandle;
     int32 error = NO_ERROR;
 
-    if (INVALID_HANDLE_VALUE == hFile)
-        return ConvertWinErrorCode(GetLastError()); 
-
-    char* buffer = NULL;
     DWORD dwFileSize = GetFileSize(hFile, NULL);
 
     if (dwFileSize == 0) {
@@ -949,20 +964,21 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             //  the file is small enough that we didn't spend the time
             //  to do a quick test so alloc the memory to read the entire
             //  file into memory and test it again...
-            buffer = (char*)malloc(dwFileSize);
-            if (buffer) {
+            std::auto_ptr<char> buffer(new char[dwFileSize]());
+            if (buffer.get()) {
 
-                validationState.data = buffer;
+                validationState.data = buffer.get();
                 validationState.dataLen = dwFileSize;
                 validationState.preserveBOM = false;
 
-                if (ReadFile(hFile, buffer, dwFileSize, &dwBytesRead, NULL)) {
-                    contents = std::string(buffer, validationState.dataLen);
+                if (ReadFile(hFile, buffer.get(), dwFileSize, &dwBytesRead, NULL)) {
+
+                    contents = std::string(buffer.get(), validationState.dataLen);
                     if (encoding != L"UTF-8"|| !GetBufferAsUTF8(validationState)) {
                         std::string detectedCharSet;
                         try {
                             if (encoding == L"UTF-8") {
-                                CharSetDetect ICUDetector = CharSetDetect();
+                                CharSetDetect ICUDetector;
                                 ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                             }
                             else {
@@ -996,14 +1012,12 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                 else {
                     error = ConvertWinErrorCode(GetLastError(), false);
                 }
-                free(buffer);
             }
             else {
                 error = ERR_UNKNOWN;
             }
         }
     }
-    CloseHandle(hFile);
     return error;
 }
 
