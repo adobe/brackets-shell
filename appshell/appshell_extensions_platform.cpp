@@ -56,7 +56,7 @@ CharSetEncode::~CharSetEncode() {
 
 void CharSetEncode::operator()(std::string &contents) {
     UnicodeString ustr(contents.c_str());
-    UErrorCode error;
+    UErrorCode error = U_ZERO_ERROR;
     int targetLen = ustr.extract(NULL, 0, m_conv, error);
     if(error != U_BUFFER_OVERFLOW_ERROR) {
         throw "Unable to convert encoding";
