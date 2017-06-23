@@ -394,8 +394,8 @@ if (!appshell.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function WriteFile();
-    appshell.fs.writeFile = function (path, data, encoding, callback) {
-        WriteFile(callback || _dummyCallback, path, data, encoding);
+    appshell.fs.writeFile = function (path, data, encoding, preserveBOM, callback) {
+        WriteFile(callback || _dummyCallback, path, data, encoding, preserveBOM);
     };
     
     /**
