@@ -123,6 +123,62 @@ module.exports = function (grunt) {
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
 
+    
+    // task: icu
+    grunt.registerTask("icu", "Download and setup ICU", function () {
+        if (platform === "win" || platform === "mac") {
+            var config   = "icu-" + platform + common.arch(),
+                zipSrc   = grunt.config("curl-dir." + config + ".src"),
+                zipName  = path.basename(zipSrc),
+                zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
+                txtName;
+
+            // extract zip file name and set config property
+            grunt.config("icuZipDest", zipDest);
+            grunt.config("icuZipSrc", zipSrc);
+            grunt.config("icuZipName", zipName);
+            grunt.config("icuConfig", config);
+
+            // remove .zip extension
+            txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
+
+            // optionally download if ICU is not found
+            if (!grunt.file.exists("deps/icu/" + txtName)) {
+                var icuTasks = ["icu-clean", "icu-extract"];
+
+                if (grunt.file.exists(zipDest)) {
+                    grunt.verbose.writeln("Found ICU download " + zipDest);
+                } else {
+                    icuTasks.unshift("icu-download");
+                }
+
+                grunt.task.run(icuTasks);
+            } else {
+                grunt.verbose.writeln("Skipping ICU download. Found deps/icu/" + txtName);
+            }
+        }
+    });
+
+    // task: icu-clean
+    grunt.registerTask("icu-clean", "Removes CEF binaries and linked folders", function () {
+        // delete dev symlinks from "setup_for_hacking"
+        common.deleteFile("Release/dev", { force: true });
+        common.deleteFile("Debug/dev", { force: true });
+
+        // finally delete ICU binary\
+        common.deleteFile("deps/icu", { force: true });
+    });
+    
+    // task: icu-download
+    grunt.registerTask("icu-download", "Download ICU, see curl-dir config in Gruntfile.js", function () {
+        // requires download-icu to set "icuZipName" in config
+        grunt.task.requires(["icu"]);
+
+        // run curl
+        grunt.log.writeln("Downloading " + grunt.config("icuZipSrc") + ". This may take a while...");
+        grunt.task.run("curl-dir:" + grunt.config("icuConfig"));
+    });
+
     function cefFileLocation() {
         return path.resolve(process.cwd(), "deps/cef");
     }
@@ -280,6 +336,46 @@ module.exports = function (grunt) {
             } else {
                 permissionsPromise = q.resolve();
             }
+
+            return permissionsPromise.then(function () {
+                // write empty file with zip file
+                grunt.file.write(memo, "");
+
+                return q.resolve();
+            });
+        }).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.writeln(err);
+            done(false);
+        });
+    });
+
+
+    // task: icu-extract
+    grunt.registerTask("icu-extract", "Extract ICU zip", function () {
+        // requires icu to set "icuZipName" in config
+        grunt.task.requires(["icu"]);
+
+        var done    = this.async(),
+            zipDest = grunt.config("icuZipDest"),
+            zipName = grunt.config("icuZipName"),
+            unzipPromise;
+
+        // unzip to deps/
+        unzipPromise = unzip(zipDest, "deps");
+
+        // remove .zip ext
+        zipName = path.basename(zipName, ".zip");
+
+        unzipPromise.then(function () {
+            // rename version stamped name to cef
+            return rename("deps/" + zipName, "deps/icu");
+        }).then(function () {
+            var memo = path.resolve(process.cwd(), "deps/icu/" + zipName + ".txt"),
+                permissionsPromise;
+            
+            permissionsPromise = q.resolve();
 
             return permissionsPromise.then(function () {
                 // write empty file with zip file
@@ -460,5 +556,5 @@ module.exports = function (grunt) {
     });
 
     // task: setup
-    grunt.registerTask("setup", ["cef", "node", "create-project"]);
+    grunt.registerTask("setup", ["cef", "node", "icu", "create-project"]);
 };

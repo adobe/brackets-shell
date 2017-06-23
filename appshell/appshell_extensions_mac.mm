@@ -32,6 +32,9 @@
 #include <sys/sysctl.h>
 
 #include <sstream>
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+#include <fstream>
 
 #include <unistd.h>
 #include <errno.h>
@@ -644,54 +647,88 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
 {
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
     NSStringEncoding enc;
-    NSError* error = nil;
+    int32 error = NO_ERROR;
     
-    if (encoding == "utf8")
+    NSString* fileContents = nil;
+    if (encoding == "UTF-8") {
         enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING; 
+        NSError* NSerror = nil;
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&NSerror];
+    }
     
-    NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
-    
-    if (fileContents) 
+    if (fileContents)
     {
         contents = [fileContents UTF8String];
         return NO_ERROR;
+    } else {
+        try {
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                }
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (!detectedCharSet.empty()) {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
+                }
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
+            }
+        } catch (...) {
+            error = ERR_CANT_READ;
+        }
     }
     
-    return ConvertNSErrorCode(error, true);
+    return error;
 }
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
 {
-    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
-    NSStringEncoding enc;
-    NSError* error = nil;
+    const char *filenameStr = filename.c_str();
+    int32 error = NO_ERROR;
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     
-    if (encoding == "utf8")
-        enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding != "UTF-8") {
+        try {
+            CharSetEncode ICUEncoder(encoding);
+            ICUEncoder(contents);
+        } catch (...) {
+            error = ERR_CANT_READ;
+        }
+    }
     
-    const NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
-    NSUInteger len = [encodedContents length];
-    NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
+    try {
+        std::ofstream file;
+        file.open (filenameStr);
+        file << contents;
+        file.close();
+    } catch (...) {
+        return ERR_CANT_WRITE;
+    }
     
-    [oStream open];
-    NSInteger res = [oStream write:(const uint8_t*)[encodedContents bytes] maxLength:len];
-    [oStream close];
-    
-    if (res == -1) {
-        error = [oStream streamError];
-    }  
-    
-    return ConvertNSErrorCode(error, false);
+    return error;
 }
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode)
