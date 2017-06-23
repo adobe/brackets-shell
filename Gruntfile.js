@@ -60,6 +60,14 @@ module.exports = function (grunt) {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
             },
+            "icu-linux32": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux32_release.zip"
+            },
+            "icu-linux64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
+            },
             /* mac */
             "cef-mac": {
                 "dest"      : "<%= downloads %>",
@@ -195,12 +203,16 @@ module.exports = function (grunt) {
             "cef": {
                 "src"       : "<%= cef_zip %>",
                 "dest"      : "deps/cef"
-            }
+            },
         },
         "jshint": {
             "all"           : ["Gruntfile.js", "tasks/**/*.js"],
             "options": {
                 "jshintrc"  : ".jshintrc"
+            },
+            "icu": {
+                "src"       : "<%= icu_zip %>",
+                "dest"      : "deps/icu"
             }
         },
         "build": {
@@ -223,6 +235,10 @@ module.exports = function (grunt) {
         },
         "node": {
             "version"       : "6.3.1"
+        },
+        "icu": {
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
+            "version"       : "58"
         }
     });
 

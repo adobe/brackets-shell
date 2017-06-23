@@ -25,6 +25,7 @@
 
 #include "include/cef_browser.h"
 #include "include/cef_v8.h"
+#include <unicode/ucsdet.h>
 
 #include <string>
 
@@ -79,6 +80,31 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
 #endif
 
 
+class CharSetDetect
+{
+	UCharsetDetector* m_charsetDetector_;
+	UErrorCode m_icuError;
+public:
+	CharSetDetect();
+	~CharSetDetect();
+	void operator()(const char* bufferData, size_t bufferLength, std::string &detectedCharSet);
+};
+
+class CharSetEncode
+{
+    UErrorCode m_status;
+    UConverter *m_conv;
+public:
+    CharSetEncode(std::string encoding);
+    ~CharSetEncode();
+    void operator()(std::string &contents);
+};
+
+#if defined(OS_MACOSX) || defined(OS_LINUX)
+void DecodeContents(std::string &contents, const std::string& encoding);
+#endif
+
+
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);
@@ -109,7 +135,7 @@ int32 Rename(ExtensionString oldName, ExtensionString newName);
 
 int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath);
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents);
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents);
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding);
 
