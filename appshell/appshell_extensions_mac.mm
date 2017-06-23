@@ -704,10 +704,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         } catch (...) {
             error = ERR_CANT_READ;
         }
-    } else {
-        if (encoding == "UTF-8" && preserveBOM) {
-            contents = "\xEF\xBB\xBF" + contents;
-        }
+    } else if (encoding == "UTF-8" && preserveBOM) {
+        contents = "\xEF\xBB\xBF" + contents;
     }
     
     try {
