@@ -933,7 +933,7 @@ public:
 
 
 
-int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == L"utf8") {
         encoding = L"UTF-8";
@@ -1008,6 +1008,10 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                             error = ERR_UNSUPPORTED_ENCODING;
                         }
                     }
+                    if (encoding == L"UTF-8" && contents.length() >= 3 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) {
+                        contents.erase(0, 3);
+                        preserveBOM = true;
+                    }
                 }
                 else {
                     error = ConvertWinErrorCode(GetLastError(), false);
@@ -1057,7 +1061,7 @@ static void WideToCharSet(const std::wstring &aUTF16string, long codePage, std::
 
 
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
+int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
     if (encoding == L"utf8") {
         encoding = L"UTF-8";
@@ -1073,6 +1077,9 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         else {
             error = ERR_UNSUPPORTED_ENCODING;
         }
+    }
+    if (encoding == L"UTF-8" && preserveBOM) {
+        contents = "\xEF\xBB\xBF" + contents;
     }
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
