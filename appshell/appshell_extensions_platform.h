@@ -45,6 +45,9 @@ static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
 static const int ERR_FILE_EXISTS            = 10;
 static const int ERR_BROWSER_NOT_INSTALLED  = 11;
+static const int ERR_ENCODE_FILE_FAILED     = 18;
+static const int ERR_DECODE_FILE_FAILED     = 19;
+static const int ERR_UNSUPPORTED_UTF16_ENCODING = 20;
 static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
 #if defined(OS_LINUX)

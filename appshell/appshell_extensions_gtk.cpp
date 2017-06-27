@@ -64,6 +64,8 @@
 #include <linux/sockios.h>
 #include <sys/ioctl.h>
 
+#define UTF8_BOM "\xEF\xBB\xBF"
+
 // Modifiers
 #define MODIFIER_CONTROL "Ctrl"
 #define MODIFIER_ALT "Alt"
@@ -434,8 +436,15 @@ bool has_utf_32_BOM(gchar* data, gsize length)
             has_utf32le_BOM(data ,length));
 }
 
+void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM) {
+    if (contents.length() >= 3 && contents.substr(0,3) == UTF8_BOM) {
+        contents.erase(0,3);
+        preserveBOM = true;
+    }
+}
 
-int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
+
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == "utf8") {
         encoding = "UTF-8";
@@ -456,18 +465,20 @@ int ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& c
             else {
                 detectedCharSet = encoding;
             }
+            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+                return ERR_UNSUPPORTED_UTF16_ENCODING;
+            }
             if (detectedCharSet != "UTF-8") {
-                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-                DecodeContents(contents, detectedCharSet);
-                encoding = detectedCharSet;
+                try {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
+                } catch (...) {
+                    error = ERR_DECODE_FILE_FAILED;
+                }
             }
             else {
-                std::cout << encoding << "\n";
-                if (contents.length() >= 3 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) {
-                    contents.erase(0,3);
-                    std::cout << "Preserve BOM" << "\n";
-                    preserveBOM = true;
-                }
+                CheckAndRemoveUTF8BOM(contents, preserveBOM);
             }
         } catch (...) {
             error = ERR_UNSUPPORTED_ENCODING;
@@ -489,21 +500,22 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
         return ERR_CANT_WRITE;
     }
+
     if (encoding == "utf8") {
         encoding = "UTF-8";
     }
-
+    
     if (encoding != "UTF-8") {
         try {
             CharSetEncode ICUEncoder(encoding);
             ICUEncoder(contents);
         } catch (...) {
-            error = ERR_CANT_READ;
+            error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
-        contents = "\xEF\xBB\xBF" + contents;
+        contents = UTF8_BOM + contents;
     }
-
+    
     try {
         std::ofstream file;
         file.open (filenameStr);
@@ -512,7 +524,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
     } catch (...) {
         return ERR_CANT_WRITE;
     }
-
+    
     return error;
 }
 
