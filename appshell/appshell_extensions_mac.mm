@@ -668,10 +668,17 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             else {
                 detectedCharSet = encoding;
             }
+            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+                return ERR_UNSUPPORTED_UTF16_ENCODING;
+            }
             if (detectedCharSet != "UTF-8") {
-                std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
-                DecodeContents(contents, detectedCharSet);
-                encoding = detectedCharSet;
+                try {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
+                } catch (...) {
+                    error = ERR_DECODE_FILE_FAILED;
+                }
             }
             else {
                 if (contents.length() >= 3 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) {
@@ -702,7 +709,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             CharSetEncode ICUEncoder(encoding);
             ICUEncoder(contents);
         } catch (...) {
-            error = ERR_CANT_READ;
+            error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
         contents = "\xEF\xBB\xBF" + contents;
