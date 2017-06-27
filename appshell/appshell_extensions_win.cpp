@@ -46,6 +46,8 @@
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
 
+#define UTF8_BOM "\xEF\xBB\xBF"
+
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
@@ -1009,9 +1011,8 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                             error = ERR_UNSUPPORTED_ENCODING;
                         }
                     }
-                    if (encoding == L"UTF-8" && contents.length() >= 3 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) {
-                        contents.erase(0, 3);
-                        preserveBOM = true;
+                    if (encoding == L"UTF-8") {
+						CheckAndRemoveUTF8BOM(contents, preserveBOM);
                     }
                 }
                 else {
@@ -1080,7 +1081,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         }
     }
     if (encoding == L"UTF-8" && preserveBOM) {
-        contents = "\xEF\xBB\xBF" + contents;
+		contents = UTF8_BOM + contents;
     }
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
