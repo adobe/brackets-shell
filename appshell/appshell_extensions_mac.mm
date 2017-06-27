@@ -56,6 +56,8 @@
 #include <sys/utsname.h>
 #include <mach-o/arch.h>
 
+#define UTF8_BOM "\xEF\xBB\xBF"
+
 NSMutableArray* pendingOpenFiles;
 
 @interface ChromeWindowsTerminatedObserver : NSObject
@@ -709,7 +711,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
-        contents = "\xEF\xBB\xBF" + contents;
+        contents = UTF8_BOM + contents;
     }
     
     try {
