@@ -681,10 +681,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                 }
             }
             else {
-                if (contents.length() >= 3 && contents[0] == (char)0xEF && contents[1] == (char)0xBB && contents[2] == (char)0xBF) {
-                    contents.erase(0,3);
-                    preserveBOM = true;
-                }
+                CheckAndRemoveUTF8BOM(contents, preserveBOM);
             }
         } catch (...) {
             error = ERR_UNSUPPORTED_ENCODING;
