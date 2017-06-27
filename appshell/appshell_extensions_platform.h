@@ -45,6 +45,9 @@ static const int ERR_NOT_FILE               = 8;
 static const int ERR_NOT_DIRECTORY          = 9;
 static const int ERR_FILE_EXISTS            = 10;
 static const int ERR_BROWSER_NOT_INSTALLED  = 11;
+static const int ERR_ENCODE_FILE_FAILED     = 18;
+static const int ERR_DECODE_FILE_FAILED     = 19;
+static const int ERR_UNSUPPORTED_UTF16_ENCODING = 20;
 static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
 
 #if defined(OS_LINUX)
@@ -104,6 +107,7 @@ public:
 void DecodeContents(std::string &contents, const std::string& encoding);
 #endif
 
+void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM);
 
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
@@ -135,9 +139,9 @@ int32 Rename(ExtensionString oldName, ExtensionString newName);
 
 int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double& size, ExtensionString& realPath);
 
-int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents);
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM);
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding);
+int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM);
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode);
 
