@@ -436,13 +436,6 @@ bool has_utf_32_BOM(gchar* data, gsize length)
             has_utf32le_BOM(data ,length));
 }
 
-void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM) {
-    if (contents.length() >= 3 && contents.substr(0,3) == UTF8_BOM) {
-        contents.erase(0,3);
-        preserveBOM = true;
-    }
-}
-
 
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
