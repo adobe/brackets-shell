@@ -38,27 +38,30 @@
 // Extension error codes. These MUST be in sync with the error
 // codes in appshell_extensions.js
 #if !defined(OS_WIN) // NO_ERROR is defined on windows
-static const int NO_ERROR                   = 0;
+static const int NO_ERROR = 0;
 #endif
-static const int ERR_UNKNOWN                = 1;
-static const int ERR_INVALID_PARAMS         = 2;
-static const int ERR_NOT_FOUND              = 3;
-static const int ERR_CANT_READ              = 4;
-static const int ERR_UNSUPPORTED_ENCODING   = 5;
-static const int ERR_CANT_WRITE             = 6;
-static const int ERR_OUT_OF_SPACE           = 7;
-static const int ERR_NOT_FILE               = 8;
-static const int ERR_NOT_DIRECTORY          = 9;
-static const int ERR_FILE_EXISTS            = 10;
-static const int ERR_BROWSER_NOT_INSTALLED  = 11;
-static const int ERR_CL_TOOLS_CANCELLED     = 12;
-static const int ERR_CL_TOOLS_RMFAILED      = 13;
-static const int ERR_CL_TOOLS_MKDIRFAILED   = 14;
+static const int ERR_UNKNOWN = 1;
+static const int ERR_INVALID_PARAMS = 2;
+static const int ERR_NOT_FOUND = 3;
+static const int ERR_CANT_READ = 4;
+static const int ERR_UNSUPPORTED_ENCODING = 5;
+static const int ERR_CANT_WRITE = 6;
+static const int ERR_OUT_OF_SPACE = 7;
+static const int ERR_NOT_FILE = 8;
+static const int ERR_NOT_DIRECTORY = 9;
+static const int ERR_FILE_EXISTS = 10;
+static const int ERR_BROWSER_NOT_INSTALLED = 11;
+static const int ERR_CL_TOOLS_CANCELLED = 12;
+static const int ERR_CL_TOOLS_RMFAILED = 13;
+static const int ERR_CL_TOOLS_MKDIRFAILED = 14;
 static const int ERR_CL_TOOLS_SYMLINKFAILED = 15;
-static const int ERR_CL_TOOLS_SERVFAILED    = 16;
-static const int ERR_CL_TOOLS_NOTSUPPORTED  = 17;
+static const int ERR_CL_TOOLS_SERVFAILED = 16;
+static const int ERR_CL_TOOLS_NOTSUPPORTED = 17;
+static const int ERR_ENCODE_FILE_FAILED = 18;
+static const int ERR_DECODE_FILE_FAILED = 19;
+static const int ERR_UNSUPPORTED_UTF16_ENCODING = 20;
 
-static const int ERR_PID_NOT_FOUND          = -9999; // negative int to avoid confusion with real PIDs
+static const int ERR_PID_NOT_FOUND = -9999; // negative int to avoid confusion with real PIDs
 
 typedef uint8_t   u8;
 typedef uint16_t  u16;

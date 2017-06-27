@@ -70,6 +70,21 @@ if (!appshell.app) {
      * @constant An unsupported encoding value was specified.
      */
     appshell.fs.ERR_UNSUPPORTED_ENCODING    = 5;
+
+    /**
+     * @constant File could not be encoded.
+     */
+    appshell.fs.ERR_ENCODE_FILE_FAILED      = 18;
+
+    /**
+     * @constant File could not be decoded.
+     */
+    appshell.fs.ERR_DECODE_FILE_FAILED      = 19;
+
+    /**
+     * @constant File was encoded with utf-16
+     */
+    appshell.fs.ERR_UNSUPPORTED_UTF16_ENCODING      = 20;
     
     /**
      * @constant File could not be written.

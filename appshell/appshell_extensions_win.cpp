@@ -858,8 +858,6 @@ CharSetMap charSetMap =
     { "SHIFT_JIS", 932 },
     { "ISO-8859-3", 28593 },
     { "ISO-8859-4", 28594 },
-    { "UTF-16LE", 1200 },
-    { "UTF-16BE", 1201},
     { "WINDOWS-1257", 1257 },
     { "WINDOWS-1258", 1258 },
     { "GB2312", 936 },
@@ -985,6 +983,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
+                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16LE") {
+                                return ERR_UNSUPPORTED_UTF16_ENCODING;
+                            }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                             CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
 
@@ -1001,7 +1002,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                     error = NO_ERROR;
                                 }
                                 catch (...) {
-                                    error = ERR_UNSUPPORTED_ENCODING;
+                                    error = ERR_DECODE_FILE_FAILED;
                                 }
                             }
                         } catch (...) {
@@ -1075,7 +1076,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             WideToCharSet(content, iter->second, contents);
         }
         else {
-            error = ERR_UNSUPPORTED_ENCODING;
+            error = ERR_ENCODE_FILE_FAILED;
         }
     }
     if (encoding == L"UTF-8" && preserveBOM) {
