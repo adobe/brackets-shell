@@ -304,12 +304,14 @@ public:
                 ExtensionString filename = argList->GetString(1);
                 ExtensionString encoding = argList->GetString(2);
                 std::string contents = "";
+                bool preserveBOM = false;
                 
-                error = ReadFile(filename, encoding, contents);
+                error = ReadFile(filename, encoding, contents, preserveBOM);
                 
                 // Set response args for this function
                 responseArgs->SetString(2, contents);
                 responseArgs->SetString(3, encoding);
+                responseArgs->SetBool(4, preserveBOM);
             }
         } else if (message_name == "WriteFile") {
             // Parameters:
@@ -317,10 +319,11 @@ public:
             //  1: string - filename
             //  2: string - data
             //  3: string - encoding
-            if (argList->GetSize() != 4 ||
+            if (argList->GetSize() != 5 ||
                 argList->GetType(1) != VTYPE_STRING ||
                 argList->GetType(2) != VTYPE_STRING ||
-                argList->GetType(3) != VTYPE_STRING) {
+                argList->GetType(3) != VTYPE_STRING ||
+                argList->GetType(4) != VTYPE_BOOL) {
                 error = ERR_INVALID_PARAMS;
             }
             
@@ -328,8 +331,9 @@ public:
                 ExtensionString filename = argList->GetString(1);
                 std::string contents = argList->GetString(2);
                 ExtensionString encoding = argList->GetString(3);
+                bool preserveBOM = argList->GetBool(4);
                 
-                error = WriteFile(filename, contents, encoding);
+                error = WriteFile(filename, contents, encoding, preserveBOM);
                 // No additional response args for this function
             }
         } else if (message_name == "SetPosixPermissions") {

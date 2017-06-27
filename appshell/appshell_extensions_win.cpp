@@ -46,6 +46,8 @@
 #define UNICODE_LEFT_ARROW 0x2190
 #define UNICODE_DOWN_ARROW 0x2193
 
+#define UTF8_BOM "\xEF\xBB\xBF"
+
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
@@ -858,8 +860,6 @@ CharSetMap charSetMap =
     { "SHIFT_JIS", 932 },
     { "ISO-8859-3", 28593 },
     { "ISO-8859-4", 28594 },
-    { "UTF-16LE", 1200 },
-    { "UTF-16BE", 1201},
     { "WINDOWS-1257", 1257 },
     { "WINDOWS-1258", 1258 },
     { "GB2312", 936 },
@@ -933,7 +933,7 @@ public:
 
 
 
-int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == L"utf8") {
         encoding = L"UTF-8";
@@ -985,6 +985,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
+                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16LE") {
+                                return ERR_UNSUPPORTED_UTF16_ENCODING;
+                            }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                             CharSetMap::iterator iter = charSetMap.find(detectedCharSet);
 
@@ -1001,12 +1004,15 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                     error = NO_ERROR;
                                 }
                                 catch (...) {
-                                    error = ERR_UNSUPPORTED_ENCODING;
+                                    error = ERR_DECODE_FILE_FAILED;
                                 }
                             }
                         } catch (...) {
                             error = ERR_UNSUPPORTED_ENCODING;
                         }
+                    }
+                    if (encoding == L"UTF-8") {
+						CheckAndRemoveUTF8BOM(contents, preserveBOM);
                     }
                 }
                 else {
@@ -1057,7 +1063,7 @@ static void WideToCharSet(const std::wstring &aUTF16string, long codePage, std::
 
 
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
+int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
     if (encoding == L"utf8") {
         encoding = L"UTF-8";
@@ -1071,8 +1077,11 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             WideToCharSet(content, iter->second, contents);
         }
         else {
-            error = ERR_UNSUPPORTED_ENCODING;
+            error = ERR_ENCODE_FILE_FAILED;
         }
+    }
+    if (encoding == L"UTF-8" && preserveBOM) {
+		contents = UTF8_BOM + contents;
     }
 
     HANDLE hFile = CreateFile(filename.c_str(), GENERIC_WRITE,
