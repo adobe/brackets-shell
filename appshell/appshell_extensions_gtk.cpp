@@ -437,6 +437,20 @@ bool has_utf_32_BOM(gchar* data, gsize length)
 }
 
 
+void CheckForUTF8(const ExtensionString &filename, std::string &detectedCharSet) {
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    gchar *file_get_contents = NULL;
+    gsize len = 0;
+    if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
+        return;
+    }
+    if (g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
+        detectedCharSet = "UTF-8";
+    }
+}
+
+
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == "utf8") {
@@ -454,6 +468,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             if (encoding == "UTF-8") {
                 CharSetDetect ICUDetector;
                 ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                if (detectedCharSet == "ISO-8859-1") {
+                    CheckForUTF8(filename, detectedCharSet);
+                }
             }
             else {
                 detectedCharSet = encoding;
