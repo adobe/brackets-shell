@@ -649,67 +649,60 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
-
-
-void CheckForUTF8(const ExtensionString &filename, ExtensionString& detectedCharSet) {
-    NSError* NSError = nil;
-    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&NSError];
-    
-    if (fileContents){
-        detectedCharSet = "UTF-8";
-    }
-}
-
-
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == "utf8") {
         encoding = "UTF-8";
     }
+    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
+    
+    NSStringEncoding enc;
     int32 error = NO_ERROR;
-
-    try {
-        std::ifstream file(filename.c_str());
-        std::stringstream ss;
-        ss << file.rdbuf();
-        contents = ss.str();
-        std::string detectedCharSet;
+    
+    NSString* fileContents = nil;
+    if (encoding == "UTF-8") {
+        enc = NSUTF8StringEncoding;
+        NSError* NSerror = nil;
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&NSerror];
+    }
+    
+    if (fileContents)
+    {
+        contents = [fileContents UTF8String];
+        CheckForUTF8BOM(filename, preserveBOM);
+        return NO_ERROR;
+    } else {
         try {
-            if (encoding == "UTF-8") {
-                CharSetDetect ICUDetector;
-                ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
-                if (detectedCharSet == "ISO-8859-1") {
-                    CheckForUTF8(filename, detectedCharSet);
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                 }
-            }
-            else {
-                detectedCharSet = encoding;
-            }
-            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
-                return ERR_UNSUPPORTED_UTF16_ENCODING;
-            }
-            if (detectedCharSet != "UTF-8") {
-                try {
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (!detectedCharSet.empty()) {
                     std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                     DecodeContents(contents, detectedCharSet);
                     encoding = detectedCharSet;
-                } catch (...) {
-                    error = ERR_DECODE_FILE_FAILED;
                 }
-            }
-            else {
-                CheckAndRemoveUTF8BOM(contents, preserveBOM);
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
             }
         } catch (...) {
-            error = ERR_UNSUPPORTED_ENCODING;
+            error = ERR_CANT_READ;
         }
-    } catch (...) {
-        error = ERR_CANT_READ;
     }
     
-    return error;
-}
+    return error;}
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
