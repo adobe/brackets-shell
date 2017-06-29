@@ -727,6 +727,9 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         std::ofstream file;
         file.open (filenameStr);
         file << contents;
+        if (file.fail()) {
+            error = ERR_CANT_WRITE;
+        }
         file.close();
     } catch (...) {
         return ERR_CANT_WRITE;
