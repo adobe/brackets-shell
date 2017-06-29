@@ -437,66 +437,59 @@ bool has_utf_32_BOM(gchar* data, gsize length)
 }
 
 
-void CheckForUTF8(const ExtensionString &filename, std::string &detectedCharSet) {
-    int error = NO_ERROR;
-    GError *gerror = NULL;
-    gchar *file_get_contents = NULL;
-    gsize len = 0;
-    if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
-        return;
-    }
-    if (g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
-        detectedCharSet = "UTF-8";
-    }
-}
-
-
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == "utf8") {
         encoding = "UTF-8";
     }
-    int32 error = NO_ERROR;
 
-    try {
-        std::ifstream file(filename.c_str());
-        std::stringstream ss;
-        ss << file.rdbuf();
-        contents = ss.str();
-        std::string detectedCharSet;
-        try {
-            if (encoding == "UTF-8") {
-                CharSetDetect ICUDetector;
-                ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
-                if (detectedCharSet == "ISO-8859-1") {
-                    CheckForUTF8(filename, detectedCharSet);
+    int error = NO_ERROR;
+    GError *gerror = NULL;
+    gchar *file_get_contents = NULL;
+    gsize len = 0;
+    
+    if (!g_file_get_contents(filename.c_str(), &file_get_contents, &len, &gerror)) {
+        error = GErrorToErrorCode(gerror);
+        if (error == ERR_NOT_FILE) {
+            error = ERR_CANT_READ;
+        }
+    } else {
+        if (has_utf_32_BOM(file_get_contents, len)) {
+            error = ERR_UNSUPPORTED_ENCODING;
+        } else  if (has_utf8_BOM(file_get_contents, len)) {
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            contents.erase(0, 3);
+            preserveBOM = true;
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror) || encoding != "UTF-8") {
+            contents.assign(file_get_contents, len);
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
                 }
-            }
-            else {
-                detectedCharSet = encoding;
-            }
-            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
-                return ERR_UNSUPPORTED_UTF16_ENCODING;
-            }
-            if (detectedCharSet != "UTF-8") {
-                try {
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (!detectedCharSet.empty()) {
                     std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                     DecodeContents(contents, detectedCharSet);
                     encoding = detectedCharSet;
-                } catch (...) {
-                    error = ERR_DECODE_FILE_FAILED;
                 }
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
             }
-            else {
-                CheckAndRemoveUTF8BOM(contents, preserveBOM);
-            }
-        } catch (...) {
-            error = ERR_UNSUPPORTED_ENCODING;
+        } else {
+            contents.assign(file_get_contents, len);
         }
-    } catch (...) {
-        error = ERR_CANT_READ;
+        g_free(file_get_contents);
     }
-    
     return error;
 }
 
@@ -530,6 +523,9 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         std::ofstream file;
         file.open (filenameStr);
         file << contents;
+        if (file.fail()) {
+            error = ERR_CANT_WRITE;
+        }
         file.close();
     } catch (...) {
         return ERR_CANT_WRITE;
