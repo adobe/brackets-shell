@@ -1012,7 +1012,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                         }
                     }
                     if (encoding == L"UTF-8") {
-						CheckAndRemoveUTF8BOM(contents, preserveBOM);
+                        CheckAndRemoveUTF8BOM(contents, preserveBOM);
                     }
                 }
                 else {
