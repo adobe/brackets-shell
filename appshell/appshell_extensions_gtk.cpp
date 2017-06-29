@@ -482,7 +482,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                     DecodeContents(contents, detectedCharSet);
                     encoding = detectedCharSet;
                 }
-                else {
+                else if (detectedCharSet.empty()) {
                     error = ERR_UNSUPPORTED_ENCODING;
                 }
             } catch (...) {
