@@ -985,7 +985,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
-                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16LE") {
+                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
                                 return ERR_UNSUPPORTED_UTF16_ENCODING;
                             }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);

@@ -649,6 +649,19 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
+
+
+void CheckForUTF8(const ExtensionString &filename, ExtensionString& detectedCharSet) {
+    NSError* NSError = nil;
+    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
+    NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&NSError];
+    
+    if (fileContents){
+        detectedCharSet = "UTF-8";
+    }
+}
+
+
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == "utf8") {
@@ -666,6 +679,9 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             if (encoding == "UTF-8") {
                 CharSetDetect ICUDetector;
                 ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                if (detectedCharSet == "ISO-8859-1") {
+                    CheckForUTF8(filename, detectedCharSet);
+                }
             }
             else {
                 detectedCharSet = encoding;
