@@ -70,6 +70,21 @@ if (!appshell.app) {
      * @constant An unsupported encoding value was specified.
      */
     appshell.fs.ERR_UNSUPPORTED_ENCODING    = 5;
+
+    /**
+     * @constant File could not be encoded.
+     */
+    appshell.fs.ERR_ENCODE_FILE_FAILED      = 18;
+
+    /**
+     * @constant File could not be decoded.
+     */
+    appshell.fs.ERR_DECODE_FILE_FAILED      = 19;
+
+    /**
+     * @constant File was encoded with utf-16
+     */
+    appshell.fs.ERR_UNSUPPORTED_UTF16_ENCODING      = 20;
     
     /**
      * @constant File could not be written.
@@ -394,8 +409,8 @@ if (!appshell.app) {
      * @return None. This is an asynchronous call that sends all return information to the callback.
      */
     native function WriteFile();
-    appshell.fs.writeFile = function (path, data, encoding, callback) {
-        WriteFile(callback || _dummyCallback, path, data, encoding);
+    appshell.fs.writeFile = function (path, data, encoding, preserveBOM, callback) {
+        WriteFile(callback || _dummyCallback, path, data, encoding, preserveBOM);
     };
     
     /**
@@ -863,13 +878,26 @@ if (!appshell.app) {
      *
      * @param {number}
      *
-     * @return int. The remote debugging port used by the appshell.
+     * @return none.
      */
      native function InstallCommandLineTools();
      appshell.app.installCommandLine = function (callback) {
         InstallCommandLineTools(callback);
      };
- 
+
+     /**
+      * Get hash of the machine based on various parameters like
+      * network interfaces, CPU ID, volume serial number e.t.c
+      *
+      * @param {none}
+      *
+      * @return None. This is an asynchronous call that sends all return information to the callback.
+      */
+     native function GetMachineHash();
+     appshell.app.getMachineHash = function (callback) {
+         GetMachineHash(callback || _dummyCallback);
+     };
+
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
     brackets = appshell;

@@ -29,6 +29,8 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
+#include "appshell_extensions.h"
+#include "native_menu_model.h"
 #include "client_handler.h"
 
 #include <errno.h>
@@ -38,6 +40,54 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
+#include <gdk/gdkkeysyms.h>
+#include <algorithm>
+#include <sstream>
+#include <vector>
+#include <iostream>
+
+// Modifiers
+#define MODIFIER_CONTROL "Ctrl"
+#define MODIFIER_ALT "Alt"
+#define MODIFIER_SHIFT "Shift"
+
+// Keys
+#define KEY_ENTER "Enter"
+#define KEY_UP_ARROW "Up"
+#define KEY_UNICODE_UP_ARROW "\u2191"
+#define KEY_DOWN_ARROW "Down"
+#define KEY_UNICODE_DOWN_ARROW "\u2193"
+#define KEY_RIGHT_ARROW "Right"
+#define KEY_LEFT_ARROW "Left"
+#define KEY_SPACE "Space"
+#define KEY_PAGE_UP "PageUp"
+#define KEY_PAGE_DOWN "PageDown"
+#define KEY_OPEN_SQUARE_BRACE "["
+#define KEY_CLOSE_SQUARE_BRACE "]"
+#define KEY_PLUS "+"
+#define KEY_MINUS "−"
+#define KEY_DOT "."
+#define KEY_BACK_SLASH "\\"
+#define KEY_SLASH "/"
+#define KEY_BACK_QUOTE "`"
+#define KEY_COMMA ","
+
+
+extern CefRefPtr<ClientHandler> g_handler;
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+
+#include <sys/types.h>
+#include <linux/if.h>
+#include <linux/sockios.h>
+#include <sys/ioctl.h>
 
 GtkWidget* _menuWidget;
 
@@ -738,57 +788,237 @@ int32 GetPendingFilesToOpen(ExtensionString& files)
 {
 }
 
-GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
+static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
 {
     GtkWidget* window = (GtkWidget*)getMenuParent(browser);
     GtkWidget* widget;
     GList *children, *iter;
+    GtkWidget* menuBar = NULL;
 
     children = gtk_container_get_children(GTK_CONTAINER(window));
     for(iter = children; iter != NULL; iter = g_list_next(iter)) {
         widget = (GtkWidget*)iter->data;
 
-        if (GTK_IS_MENU_BAR(widget))
-            return widget;
+        if (GTK_IS_MENU_BAR(widget)) {
+            menuBar = widget;
+            break;
+        }
     }
 
-    return NULL;
+    g_list_free(children);
+
+    return menuBar;
+}
+
+static int GetPosition(const ExtensionString& positionString, const ExtensionString& relativeId,
+                       GtkWidget* container, NativeMenuModel& model)
+{
+    if (positionString == "" || positionString == "last")
+        return -1;
+    else if (positionString == "first")
+        return 0;
+    else if (!relativeId.empty()) {
+        int relativeTag = model.getTag(relativeId);
+        GtkWidget* relativeMenuItem = (GtkWidget*) model.getOsItem(relativeTag);
+        int position = 0;
+        GList* children = gtk_container_get_children(GTK_CONTAINER(container));
+        GList* iter;
+        for (iter = children; iter != NULL; iter = g_list_next(iter)) {
+            if (iter->data == relativeMenuItem)
+                break;
+            position++;
+        }
+        if (iter == NULL)
+            position = -1;
+        else if (positionString == "before")
+            ;
+        else if (positionString == "after")
+            position++;
+        else if (positionString == "firstInSection") {
+            for (; iter != NULL; iter = g_list_previous(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position--;
+            }
+            position++;
+        }
+        else if (positionString == "lastInSection") {
+            for (; iter != NULL; iter = g_list_next(iter)) {
+                if (GTK_IS_SEPARATOR_MENU_ITEM(iter->data))
+                    break;
+                position++;
+            }
+        }
+        else
+            position = -1;
+        g_list_free(children);
+        return position;
+    }
+    else
+        return -1;
 }
 
 int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
-              ExtensionString position, ExtensionString relativeId)
+              ExtensionString positionString, ExtensionString relativeId)
 {
-    // if (tag == kTagNotFound) {
-    //     tag = NativeMenuModel::getInstance(getMenuParent(browser)).getOrCreateTag(command, ExtensionString());
-    // } else {
-    //     // menu already there
-    //     return NO_ERROR;
-    // }
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        tag = model.getOrCreateTag(command, ExtensionString());
+    } else {
+        // menu is already there
+        return NO_ERROR;
+    }
 
     GtkWidget* menuBar = GetMenuBar(browser);
     GtkWidget* menuWidget = gtk_menu_new();
     GtkWidget* menuHeader = gtk_menu_item_new_with_label(title.c_str());
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menuHeader), menuWidget);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
+    model.setOsItem(tag, menuHeader);
+    int position = GetPosition(positionString, relativeId, menuBar, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuBar), menuHeader, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuHeader);
     gtk_widget_show(menuHeader);
-
-    // FIXME add lookup for menu widgets
-    _menuWidget = menuWidget;
     
     return NO_ERROR;
 }
 
-void FakeCallback() {
+static void Callback(GtkMenuItem* menuItem, gpointer userData) {
+    if (g_handler.get() && g_handler->GetBrowserId()) {
+        int tag = GPOINTER_TO_INT(userData);
+        ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(tag);
+        CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+        g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+    }
+}
+
+
+static ExtensionString GetDisplayKeyString(const ExtensionString& keyStr)
+{
+    ExtensionString result = keyStr;
+
+    // We get a keyStr that looks like "Ctrl-O", which is the format we
+    // need for the accelerator table. For displaying in the menu, though,
+    // we have to change it to "Ctrl+O". Careful not to change the final
+    // character, though, so "Ctrl--" ends up as "Ctrl+-".
+    if (result.size() > 0) {
+        replace(result.begin(), result.end() - 1, '-', '+');
+    }
+    return result;
+}
+
+
+static int32 ParseShortcut(CefRefPtr<CefBrowser> browser, GtkWidget* entry, ExtensionString& key, ExtensionString& commandId) {
+    if (key.size()) {
+        GdkModifierType modifier = GdkModifierType(0);
+        guint keyVal = 0;
+        GtkAccelGroup *accel_group = NULL;
+        accel_group = gtk_accel_group_new();
+
+        std::vector<std::string> tokens;
+        std::istringstream f(key);
+        std::string s;
+        while (getline(f, s, '-')) {
+            tokens.push_back(s);
+        }
+        std::string shortcut = "";
+        // convert shortcut format
+        // e.g. Ctrl+A converts to <Ctrl>A whose entry is stored in accelerator table
+        int numTokens = tokens.size();
+        for (int i=0;i<numTokens;i++) {
+            if (i != numTokens - 1) {
+                shortcut += "<";
+            }
+            shortcut += tokens[i];
+            if (i != numTokens - 1) {
+                shortcut += ">";
+            }
+        }
+        gchar* val = (gchar*)shortcut.c_str();
+        gtk_accelerator_parse(val, &keyVal, &modifier);
+
+        // Fallback
+        if (!(keyVal)) {
+            for (int i=0;i<numTokens;i++) {
+                if (tokens[i] == MODIFIER_CONTROL) {
+                    modifier = GdkModifierType(modifier | GDK_CONTROL_MASK);
+                } else if (tokens[i] == MODIFIER_ALT) {
+                    modifier = GdkModifierType(modifier | GDK_MOD1_MASK);
+                } else if (tokens[i] == MODIFIER_SHIFT) {
+                    modifier = GdkModifierType(modifier | GDK_SHIFT_MASK);
+                } else if (tokens[i] == KEY_ENTER) {
+                    keyVal = GDK_KEY_KP_Enter;
+                } else if (tokens[i] == KEY_UP_ARROW || tokens[i] == KEY_UNICODE_UP_ARROW) {
+                    keyVal = GDK_KEY_uparrow;
+                } else if (tokens[i] == KEY_DOWN_ARROW || tokens[i] == KEY_UNICODE_DOWN_ARROW) {
+                    keyVal = GDK_KEY_downarrow;
+                } else if (tokens[i] == KEY_RIGHT_ARROW) {
+                    keyVal = GDK_KEY_rightarrow;
+                } else if (tokens[i] == KEY_LEFT_ARROW) {
+                    keyVal = GDK_KEY_leftarrow;
+                } else if (tokens[i] == KEY_SPACE) {
+                    keyVal = GDK_KEY_KP_Space;
+                } else if (tokens[i] == KEY_PAGE_UP) {
+                    keyVal = GDK_KEY_Page_Up;
+                } else if (tokens[i] == KEY_PAGE_DOWN) {
+                    keyVal = GDK_KEY_Page_Down;
+                } else if (tokens[i] == KEY_OPEN_SQUARE_BRACE || tokens[i] == KEY_CLOSE_SQUARE_BRACE || tokens[i] == KEY_PLUS || tokens[i] == KEY_DOT || tokens[i] == KEY_COMMA || tokens[i] == KEY_BACK_SLASH || tokens[i] == KEY_SLASH || tokens[i] == KEY_BACK_QUOTE) {
+                    keyVal = tokens[i][0];
+                } else if (tokens[i] == KEY_MINUS) {
+                    keyVal = GDK_KEY_minus;
+                }
+            }
+        }
+        if (keyVal) {
+            gtk_widget_add_accelerator(entry, "activate", accel_group, keyVal, modifier, GTK_ACCEL_VISIBLE);
+        } else if (shortcut.size()) {
+            // If fallback also fails, then
+            // we append the shorcut to menu title
+            // e.g. MENU_TITLE (Ctrl + A)
+            ExtensionString menuTitle;
+            GetMenuTitle(browser, commandId, menuTitle);
+            menuTitle +=  "\t( " + GetDisplayKeyString(key) + " )";
+            gtk_menu_item_set_label(GTK_MENU_ITEM(entry), menuTitle.c_str());
+        }
+    }
+    return NO_ERROR;
 }
 
 int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
                   ExtensionString command, ExtensionString key, ExtensionString displayStr,
-                  ExtensionString position, ExtensionString relativeId)
+                  ExtensionString positionString, ExtensionString relativeId)
 {
-    GtkWidget* entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", FakeCallback, NULL);
-    // FIXME add lookup for menu widgets
-    gtk_menu_shell_append(GTK_MENU_SHELL(_menuWidget), entry);
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int parentTag = model.getTag(parentCommand);
+    if (parentTag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        tag = model.getOrCreateTag(command, parentCommand);
+    } else {
+        return NO_ERROR;
+    }
+
+    GtkWidget* entry;
+    if (itemTitle == "---")
+        entry = gtk_separator_menu_item_new();
+    else
+        entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+    g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+    ExtensionString commandId = model.getCommandId(tag);
+    model.setOsItem(tag, entry);
+    ParseShortcut(browser, entry, key, commandId);
+    GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
+    GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
+    int position = GetPosition(positionString, relativeId, menuWidget, model);
+    if (position >= 0)
+        gtk_menu_shell_insert(GTK_MENU_SHELL(menuWidget), entry, position);
+    else
+        gtk_menu_shell_append(GTK_MENU_SHELL(menuWidget), entry);
     gtk_widget_show(entry);
 
     return NO_ERROR;
@@ -796,11 +1026,19 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
 int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
-    return NO_ERROR;
+    // works for menu and menu item
+    return RemoveMenuItem(browser, commandId);
 }
 
 int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    model.removeMenuItem(commandId);
+    gtk_widget_destroy(menuItem);
     return NO_ERROR;
 }
 
@@ -809,18 +1047,63 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    // TODO: Implement functionality for checked
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(command);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    gtk_widget_set_sensitive(menuItem, enabled);
+    return NO_ERROR;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    ExtensionString shortcut;
+    GetMenuTitle(browser, commandId, shortcut);
+    size_t pos = shortcut.find("\t");
+    if (pos != -1) {
+        shortcut = shortcut.substr(pos);
+    } else {
+        shortcut = "";
+    }
+
+    ExtensionString newTitle = menuTitle;
+    if (shortcut.length() > 0) {
+         newTitle += shortcut;
+    }
+    gtk_menu_item_set_label(GTK_MENU_ITEM(menuItem), newTitle.c_str());
     return NO_ERROR;
 }
 
 int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle)
 {
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
+    if (tag == kTagNotFound)
+        return ERR_NOT_FOUND;
+    GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    menuTitle = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
     return NO_ERROR;
 }
 
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
+    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int32 tag = model.getTag(commandId);
+    if (tag == kTagNotFound) {
+        return ERR_NOT_FOUND;
+    }
+    GtkWidget* entry = (GtkWidget*) model.getOsItem(tag);
+    ParseShortcut(browser, entry, shortcut, commandId);
     return NO_ERROR;
 }
 
@@ -833,4 +1116,191 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
 {
     // TODO
 }
+
+// The below code is from https://oroboro.com/unique-machine-fingerprint/ and modified
+// Original Author: Rafael
+
+//---------------------------------get MAC addresses ---------------------------------
+// we just need this for purposes of unique machine id. So any one or two
+// mac's is fine.
+
+const char* GetMachineName()
+{
+    static struct utsname u;
+
+    if ( uname( &u ) < 0 )
+    {
+        assert(0);
+        return "unknown";
+    }
+
+    return u.nodename;
+}
+
+u16 HashMacAddress( u8* mac )
+{
+    u16 hash = 0;
+
+    for ( u32 i = 0; i < 6; i++ )
+    {
+        hash += ( mac[i] << (( i & 1 ) * 8 ));
+    }
+    return hash;
+}
+
+void GetMacHash( u16& mac1, u16& mac2 )
+{
+    mac1 = 0;
+    mac2 = 0;
+
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP );
+    if ( sock < 0 ) return;
+
+    // enumerate all IP addresses of the system
+    struct ifconf conf;
+    char ifconfbuf[ 128 * sizeof(struct ifreq)  ];
+    memset( ifconfbuf, 0, sizeof( ifconfbuf ));
+    conf.ifc_buf = ifconfbuf;
+    conf.ifc_len = sizeof( ifconfbuf );
+    if ( ioctl( sock, SIOCGIFCONF, &conf ))
+    {
+        assert(0);
+        return;
+    }
+
+    // get MAC address
+    bool foundMac1 = false;
+    struct ifreq* ifr;
+    for ( ifr = conf.ifc_req; (s8*)ifr < (s8*)conf.ifc_req + conf.ifc_len; ifr++ )
+    {
+        if ( ifr->ifr_addr.sa_data == (ifr+1)->ifr_addr.sa_data )
+            continue;  // duplicate, skip it
+
+        if ( ioctl( sock, SIOCGIFFLAGS, ifr ))
+            continue;  // failed to get flags, skip it
+        if ( ioctl( sock, SIOCGIFHWADDR, ifr ) == 0 )
+        {
+            if ( !foundMac1 )
+            {
+                foundMac1 = true;
+                mac1 = HashMacAddress( (u8*)&(ifr->ifr_addr.sa_data));
+            } else {
+                mac2 = HashMacAddress( (u8*)&(ifr->ifr_addr.sa_data));
+                break;
+            }
+        }
+    }
+
+    close( sock );
+
+    // sort the mac addresses. We don't want to invalidate
+    // both macs if they just change order.
+    if ( mac1 > mac2 )
+    {
+        u16 tmp = mac2;
+        mac2 = mac1;
+        mac1 = tmp;
+    }
+}
+
+u16 GetVolumeHash()
+{
+    // we don't have a 'volume serial number' like on windows.
+    // Lets hash the system name instead.
+    u8* sysname = (u8*)GetMachineName();
+    u16 hash = 0;
+
+    for ( u32 i = 0; sysname[i]; i++ )
+        hash += ( sysname[i] << (( i & 1 ) * 8 ));
+    
+    return hash;
+}
+
+
+
+static void GetCPUId( u32* p, u32 ax )
+{
+    __asm __volatile
+    (   "movl %%ebx, %%esi\n\t"
+     "cpuid\n\t"
+     "xchgl %%ebx, %%esi"
+     : "=a" (p[0]), "=S" (p[1]),
+     "=c" (p[2]), "=d" (p[3])
+     : "0" (ax)
+     );
+}
+
+u16 GetCPUHash()
+{
+    u32 cpuinfo[4] = { 0, 0, 0, 0 };
+    GetCPUId( cpuinfo, 0 );
+    u16 hash = 0;
+    u32* ptr = (&cpuinfo[0]);
+    for ( u32 i = 0; i < 4; i++ )
+        hash += (ptr[i] & 0xFFFF) + ( ptr[i] >> 16 );
+
+    return hash;
+}
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void Smear(u16* id)
+{
+    for (u32 i = 0; i < 5; i++)
+        for (u32 j = i; j < 5; j++)
+            if (i != j)
+                id[i] ^= id[j];
+
+    for (u32 i = 0; i < 5; i++)
+        id[i] ^= mask[i];
+}
+
+static u16* ComputeSystemUniqueID()
+{
+    static u16 id[5] = { 0 };
+    static bool computed = false;
+
+    if (computed) return id;
+
+    // produce a number that uniquely identifies this system.
+    id[0] = GetCPUHash();
+    id[1] = GetVolumeHash();
+    GetMacHash(id[2], id[3]);
+
+    // fifth block is some check digits
+    id[4] = 0;
+    for (u32 i = 0; i < 4; i++)
+        id[4] += id[i];
+
+    Smear(id);
+
+    computed = true;
+    return id;
+}
+
+std::string GetSystemUniqueID()
+{
+    // get the name of the computer
+    std::string buf;
+
+    u16* id = ComputeSystemUniqueID();
+    for (u32 i = 0; i < 5; i++)
+    {
+        char num[16];
+        snprintf(num, 16, "%x", id[i]);
+        if (i > 0) {
+            buf = buf + "-";
+        }
+        switch (strlen(num))
+        {
+            case 1: buf = buf + "000"; break;
+            case 2: buf = buf + "00";  break;
+            case 3: buf = buf + "0";   break;
+        }
+        buf = buf + num;
+    }
+
+    return buf;
+}
+
 

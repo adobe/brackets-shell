@@ -32,6 +32,31 @@
 #include <sys/sysctl.h>
 
 #include <sstream>
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+#include <fstream>
+
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <net/if_dl.h>
+#include <ifaddrs.h>
+#include <net/if_types.h>
+#include <sys/resource.h>
+#include <sys/utsname.h>
+#include <mach-o/arch.h>
+
+#define UTF8_BOM "\xEF\xBB\xBF"
 
 NSMutableArray* pendingOpenFiles;
 
@@ -624,54 +649,102 @@ int32 GetFileInfo(ExtensionString filename, uint32& modtime, bool& isDir, double
     return ConvertNSErrorCode(error, true);
 }
 
-int32 ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     NSString* path = [NSString stringWithUTF8String:filename.c_str()];
     
     NSStringEncoding enc;
-    NSError* error = nil;
+    int32 error = NO_ERROR;
     
-    if (encoding == "utf8")
+    NSString* fileContents = nil;
+    if (encoding == "UTF-8") {
         enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING; 
-    
-    NSString* fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&error];
-    
-    if (fileContents) 
-    {
-        contents = [fileContents UTF8String];
-        return NO_ERROR;
+        NSError* NSerror = nil;
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&NSerror];
     }
     
-    return ConvertNSErrorCode(error, true);
-}
+    if (fileContents)
+    {
+        contents = [fileContents UTF8String];
+        // We check if the file contains BOM or not
+        // if yes, then we set preserveBOM to true
+        // Please note we try to read first 3 characters
+        // again to check for BOM
+        CheckForUTF8BOM(filename, preserveBOM);
+        return NO_ERROR;
+    } else {
+        try {
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                }
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+                    return ERR_UNSUPPORTED_UTF16_ENCODING;
+                }
+                if (!detectedCharSet.empty()) {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
+                }
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
+            }
+        } catch (...) {
+            error = ERR_CANT_READ;
+        }
+    }
+    
+    return error;}
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
+int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
-    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
-    NSString* contentsStr = [NSString stringWithUTF8String:contents.c_str()];
-    NSStringEncoding enc;
-    NSError* error = nil;
+    const char *filenameStr = filename.c_str();
+    int32 error = NO_ERROR;
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
     
-    if (encoding == "utf8")
-        enc = NSUTF8StringEncoding;
-    else
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding != "UTF-8") {
+        try {
+            CharSetEncode ICUEncoder(encoding);
+            ICUEncoder(contents);
+        } catch (...) {
+            error = ERR_ENCODE_FILE_FAILED;
+        }
+    } else if (encoding == "UTF-8" && preserveBOM) {
+        // The file originally contained BOM chars
+        // so we prepend BOM chars
+        contents = UTF8_BOM + contents;
+    }
     
-    const NSData* encodedContents = [contentsStr dataUsingEncoding:enc];
-    NSUInteger len = [encodedContents length];
-    NSOutputStream* oStream = [NSOutputStream outputStreamToFileAtPath:path append:NO];
+    try {
+        std::ofstream file;
+        file.open (filenameStr);
+        file << contents;
+        if (file.fail()) {
+            error = ERR_CANT_WRITE;
+        }
+        file.close();
+    } catch (...) {
+        return ERR_CANT_WRITE;
+    }
     
-    [oStream open];
-    NSInteger res = [oStream write:(const uint8_t*)[encodedContents bytes] maxLength:len];
-    [oStream close];
-    
-    if (res == -1) {
-        error = [oStream streamError];
-    }  
-    
-    return ConvertNSErrorCode(error, false);
+    return error;
 }
 
 int32 SetPosixPermissions(ExtensionString filename, int32 mode)
@@ -1229,6 +1302,11 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
+{
+    return NO_ERROR;
+}
+
 int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, ExtensionString itemTitle) {
     NSString* itemTitleStr = [[[NSString alloc] initWithUTF8String:itemTitle.c_str()] autorelease];
     int32 tag = NativeMenuModel::getInstance(getMenuParent(browser)).getTag(command);
@@ -1674,4 +1752,161 @@ ERROR_B:
     free(procargs);
 ERROR_A:
     return ERR_UNKNOWN;
+}
+
+
+// The below code is from https://oroboro.com/unique-machine-fingerprint/ and modified
+// Original Author: Rafael
+
+//---------------------------------get MAC addresses ---------------------------------
+// we just need this for purposes of unique machine id. So any one or two
+// mac's is fine.
+
+u16 HashMacAddress( u8* mac )
+{
+    u16 hash = 0;
+    
+    for ( u32 i = 0; i < 6; i++ )
+    {
+        hash += ( mac[i] << (( i & 1 ) * 8 ));
+    }
+    return hash;
+}
+
+void GetMacHash( u16& mac1, u16& mac2 )
+{
+    mac1 = 0;
+    mac2 = 0;
+    
+    
+    struct ifaddrs* ifaphead;
+    if ( getifaddrs( &ifaphead ) != 0 )
+        return;
+    
+    // iterate over the net interfaces
+    bool foundMac1 = false;
+    struct ifaddrs* ifap;
+    for ( ifap = ifaphead; ifap; ifap = ifap->ifa_next )
+    {
+        struct sockaddr_dl* sdl = (struct sockaddr_dl*)ifap->ifa_addr;
+        if ( sdl && ( sdl->sdl_family == AF_LINK ) && ( sdl->sdl_type == IFT_ETHER ))
+        {
+            if ( !foundMac1 )
+            {
+                foundMac1 = true;
+                mac1 = HashMacAddress( (u8*)(LLADDR(sdl))); //sdl->sdl_data) + sdl->sdl_nlen) );
+            } else {
+                mac2 = HashMacAddress( (u8*)(LLADDR(sdl))); //sdl->sdl_data) + sdl->sdl_nlen) );
+                break;
+            }
+        }
+    }
+    
+    freeifaddrs( ifaphead );
+    
+    
+    // sort the mac addresses. We don't want to invalidate
+    // both macs if they just change order.
+    if ( mac1 > mac2 )
+    {
+        u16 tmp = mac2;
+        mac2 = mac1;
+        mac1 = tmp;
+    }
+}
+
+const char* GetMachineName()
+{
+    static struct utsname u;
+
+    if ( uname( &u ) < 0 )
+    {
+        assert(0);
+        return "unknown";
+    }
+
+    return u.nodename;
+}
+
+u16 GetVolumeHash()
+{
+    // we don't have a 'volume serial number' like on windows.
+    // Lets hash the system name instead.
+    u8* sysname = (u8*)GetMachineName();
+    u16 hash = 0;
+    
+    for ( u32 i = 0; sysname[i]; i++ )
+        hash += ( sysname[i] << (( i & 1 ) * 8 ));
+    
+    return hash;
+}
+
+u16 GetCPUHash()
+{
+    const NXArchInfo* info = NXGetLocalArchInfo();
+    u16 val = 0;
+    val += (u16)info->cputype;
+    val += (u16)info->cpusubtype;
+    return val;
+}
+
+u16 mask[5] = { 0x4e25, 0xf4a1, 0x5437, 0xab41, 0x0000 };
+
+static void Smear(u16* id)
+{
+	for (u32 i = 0; i < 5; i++)
+		for (u32 j = i; j < 5; j++)
+			if (i != j)
+				id[i] ^= id[j];
+
+	for (u32 i = 0; i < 5; i++)
+		id[i] ^= mask[i];
+}
+
+static u16* ComputeSystemUniqueID()
+{
+	static u16 id[5] = {0};
+	static bool computed = false;
+
+	if (computed) return id;
+
+	// produce a number that uniquely identifies this system.
+	id[0] = GetCPUHash();
+	id[1] = GetVolumeHash();
+	GetMacHash(id[2], id[3]);
+
+	// fifth block is some check digits
+	id[4] = 0;
+	for (u32 i = 0; i < 4; i++)
+		id[4] += id[i];
+
+	Smear(id);
+
+	computed = true;
+	return id;
+}
+
+std::string GetSystemUniqueID()
+{
+	// get the name of the computer
+	std::string buf;
+
+	u16* id = ComputeSystemUniqueID();
+	for (u32 i = 0; i < 5; i++)
+	{
+		char num[16];
+		snprintf(num, 16, "%x", id[i]);
+		if (i > 0) {
+			buf = buf + "-";
+		}
+		switch (strlen(num))
+		{
+		case 1: buf = buf + "000"; break;
+		case 2: buf = buf + "00";  break;
+		case 3: buf = buf + "0";   break;
+		}
+		buf = buf + num;
+	}
+	
+	return buf;
 }

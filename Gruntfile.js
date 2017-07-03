@@ -71,6 +71,10 @@ module.exports = function (grunt) {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-darwin-x64.tar.gz"
             },
+            "icu-mac": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_macosx64.zip"
+            },
             /* win */
             "cef-win": {
                 "dest"      : "<%= downloads %>",
@@ -83,6 +87,10 @@ module.exports = function (grunt) {
             "node-win": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
+            },
+            "icu-win": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_windows32.zip"
             }
         },
         "clean": {
@@ -112,6 +120,9 @@ module.exports = function (grunt) {
                             "devtools_resources.pak",
                             "icudtl.dat",
                             "libcef.dll",
+                            "icuuc58.dll",
+                            "icuin58.dll",
+                            "icudt58.dll",
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "command/**"
@@ -202,6 +213,10 @@ module.exports = function (grunt) {
             "cef": {
                 "src"       : "<%= cef_zip %>",
                 "dest"      : "deps/cef"
+            },
+            "icu": {
+                "src"       : "<%= icu_zip %>",
+                "dest"      : "deps/icu"
             }
         },
         "eslint": {
@@ -234,6 +249,10 @@ module.exports = function (grunt) {
         },
         "node": {
             "version"       : "6.3.1"
+        },
+        "icu": {
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
+            "version"       : "58"
         }
     });
 

@@ -1781,6 +1781,7 @@
         ],
         'include_dirs': [
           '<(DEPTH)/third_party/wtl/include',
+          '<(DEPTH)/deps/icu/include',
         ],
         'conditions': [
           ['win_z7!=0', {
@@ -3592,6 +3593,7 @@
               'winmm.lib',
               'shlwapi.lib',
               'advapi32.lib',
+              'iphlpapi.lib',
             ],
 
             'conditions': [
