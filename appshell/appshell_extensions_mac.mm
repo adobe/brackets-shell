@@ -654,46 +654,62 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     if (encoding == "utf8") {
         encoding = "UTF-8";
     }
+    NSString* path = [NSString stringWithUTF8String:filename.c_str()];
+    
+    NSStringEncoding enc;
     int32 error = NO_ERROR;
-
-    try {
-        std::ifstream file(filename.c_str());
-        std::stringstream ss;
-        ss << file.rdbuf();
-        contents = ss.str();
-        std::string detectedCharSet;
+    
+    NSString* fileContents = nil;
+    if (encoding == "UTF-8") {
+        enc = NSUTF8StringEncoding;
+        NSError* NSerror = nil;
+        fileContents = [NSString stringWithContentsOfFile:path encoding:enc error:&NSerror];
+    }
+    
+    if (fileContents)
+    {
+        contents = [fileContents UTF8String];
+        // We check if the file contains BOM or not
+        // if yes, then we set preserveBOM to true
+        // Please note we try to read first 3 characters
+        // again to check for BOM
+        CheckForUTF8BOM(filename, preserveBOM);
+        return NO_ERROR;
+    } else {
         try {
-            if (encoding == "UTF-8") {
-                CharSetDetect ICUDetector;
-                ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
-            }
-            else {
-                detectedCharSet = encoding;
-            }
-            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
-                return ERR_UNSUPPORTED_UTF16_ENCODING;
-            }
-            if (detectedCharSet != "UTF-8") {
-                try {
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                }
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+                    return ERR_UNSUPPORTED_UTF16_ENCODING;
+                }
+                if (!detectedCharSet.empty()) {
                     std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
                     DecodeContents(contents, detectedCharSet);
                     encoding = detectedCharSet;
-                } catch (...) {
-                    error = ERR_DECODE_FILE_FAILED;
                 }
-            }
-            else {
-                CheckAndRemoveUTF8BOM(contents, preserveBOM);
+                else {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
             }
         } catch (...) {
-            error = ERR_UNSUPPORTED_ENCODING;
+            error = ERR_CANT_READ;
         }
-    } catch (...) {
-        error = ERR_CANT_READ;
     }
     
-    return error;
-}
+    return error;}
 
 int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
@@ -711,6 +727,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
+        // The file originally contained BOM chars
+        // so we prepend BOM chars
         contents = UTF8_BOM + contents;
     }
     
@@ -718,6 +736,9 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         std::ofstream file;
         file.open (filenameStr);
         file << contents;
+        if (file.fail()) {
+            error = ERR_CANT_WRITE;
+        }
         file.close();
     } catch (...) {
         return ERR_CANT_WRITE;

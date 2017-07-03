@@ -985,7 +985,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
-                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16LE") {
+                            if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
                                 return ERR_UNSUPPORTED_UTF16_ENCODING;
                             }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
@@ -1012,7 +1012,10 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                         }
                     }
                     if (encoding == L"UTF-8") {
-						CheckAndRemoveUTF8BOM(contents, preserveBOM);
+                        // If file starts with BOM chars, then
+                        // we set preserveBOM to true, so that
+                        // while writing we can preprend the BOM
+                        CheckAndRemoveUTF8BOM(contents, preserveBOM);
                     }
                 }
                 else {
@@ -1080,6 +1083,9 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             error = ERR_ENCODE_FILE_FAILED;
         }
     }
+	// We check if the file originally contained BOM chars
+	// if yes, then we prepend BOM chars to file
+	// Currently BOM is supported only for UTF-8
     if (encoding == L"UTF-8" && preserveBOM) {
 		contents = UTF8_BOM + contents;
     }

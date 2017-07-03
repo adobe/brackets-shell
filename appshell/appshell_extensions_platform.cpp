@@ -1,6 +1,7 @@
 #include "appshell/appshell_extensions_platform.h"
 #include <unicode/ucsdet.h>
 #include <unicode/ucnv.h>
+#include <fstream>
 
 #define UTF8_BOM "\xEF\xBB\xBF"
 
@@ -92,9 +93,28 @@ void DecodeContents(std::string &contents, const std::string& encoding) {
 #endif
 
 void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM) {
-    if (contents.length() >= 3 && contents.substr(0,3) == UTF8_BOM) {
-        contents.erase(0,3);
+    if (contents.length() >= 3 && contents.substr(0, 3) == UTF8_BOM) {
         preserveBOM = true;
+        contents.erase(0, 3);
     }
+}
+
+void CheckForUTF8BOM(const std::string& filename, bool& preserveBOM) {
+	try {
+		std::ifstream file(filename.c_str());
+		int ch1, ch2, ch3;
+		ch1 = ch2 = ch3 = 0;
+		if (file.good())
+			ch1 = file.get();
+		if (file.good())
+			ch2 = file.get();
+		if (file.good())
+			ch3 = file.get();
+		if (ch1 == 0xef && ch2 == 0xbb && ch3 == 0xbf) {
+			preserveBOM = true;
+		}
+	}
+	catch (...) {
+	}
 }
 
