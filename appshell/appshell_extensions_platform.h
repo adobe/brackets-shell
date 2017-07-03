@@ -107,8 +107,6 @@ public:
 void DecodeContents(std::string &contents, const std::string& encoding);
 #endif
 
-void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM);
-
 // Native extension code. These are implemented in appshell_extensions_mac.mm
 // and appshell_extensions_win.cpp
 int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging);

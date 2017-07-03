@@ -92,10 +92,3 @@ void DecodeContents(std::string &contents, const std::string& encoding) {
     }
 }
 #endif
-
-void CheckAndRemoveUTF8BOM(std::string& contents, bool& preserveBOM) {
-    if (contents.length() >= 3 && contents.substr(0,3) == UTF8_BOM) {
-        contents.erase(0,3);
-        preserveBOM = true;
-    }
-}
