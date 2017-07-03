@@ -669,6 +669,10 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     if (fileContents)
     {
         contents = [fileContents UTF8String];
+        // We check if the file contains BOM or not
+        // if yes, then we set preserveBOM to true
+        // Please note we try to read first 3 characters
+        // again to check for BOM
         CheckForUTF8BOM(filename, preserveBOM);
         return NO_ERROR;
     } else {
@@ -723,6 +727,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
+        // The file originally contained BOM chars
+        // so we prepend BOM chars
         contents = UTF8_BOM + contents;
     }
     
