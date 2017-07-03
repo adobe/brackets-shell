@@ -457,6 +457,10 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
         if (has_utf_32_BOM(file_get_contents, len)) {
             error = ERR_UNSUPPORTED_ENCODING;
         } else  if (has_utf8_BOM(file_get_contents, len)) {
+            // if file contains BOM chars,
+            // then we set preserveBOM to true,
+            // so that while writing we can 
+            // prepend the BOM chars
             std::ifstream file(filename.c_str());
             std::stringstream ss;
             ss << file.rdbuf();
@@ -519,6 +523,8 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
             error = ERR_ENCODE_FILE_FAILED;
         }
     } else if (encoding == "UTF-8" && preserveBOM) {
+        // File originally contained BOM chars
+        // so we prepend BOM chars
         contents = UTF8_BOM + contents;
     }
     
