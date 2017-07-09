@@ -177,7 +177,15 @@
               # Copy ICU dlls
               'destination': '<(PRODUCT_DIR)',
               'files': ['deps/icu/bin/icuuc58.dll', 'deps/icu/bin/icuin58.dll', 'deps/icu/bin/icudt58.dll'],
-            }
+            },
+            {
+              # Copy VS2015 CRT dlls
+              'destination': '<(PRODUCT_DIR)',
+              'files': [
+                'deps/vs-crt/msvcp140.dll',
+                'deps/vs-crt/vcruntime140.dll',
+                ],
+            },
           ],
         }],
         [ 'OS=="win" and multi_threaded_dll', {

@@ -91,6 +91,10 @@ module.exports = function (grunt) {
             "icu-win": {
                 "dest"      :  "<%= downloads %>",
                 "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_windows32.zip"
+            },
+            "vs-crt-win": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-ia32.zip"
             }
         },
         "clean": {
@@ -123,6 +127,8 @@ module.exports = function (grunt) {
                             "icuuc58.dll",
                             "icuin58.dll",
                             "icudt58.dll",
+                            "msvcp140.dll",
+                            "vcruntime140.dll",
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "command/**"
@@ -253,7 +259,11 @@ module.exports = function (grunt) {
         "icu": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
             "version"       : "58"
-        }
+        },
+        "vsCrt": {
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/vs-crt",
+            "version"       : "2015"
+        },
     });
 
     grunt.loadTasks("tasks");
