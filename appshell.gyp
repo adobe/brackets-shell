@@ -375,6 +375,11 @@
               "$(BUILDTYPE)/libcef.so",
               "-lX11",
               'appshell_extensions_js.o',
+              'deps/icu/lib/libicuuc.a',
+              'deps/icu/lib/libicuio.a',
+              'deps/icu/lib/libicui18n.a',
+              'deps/icu/lib/libicudata.a',
+              '-ldl',
             ],
           },
           'sources': [

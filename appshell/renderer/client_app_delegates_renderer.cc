@@ -15,3 +15,4 @@ void ClientAppRenderer::CreateDelegates(DelegateSet& delegates) {
 }
 
 }  // namespace client
+  

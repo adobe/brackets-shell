@@ -387,12 +387,14 @@ void RootWindowGtk::OnSetFullscreen(bool fullscreen) {
   REQUIRE_MAIN_THREAD();
 
   CefRefPtr<CefBrowser> browser = GetBrowser();
+  /*
   if (browser) {
     if (fullscreen)
       window_test::Maximize(browser);
     else
       window_test::Restore(browser);
   }
+  */
 }
 
 void RootWindowGtk::OnSetLoadingState(bool isLoading,

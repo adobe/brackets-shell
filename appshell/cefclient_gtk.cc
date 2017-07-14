@@ -18,6 +18,12 @@
 #include "appshell/common/client_switches.h"
 #include "appshell/appshell_helpers.h"
 #include "appshell_node_process.h"
+#include "appshell/common/client_app.h"
+#include "appshell/common/client_app_other.h"
+#include "appshell/browser/client_app_browser.h"
+#include "appshell/renderer/client_app_renderer.h"
+#include "appshell/browser/main_context_impl.h"
+#include "appshell/browser/main_message_loop_std.h"
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 int add_handler_id;
@@ -88,12 +94,52 @@ int main(int argc, char* argv[]) {
   g_appStartupTime = time(NULL);
 
   gtk_init(&argc, &argv);
-  CefRefPtr<ClientApp> app(new ClientApp);
+
+
+
+  //CefRefPtr<ClientApp> app(new ClientApp);
 
   // Execute the secondary process, if any.
-  int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
+  //int exit_code = CefExecuteProcess(main_args, app.get(), NULL);
+  //if (exit_code >= 0)
+  //    return exit_code;
+
+// Create a ClientApp of the correct type.
+  
+  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
+  command_line->InitFromArgv(argc, argv);
+  CefRefPtr<CefApp> app;
+  client::ClientApp::ProcessType process_type = client::ClientApp::GetProcessType(command_line);
+  if (process_type == client::ClientApp::BrowserProcess) {
+    app = new client::ClientAppBrowser();
+  } else if (process_type == client::ClientApp::RendererProcess ||
+             process_type == client::ClientApp::ZygoteProcess) {
+    // On Linux the zygote process is used to spawn other process types. Since
+    // we don't know what type of process it will be give it the renderer
+    // client.
+    app = new client::ClientAppRenderer();
+  } else if (process_type == client::ClientApp::OtherProcess) {
+    app = new client::ClientAppOther();
+  }
+
+  // Execute the secondary process, if any.
+  int exit_code = CefExecuteProcess(main_args, app, NULL);
   if (exit_code >= 0)
-    return exit_code;
+    return exit_code; 
+  
+  scoped_ptr<client::MainContextImpl> context(new client::MainContextImpl(command_line, true));
+  
+  CefSettings settings2;
+  settings2.no_sandbox = TRUE;
+
+  // Populate the settings based on command line arguments.
+  context->PopulateSettings(&settings2);
+
+  // Create the main message loop object.
+  scoped_ptr<client::MainMessageLoop> message_loop(new client::MainMessageLoopStd);
+
+  // Initialize CEF.
+  context->Initialize(main_args, settings2, app, NULL);
 
   //Retrieve the current working directory
   if (!appshell::AppInitWorkingDirectory())
@@ -101,7 +147,7 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* window;
 
-  // Parse command line arguments.
+  // Parse command line arguments.browser
   CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
   cmdLine->InitFromArgv(argc, argv);
 
@@ -122,7 +168,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Initialize CEF.
-  CefInitialize(main_args, settings, app.get(), NULL);
+  //CefInitialize(main_args, settings, app.get(), NULL);
   
   // Set window icon
   std::vector<std::string> icons(APPICONS, APPICONS + sizeof(APPICONS) / sizeof(APPICONS[0]) );
@@ -180,13 +226,22 @@ int main(int argc, char* argv[]) {
   CefRect someRect;
   window_info.SetAsChild((CefWindowHandle)vbox, someRect);
 
-  CefBrowserHost::CreateBrowser(
+  /*CefBrowserHost::CreateBrowser(
       window_info,
       static_cast<CefRefPtr<CefClient> >(g_handler),
-      "file://" + appshell::AppGetInitialURL(), browserSettings, NULL);
+      //"file://" + appshell::AppGetInitialURL()
+      "https://www.google.com", browserSettings, NULL);*/
 
-  gtk_container_add(GTK_CONTAINER(window), vbox);
-  gtk_widget_show_all(GTK_WIDGET(window));
+  //gtk_container_add(GTK_CONTAINER(window), vbox);
+  //gtk_widget_show_all(GTK_WIDGET(window));
+
+   // Create the first window.
+  context->GetRootWindowManager()->CreateRootWindow(
+      //!command_line->HasSwitch(switches::kHideControls),  // Show controls.
+      false,
+      settings.windowless_rendering_enabled ? true : false,
+      CefRect(),        // Use default system size.
+      std::string());   // Use default URL.
 
   // Install an signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
@@ -195,9 +250,21 @@ int main(int argc, char* argv[]) {
   // Start the node server process
   startNodeProcess();
 
-  CefRunMessageLoop();
+  //CefRunMessageLoop();
 
-  CefShutdown();
+  //CefShutdown();
 
-  return 0;
+// Run the message loop. This will block until Quit() is called.
+  int result = message_loop->Run();
+
+  // Shut down CEF.
+  context->Shutdown();
+
+  // Release objects in reverse order of creation.
+  message_loop.reset();
+  context.reset();
+
+  return result;
+
+  //return 0;
 }
