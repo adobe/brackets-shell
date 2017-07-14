@@ -1117,6 +1117,7 @@ void DragWindow(CefRefPtr<CefBrowser> browser)
     // TODO
 }
 
+#if 0
 // The below code is from https://oroboro.com/unique-machine-fingerprint/ and modified
 // Original Author: Rafael
 
@@ -1303,4 +1304,4 @@ std::string GetSystemUniqueID()
     return buf;
 }
 
-
+#endif

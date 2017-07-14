@@ -33,8 +33,8 @@ MainContextImpl::MainContextImpl(CefRefPtr<CefCommandLine> command_line,
 
   if (command_line_->HasSwitch(switches::kBackgroundColor)) {
     // Parse the background color value.
-    CefParseCSSColor(command_line_->GetSwitchValue(switches::kBackgroundColor),
-                     false, background_color_);
+    //CefParseCSSColor(command_line_->GetSwitchValue(switches::kBackgroundColor),
+    //                 false, background_color_);
   }
 }
 

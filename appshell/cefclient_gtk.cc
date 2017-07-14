@@ -13,7 +13,7 @@
 #include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-#include "include/cef_runnable.h"
+//#include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
 #include "appshell/appshell_helpers.h"
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 
   // Create the handler.
   g_handler = new ClientHandler();
-  g_handler->SetMainHwnd(vbox);
+  g_handler->SetMainHwnd((CefWindowHandle)vbox);
 
   // Create the browser view.
   CefWindowInfo window_info;
@@ -177,8 +177,8 @@ int main(int argc, char* argv[]) {
   // Necessary to enable document.executeCommand("paste")
   browserSettings.javascript_access_clipboard = STATE_ENABLED;
   browserSettings.javascript_dom_paste = STATE_ENABLED;
-
-  window_info.SetAsChild(vbox);
+  CefRect someRect;
+  window_info.SetAsChild((CefWindowHandle)vbox, someRect);
 
   CefBrowserHost::CreateBrowser(
       window_info,

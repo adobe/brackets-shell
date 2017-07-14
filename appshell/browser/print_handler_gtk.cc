@@ -491,8 +491,8 @@ void ClientPrintHandlerGtk::OnDialogResponse(GtkDialog *dialog,
               gtk_print_settings_get_page_ranges(gtk_settings_, &num_ranges);
           if (gtk_range) {
             for (int i = 0; i < num_ranges; ++i) {
-              ranges_vector.push_back(
-                  CefPageRange(gtk_range[i].start, gtk_range[i].end));
+              //ranges_vector.push_back(
+              //    CefPageRange(gtk_range[i].start, gtk_range[i].end));
             }
             g_free(gtk_range);
           }
