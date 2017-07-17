@@ -31,7 +31,7 @@ void CharSetDetect::operator()(const char* bufferData, size_t bufferLength, std:
 
 	// detect language
 	charsetMatch_ = ucsdet_detect(m_charsetDetector_, &error);
-	if (U_FAILURE(error))
+	if (U_FAILURE(error) || !charsetMatch_)
 		throw "Failed to detect CharSet";
 
 	const char* detectedCharsetName = ucsdet_getName(charsetMatch_, &error);
