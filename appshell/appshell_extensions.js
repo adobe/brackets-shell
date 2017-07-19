@@ -327,6 +327,39 @@ if (!appshell.app) {
     };
  
  
+    // Test dictionary
+    native function ReadDirWithStats();
+    appshell.fs.readDirWithStats = function (path, callback){
+
+        ReadDirWithStats(function (err, allPaths){
+            if (callback) {
+                var finalArray  = [];
+                var allContents = allPaths[0];
+                var allStats    = allPaths[1];
+
+                allStats.forEach(function (val, idx) {
+                    finalArray[idx] = {
+                        isFile: function () {
+                            return !val[1];
+                        },
+                        isDirectory: function () {
+                            return val[1];
+                        },
+                        mtime: new Date(val[0] * 1000), // modtime is seconds since 1970, convert to ms
+                        size: new Number(val[2]),
+                        realPath: val[3] ? val[3] : null
+                    }
+                });
+                callback(err, allContents, finalArray);
+            }
+        }, path);
+    };
+
+     // Test dictionary
+    native function TestListValue();
+    appshell.fs.testList = function (path, callback){
+        TestListValue(callback || _dummyCallback, path);
+    };
  
     /**
      * Quits native shell application

@@ -286,7 +286,7 @@ public:
                 // Set response args for this function
                 responseArgs->SetInt(2, modtime);
                 responseArgs->SetBool(3, isDir);
-                responseArgs->SetInt(4, size);
+                responseArgs->SetInt(4, size);  
                 responseArgs->SetString(5, realPath);
             }
         } else if (message_name == "ReadFile") {
@@ -765,8 +765,73 @@ public:
 			//  0: int32 - callback id
 
 			responseArgs->SetString(2, GetSystemUniqueID());
-		}
-		else {
+		} else if (message_name == "ReadDirWithStats") {
+            // Parameters:
+            //  0: int32 - callback id
+            
+            CefRefPtr<CefListValue> uberDict    = CefListValue::Create();
+            CefRefPtr<CefListValue> dirContents = CefListValue::Create();
+            CefRefPtr<CefListValue> allStats = CefListValue::Create();
+            
+            ExtensionString path = argList->GetString(1); //"/Users/prashant/brackets-source/brackets/tools/";
+            ReadDir(path, dirContents);
+            
+            // Now we iterator through the contents of directoryContents.
+            size_t theSize = dirContents->GetSize();
+            for ( size_t iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
+                CefRefPtr<CefListValue> fileStats = CefListValue::Create();
+                
+                ExtensionString theFile  = path + "/";
+                ExtensionString fileName = dirContents->GetString(iFileEntry);
+                theFile = theFile + fileName;
+                
+                ExtensionString realPath;
+                uint32 modtime;
+                double size;
+                bool isDir;
+                GetFileInfo(theFile, modtime, isDir, size, realPath);
+                
+                fileStats->SetInt(0, modtime);
+                fileStats->SetBool(1, isDir);
+                fileStats->SetInt(2, size);
+                fileStats->SetString(3, realPath);
+                
+                allStats->SetList(iFileEntry, fileStats);
+                
+            }
+            
+            uberDict->SetList(0, dirContents);
+            uberDict->SetList(1, allStats);
+            responseArgs->SetList(2, uberDict);
+            
+            // Test code working fine.
+            /*
+            //CefRefPtr<CefDictionaryValue> someDictionary = CefDictionaryValue::Create();
+            CefRefPtr<CefListValue> someDictionary = CefListValue::Create();
+            CefString theKey   = "key1";
+            CefString theValue = "val1";
+            someDictionary->SetString(0, theValue);
+            theKey = "key2";
+            someDictionary->SetInt(1, 2);
+            
+            CefRefPtr<CefListValue> innerDict = CefListValue::Create();
+            innerDict->SetString(0, theValue);
+            innerDict->SetInt(1, 2);
+            
+            
+            someDictionary->SetList(2, innerDict);
+            
+            //responseArgs->SetDictionary(2, someDictionary);
+            responseArgs->SetList(2, someDictionary);
+             */
+        } else if (message_name == "TestListValue") {
+            // Parameters:
+            //  0: int32 - callback id
+            
+            responseArgs->SetString(2, GetSystemUniqueID());
+        }
+
+        else {
             fprintf(stderr, "Native function not implemented yet: %s\n", message_name.c_str());
             return false;
         }
