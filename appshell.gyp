@@ -314,7 +314,7 @@
           ],
           'cflags': [
             '-g',
-            '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+            '<!@(<(pkg-config) --cflags gtk+-3.0 gthread-2.0)',
             '<(march)',
           ],
           'include_dirs': [
@@ -542,7 +542,7 @@
           'variables': {
             # gtk requires gmodule, but it does not list it as a dependency
             # in some misconfigured systems.
-            'gtk_packages': 'gmodule-2.0 gtk+-2.0 gthread-2.0 gtk+-unix-print-2.0',
+            'gtk_packages': 'gmodule-2.0 gtk+-3.0 gthread-2.0 gtk+-unix-print-2.0',
           },
           'direct_dependent_settings': {
             'cflags': [

@@ -5,7 +5,7 @@
 #include "appshell/browser/client_app_browser.h"
 
 #if defined(OS_LINUX)
-#include "appshell/browser/print_handler_gtk.h"
+//#include "appshell/browser/print_handler_gtk.h"
 #endif
 
 namespace client {
@@ -17,10 +17,11 @@ void ClientAppBrowser::CreateDelegates(DelegateSet& delegates) {
 // static
 CefRefPtr<CefPrintHandler> ClientAppBrowser::CreatePrintHandler() {
 #if defined(OS_LINUX)
-  return new ClientPrintHandlerGtk();
+  //return new ClientPrintHandlerGtk();
 #else
   return NULL;
 #endif
+return NULL;
 }
 
 }  // namespace client

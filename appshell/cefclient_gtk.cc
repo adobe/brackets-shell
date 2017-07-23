@@ -723,8 +723,8 @@ int RunMain(int argc, char* argv[]) {
       false, //!command_line->HasSwitch(switches::kHideControls),  // Show controls.
       settings.windowless_rendering_enabled ? true : false,
       CefRect(),        // Use default system size.
-      "file://" + appshell::AppGetInitialURL()
-      //std::string() // Use default URL.
+      //"file://" + appshell::AppGetInitialURL()
+      std::string() // Use default URL.
       );
 
   startNodeProcess();
