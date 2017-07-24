@@ -6,7 +6,6 @@
 
 #include "include/cef_parser.h"
 #include "appshell/common/client_switches.h"
-extern CefSettings g_globalSettings;
 namespace client {
 
 namespace {
@@ -92,7 +91,7 @@ bool MainContextImpl::Initialize(const CefMainArgs& args,
   DCHECK(!initialized_);
   DCHECK(!shutdown_);
 
-  if (!CefInitialize(args, g_globalSettings, application, windows_sandbox_info))
+  if (!CefInitialize(args, settings, application, windows_sandbox_info))
     return false;
 
   // Need to create the RootWindowManager after calling CefInitialize because
