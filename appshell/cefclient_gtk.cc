@@ -144,11 +144,28 @@ int RunMain(int argc, char* argv[]) {
   if (exit_code >= 0)
     return exit_code;
 
+  // Create the main context object.
+  scoped_ptr<MainContextImpl> context(new MainContextImpl(command_line, true));
+
+  CefSettings settings;
+
+  // Populate the settings based on command line arguments.
+  AppGetSettings(settings, command_line);
+
+  // Check cache_path setting
+  if (CefString(&settings.cache_path).length() == 0) {
+    CefString(&settings.cache_path) = appshell::AppGetCachePath();
+  }
+
+  // Initialize CEF.
+  context->Initialize(main_args, settings, app, NULL);
+  
   // The Chromium sandbox requires that there only be a single thread during
   // initialization. Therefore initialize GTK after CEF.
   gtk_init(&argc, &argv_copy);
 
   if (appshell::AppInitInitialURL(command_line) < 0) {
+    context->Shutdown();
     return 0;
   }
 
@@ -160,25 +177,9 @@ int RunMain(int argc, char* argv[]) {
   // Install a signal handler so we clean up after ourselves.
   signal(SIGINT, TerminationSignalHandler);
   signal(SIGTERM, TerminationSignalHandler);
-
-// Create the main context object.
-  scoped_ptr<MainContextImpl> context(new MainContextImpl(command_line, true));
-
-  CefSettings settings;
-
-  // Populate the settings based on command line arguments.
-  AppGetSettings(settings, command_line);
-
+  
   // Create the main message loop object.
   scoped_ptr<MainMessageLoop> message_loop(new MainMessageLoopStd);
-
-  // Check cache_path setting
-  if (CefString(&settings.cache_path).length() == 0) {
-    CefString(&settings.cache_path) = appshell::AppGetCachePath();
-  }  
-
-  // Initialize CEF.
-  context->Initialize(main_args, settings, app, NULL);
 
   // Create the first window.
   scoped_refptr<RootWindow> root_window = context->GetRootWindowManager()->CreateRootWindow(
@@ -219,6 +220,8 @@ int RunMain(int argc, char* argv[]) {
   // Run the message loop. This will block until Quit() is called.
   int result = message_loop->Run();
 
+  root_window = NULL;
+  
   // Shut down CEF.
   context->Shutdown();
 
