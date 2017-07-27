@@ -66,6 +66,10 @@ scoped_refptr<RootWindow> RootWindowManager::CreateRootWindow(
   MainContext::Get()->PopulateBrowserSettings(&settings);
 
   scoped_refptr<RootWindow> root_window = RootWindow::Create();
+    
+  // Brackets specific change.
+  with_controls = false;
+
   root_window->Init(this, with_controls, with_osr, bounds, settings,
                     url.empty() ? MainContext::Get()->GetMainURL() : url);
 
@@ -83,6 +87,9 @@ scoped_refptr<RootWindow> RootWindowManager::CreateRootWindowAsPopup(
     CefRefPtr<CefClient>& client,
     CefBrowserSettings& settings) {
   MainContext::Get()->PopulateBrowserSettings(&settings);
+
+  // Brackets specific change.
+  with_controls = false;
 
   scoped_refptr<RootWindow> root_window = RootWindow::Create();
   root_window->InitAsPopup(this, with_controls, with_osr,
