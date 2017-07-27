@@ -117,6 +117,8 @@ class RootWindow :
   // Returns the native handle for this window, if any.
   virtual ClientWindowHandle GetWindowHandle() const = 0;
 
+  virtual void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser) = 0;
+
  protected:
   // Allow deletion via scoped_refptr only.
   friend struct DeleteOnMainThread;

@@ -28,6 +28,11 @@
 #include "appshell_node_process.h"
 #include "config.h"
 
+#ifdef OS_LINUX
+#include "appshell/browser/main_context.h"
+#include "appshell/browser/root_window_manager.h"
+#endif
+
 #include <algorithm>
 
 extern std::vector<CefString> gDroppedFiles;
@@ -428,7 +433,12 @@ public:
 
             // The DispatchCloseToNextBrowser() call initiates a quit sequence. The app will
             // quit if all browser windows are closed.
-            handler->DispatchCloseToNextBrowser();
+            #ifdef OS_LINUX
+                client::MainContext::Get()->GetRootWindowManager()->DispatchCloseToNextWindow();
+            #else
+                handler->DispatchCloseToNextBrowser();
+            #endif
+            
 
         } else if (message_name == "AbortQuit") {
             // Parameters - none

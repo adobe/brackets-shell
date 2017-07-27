@@ -200,4 +200,15 @@ void RootWindowManager::OnRootWindowDestroyed(RootWindow* root_window) {
   }
 }
 
+// Brackets specific change.
+void RootWindowManager::DispatchCloseToNextWindow(){
+  if (!root_windows_.empty()){
+    RootWindowSet::const_iterator it = root_windows_.begin();
+    for (; it != root_windows_.end(); ++it) {
+      CefRefPtr<CefBrowser> browser = (*it)->GetBrowser();
+      (*it)->DispatchCloseToBrowser(browser);
+    }
+  }
+}
+
 }  // namespace client

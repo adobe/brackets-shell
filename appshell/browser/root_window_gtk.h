@@ -48,7 +48,7 @@ class RootWindowGtk : public RootWindow,
   CefRefPtr<CefBrowser> GetBrowser() const OVERRIDE;
   ClientWindowHandle GetWindowHandle() const OVERRIDE;
 
-  void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser);
+  virtual void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser);
 
  private:
   void CreateBrowserWindow(const std::string& startup_url);
