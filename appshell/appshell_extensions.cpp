@@ -394,10 +394,15 @@ public:
             CefWindowInfo wi;
             CefBrowserSettings settings;
 
-#if defined(OS_WIN)
-            wi.SetAsPopup(NULL, "DevTools");
-#endif
-            browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings, CefPoint());
+            #if defined(OS_WIN)
+                wi.SetAsPopup(NULL, "DevTools");
+            #elif defined(OS_LINUX)
+                handler->ShowDevTools(browser, CefPoint());
+            #endif
+
+            #ifndef OS_LINUX
+                browser->GetHost()->ShowDevTools(wi, browser->GetHost()->GetClient(), settings, CefPoint());
+            #endif
 
         } else if (message_name == "GetNodeState") {
             // Parameters:

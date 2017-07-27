@@ -212,7 +212,8 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   void SendNotification(NotificationType type);
   void CloseMainWindow();
 
-  void ShowDevTools(CefRefPtr<CefBrowser> browser);  
+  virtual void ShowDevTools(CefRefPtr<CefBrowser> browserShowDevTools,
+                    const CefPoint& inspect_element_at);
                         
   // Call the "executeCommand" method, passing the command name.
   // If callback is specified, it will be called with the result from the command.

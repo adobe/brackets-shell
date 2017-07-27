@@ -62,7 +62,7 @@ void HandleAdd(GtkContainer *container,
 static gboolean HandleQuit(int signatl) {
   if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
-    
+
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
     return TRUE;
   }

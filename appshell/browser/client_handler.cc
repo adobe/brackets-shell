@@ -178,7 +178,6 @@ void ClientHandler::DetachDelegate() {
   delegate_ = NULL;
 }
 
-/*
 bool ClientHandler::OnProcessMessageReceived(
     CefRefPtr<CefBrowser> browser,
     CefProcessId source_process,
@@ -201,10 +200,11 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
   }
 
-  return false;
+  // Give an opportunity to the base class. appshell specific change.
+  return _parent::OnProcessMessageReceived(browser, source_process, message);
 }
-*/
 
+#if 0
 
 bool ClientHandler::OnProcessMessageReceived(
           CefRefPtr<CefBrowser> browser,
@@ -1014,6 +1014,7 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
 }
 
+#endif
 
 void ClientHandler::OnBeforeContextMenu(
     CefRefPtr<CefBrowser> browser,

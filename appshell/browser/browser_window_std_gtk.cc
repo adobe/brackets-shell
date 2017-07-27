@@ -16,6 +16,9 @@
 #include "appshell/browser/client_handler_std.h"
 #include "appshell/browser/main_message_loop.h"
 
+// Brackets specific change.
+extern CefRefPtr<ClientHandler> g_handler;
+
 namespace client {
 
 namespace {
@@ -86,6 +89,9 @@ BrowserWindowStdGtk::BrowserWindowStdGtk(Delegate* delegate,
                                          const std::string& startup_url)
     : BrowserWindow(delegate) {
   client_handler_ = new ClientHandlerStd(this, startup_url);
+  
+  // Brackets specific change.
+  //g_handler = client_handler_;
 }
 
 void BrowserWindowStdGtk::CreateBrowser(
