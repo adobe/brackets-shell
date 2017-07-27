@@ -156,6 +156,8 @@ int RunMain(int argc, char* argv[]) {
   if (CefString(&settings.cache_path).length() == 0) {
     CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
+  
+  startNodeProcess();
 
   // Initialize CEF.
   context->Initialize(main_args, settings, app, NULL);
@@ -214,8 +216,6 @@ int RunMain(int argc, char* argv[]) {
     g_list_foreach(list, (GFunc) g_object_unref, NULL);
     g_list_free(list);
   }
-
-  startNodeProcess();
 
   // Run the message loop. This will block until Quit() is called.
   int result = message_loop->Run();

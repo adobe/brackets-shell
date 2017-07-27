@@ -490,8 +490,9 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
       // Notify the browser window that we would like to close it. This
       // will result in a call to ClientHandler::DoClose() if the
       // JavaScript 'onbeforeunload' event handler allows it.
-      browser->GetHost()->CloseBrowser(false);
-
+      //browser->GetHost()->CloseBrowser(false);
+      // Brackets specific change.
+      self->DispatchCloseToBrowser(browser);
       // Cancel the close.
       return TRUE;
     }
@@ -501,6 +502,11 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
   return FALSE;
 }
 
+// Brackets specific change.
+void RootWindowGtk::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
+{
+  browser_window_->DispatchCloseToBrowser(browser);
+}
 // static
 void RootWindowGtk::VboxSizeAllocated(GtkWidget* widget,
                                       GtkAllocation* allocation,

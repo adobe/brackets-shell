@@ -7,6 +7,9 @@
 #include "include/base/cef_bind.h"
 #include "appshell/browser/main_message_loop.h"
 
+// Brackets specific change
+#include "appshell/command_callbacks.h"
+
 namespace client {
 
 BrowserWindow::BrowserWindow(Delegate* delegate)
@@ -87,5 +90,13 @@ void BrowserWindow::OnSetDraggableRegions(
   REQUIRE_MAIN_THREAD();
   delegate_->OnSetDraggableRegions(regions);
 }
+
+#ifdef OS_LINUX
+void BrowserWindow::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
+{
+  CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+  client_handler_->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+}
+#endif
 
 }  // namespace client
