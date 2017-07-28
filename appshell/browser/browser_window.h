@@ -101,6 +101,7 @@ class BrowserWindow : public ClientHandler::Delegate {
 
 #ifdef OS_LINUX
   void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser) ;
+  void DispatchCommandToBrowser(CefRefPtr<CefBrowser> browser, int tag);
 #endif
 
  protected:

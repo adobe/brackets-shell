@@ -21,6 +21,10 @@
 #include "appshell/browser/window_test.h"
 #include "appshell/common/client_switches.h"
 
+// Brackets specific change.
+#include "appshell/native_menu_model.h"
+#include "appshell/command_callbacks.h"
+
 namespace client {
 
 namespace {
@@ -216,7 +220,8 @@ CefRefPtr<CefBrowser> RootWindowGtk::GetBrowser() const {
 
 ClientWindowHandle RootWindowGtk::GetWindowHandle() const {
   REQUIRE_MAIN_THREAD();
-  return window_;
+  //return window_;
+  return vbox_;
 }
 
 void RootWindowGtk::CreateBrowserWindow(const std::string& startup_url) {
@@ -265,6 +270,11 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   g_signal_connect(vbox, "size-allocate",
                    G_CALLBACK(&RootWindowGtk::VboxSizeAllocated), this);
   gtk_container_add(GTK_CONTAINER(window_), vbox);
+  
+  // Brackets specific change.
+  menu_bar_ = gtk_menu_bar_new();
+  vbox_ = vbox;
+  gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
 
   if (with_controls_) {
     GtkWidget* menu_bar = CreateMenuBar();
@@ -536,12 +546,17 @@ void RootWindowGtk::MenubarSizeAllocated(GtkWidget* widget,
 gboolean RootWindowGtk::MenuItemActivated(GtkWidget* widget,
                                           RootWindowGtk* self) {
   // Retrieve the menu ID set in AddMenuEntry.
-  int id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
+  /*int id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
   // Run the test.
   if (self->delegate_)
     self->delegate_->OnTest(self, id);
 
-  return FALSE;  // Don't stop this message.
+  return FALSE;  // Don't stop this message.*/
+  
+        //int tag = GPOINTER_TO_INT(userData);
+  int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
+  self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
+    
 }
 
 // static

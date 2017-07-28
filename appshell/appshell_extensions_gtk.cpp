@@ -1057,7 +1057,10 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         entry = gtk_separator_menu_item_new();
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+        
+    //g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+    InstallMenuHandler(entry, browser, tag);
+
     ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
     ParseShortcut(browser, entry, key, commandId);

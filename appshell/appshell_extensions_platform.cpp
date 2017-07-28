@@ -3,6 +3,12 @@
 #include <unicode/ucnv.h>
 #include <fstream>
 
+#ifdef OS_LINUX
+#include "appshell/browser/main_context.h"
+#include "appshell/browser/root_window_manager.h"
+#include "appshell/browser/root_window_gtk.h"
+#endif
+
 #define UTF8_BOM "\xEF\xBB\xBF"
 
 CharSetDetect::CharSetDetect() {
@@ -118,3 +124,23 @@ void CheckForUTF8BOM(const std::string& filename, bool& preserveBOM) {
 	}
 }
 
+#ifdef OS_LINUX
+void* getMenuParent(CefRefPtr<CefBrowser>browser){
+    scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    if (rootWindow){
+        return (void*)(rootWindow->GetWindowHandle());
+    } else {
+        return NULL;
+    }
+}
+
+void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int tag)
+{
+    scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    if (rootWindow.get()){
+        g_object_set_data(G_OBJECT(entry), "menu_id", GINT_TO_POINTER(tag));
+        g_signal_connect(entry, "activate", G_CALLBACK(&client::RootWindowGtk::MenuItemActivated), rootWindow.get());
+    }
+}
+
+#endif

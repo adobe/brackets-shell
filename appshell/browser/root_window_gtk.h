@@ -50,6 +50,9 @@ class RootWindowGtk : public RootWindow,
 
   virtual void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser);
 
+  // Brackets specific change.
+  static gboolean MenuItemActivated(GtkWidget* widget,
+                                    RootWindowGtk* self);
  private:
   void CreateBrowserWindow(const std::string& startup_url);
   void CreateRootWindow(const CefBrowserSettings& settings);
@@ -96,8 +99,7 @@ class RootWindowGtk : public RootWindow,
   static void MenubarSizeAllocated(GtkWidget* widget,
                                    GtkAllocation* allocation,
                                    RootWindowGtk* self);
-  static gboolean MenuItemActivated(GtkWidget* widget,
-                                    RootWindowGtk* self);
+  
 
   // Signal handlers for the GTK toolbar.
   static void ToolbarSizeAllocated(GtkWidget* widget,
@@ -131,6 +133,11 @@ class RootWindowGtk : public RootWindow,
 
   // Main window.
   GtkWidget* window_;
+
+  // Brackets specific change.
+  GtkWidget* menu_bar_;
+
+  GtkWidget* vbox_;
 
   // Buttons.
   GtkToolItem* back_button_;

@@ -8,7 +8,10 @@
 #include "appshell/browser/main_message_loop.h"
 
 // Brackets specific change
+#ifdef OS_LINUX
 #include "appshell/command_callbacks.h"
+#include "appshell/native_menu_model.h"
+#endif
 
 namespace client {
 
@@ -97,6 +100,14 @@ void BrowserWindow::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
   CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
   client_handler_->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
 }
+
+void BrowserWindow::DispatchCommandToBrowser(CefRefPtr<CefBrowser> browser, int tag)
+{
+  ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag);
+  CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+  client_handler_->SendJSCommand(browser, commandId, callback);
+}
+
 #endif
 
 }  // namespace client
