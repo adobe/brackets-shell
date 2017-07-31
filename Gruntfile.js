@@ -26,7 +26,8 @@
 module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
-        staging;
+        staging,
+        cef_version = "3.2623.1397";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -35,6 +36,10 @@ module.exports = function (grunt) {
     } else {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
+
+    /*if (platform === "linux") {
+        cef_version = "3.2704.1414";
+    }*/
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -245,7 +250,7 @@ module.exports = function (grunt) {
         },
         "cef": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
-            "version"       : "3.2623.1397"
+            "version"       : cef_version
         },
         "node": {
             "version"       : "6.3.1"
