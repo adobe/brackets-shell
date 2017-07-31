@@ -125,10 +125,26 @@ void CheckForUTF8BOM(const std::string& filename, bool& preserveBOM) {
 }
 
 #ifdef OS_LINUX
-void* getMenuParent(CefRefPtr<CefBrowser>browser){
-    scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
-    if (rootWindow){
-        return (void*)(rootWindow->GetWindowHandle());
+scoped_refptr<client::RootWindowGtk> getRootGtkWindow(CefRefPtr<CefBrowser> browser)
+{
+    DCHECK(browser);
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow;
+    if(browser.get() && 
+        client::MainContext::Get() && 
+        client::MainContext::Get()->GetRootWindowManager()){
+        scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+        if (rootWindow){
+            rootGtkWindow = dynamic_cast <client::RootWindowGtk *>(rootWindow.get());    
+        }
+    }
+    return rootGtkWindow;
+}
+
+void* getMenuParent(CefRefPtr<CefBrowser>browser)
+{
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser); //client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    if (rootGtkWindow){
+        return (void*)(rootGtkWindow->GetContainerHandle());
     } else {
         return NULL;
     }
@@ -136,10 +152,9 @@ void* getMenuParent(CefRefPtr<CefBrowser>browser){
 
 void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int tag)
 {
-    scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
-    if (rootWindow.get()){
-        g_object_set_data(G_OBJECT(entry), "menu_id", GINT_TO_POINTER(tag));
-        g_signal_connect(entry, "activate", G_CALLBACK(&client::RootWindowGtk::MenuItemActivated), rootWindow.get());
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser); //client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    if (rootGtkWindow){
+        rootGtkWindow->InstallMenuHandler(entry, tag);
     }
 }
 

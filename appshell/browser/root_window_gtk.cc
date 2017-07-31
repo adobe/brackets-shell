@@ -220,8 +220,7 @@ CefRefPtr<CefBrowser> RootWindowGtk::GetBrowser() const {
 
 ClientWindowHandle RootWindowGtk::GetWindowHandle() const {
   REQUIRE_MAIN_THREAD();
-  //return window_;
-  return vbox_;
+  return window_;
 }
 
 void RootWindowGtk::CreateBrowserWindow(const std::string& startup_url) {
@@ -272,8 +271,8 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   gtk_container_add(GTK_CONTAINER(window_), vbox);
   
   // Brackets specific change.
-  menu_bar_ = gtk_menu_bar_new();
-  vbox_ = vbox;
+  GtkWidget *menu_bar_ = gtk_menu_bar_new();
+  v_box_ = vbox;
   gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
 
   if (with_controls_) {
@@ -397,6 +396,7 @@ void RootWindowGtk::OnSetFullscreen(bool fullscreen) {
   REQUIRE_MAIN_THREAD();
 
   CefRefPtr<CefBrowser> browser = GetBrowser();
+  // Brackets specific change.
   /*
   if (browser) {
     if (fullscreen)
@@ -494,15 +494,13 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
   if (self->force_close_)
     return FALSE;  // Allow the close.
 
+  // Brackets specific change.
   if (self->browser_window_.get() && !self->browser_window_->IsClosing()) {
     CefRefPtr<CefBrowser> browser = self->GetBrowser();
     if (browser) {
-      // Notify the browser window that we would like to close it. This
-      // will result in a call to ClientHandler::DoClose() if the
-      // JavaScript 'onbeforeunload' event handler allows it.
-      //browser->GetHost()->CloseBrowser(false);
       // Brackets specific change.
       self->DispatchCloseToBrowser(browser);
+
       // Cancel the close.
       return TRUE;
     }
@@ -517,6 +515,20 @@ void RootWindowGtk::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
 {
   browser_window_->DispatchCloseToBrowser(browser);
 }
+
+ClientWindowHandle RootWindowGtk::GetContainerHandle() const
+{
+  return v_box_;
+}
+
+void RootWindowGtk::InstallMenuHandler(GtkWidget* entry, int tag)
+{
+  if(entry){
+    g_object_set_data(G_OBJECT(entry), kMenuIdKey, GINT_TO_POINTER(tag));
+    g_signal_connect(entry, "activate", G_CALLBACK(&RootWindowGtk::MenuItemActivated), this);
+  }
+}
+
 // static
 void RootWindowGtk::VboxSizeAllocated(GtkWidget* widget,
                                       GtkAllocation* allocation,
@@ -546,14 +558,6 @@ void RootWindowGtk::MenubarSizeAllocated(GtkWidget* widget,
 gboolean RootWindowGtk::MenuItemActivated(GtkWidget* widget,
                                           RootWindowGtk* self) {
   // Retrieve the menu ID set in AddMenuEntry.
-  /*int id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
-  // Run the test.
-  if (self->delegate_)
-    self->delegate_->OnTest(self, id);
-
-  return FALSE;  // Don't stop this message.*/
-  
-        //int tag = GPOINTER_TO_INT(userData);
   int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
   self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
     

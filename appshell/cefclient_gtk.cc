@@ -13,7 +13,6 @@
 #include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-//#include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "appshell/common/client_switches.h"
 #include "appshell/appshell_helpers.h"
@@ -30,14 +29,11 @@
 #include <gdk/gdkx.h>
 
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
-
 int add_handler_id;
 bool isReallyClosing = false;
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
-
-CefSettings g_globalSettings;
 
 // Application startup time
 time_t g_appStartupTime;
@@ -62,7 +58,7 @@ void HandleAdd(GtkContainer *container,
 static gboolean HandleQuit(int signatl) {
   if (!isReallyClosing && g_handler.get() && g_handler->GetBrowserId()) {
     CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(g_handler->GetBrowser());
-
+    
     g_handler->SendJSCommand(g_handler->GetBrowser(), FILE_CLOSE_WINDOW, callback);
     return TRUE;
   }
@@ -70,6 +66,7 @@ static gboolean HandleQuit(int signatl) {
 }
 
 // Global functions
+
 GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
                         GCallback callback) {
   GtkWidget* entry = gtk_menu_item_new_with_label(text);
@@ -240,4 +237,3 @@ int RunMain(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
   return client::RunMain(argc, argv);
 }
-//#endif

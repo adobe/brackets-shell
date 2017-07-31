@@ -17,6 +17,7 @@
 
 #if defined(OS_LINUX)
 #include "appshell/browser/dialog_handler_gtk.h"
+// Brackets specific change.
 #include "appshell/client_handler.h"
 #endif
 

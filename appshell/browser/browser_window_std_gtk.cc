@@ -16,9 +16,6 @@
 #include "appshell/browser/client_handler_std.h"
 #include "appshell/browser/main_message_loop.h"
 
-// Brackets specific change.
-extern CefRefPtr<ClientHandler> g_handler;
-
 namespace client {
 
 namespace {
@@ -89,9 +86,6 @@ BrowserWindowStdGtk::BrowserWindowStdGtk(Delegate* delegate,
                                          const std::string& startup_url)
     : BrowserWindow(delegate) {
   client_handler_ = new ClientHandlerStd(this, startup_url);
-  
-  // Brackets specific change.
-  //g_handler = client_handler_;
 }
 
 void BrowserWindowStdGtk::CreateBrowser(
@@ -104,6 +98,7 @@ void BrowserWindowStdGtk::CreateBrowser(
   CefWindowInfo window_info;
   window_info.SetAsChild(GetXWindowForWidget(parent_handle), rect);
   
+  // Brackets specific overrides.
   CefBrowserSettings browserSettings;// = settings;
 
   browserSettings.web_security = STATE_DISABLED;
@@ -111,9 +106,10 @@ void BrowserWindowStdGtk::CreateBrowser(
   // Necessary to enable document.executeCommand("paste")
   browserSettings.javascript_access_clipboard = STATE_ENABLED;
   browserSettings.javascript_dom_paste = STATE_ENABLED;
-  CefBrowserHost::CreateBrowserSync(window_info, client_handler_,
+
+  CefBrowserHost::CreateBrowser(window_info, client_handler_,
                                 client_handler_->startup_url(),
-                                /*settings*/browserSettings, request_context);
+                                browserSettings, request_context);
 }
 
 void BrowserWindowStdGtk::GetPopupConfig(CefWindowHandle temp_handle,

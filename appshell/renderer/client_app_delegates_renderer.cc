@@ -11,6 +11,7 @@ namespace client {
 // static
 void ClientAppRenderer::CreateDelegates(DelegateSet& delegates) {
   renderer::CreateDelegates(delegates);
+  // Brackets specific change.
   //performance_test::CreateDelegates(delegates);
 }
 

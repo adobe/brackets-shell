@@ -326,7 +326,22 @@ if (!appshell.app) {
         }, path);
     };
  
- 
+    /**
+     * Reads the contents of a directory and reports contents along with stats. 
+     *
+     * @param {string} path The path of the directory to read.
+     * @param {function(err, files)} callback Asynchronous callback function. The callback gets three arguments 
+     *        (err, files, stats) where files is an array of the names of the files
+     *        in the directory excluding '.' and '..'  and stats is an array of all stats of the files.
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_UNKNOWN
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *          ERR_CANT_READ
+     *                 
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */ 
     // Test dictionary
     native function ReadDirWithStats();
     appshell.fs.readDirWithStats = function (path, callback){
@@ -355,12 +370,6 @@ if (!appshell.app) {
         }, path);
     };
 
-     // Test dictionary
-    native function TestListValue();
-    appshell.fs.testList = function (path, callback){
-        TestListValue(callback || _dummyCallback, path);
-    };
- 
     /**
      * Quits native shell application
      */

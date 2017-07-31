@@ -1057,8 +1057,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         entry = gtk_separator_menu_item_new();
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-        
-    //g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+
     InstallMenuHandler(entry, browser, tag);
 
     ExtensionString commandId = model.getCommandId(tag);
@@ -1309,7 +1308,7 @@ static void Smear(u16* id)
 
 static u16* ComputeSystemUniqueID()
 {
-    static u16 id[5];
+    static u16 id[5] = { 0 };
     static bool computed = false;
 
     if (computed) return id;
