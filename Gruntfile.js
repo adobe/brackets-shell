@@ -184,7 +184,12 @@ module.exports = function (grunt) {
                             "cef_100_percent.pak",
                             "cef_200_percent.pak",
                             "devtools_resources.pak",
+                            "cef_extensions.pak",
                             "icudtl.dat",
+                            "libcef.so",
+                            "natives_blob.bin",
+                            "snapshot_blob.bin",
+                            "chrome-sandbox",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
