@@ -37,9 +37,9 @@ module.exports = function (grunt) {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
-    /*if (platform === "linux") {
+    if (platform === "linux") {
         cef_version = "3.2704.1414";
-    }*/
+    }
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
@@ -62,6 +62,14 @@ module.exports = function (grunt) {
             "node-linux64": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
+            "icu-linux32": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux32_release.zip"
+            },
+            "icu-linux64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
             },
             /* mac */
             "cef-mac": {
