@@ -799,8 +799,13 @@ public:
             size_t theSize = dirContents->GetSize();
             for ( size_t iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
                 CefRefPtr<CefListValue> fileStats = CefListValue::Create();
-                
-                ExtensionString theFile  = path + "/";
+
+                #ifdef OS_WIN
+                    ExtensionString theFile  = path + L"/";
+                #else
+                    ExtensionString theFile  = path + "/";
+                #endif
+
                 ExtensionString fileName = dirContents->GetString(iFileEntry);
                 theFile = theFile + fileName;
                 
