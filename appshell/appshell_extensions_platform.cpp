@@ -125,6 +125,7 @@ void CheckForUTF8BOM(const std::string& filename, bool& preserveBOM) {
 }
 
 #ifdef OS_LINUX
+// The following routine will get the containing GTK root window, for a browser.
 scoped_refptr<client::RootWindowGtk> getRootGtkWindow(CefRefPtr<CefBrowser> browser)
 {
     DCHECK(browser);
@@ -142,8 +143,10 @@ scoped_refptr<client::RootWindowGtk> getRootGtkWindow(CefRefPtr<CefBrowser> brow
 
 void* getMenuParent(CefRefPtr<CefBrowser>browser)
 {
-    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser); //client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser);
     if (rootGtkWindow){
+        // This returns the underlying vbox. GetWindowHandle() is going to
+        // return X11 ref because of which all our routines will break.
         return (void*)(rootGtkWindow->GetContainerHandle());
     } else {
         return NULL;
@@ -152,8 +155,9 @@ void* getMenuParent(CefRefPtr<CefBrowser>browser)
 
 void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int tag)
 {
-    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser); //client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser);
     if (rootGtkWindow){
+        // Let the gtk root window handle menu activations.
         rootGtkWindow->InstallMenuHandler(entry, tag);
     }
 }

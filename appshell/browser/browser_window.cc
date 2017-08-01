@@ -95,17 +95,26 @@ void BrowserWindow::OnSetDraggableRegions(
 }
 
 #ifdef OS_LINUX
+// Brackets specific change.
+// The following is usually called in the multi window workflows.
+// Once a window is done processing the "QuitApplication" command, 
+// We pass the quit to the next window.
 void BrowserWindow::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
 {
-  CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
-  client_handler_->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+  if(client_handler_){
+    CefRefPtr<CommandCallback> callback = new CloseWindowCommandCallback(browser);
+    client_handler_->SendJSCommand(browser, FILE_CLOSE_WINDOW, callback);
+  }
 }
 
+// The following routine dispatches brackets specific commands to the browser.
 void BrowserWindow::DispatchCommandToBrowser(CefRefPtr<CefBrowser> browser, int tag)
 {
-  ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag);
-  CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
-  client_handler_->SendJSCommand(browser, commandId, callback);
+  if(client_handler_){
+    ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(browser)).getCommandId(tag);
+    CefRefPtr<CommandCallback> callback = new EditCommandCallback(browser, commandId);
+    client_handler_->SendJSCommand(browser, commandId, callback);
+  }
 }
 
 #endif

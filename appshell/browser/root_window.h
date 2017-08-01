@@ -117,8 +117,10 @@ class RootWindow :
   // Returns the native handle for this window, if any.
   virtual ClientWindowHandle GetWindowHandle() const = 0;
 
+#ifdef OS_LINUX
   // Brackets specific: Dispatches close command to the next browser window.
   virtual void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser) = 0;
+#endif
 
  protected:
   // Allow deletion via scoped_refptr only.

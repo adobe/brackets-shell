@@ -26,6 +26,10 @@ namespace client {
 
 // Client handler abstract base class. Provides common functionality shared by
 // all concrete client handler implementations.
+
+// Brackets specific change.
+// On Linux we are going to be using this client handler instead of
+// appshell/ClientHandler.
 class ClientHandler : 
                   #ifdef OS_LINUX
                       public ::ClientHandler,

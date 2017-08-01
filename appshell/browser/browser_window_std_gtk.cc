@@ -99,7 +99,7 @@ void BrowserWindowStdGtk::CreateBrowser(
   window_info.SetAsChild(GetXWindowForWidget(parent_handle), rect);
   
   // Brackets specific overrides.
-  CefBrowserSettings browserSettings;// = settings;
+  CefBrowserSettings browserSettings;
 
   browserSettings.web_security = STATE_DISABLED;
 

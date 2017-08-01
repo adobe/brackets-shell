@@ -23,14 +23,6 @@
 // Brackets specific change.
 #ifdef OS_LINUX
 #include "appshell/appshell_extensions.h"
-
-#include "appshell/appshell_extensions_platform.h"
-#include "appshell/native_menu_model.h"
-#include "appshell/appshell_node_process.h"
-#include "appshell/config.h"
-
-#include <algorithm>
-extern std::vector<CefString> gDroppedFiles;
 #endif
 
 namespace client {
@@ -202,8 +194,12 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
   }
 
+#ifdef OS_LINUX
   // Give an opportunity to the base class. brackets/appshell specific change.
   return _parent::OnProcessMessageReceived(browser, source_process, message);
+#else
+  return false;
+#endif
 }
 
 void ClientHandler::OnBeforeContextMenu(

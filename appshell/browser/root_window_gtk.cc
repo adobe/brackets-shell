@@ -270,10 +270,8 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
                    G_CALLBACK(&RootWindowGtk::VboxSizeAllocated), this);
   gtk_container_add(GTK_CONTAINER(window_), vbox);
   
-  // Brackets specific change.
-  GtkWidget *menu_bar_ = gtk_menu_bar_new();
+  // Brackets specific change.  
   v_box_ = vbox;
-  gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
 
   if (with_controls_) {
     GtkWidget* menu_bar = CreateMenuBar();
@@ -320,6 +318,10 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_item, -1);  // append
 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+  } else {
+      // Brackets specific change.
+      GtkWidget *menu_bar_ = gtk_menu_bar_new();
+      gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
   }
 
   // Realize (show) the GTK widget. This must be done before the browser is
@@ -513,7 +515,9 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
 // Brackets specific change.
 void RootWindowGtk::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
 {
-  browser_window_->DispatchCloseToBrowser(browser);
+  DCHECK(browser_window_);
+  if(browser_window_)
+    browser_window_->DispatchCloseToBrowser(browser);
 }
 
 ClientWindowHandle RootWindowGtk::GetContainerHandle() const
@@ -528,6 +532,7 @@ void RootWindowGtk::InstallMenuHandler(GtkWidget* entry, int tag)
     g_signal_connect(entry, "activate", G_CALLBACK(&RootWindowGtk::MenuItemActivated), this);
   }
 }
+// End of Brackets specific changes.
 
 // static
 void RootWindowGtk::VboxSizeAllocated(GtkWidget* widget,
@@ -559,8 +564,8 @@ gboolean RootWindowGtk::MenuItemActivated(GtkWidget* widget,
                                           RootWindowGtk* self) {
   // Retrieve the menu ID set in AddMenuEntry.
   int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
-  self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
-    
+  if (self && self->browser_window_)
+    self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
 }
 
 // static
@@ -654,7 +659,7 @@ gboolean RootWindowGtk::URLEntryButtonPress(GtkWidget* widget,
 
 GtkWidget* RootWindowGtk::CreateMenuBar() {
   GtkWidget* menu_bar = gtk_menu_bar_new();
-
+  
   // Create the test menu.
   GtkWidget* test_menu = CreateMenu(menu_bar, "Tests");
   AddMenuEntry(test_menu, "Get Source",    ID_TESTS_GETSOURCE);

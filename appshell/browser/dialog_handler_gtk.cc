@@ -334,7 +334,7 @@ bool ClientDialogHandlerGtk::OnJSDialog(
 
   if (!origin_url.empty()) {
     title += " - ";
-    //title += CefFormatUrlForSecurityDisplay(origin_url, accept_lang).ToString();
+    title += CefFormatUrlForSecurityDisplay(origin_url).ToString();
   }
 
   GtkWidget* window = GetWindow(browser);

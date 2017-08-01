@@ -204,9 +204,7 @@ int RunMain(int argc, char* argv[]) {
       list = g_list_append(list, icon);
     }
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
-
     gtk_window_set_icon_list(GTK_WINDOW(window), list);
     
     // Free icon list
