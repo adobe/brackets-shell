@@ -455,6 +455,33 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask("node-check", function() {
+        var done = this.async(),
+            promise,
+            systemNodeCheck,
+            bundledNodeCheck,
+            bundledNodeVersion,
+            systemNodeVersion;
+
+        var bundledNodeLocation = path.join("deps", "node", "node.exe");
+
+        bundledNodeCheck = exec(bundledNodeLocation + " -v");
+
+        bundledNodeCheck.then(function (bundleNodeCmdStdout) {
+            bundledNodeVersion = bundleNodeCmdStdout[0];
+        }).then(function() {
+            systemNodeCheck = exec("node -v");
+            return systemNodeCheck;
+        })
+        .then(function(systemNodeCmdStdout) {
+            systemNodeVersion = systemNodeCmdStdout[0];
+            return systemNodeVersion === bundledNodeVersion ? done() : done(false);
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+
     function nodeWriteVersion() {
         // write empty file with node-version name
         grunt.file.write("deps/node/version-" + grunt.config("node.version") + ".txt", "");
@@ -556,5 +583,5 @@ module.exports = function (grunt) {
     });
 
     // task: setup
-    grunt.registerTask("setup", ["cef", "node", "icu", "create-project"]);
+    grunt.registerTask("setup", ["cef", "node", "node-check", "icu", "create-project"]);
 };
