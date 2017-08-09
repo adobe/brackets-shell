@@ -160,6 +160,7 @@ void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int ta
     if (rootGtkWindow){
         // Let the gtk root window handle menu activations.
         rootGtkWindow->InstallMenuHandler(entry, tag);
+        rootGtkWindow->Show(client::RootWindowGtk::ShowNormal);
     }
 }
 

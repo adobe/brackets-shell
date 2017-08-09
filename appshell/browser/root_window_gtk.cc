@@ -153,6 +153,13 @@ void RootWindowGtk::Show(ShowMode mode) {
     MinimizeWindow(GTK_WINDOW(window_));
   else if (mode == ShowMaximized)
     MaximizeWindow(GTK_WINDOW(window_));
+
+  // Flush the display to make sure the underlying X11 window gets created
+  // immediately.
+  GdkWindow* gdk_window = gtk_widget_get_window(window_);
+  GdkDisplay* display = gdk_window_get_display(gdk_window);
+  gdk_display_flush(display);
+
 }
 
 void RootWindowGtk::Hide() {
@@ -322,6 +329,8 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
       // Brackets specific change.
       GtkWidget *menu_bar_ = gtk_menu_bar_new();
       gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
+      g_signal_connect(menu_bar_, "size-allocate",
+                     G_CALLBACK(&RootWindowGtk::MenubarSizeAllocated), this);
   }
 
   // Realize (show) the GTK widget. This must be done before the browser is
@@ -540,7 +549,7 @@ void RootWindowGtk::VboxSizeAllocated(GtkWidget* widget,
                                       RootWindowGtk* self) {
   // Offset browser positioning by any controls that will appear in the client
   // area.
-  const int ux_height = self->toolbar_height_ + self->menubar_height_;
+  const int ux_height = self->toolbar_height_ + self->menubar_height_ > 1 ? self->menubar_height_ : 0;
   const int x = allocation->x;
   const int y = allocation->y + ux_height;
   const int width = allocation->width;
