@@ -460,10 +460,17 @@ module.exports = function (grunt) {
             promise,
             systemNodeCheck,
             bundledNodeCheck,
+            bundledNodeLocation,
             bundledNodeVersion,
             systemNodeVersion;
 
-        var bundledNodeLocation = path.join("deps", "node", "node.exe");
+        if (platform === "win") {
+            bundledNodeLocation = path.join("deps", "node", "node.exe");
+        }
+        else {
+            bundledNodeLocation = path.join("deps", "node", "bin", "Brackets-node");
+        }
+        
 
         bundledNodeCheck = exec(bundledNodeLocation + " -v");
 
