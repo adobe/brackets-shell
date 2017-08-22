@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "appshell/browser/dialog_handler_gtk.h"
+#include "cefclient/browser/dialog_handler_gtk.h"
 
 #include <libgen.h>
 #include <sys/stat.h>
@@ -10,7 +10,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_parser.h"
 #include "include/wrapper/cef_helpers.h"
-#include "appshell/browser/root_window.h"
+#include "cefclient/browser/root_window.h"
 
 namespace client {
 
@@ -129,11 +129,15 @@ void AddFilters(GtkFileChooser* chooser,
   }
 }
 
-GtkWidget* GetWindow(CefRefPtr<CefBrowser> browser) {
+GtkWindow* GetWindow(CefRefPtr<CefBrowser> browser) {
   scoped_refptr<RootWindow> root_window =
       RootWindow::GetForBrowser(browser->GetIdentifier());
-  if (root_window.get())
-    return root_window->GetWindowHandle();
+  if (root_window) {
+    GtkWindow* window = GTK_WINDOW(root_window->GetWindowHandle());
+    if (!window)
+      LOG(ERROR) << "No GtkWindow for browser";
+    return window;
+  }
   return NULL;
 }
 
@@ -197,8 +201,9 @@ bool ClientDialogHandlerGtk::OnFileDialog(
     }
   }
 
-  GtkWidget* window = GetWindow(browser);
-  DCHECK(window);
+  GtkWindow* window = GetWindow(browser);
+  if (!window)
+    return false;
 
   GtkWidget* dialog = gtk_file_chooser_dialog_new(
       title_str.c_str(),
@@ -298,7 +303,6 @@ bool ClientDialogHandlerGtk::OnFileDialog(
 bool ClientDialogHandlerGtk::OnJSDialog(
     CefRefPtr<CefBrowser> browser,
     const CefString& origin_url,
-    const CefString& accept_lang,
     JSDialogType dialog_type,
     const CefString& message_text,
     const CefString& default_prompt_text,
@@ -337,8 +341,9 @@ bool ClientDialogHandlerGtk::OnJSDialog(
     title += CefFormatUrlForSecurityDisplay(origin_url).ToString();
   }
 
-  GtkWidget* window = GetWindow(browser);
-  DCHECK(window);
+  GtkWindow* window = GetWindow(browser);
+  if (!window)
+    return false;
 
   gtk_dialog_ = gtk_message_dialog_new(GTK_WINDOW(window),
                                        GTK_DIALOG_MODAL,
@@ -389,7 +394,7 @@ bool ClientDialogHandlerGtk::OnBeforeUnloadDialog(
       message_text.ToString() + "\n\nIs it OK to leave/reload this page?";
   bool suppress_message = false;
 
-  return OnJSDialog(browser, CefString(), CefString(), JSDIALOGTYPE_CONFIRM,
+  return OnJSDialog(browser, CefString(), JSDIALOGTYPE_CONFIRM,
                     new_message_text, CefString(), callback, suppress_message);
 }
 

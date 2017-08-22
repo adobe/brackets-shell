@@ -49,7 +49,7 @@ class RootWindowGtk : public RootWindow,
   ClientWindowHandle GetWindowHandle() const OVERRIDE;
   
   // Brackets specific change.
-  ClientWindowHandle GetContainerHandle() const OVERRIDE;
+  ClientWindowHandle GetContainerHandle() const;
   virtual void       DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser);
   virtual void       InstallMenuHandler(GtkWidget* entry, int tag);
 
