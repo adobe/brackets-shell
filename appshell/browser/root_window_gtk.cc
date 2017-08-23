@@ -21,6 +21,10 @@
 #include "appshell/browser/window_test.h"
 #include "appshell/common/client_switches.h"
 
+// Brackets specific change.
+#include "appshell/native_menu_model.h"
+#include "appshell/command_callbacks.h"
+
 namespace client {
 
 namespace {
@@ -149,6 +153,13 @@ void RootWindowGtk::Show(ShowMode mode) {
     MinimizeWindow(GTK_WINDOW(window_));
   else if (mode == ShowMaximized)
     MaximizeWindow(GTK_WINDOW(window_));
+
+  // Flush the display to make sure the underlying X11 window gets created
+  // immediately.
+  GdkWindow* gdk_window = gtk_widget_get_window(window_);
+  GdkDisplay* display = gdk_window_get_display(gdk_window);
+  gdk_display_flush(display);
+
 }
 
 void RootWindowGtk::Hide() {
@@ -265,6 +276,9 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   g_signal_connect(vbox, "size-allocate",
                    G_CALLBACK(&RootWindowGtk::VboxSizeAllocated), this);
   gtk_container_add(GTK_CONTAINER(window_), vbox);
+  
+  // Brackets specific change.  
+  v_box_ = vbox;
 
   if (with_controls_) {
     GtkWidget* menu_bar = CreateMenuBar();
@@ -311,6 +325,12 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), tool_item, -1);  // append
 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+  } else {
+      // Brackets specific change.
+      GtkWidget *menu_bar_ = gtk_menu_bar_new();
+      gtk_box_pack_start(GTK_BOX(vbox), menu_bar_, FALSE, FALSE, 0);
+      g_signal_connect(menu_bar_, "size-allocate",
+                     G_CALLBACK(&RootWindowGtk::MenubarSizeAllocated), this);
   }
 
   // Realize (show) the GTK widget. This must be done before the browser is
@@ -387,12 +407,15 @@ void RootWindowGtk::OnSetFullscreen(bool fullscreen) {
   REQUIRE_MAIN_THREAD();
 
   CefRefPtr<CefBrowser> browser = GetBrowser();
+  // Brackets specific change.
+  /*
   if (browser) {
     if (fullscreen)
       window_test::Maximize(browser);
     else
       window_test::Restore(browser);
   }
+  */
 }
 
 void RootWindowGtk::OnSetLoadingState(bool isLoading,
@@ -482,13 +505,12 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
   if (self->force_close_)
     return FALSE;  // Allow the close.
 
+  // Brackets specific change.
   if (self->browser_window_.get() && !self->browser_window_->IsClosing()) {
     CefRefPtr<CefBrowser> browser = self->GetBrowser();
     if (browser) {
-      // Notify the browser window that we would like to close it. This
-      // will result in a call to ClientHandler::DoClose() if the
-      // JavaScript 'onbeforeunload' event handler allows it.
-      browser->GetHost()->CloseBrowser(false);
+      // Brackets specific change.
+      self->DispatchCloseToBrowser(browser);
 
       // Cancel the close.
       return TRUE;
@@ -499,13 +521,35 @@ gboolean RootWindowGtk::WindowDelete(GtkWidget* widget,
   return FALSE;
 }
 
+// Brackets specific change.
+void RootWindowGtk::DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser)
+{
+  DCHECK(browser_window_);
+  if(browser_window_)
+    browser_window_->DispatchCloseToBrowser(browser);
+}
+
+ClientWindowHandle RootWindowGtk::GetContainerHandle() const
+{
+  return v_box_;
+}
+
+void RootWindowGtk::InstallMenuHandler(GtkWidget* entry, int tag)
+{
+  if(entry){
+    g_object_set_data(G_OBJECT(entry), kMenuIdKey, GINT_TO_POINTER(tag));
+    g_signal_connect(entry, "activate", G_CALLBACK(&RootWindowGtk::MenuItemActivated), this);
+  }
+}
+// End of Brackets specific changes.
+
 // static
 void RootWindowGtk::VboxSizeAllocated(GtkWidget* widget,
                                       GtkAllocation* allocation,
                                       RootWindowGtk* self) {
   // Offset browser positioning by any controls that will appear in the client
   // area.
-  const int ux_height = self->toolbar_height_ + self->menubar_height_;
+  const int ux_height = self->toolbar_height_ + self->menubar_height_ > 1 ? self->menubar_height_ : 0;
   const int x = allocation->x;
   const int y = allocation->y + ux_height;
   const int width = allocation->width;
@@ -528,12 +572,9 @@ void RootWindowGtk::MenubarSizeAllocated(GtkWidget* widget,
 gboolean RootWindowGtk::MenuItemActivated(GtkWidget* widget,
                                           RootWindowGtk* self) {
   // Retrieve the menu ID set in AddMenuEntry.
-  int id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
-  // Run the test.
-  if (self->delegate_)
-    self->delegate_->OnTest(self, id);
-
-  return FALSE;  // Don't stop this message.
+  int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
+  if (self && self->browser_window_)
+    self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
 }
 
 // static
@@ -627,7 +668,7 @@ gboolean RootWindowGtk::URLEntryButtonPress(GtkWidget* widget,
 
 GtkWidget* RootWindowGtk::CreateMenuBar() {
   GtkWidget* menu_bar = gtk_menu_bar_new();
-
+  
   // Create the test menu.
   GtkWidget* test_menu = CreateMenu(menu_bar, "Tests");
   AddMenuEntry(test_menu, "Get Source",    ID_TESTS_GETSOURCE);

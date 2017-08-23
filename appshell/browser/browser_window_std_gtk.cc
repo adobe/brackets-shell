@@ -97,10 +97,19 @@ void BrowserWindowStdGtk::CreateBrowser(
 
   CefWindowInfo window_info;
   window_info.SetAsChild(GetXWindowForWidget(parent_handle), rect);
+  
+  // Brackets specific overrides.
+  CefBrowserSettings browserSettings;
+
+  browserSettings.web_security = STATE_DISABLED;
+
+  // Necessary to enable document.executeCommand("paste")
+  browserSettings.javascript_access_clipboard = STATE_ENABLED;
+  browserSettings.javascript_dom_paste = STATE_ENABLED;
 
   CefBrowserHost::CreateBrowser(window_info, client_handler_,
                                 client_handler_->startup_url(),
-                                settings, request_context);
+                                browserSettings, request_context);
 }
 
 void BrowserWindowStdGtk::GetPopupConfig(CefWindowHandle temp_handle,

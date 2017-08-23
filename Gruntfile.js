@@ -26,7 +26,8 @@
 module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
-        staging;
+        staging,
+        cef_version = "3.2623.1397";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -34,6 +35,10 @@ module.exports = function (grunt) {
         staging = "installer/win/staging";
     } else {
         staging = "installer/linux/debian/package-root/opt/brackets";
+    }
+
+    if (platform === "linux") {
+        cef_version = "3.2704.1414";
     }
 
     grunt.initConfig({
@@ -57,6 +62,14 @@ module.exports = function (grunt) {
             "node-linux64": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
+            "icu-linux32": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux32_release.zip"
+            },
+            "icu-linux64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
             },
             /* mac */
             "cef-mac": {
@@ -171,7 +184,12 @@ module.exports = function (grunt) {
                             "cef_100_percent.pak",
                             "cef_200_percent.pak",
                             "devtools_resources.pak",
+                            "cef_extensions.pak",
                             "icudtl.dat",
+                            "libcef.so",
+                            "natives_blob.bin",
+                            "snapshot_blob.bin",
+                            "chrome-sandbox",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
@@ -245,7 +263,7 @@ module.exports = function (grunt) {
         },
         "cef": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
-            "version"       : "3.2623.1397"
+            "version"       : cef_version
         },
         "node": {
             "version"       : "6.11.0"

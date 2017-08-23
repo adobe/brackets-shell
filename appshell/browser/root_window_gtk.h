@@ -47,6 +47,11 @@ class RootWindowGtk : public RootWindow,
   float GetDeviceScaleFactor() const OVERRIDE;
   CefRefPtr<CefBrowser> GetBrowser() const OVERRIDE;
   ClientWindowHandle GetWindowHandle() const OVERRIDE;
+  
+  // Brackets specific change.
+  ClientWindowHandle GetContainerHandle() const;
+  virtual void       DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser);
+  virtual void       InstallMenuHandler(GtkWidget* entry, int tag);
 
  private:
   void CreateBrowserWindow(const std::string& startup_url);
@@ -129,6 +134,9 @@ class RootWindowGtk : public RootWindow,
 
   // Main window.
   GtkWidget* window_;
+
+  // Brackets specific change.
+  GtkWidget* v_box_;
 
   // Buttons.
   GtkToolItem* back_button_;

@@ -55,6 +55,9 @@ class RootWindowManager : public RootWindow::Delegate {
   // be executed.
   void CloseAllWindows(bool force);
 
+  // Brackets specific change.
+  void DispatchCloseToNextWindow();
+
  private:
   // Allow deletion via scoped_ptr only.
   friend struct base::DefaultDeleter<RootWindowManager>;

@@ -356,7 +356,7 @@ bool ClientHandler::OnContextMenuCommand(
     EventFlags event_flags) {
   switch (command_id) {
     case CLIENT_ID_SHOW_DEVTOOLS:
-      ShowDevTools(browser);
+      ShowDevTools(browser, CefPoint());
       return true;
     default:  // Allow default handling, if any.
       return false;
@@ -399,7 +399,8 @@ std::string ClientHandler::GetLastDownloadFile() {
   return m_LastDownloadFile;
 }
 
-void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser) {
+void ClientHandler::ShowDevTools(CefRefPtr<CefBrowser> browser,
+                    const CefPoint& inspect_element_at) {
     CefWindowInfo wi;
     CefBrowserSettings settings;
 

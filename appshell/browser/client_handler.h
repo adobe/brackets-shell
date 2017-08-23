@@ -17,13 +17,25 @@
 
 #if defined(OS_LINUX)
 #include "appshell/browser/dialog_handler_gtk.h"
+// Brackets specific change.
+#include "appshell/client_handler.h"
 #endif
+
 
 namespace client {
 
 // Client handler abstract base class. Provides common functionality shared by
 // all concrete client handler implementations.
-class ClientHandler : public CefClient,
+
+// Brackets specific change.
+// On Linux we are going to be using this client handler instead of
+// appshell/ClientHandler.
+class ClientHandler : 
+                  #ifdef OS_LINUX
+                      public ::ClientHandler,
+                      public CefDownloadHandler {
+                  #else
+                      public CefClient,
                       public CefContextMenuHandler,
                       public CefDisplayHandler,
                       public CefDownloadHandler,
@@ -33,7 +45,9 @@ class ClientHandler : public CefClient,
                       public CefLifeSpanHandler,
                       public CefLoadHandler,
                       public CefRequestHandler {
+                    #endif
  public:
+  typedef ::ClientHandler _parent;
   // Implement this interface to receive notification of ClientHandler
   // events. The methods of this class will be called on the main thread.
   class Delegate {
@@ -109,7 +123,8 @@ class ClientHandler : public CefClient,
   CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE {
     return this;
   }
-  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+  
+  virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
@@ -253,7 +268,7 @@ class ClientHandler : public CefClient,
   int GetBrowserCount() const;
 
   // Show a new DevTools popup window.
-  void ShowDevTools(CefRefPtr<CefBrowser> browser,
+  virtual void ShowDevTools(CefRefPtr<CefBrowser> browser,
                     const CefPoint& inspect_element_at);
 
   // Close the existing DevTools popup window, if any.

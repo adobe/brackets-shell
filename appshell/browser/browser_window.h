@@ -99,6 +99,12 @@ class BrowserWindow : public ClientHandler::Delegate {
   // Returns true if the browser is closing.
   bool IsClosing() const;
 
+  // Brackets specific change.
+#ifdef OS_LINUX
+  void DispatchCloseToBrowser(CefRefPtr<CefBrowser> browser) ;
+  void DispatchCommandToBrowser(CefRefPtr<CefBrowser> browser, int tag);
+#endif
+
  protected:
   // Allow deletion via scoped_ptr only.
   friend struct base::DefaultDeleter<BrowserWindow>;

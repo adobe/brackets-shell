@@ -123,39 +123,38 @@ module.exports = function (grunt) {
         grunt.task.run("curl-dir:" + grunt.config("cefConfig"));
     });
 
-    
+
+
     // task: icu
     grunt.registerTask("icu", "Download and setup ICU", function () {
-        if (platform === "win" || platform === "mac") {
-            var config   = "icu-" + platform + common.arch(),
-                zipSrc   = grunt.config("curl-dir." + config + ".src"),
-                zipName  = path.basename(zipSrc),
-                zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
-                txtName;
+        var config   = "icu-" + platform + common.arch(),
+            zipSrc   = grunt.config("curl-dir." + config + ".src"),
+            zipName  = path.basename(zipSrc),
+            zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
+            txtName;
 
-            // extract zip file name and set config property
-            grunt.config("icuZipDest", zipDest);
-            grunt.config("icuZipSrc", zipSrc);
-            grunt.config("icuZipName", zipName);
-            grunt.config("icuConfig", config);
+        // extract zip file name and set config property
+        grunt.config("icuZipDest", zipDest);
+        grunt.config("icuZipSrc", zipSrc);
+        grunt.config("icuZipName", zipName);
+        grunt.config("icuConfig", config);
 
-            // remove .zip extension
-            txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
+        // remove .zip extension
+        txtName = zipName.substr(0, zipName.lastIndexOf(".")) + ".txt";
 
-            // optionally download if ICU is not found
-            if (!grunt.file.exists("deps/icu/" + txtName)) {
-                var icuTasks = ["icu-clean", "icu-extract"];
+        // optionally download if ICU is not found
+        if (!grunt.file.exists("deps/icu/" + txtName)) {
+            var icuTasks = ["icu-clean", "icu-extract"];
 
-                if (grunt.file.exists(zipDest)) {
-                    grunt.verbose.writeln("Found ICU download " + zipDest);
-                } else {
-                    icuTasks.unshift("icu-download");
-                }
-
-                grunt.task.run(icuTasks);
+            if (grunt.file.exists(zipDest)) {
+                grunt.verbose.writeln("Found ICU download " + zipDest);
             } else {
-                grunt.verbose.writeln("Skipping ICU download. Found deps/icu/" + txtName);
+                icuTasks.unshift("icu-download");
             }
+
+            grunt.task.run(icuTasks);
+        } else {
+            grunt.verbose.writeln("Skipping ICU download. Found deps/icu/" + txtName);
         }
     });
 

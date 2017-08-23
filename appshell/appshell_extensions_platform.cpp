@@ -3,6 +3,12 @@
 #include <unicode/ucnv.h>
 #include <fstream>
 
+#ifdef OS_LINUX
+#include "appshell/browser/main_context.h"
+#include "appshell/browser/root_window_manager.h"
+#include "appshell/browser/root_window_gtk.h"
+#endif
+
 #define UTF8_BOM "\xEF\xBB\xBF"
 
 CharSetDetect::CharSetDetect() {
@@ -75,7 +81,8 @@ void CharSetEncode::operator()(std::string &contents) {
 void DecodeContents(std::string &contents, const std::string& encoding) {
     UnicodeString ustr(contents.c_str(), encoding.c_str());
     UErrorCode status = U_ZERO_ERROR;
-    int targetLen = ustr.extract(NULL, 0, NULL, status);
+    UConverter *conv = NULL;
+    int targetLen = ustr.extract(NULL, 0, conv, status);
     if(status != U_BUFFER_OVERFLOW_ERROR) {
         throw "Unable to decode contents";
     }
@@ -118,3 +125,43 @@ void CheckForUTF8BOM(const std::string& filename, bool& preserveBOM) {
 	}
 }
 
+#ifdef OS_LINUX
+// The following routine will get the containing GTK root window, for a browser.
+scoped_refptr<client::RootWindowGtk> getRootGtkWindow(CefRefPtr<CefBrowser> browser)
+{
+    DCHECK(browser);
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow;
+    if(browser.get() && 
+        client::MainContext::Get() && 
+        client::MainContext::Get()->GetRootWindowManager()){
+        scoped_refptr<client::RootWindow> rootWindow = client::MainContext::Get()->GetRootWindowManager()->GetWindowForBrowser(browser->GetIdentifier());
+        if (rootWindow){
+            rootGtkWindow = dynamic_cast <client::RootWindowGtk *>(rootWindow.get());    
+        }
+    }
+    return rootGtkWindow;
+}
+
+void* getMenuParent(CefRefPtr<CefBrowser>browser)
+{
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser);
+    if (rootGtkWindow){
+        // This returns the underlying vbox. GetWindowHandle() is going to
+        // return X11 ref because of which all our routines will break.
+        return (void*)(rootGtkWindow->GetContainerHandle());
+    } else {
+        return NULL;
+    }
+}
+
+void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int tag)
+{
+    scoped_refptr<client::RootWindowGtk> rootGtkWindow = getRootGtkWindow(browser);
+    if (rootGtkWindow){
+        // Let the gtk root window handle menu activations.
+        rootGtkWindow->InstallMenuHandler(entry, tag);
+        rootGtkWindow->Show(client::RootWindowGtk::ShowNormal);
+    }
+}
+
+#endif
