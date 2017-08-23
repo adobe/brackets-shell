@@ -17,4 +17,4 @@ else
 fi
 export LD_LIBRARY_PATH
 
-exec -a "$0" "$HERE/Brackets"  "$@"
+exec -a "$0" "$HERE/Brackets"  "$@" 1>/dev/null 2>&1 &
