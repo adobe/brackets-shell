@@ -93,6 +93,9 @@ void* nodeThread(void* unused) {
     // strip off trailing executable name
     char* lastIndexOf = strrchr(executablePath, '/');
     memcpy(bracketsDirPath, executablePath, lastIndexOf - executablePath + 1);
+
+    // null terminate the string
+    bracketsDirPath[lastIndexOf - executablePath + 1] = '\0';
     
     // create node exec and node-core paths
     strcpy(nodeExecutablePath, bracketsDirPath);
