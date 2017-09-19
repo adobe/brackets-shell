@@ -1,30 +1,27 @@
 /*
  * Copyright (c) 2012 Chhatoi Pritam Baral <pritam@pritambaral.com>. All rights reserved.
- *
+ *  
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
  * Software is furnished to do so, subject to the following conditions:
- *
+ *  
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ *  
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
- *
+ * 
  */
 
-#include "appshell_extensions_platform.h"
-
-#include "appshell/appshell_helpers.h"
-
+#include "client_app.h"
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -45,6 +42,30 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <fstream>
+
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <sys/utsname.h>
+
+#include <sys/types.h>
+#include <linux/if.h>
+#include <linux/sockios.h>
+#include <sys/ioctl.h>
+#include "appshell_helpers.h"
+
+#define UTF8_BOM "\xEF\xBB\xBF"
 
 // Modifiers
 #define MODIFIER_CONTROL "Ctrl"
@@ -72,24 +93,9 @@
 #define KEY_BACK_QUOTE "`"
 #define KEY_COMMA ","
 
+typedef char s8;
 
 extern CefRefPtr<ClientHandler> g_handler;
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-
-#include <sys/types.h>
-#include <linux/if.h>
-#include <linux/sockios.h>
-#include <sys/ioctl.h>
-
-GtkWidget* _menuWidget;
 
 // Supported browsers (order matters):
 //   - google-chorme 
@@ -426,19 +432,17 @@ bool has_utf32le_BOM(gchar* data, gsize length)
 }
 
 
-bool has_utf16_32_BOM(gchar* data, gsize length) 
+bool has_utf_32_BOM(gchar* data, gsize length) 
 {
     return (has_utf32be_BOM(data ,length) ||
-            has_utf32le_BOM(data ,length) ||
-            has_utf16be_BOM(data ,length) ||
-            has_utf16le_BOM(data ,length) );
+            has_utf32le_BOM(data ,length));
 }
 
 
-int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& contents)
+int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
-    if (encoding != "utf8") {
-        return ERR_UNSUPPORTED_ENCODING;
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
     }
 
     int error = NO_ERROR;
@@ -452,47 +456,92 @@ int ReadFile(ExtensionString filename, ExtensionString encoding, std::string& co
             error = ERR_CANT_READ;
         }
     } else {
-        if (has_utf16_32_BOM(file_get_contents, len)) {
+        if (has_utf_32_BOM(file_get_contents, len)) {
             error = ERR_UNSUPPORTED_ENCODING;
         } else  if (has_utf8_BOM(file_get_contents, len)) {
-            contents.assign(file_get_contents + utf8_BOM_Len, len);        
-        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror)) {
-            error = ERR_UNSUPPORTED_ENCODING;
+            // if file contains BOM chars,
+            // then we set preserveBOM to true,
+            // so that while writing we can 
+            // prepend the BOM chars
+            std::ifstream file(filename.c_str());
+            std::stringstream ss;
+            ss << file.rdbuf();
+            contents = ss.str();
+            contents.erase(0, 3);
+            preserveBOM = true;
+        } else if (!g_locale_to_utf8(file_get_contents, -1, NULL, NULL, &gerror) || encoding != "UTF-8") {
+            contents.assign(file_get_contents, len);
+            std::string detectedCharSet;
+            try {
+                if (encoding == "UTF-8") {
+                    CharSetDetect ICUDetector;
+                    ICUDetector(contents.c_str(), contents.size(), detectedCharSet);
+                }
+                else {
+                    detectedCharSet = encoding;
+                }
+                if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+                    error = ERR_UNSUPPORTED_UTF16_ENCODING;
+                }
+                if (!detectedCharSet.empty() && error == NO_ERROR) {
+                    std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
+                    DecodeContents(contents, detectedCharSet);
+                    encoding = detectedCharSet;
+                }
+                else if (detectedCharSet.empty()) {
+                    error = ERR_UNSUPPORTED_ENCODING;
+                }
+            } catch (...) {
+                error = ERR_UNSUPPORTED_ENCODING;
+            }
         } else {
             contents.assign(file_get_contents, len);
         }
         g_free(file_get_contents);
     }
-
     return error;
 }
 
 
 
-int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding)
+int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString encoding, bool preserveBOM)
 {
     const char *filenameStr = filename.c_str();    
     int error = NO_ERROR;
     GError *gerror = NULL;
+    if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
+        return ERR_CANT_WRITE;
+    }
 
-    if (encoding != "utf8") {
-        return ERR_UNSUPPORTED_ENCODING;
-    } else if (g_file_test(filenameStr, G_FILE_TEST_EXISTS) && g_access(filenameStr, W_OK) == -1) {
+    if (encoding == "utf8") {
+        encoding = "UTF-8";
+    }
+    
+    if (encoding != "UTF-8") {
+        try {
+            CharSetEncode ICUEncoder(encoding);
+            ICUEncoder(contents);
+        } catch (...) {
+            error = ERR_ENCODE_FILE_FAILED;
+        }
+    } else if (encoding == "UTF-8" && preserveBOM) {
+        // File originally contained BOM chars
+        // so we prepend BOM chars
+        contents = UTF8_BOM + contents;
+    }
+    
+    try {
+        std::ofstream file;
+        file.open (filenameStr);
+        file << contents;
+        if (file.fail()) {
+            error = ERR_CANT_WRITE;
+        }
+        file.close();
+    } catch (...) {
         return ERR_CANT_WRITE;
     }
     
-    FILE* file = fopen(filenameStr, "w");
-    if (file) {
-        size_t size = fwrite(contents.c_str(), sizeof(gchar), contents.length(), file);
-        if (size != contents.length()) {
-            error = ERR_CANT_WRITE;
-        }
-
-        fclose(file);
-    } else {
-        return ConvertLinuxErrorCode(errno);
-    }
-
     return error;
 }
 
@@ -1008,7 +1057,9 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
         entry = gtk_separator_menu_item_new();
     else
         entry = gtk_menu_item_new_with_label(itemTitle.c_str());
-    g_signal_connect(entry, "activate", G_CALLBACK(Callback), GINT_TO_POINTER(tag));
+
+    InstallMenuHandler(entry, browser, tag);
+
     ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
     ParseShortcut(browser, entry, key, commandId);

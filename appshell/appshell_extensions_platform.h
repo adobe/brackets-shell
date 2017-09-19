@@ -83,11 +83,8 @@ inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {return NULL;} // Mac u
 int32 InstallCommandLineTools();
 #else
 typedef std::string ExtensionString;
-inline void* getMenuParent(CefRefPtr<CefBrowser>browser) {
-    return gtk_widget_get_ancestor(
-        GTK_WIDGET(browser->GetHost()->GetWindowHandle()),
-        GTK_TYPE_VBOX);
-}
+void* getMenuParent(CefRefPtr<CefBrowser>browser);
+void  InstallMenuHandler(GtkWidget* entry, CefRefPtr<CefBrowser> browser, int id);
 inline int32 InstallCommandLineTools() { return ERR_CL_TOOLS_NOTSUPPORTED; }
 #endif
 

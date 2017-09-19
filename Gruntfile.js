@@ -26,7 +26,8 @@
 module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
-        staging;
+        staging,
+        cef_version = "3.2623.1397";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -34,6 +35,10 @@ module.exports = function (grunt) {
         staging = "installer/win/staging";
     } else {
         staging = "installer/linux/debian/package-root/opt/brackets";
+    }
+
+    if (platform === "linux") {
+        cef_version = "3.2704.1414";
     }
 
     grunt.initConfig({
@@ -57,6 +62,14 @@ module.exports = function (grunt) {
             "node-linux64": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
+            "icu-linux32": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux32_release.zip"
+            },
+            "icu-linux64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= icu.url %>/icu_<%= icu.version %>_linux64_release.zip"
             },
             /* mac */
             "cef-mac": {
@@ -91,6 +104,10 @@ module.exports = function (grunt) {
             "icu-win": {
                 "dest"      :  "<%= downloads %>",
                 "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_windows32.zip"
+            },
+            "vs-crt-win": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-ia32.zip"
             }
         },
         "clean": {
@@ -123,6 +140,50 @@ module.exports = function (grunt) {
                             "icuuc58.dll",
                             "icuin58.dll",
                             "icudt58.dll",
+                            "api-ms-win-core-console-l1-1-0.dll",
+                            "api-ms-win-core-handle-l1-1-0.dll",
+                            "api-ms-win-core-processenvironment-l1-1-0.dll",
+                            "api-ms-win-core-synch-l1-2-0.dll",
+                            "api-ms-win-crt-filesystem-l1-1-0.dll",
+                            "api-ms-win-crt-runtime-l1-1-0.dll",
+                            "vccorlib140.dll",
+                            "api-ms-win-core-datetime-l1-1-0.dll",
+                            "api-ms-win-core-heap-l1-1-0.dll",
+                            "api-ms-win-core-processthreads-l1-1-0.dll",
+                            "api-ms-win-core-sysinfo-l1-1-0.dll",
+                            "api-ms-win-crt-heap-l1-1-0.dll",
+                            "api-ms-win-crt-stdio-l1-1-0.dll",
+                            "vcruntime140.dll",
+                            "api-ms-win-core-debug-l1-1-0.dll",
+                            "api-ms-win-core-interlocked-l1-1-0.dll",
+                            "api-ms-win-core-processthreads-l1-1-1.dll",
+                            "api-ms-win-core-timezone-l1-1-0.dll",
+                            "api-ms-win-crt-locale-l1-1-0.dll",
+                            "api-ms-win-crt-string-l1-1-0.dll",
+                            "api-ms-win-core-errorhandling-l1-1-0.dll",
+                            "api-ms-win-core-libraryloader-l1-1-0.dll",
+                            "api-ms-win-core-profile-l1-1-0.dll",
+                            "api-ms-win-core-util-l1-1-0.dll",
+                            "api-ms-win-crt-math-l1-1-0.dll",
+                            "api-ms-win-crt-time-l1-1-0.dll",
+                            "api-ms-win-core-file-l1-1-0.dll",
+                            "api-ms-win-core-localization-l1-2-0.dll",
+                            "api-ms-win-core-rtlsupport-l1-1-0.dll",
+                            "api-ms-win-crt-conio-l1-1-0.dll",
+                            "api-ms-win-crt-multibyte-l1-1-0.dll",
+                            "api-ms-win-crt-utility-l1-1-0.dll",
+                            "api-ms-win-core-file-l1-2-0.dll",
+                            "api-ms-win-core-memory-l1-1-0.dll",
+                            "api-ms-win-core-string-l1-1-0.dll",
+                            "api-ms-win-crt-convert-l1-1-0.dll",
+                            "api-ms-win-crt-private-l1-1-0.dll",
+                            "msvcp140.dll",
+                            "api-ms-win-core-file-l2-1-0.dll",
+                            "api-ms-win-core-namedpipe-l1-1-0.dll",
+                            "api-ms-win-core-synch-l1-1-0.dll",
+                            "api-ms-win-crt-environment-l1-1-0.dll",
+                            "api-ms-win-crt-process-l1-1-0.dll",
+                            "ucrtbase.dll",
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "command/**"
@@ -171,7 +232,12 @@ module.exports = function (grunt) {
                             "cef_100_percent.pak",
                             "cef_200_percent.pak",
                             "devtools_resources.pak",
+                            "cef_extensions.pak",
                             "icudtl.dat",
+                            "libcef.so",
+                            "natives_blob.bin",
+                            "snapshot_blob.bin",
+                            "chrome-sandbox",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
@@ -245,15 +311,19 @@ module.exports = function (grunt) {
         },
         "cef": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
-            "version"       : "3.2623.1397"
+            "version"       : cef_version
         },
         "node": {
-            "version"       : "6.3.1"
+            "version"       : "6.11.0"
         },
         "icu": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
             "version"       : "58"
-        }
+        },
+        "vsCrt": {
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/vs-crt",
+            "version"       : "2015"
+        },
     });
 
     grunt.loadTasks("tasks");

@@ -20,6 +20,11 @@
 #include "appshell/browser/root_window_manager.h"
 #include "appshell/common/client_switches.h"
 
+// Brackets specific change.
+#ifdef OS_LINUX
+#include "appshell/appshell_extensions.h"
+#endif
+
 namespace client {
 
 #if defined(OS_WIN)
@@ -189,7 +194,12 @@ bool ClientHandler::OnProcessMessageReceived(
     return true;
   }
 
+#ifdef OS_LINUX
+  // Give an opportunity to the base class. brackets/appshell specific change.
+  return _parent::OnProcessMessageReceived(browser, source_process, message);
+#else
   return false;
+#endif
 }
 
 void ClientHandler::OnBeforeContextMenu(

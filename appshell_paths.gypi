@@ -171,8 +171,6 @@
       'appshell/browser/root_window_manager.cc',
       'appshell/browser/root_window_manager.h',
       'appshell/browser/temp_window.h',
-      'appshell/browser/window_test.cc',
-      'appshell/browser/window_test.h',
     ],
     'appshell_sources_common_helper': [
       'appshell/common/client_switches.cc',
@@ -380,7 +378,6 @@
       'appshell/browser/root_window_gtk.h',
       'appshell/browser/temp_window_x11.cc',
       'appshell/browser/temp_window_x11.h',
-      'appshell/browser/window_test_gtk.cc',
       'appshell/cefclient_gtk.cc',
 
       'appshell/appshell_extensions_gtk.cpp',

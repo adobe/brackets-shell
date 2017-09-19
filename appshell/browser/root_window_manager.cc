@@ -66,6 +66,10 @@ scoped_refptr<RootWindow> RootWindowManager::CreateRootWindow(
   MainContext::Get()->PopulateBrowserSettings(&settings);
 
   scoped_refptr<RootWindow> root_window = RootWindow::Create();
+    
+  // Brackets specific change.
+  with_controls = false;
+
   root_window->Init(this, with_controls, with_osr, bounds, settings,
                     url.empty() ? MainContext::Get()->GetMainURL() : url);
 
@@ -83,6 +87,9 @@ scoped_refptr<RootWindow> RootWindowManager::CreateRootWindowAsPopup(
     CefRefPtr<CefClient>& client,
     CefBrowserSettings& settings) {
   MainContext::Get()->PopulateBrowserSettings(&settings);
+
+  // Brackets specific change.
+  with_controls = false;
 
   scoped_refptr<RootWindow> root_window = RootWindow::Create();
   root_window->InitAsPopup(this, with_controls, with_osr,
@@ -197,6 +204,17 @@ void RootWindowManager::OnRootWindowDestroyed(RootWindow* root_window) {
   if (terminate_when_all_windows_closed_ && root_windows_.empty()) {
     // Quit the main message loop after all windows have closed.
     MainMessageLoop::Get()->Quit();
+  }
+}
+
+// Brackets specific change.
+void RootWindowManager::DispatchCloseToNextWindow(){
+  if (!root_windows_.empty()){
+    RootWindowSet::const_iterator it = root_windows_.begin();
+    for (; it != root_windows_.end(); ++it) {
+      CefRefPtr<CefBrowser> browser = (*it)->GetBrowser();
+      (*it)->DispatchCloseToBrowser(browser);
+    }
   }
 }
 
