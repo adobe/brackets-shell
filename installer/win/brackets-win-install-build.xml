@@ -35,7 +35,7 @@ default="build.mul">
     <!-- heat, candle, light-->
     <echo message="Generating fileset."/>
     <exec dir="" executable="${heat.cmd}">
-      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -t $(Projectdir)transform.xslt -out bracketsharvestmanager.wxs"/>
+      <arg line="dir ${brackets.staging} -cg BRACKETSHARVESTMANAGER -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -out bracketsharvestmanager.wxs"/>
     </exec>
 
     <echo message="Prepping installer source."/>
