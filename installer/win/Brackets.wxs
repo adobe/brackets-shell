@@ -77,7 +77,7 @@
 
         <Component Id="AddContextMenu"
                          Guid="5E95F75D-91C4-44B6-B8A3-83005388B4BF" Directory="INSTALLDIR" KeyPath="yes">
-
+            <Condition>ADDCONTEXTMENU="1"</Condition>        
             <!-- Add Open With Brackets to explorer's file context menu -->
             <RegistryValue Root="HKCR" Key="*\shell\!(loc.ProductName)" Value="!(loc.ExplorerFileOpenContextMenu)"
                                Type="string" />
@@ -137,6 +137,7 @@
                 <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'>
                   <Component Id="UpdatePath"
                              Guid="1781A625-8ACB-45E7-A8BA-219D81760B2E">
+                             <Condition>UPDATEPATH="1"</Condition>
                     <CreateFolder />
                     <Environment Id="PATH"
                                  Action="set"
