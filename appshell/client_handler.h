@@ -126,7 +126,11 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
 
   // CefLoadHandler methods
   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame) OVERRIDE;
+                           CefRefPtr<CefFrame> frame
+                    #ifdef OS_LINUX
+                           ,TransitionType transition_type
+                    #endif
+                           ) OVERRIDE;
   virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                          CefRefPtr<CefFrame> frame,
                          int httpStatusCode) OVERRIDE;
