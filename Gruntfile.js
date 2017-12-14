@@ -38,7 +38,7 @@ module.exports = function (grunt) {
     }
 
     if (platform === "linux") {
-        cef_version = "3.2785.1485";
+        cef_version = "3.2785.1486";
     }
 
     grunt.initConfig({

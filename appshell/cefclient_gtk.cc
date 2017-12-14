@@ -112,62 +112,7 @@ void TerminationSignalHandler(int signatl) {
   MainContext::Get()->GetRootWindowManager()->CloseAllWindows(true);
 }
 
-int RunMain(int _argc, char** _argv) {
-
-  // We are going to create a copy of the args and add
-  // another command line parameter to disable hi-dpi on Linux
-  // as it is breaking the layout upon launching. Tried supplying
-  // the argument via OnBeforeChildProcessLaunch and OnBeforeCommandLineProcessing
-  // and nothing seemed to have worked. So going the hard way replicating
-  // parameters and adding the extra parameter to the list.
-
-  // Note: This piece of code is temporary and should go away
-  // once we start supporting hi-dpi on Linux.
-
-  char** argv = (char **) malloc((_argc+2) * sizeof (char **));
-
-  int    argc      = _argc + 1,
-         iArgument = 0;
-
-  bool arg_found = false;
-  for(; iArgument < _argc; ++iArgument)
-  {
-      // check if the command line option is already passed
-      // on by the user.
-      char *pch = strstr (DEVICE_SCALE_COMMAND_LINE_OPTION, _argv[iArgument]);
-      if (pch) {
-        arg_found = true;
-        break;
-      }
-
-      size_t cmLineArgLen     = strlen(_argv[iArgument])+1;
-      argv[iArgument] = (char *)malloc(cmLineArgLen);
-      memcpy(argv[iArgument], _argv[iArgument], cmLineArgLen);
-  }
-
-  // Add force-device-scale-factor to the copy.
-  if (!arg_found) {
-
-    size_t cmLineArgLen = strlen(DEVICE_SCALE_COMMAND_LINE_OPTION)+1;
-    argv[iArgument] = (char *)malloc(cmLineArgLen);
-    memcpy(argv[iArgument], DEVICE_SCALE_COMMAND_LINE_OPTION, cmLineArgLen);
-
-    argv[argc] = NULL;
-
-  } else {
-
-    // User had already passed this option, so honor that.
-    // Free memory of allocated memory.
-    for(int i = 0; i < argc; ++i)
-    {
-        free(argv[i]);
-    }
-    free(argv);
-
-    //Just use the passed parameters.
-    argc = _argc;
-    argv = _argv;
-  }
+int RunMain(int argc, char** argv) {
 
   // Create a copy of |argv| on Linux because Chromium mangles the value
   // internally (see issue #620).
