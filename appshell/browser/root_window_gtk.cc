@@ -115,17 +115,14 @@ void SaveWindowState(GtkWindow* window) {
       }
     }
 
-    g_key_file_free(key_file);
-
-    // The values would always be written to file.
-    key_file = g_key_file_new();
-
     g_key_file_set_integer(key_file, "position", "left", left);
     g_key_file_set_integer(key_file, "position", "top", top);
     g_key_file_set_integer(key_file, "size", "width", width - 1);   // DelayedResize() 1 pixel compensation
     g_key_file_set_integer(key_file, "size", "height", height - 1); // DelayedResize() 1 pixel compensation
     g_key_file_set_boolean(key_file, "state", "maximized", maximized);
 
+    err = NULL;
+    
     g_key_file_save_to_file(key_file, filePath, &err);
 
     if (err) {
