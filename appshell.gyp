@@ -364,6 +364,7 @@
           ],
           'cflags': [
             '<!@(<(pkg-config) --cflags gtk+-2.0 gthread-2.0)',
+            '-g',
             '<(march)',
           ],
           'include_dirs': [

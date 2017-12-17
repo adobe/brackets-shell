@@ -80,8 +80,10 @@ void SaveWindowState(GtkWindow* window) {
 
   GKeyFile* key_file = g_key_file_new();
   GError* err = NULL;
+  gchar* filePath = NULL;
+
   if (key_file) {
-    gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
+    filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
     gboolean maximized  = IsWindowMaximized(window);
 
     // If window is not maximized, save current size and position
@@ -113,7 +115,11 @@ void SaveWindowState(GtkWindow* window) {
       }
     }
 
+    g_key_file_free(key_file);
+
     // The values would always be written to file.
+    key_file = g_key_file_new();
+
     g_key_file_set_integer(key_file, "position", "left", left);
     g_key_file_set_integer(key_file, "position", "top", top);
     g_key_file_set_integer(key_file, "size", "width", width - 1);   // DelayedResize() 1 pixel compensation
@@ -123,12 +129,17 @@ void SaveWindowState(GtkWindow* window) {
     g_key_file_save_to_file(key_file, filePath, &err);
 
     if (err) {
-      fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`. Error Description: %s\n", err->message);
+      fprintf(stderr, "SaveWindowState(): Could not save window state to %s. Error Description:%s.\n", filePath, err->message);
       g_error_free(err);
     }
   } else {
-    fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`\n");
+    fprintf(stderr, "SaveWindowState(): Could not save window state to %s.`\n", filePath);
   }
+
+  if (key_file) {
+    g_key_file_free(key_file);
+  }
+
 }
 
 void LoadWindowState(GtkWindow* window) {
@@ -140,6 +151,13 @@ void LoadWindowState(GtkWindow* window) {
   // Default values for the window state.
   gint left   = 1;
   gint top    = 1;
+
+  GdkScreen* screen = gdk_screen_get_default();
+  if (screen) {
+    left = (gdk_screen_get_width(screen)  - DEFAULT_WINDOW_WIDTH) / 2 ;
+    top  = (gdk_screen_get_height(screen) - DEFAULT_WINDOW_HEIGHT) / 2 ;
+  }
+  
   gint width  = DEFAULT_WINDOW_WIDTH;
   gint height = DEFAULT_WINDOW_HEIGHT;
 
@@ -148,10 +166,16 @@ void LoadWindowState(GtkWindow* window) {
   GKeyFile* key_file = g_key_file_new();
   bool any_error = false;
   GError* err = NULL;
+  gchar* filePath = NULL;
+
+  // Set default position and size
+  gtk_window_move(GTK_WINDOW(window), left, top);
+  gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+
 
   if (key_file) {
 
-    gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
+    filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
 
     if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, &err)) {
 
@@ -196,13 +220,17 @@ void LoadWindowState(GtkWindow* window) {
     MaximizeWindow(window);
 
     if (err) {
-      if (err && err->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND){
-        fprintf(stderr, "Err -> SaveWindowState(): could not create a file object to read `window.ini`. Error Description:%s.\n", err->message);
+      if (err->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND){
+        fprintf(stderr, "LoadWindowState(): Could not read %s. Error Description:%s.\n", filePath, err->message);
       }
       g_error_free(err);
     } else {
-      fprintf(stderr, "Err -> SaveWindowState(): could not create a file object to read `window.ini`.\n");
+      fprintf(stderr, "LoadWindowState(): Could not read %s.\n", filePath);
     }
+  }
+
+  if (key_file) {
+    g_key_file_free(key_file);
   }
 }
 // End of Brackets specific changes.
