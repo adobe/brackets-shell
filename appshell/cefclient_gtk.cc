@@ -31,7 +31,6 @@
 static std::string APPICONS[] = {"appshell32.png","appshell48.png","appshell128.png","appshell256.png"};
 int add_handler_id;
 bool isReallyClosing = false;
-char *DEVICE_SCALE_COMMAND_LINE_OPTION = "--force-device-scale-factor=1";
 
 // The global ClientHandler reference.
 extern CefRefPtr<ClientHandler> g_handler;
