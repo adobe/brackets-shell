@@ -360,6 +360,36 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   }
 }
 
+// The following function makes sure we repaginate
+// the content once the window is shown first. The
+// problem was that the view port was not getting
+// updated and a fake resize was required for the
+// content to repaginate.
+void DelayedResize(GtkWidget* window_) {
+  if(window_){
+      GtkWindow* window = GTK_WINDOW(window_);
+      GdkWindow* gdk_window = gtk_widget_get_window(window_);
+
+      gint x;
+      gint y;
+      gint width;
+      gint height;
+      gint depth;
+
+      gdk_window_get_geometry (gdk_window,
+                          &x,
+                          &y,
+                          &width,
+                          &height,
+                          &depth);
+
+      // A hack to repaginate the content inside the window.
+      // Nudge the width and height by one pixel, so that the
+      // resize is not noticeable.
+      gdk_window_resize (gdk_window, width + 1, height + 1);
+  }
+}
+
 void RootWindowGtk::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
   REQUIRE_MAIN_THREAD();
 
@@ -367,6 +397,9 @@ void RootWindowGtk::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
   // created.
   if (is_popup_)
     CreateRootWindow(CefBrowserSettings());
+
+  // Post a message to CEF queue for delated resize.
+  CefPostTask(TID_UI, base::Bind(&DelayedResize, window_));
 }
 
 void RootWindowGtk::OnBrowserWindowDestroyed() {
