@@ -202,7 +202,11 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
 }
 
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame) {
+                                CefRefPtr<CefFrame> frame
+                                #ifdef OS_LINUX
+                                  ,TransitionType transition_type
+                                #endif
+                                ) {
   CEF_REQUIRE_UI_THREAD();
 
   if (m_BrowserId == browser->GetIdentifier() && frame->IsMain()) {

@@ -942,5 +942,8 @@ if (!appshell.app) {
 
  
     // Alias the appshell object to brackets. This is temporary and should be removed.
-    brackets = appshell;
+    // The following is now moved to Global.js as newer versions of CEF crash upon
+    // eval of this statement.
+    //brackets = appshell;
+    
 })();
