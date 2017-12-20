@@ -112,10 +112,8 @@ void TerminationSignalHandler(int signatl) {
 }
 
 int RunMain(int argc, char* argv[]) {
-
   // Create a copy of |argv| on Linux because Chromium mangles the value
   // internally (see issue #620).
-
   CefScopedArgArray scoped_arg_array(argc, argv);
   char** argv_copy = scoped_arg_array.array();
 
