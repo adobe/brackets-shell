@@ -111,7 +111,7 @@ void TerminationSignalHandler(int signatl) {
   MainContext::Get()->GetRootWindowManager()->CloseAllWindows(true);
 }
 
-int RunMain(int argc, char** argv) {
+int RunMain(int argc, char* argv[]) {
 
   // Create a copy of |argv| on Linux because Chromium mangles the value
   // internally (see issue #620).
