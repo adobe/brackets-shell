@@ -27,7 +27,7 @@
 // Note: All file native file i/o functions are synchronous, but are exposed
 // here as asynchronous calls. 
 
-var appshell;
+var appshell, brackets;
 if (!appshell) {
     appshell = {};
 }
@@ -36,6 +36,9 @@ if (!appshell.fs) {
 }
 if (!appshell.app) {
     appshell.app = {};
+}
+if (!brackets) {
+    brackets = appshell;
 }
 (function () {
     // Error values. These MUST be in sync with the error values
@@ -941,6 +944,3 @@ if (!appshell.app) {
      };
     
 })();
-
-// Alias the appshell object to brackets. This is temporary and should be removed.
-var brackets = appshell;
