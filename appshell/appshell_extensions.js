@@ -27,7 +27,7 @@
 // Note: All file native file i/o functions are synchronous, but are exposed
 // here as asynchronous calls. 
 
-var appshell;
+var appshell, brackets;
 if (!appshell) {
     appshell = {};
 }
@@ -36,6 +36,11 @@ if (!appshell.fs) {
 }
 if (!appshell.app) {
     appshell.app = {};
+}
+
+// Alias the appshell object to brackets. This is temporary and should be removed.
+if (!brackets) {
+    brackets = appshell;
 }
 (function () {
     // Error values. These MUST be in sync with the error values
@@ -939,11 +944,5 @@ if (!appshell.app) {
      appshell.app.getMachineHash = function (callback) {
          GetMachineHash(callback || _dummyCallback);
      };
-
- 
-    // Alias the appshell object to brackets. This is temporary and should be removed.
-    // The following is now moved to Global.js as newer versions of CEF crash upon
-    // eval of this statement.
-    //brackets = appshell;
     
 })();
