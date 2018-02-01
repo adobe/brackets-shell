@@ -37,6 +37,8 @@ if (!appshell.fs) {
 if (!appshell.app) {
     appshell.app = {};
 }
+
+// Alias the appshell object to brackets. This is temporary and should be removed.
 if (!brackets) {
     brackets = appshell;
 }
