@@ -939,11 +939,8 @@ if (!appshell.app) {
      appshell.app.getMachineHash = function (callback) {
          GetMachineHash(callback || _dummyCallback);
      };
-
- 
-    // Alias the appshell object to brackets. This is temporary and should be removed.
-    // The following is now moved to Global.js as newer versions of CEF crash upon
-    // eval of this statement.
-    //brackets = appshell;
     
 })();
+
+// Alias the appshell object to brackets. This is temporary and should be removed.
+var brackets = appshell;
