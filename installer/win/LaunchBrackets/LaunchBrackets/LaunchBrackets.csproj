@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="LaunchBrackets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="LaunchBrackets.config" />
+    <Content Include="CustomAction.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(WixCATargetsPath)" Condition=" '$(WixCATargetsPath)' != '' " />
