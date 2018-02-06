@@ -117,6 +117,7 @@
 
         <Property Id="LAUNCHAPPONEXIT" Value="1" />
         <Property Id="LAUNCH_APPLICATION_SILENT" Value="0" />
+        <Property Id="MSIFASTINSTALL" Value="2"/>
         <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
         <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand=""
                       Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
@@ -125,19 +126,19 @@
                       Return="check"
                       Execute="immediate"
                       BinaryKey="BracketsExecutor.dll"
-                      DllEntry="CustomAction2" />
+                      DllEntry="LaunchBrackets" />
         
         <CustomAction Id="LaunchApplicationError"
                       Return="check"
                       Execute="immediate"
                       BinaryKey="BracketsExecutor.dll"
-                      DllEntry="CustomAction2" />
+                      DllEntry="LaunchBrackets" />
         
         <CustomAction Id="LaunchApplicationSuspend"
                       Return="check"
                       Execute="immediate"
                       BinaryKey="BracketsExecutor.dll"
-                      DllEntry="CustomAction2" />
+                      DllEntry="LaunchBrackets" />
 
         <Property Id="INSTALLDIRREGISTRY">
             <RegistrySearch Id="InstallDirRegistryID"
@@ -160,14 +161,14 @@
              Sequence="execute"
              Value="[%PATH]" />
 
-        <Binary Id="InstallLocationChecker.dll" SourceFile="CustomAction1.CA.dll" />
-        <Binary Id="BracketsExecutor.dll" SourceFile="CustomAction2.CA.dll" />
+        <Binary Id="InstallLocationChecker.dll" SourceFile="BracketsConfigurator.CA.dll" />
+        <Binary Id="BracketsExecutor.dll" SourceFile="LaunchBrackets.CA.dll" />
 
         <CustomAction Id="InstallDirCustomAction"
                       Return="check"
                       Execute="immediate"
                       BinaryKey="InstallLocationChecker.dll"
-                      DllEntry="CustomAction1" />
+                      DllEntry="BracketsConfigurator" />
 
 
         <UI>

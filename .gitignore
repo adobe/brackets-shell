@@ -14,7 +14,6 @@ xcodebuild/*
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
-*.sln
 
 *.pbxuser
 *.perspective

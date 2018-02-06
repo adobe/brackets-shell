@@ -4,14 +4,14 @@ using System.Text;
 using System.Linq;
 using Microsoft.Deployment.WindowsInstaller;
 
-namespace CustomAction1
+namespace BracketsConfigurator
 {
-    public class CustomActions
+    public class BracketsConfiguratorClass
     {
         [CustomAction]
-        public static ActionResult CustomAction1(Session session)
+        public static ActionResult BracketsConfigurator(Session session)
         {
-            session.Log("Begin CustomAction1");
+            session.Log("Begin BracketsConfigurator");
 
             //Set Install Directory if available
             string installRegistry = session["INSTALLDIRREGISTRY"];
@@ -60,7 +60,7 @@ namespace CustomAction1
                 session.Log("Not Updating Path");
             }
 
-            session.Log("End CustomAction1");
+            session.Log("End BracketsConfigurator");
             return ActionResult.Success;
         }
     }

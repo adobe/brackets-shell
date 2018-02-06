@@ -85,7 +85,7 @@ module.exports = function (grunt) {
     grunt.registerTask("build-win", "Build windows shell", function () {
         var done = this.async();
 
-        spawn("cmd.exe /c scripts\\build_projects.bat").then(function () {
+        spawn(["cmd.exe /c scripts\\build_projects.bat", "cmd.exe /c scripts\\brackets_installer_projects.bat"]).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
@@ -154,6 +154,7 @@ module.exports = function (grunt) {
     // task: stage-win
     grunt.registerTask("stage-win", "Stage win executable files", function () {
         // stage platform-specific binaries, then package www files
+        grunt.task.run("copy:winInstallerDLLs");
         grunt.task.run("copy:win");
     });
 

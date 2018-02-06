@@ -4,14 +4,14 @@ using System.Text;
 using Microsoft.Deployment.WindowsInstaller;
 using System.IO;
 
-namespace CustomAction2
+namespace LaunchBrackets
 {
-    public class CustomActions
+    public class LaunchBracketsClass
     {
         [CustomAction]
-        public static ActionResult CustomAction2(Session session)
+        public static ActionResult LaunchBrackets(Session session)
         {
-            session.Log("Begin CustomAction2");
+            session.Log("Begin LaunchBrackets");
             string bracketsInstallLocation = session["INSTALLDIRREGISTRY"];
             if (!string.IsNullOrEmpty(bracketsInstallLocation))
             {
@@ -22,7 +22,7 @@ namespace CustomAction2
                     System.Diagnostics.Process.Start(bracketsInstallLocation);
                 }
             }
-            session.Log("Begin CustomAction2");
+            session.Log("Begin LaunchBrackets");
 
             return ActionResult.Success;
         }
