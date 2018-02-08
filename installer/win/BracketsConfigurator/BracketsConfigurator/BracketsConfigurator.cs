@@ -29,7 +29,7 @@ namespace BracketsConfigurator
             }
             else
             {
-                session.Log("No Registry Value");
+                session.Log("No Registry Value for installation directory");
             }
 
             //Set AddContextMenu if required
