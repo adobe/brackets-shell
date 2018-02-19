@@ -1098,6 +1098,10 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+void CheckedItemCallbach(GtkWidget* checkMenuItem, GtkWidget* originalMenuItem) {
+    gtk_menu_item_activate(GTK_MENU_ITEM(originalMenuItem));
+}
+
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
 {
     NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
