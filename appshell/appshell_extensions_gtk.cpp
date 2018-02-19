@@ -1100,7 +1100,6 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
 
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
 {
-    // TODO: Implement functionality for checked
     NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
     int tag = model.getTag(command);
     if (tag == kTagNotFound) {
@@ -1108,6 +1107,40 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
     gtk_widget_set_sensitive(menuItem, enabled);
+
+    // Functionality for checked
+    gint position;
+    GtkWidget* checkedMenuItem;
+    GtkWidget* parent = gtk_widget_get_parent(menuItem);
+
+    if (GTK_IS_CONTAINER(parent)) {
+        GList* children = gtk_container_get_children(GTK_CONTAINER(parent));
+        gint index = 0;
+        do {
+            GtkWidget* widget = (GtkWidget*) children->data;
+            if (widget == menuItem)
+                position = index + 1;
+            if (index == position && GTK_IS_CHECK_MENU_ITEM(widget))
+                checkedMenuItem = widget;
+            index++;
+        } while ((children = g_list_next(children)) != NULL);
+        g_list_free(children);
+    }
+
+    if (checked == true) {
+        const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
+        checkedMenuItem = gtk_check_menu_item_new_with_label(label);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
+        gtk_widget_set_sensitive(checkedMenuItem, enabled);
+        g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallbach), menuItem);
+        gtk_menu_shell_insert(GTK_MENU_SHELL(parent), checkedMenuItem, position);
+        gtk_widget_show(checkedMenuItem);
+        gtk_widget_hide(menuItem);
+    } else {
+        gtk_widget_show(menuItem);
+        if (GTK_IS_WIDGET(checkedMenuItem))
+            gtk_widget_destroy(checkedMenuItem);
+    }
     return NO_ERROR;
 }
 
