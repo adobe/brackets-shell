@@ -1098,8 +1098,12 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
-void CheckedItemCallbach(GtkWidget* checkMenuItem, GtkWidget* originalMenuItem) {
-    gtk_menu_item_activate(GTK_MENU_ITEM(originalMenuItem));
+void CheckedItemCallback(GtkWidget* checkMenuItem, GtkWidget* originalMenuItem) {
+    if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(checkMenuItem))) {
+        gtk_menu_item_activate(GTK_MENU_ITEM(originalMenuItem));
+    } else {
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkMenuItem), true);
+    }
 }
 
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
@@ -1140,7 +1144,7 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
         checkedMenuItem = gtk_check_menu_item_new_with_label(label);
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
         gtk_widget_set_sensitive(checkedMenuItem, enabled);
-        g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallbach), menuItem);
+        g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallback), menuItem);
         gtk_menu_shell_insert(GTK_MENU_SHELL(parent), checkedMenuItem, checkedItemPos);
         gtk_widget_show(checkedMenuItem);
         gtk_widget_hide(menuItem);
