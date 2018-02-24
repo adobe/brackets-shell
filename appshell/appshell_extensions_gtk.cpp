@@ -1141,17 +1141,19 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     }
 
     if (checked == true) {
-        checkedMenuItem = gtk_check_menu_item_new_with_label(label);
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
+        if (GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
+            checkedMenuItem = gtk_check_menu_item_new_with_label(label);
+            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
+            g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallback), menuItem);
+            gtk_menu_shell_insert(GTK_MENU_SHELL(parent), checkedMenuItem, checkedItemPos);
+        }
         gtk_widget_set_sensitive(checkedMenuItem, enabled);
-        g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallback), menuItem);
-        gtk_menu_shell_insert(GTK_MENU_SHELL(parent), checkedMenuItem, checkedItemPos);
         gtk_widget_show(checkedMenuItem);
         gtk_widget_hide(menuItem);
     } else {
         gtk_widget_show(menuItem);
         if (GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
-            gtk_widget_destroy(checkedMenuItem);
+            gtk_widget_hide(checkedMenuItem);
         }
     }
     return NO_ERROR;
