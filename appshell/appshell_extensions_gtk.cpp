@@ -1141,7 +1141,7 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     }
 
     if (checked == true) {
-        if (GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
+        if (!GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
             checkedMenuItem = gtk_check_menu_item_new_with_label(label);
             gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
             g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallback), menuItem);
