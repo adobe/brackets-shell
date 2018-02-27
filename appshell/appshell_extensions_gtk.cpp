@@ -94,6 +94,9 @@
 #define KEY_COMMA ","
 
 typedef char s8;
+ExtensionString gFilesToOpen;
+
+bool StMenuCommandSkipper::sSkipMenuCommand = false;
 
 extern CefRefPtr<ClientHandler> g_handler;
 
@@ -835,6 +838,8 @@ int32 CopyFile(ExtensionString src, ExtensionString dest)
 
 int32 GetPendingFilesToOpen(ExtensionString& files)
 {
+    files = gFilesToOpen;
+    return NO_ERROR;
 }
 
 static GtkWidget* GetMenuBar(CefRefPtr<CefBrowser> browser)
@@ -1056,7 +1061,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
     if (itemTitle == "---")
         entry = gtk_separator_menu_item_new();
     else
-        entry = gtk_menu_item_new_with_label(itemTitle.c_str());
+        entry = gtk_check_menu_item_new_with_label(itemTitle.c_str());
 
     InstallMenuHandler(entry, browser, tag);
 
@@ -1108,6 +1113,10 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
     gtk_widget_set_sensitive(menuItem, enabled);
+
+    StMenuCommandSkipper skipCmd;
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menuItem), checked);
+
     return NO_ERROR;
 }
 

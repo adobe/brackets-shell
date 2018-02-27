@@ -37,6 +37,7 @@ extern CefRefPtr<ClientHandler> g_handler;
 
 // Application startup time
 time_t g_appStartupTime;
+extern ExtensionString gFilesToOpen;
 
 void destroy(void) {
   CefQuitMessageLoop();
@@ -111,6 +112,53 @@ void TerminationSignalHandler(int signatl) {
   MainContext::Get()->GetRootWindowManager()->CloseAllWindows(true);
 }
 
+ExtensionString GetFilenamesFromCommandLine(CefRefPtr<CefCommandLine> command_line) {
+  ExtensionString result = "[]";
+
+  if (command_line->HasArguments()) {
+    bool firstEntry = true;
+    result = "[";
+
+    std::vector<CefString> args;
+    command_line->GetArguments(args);
+    for (std::vector<CefString>::const_iterator iPathName = args.begin();
+          iPathName != args.end();
+          iPathName++) {
+
+      ExtensionString argument = *iPathName;
+      const char *pathStrToTest = argument.c_str();
+      int32 error = NO_ERROR;
+      ExtensionString fullPath;
+
+      if (g_file_test(pathStrToTest, G_FILE_TEST_EXISTS)) {
+
+        // Now we check if the path is absolute or relative.
+        if(g_path_is_absolute (pathStrToTest)) {
+          fullPath = argument.c_str();
+        } else {
+          // We have a relative path. Form an absolute URL
+          fullPath = g_get_current_dir();
+          fullPath = fullPath + "/";
+          fullPath = fullPath + pathStrToTest;
+        }
+      }
+
+      if (!fullPath.empty()) {
+        if (!firstEntry) {
+          result += ",";
+        }
+        firstEntry = false;
+
+        result += "\"" + fullPath + "\"";
+      }
+    }
+
+    result += "]";
+  }
+
+  return result;
+}
+
 int RunMain(int argc, char* argv[]) {
   // Create a copy of |argv| on Linux because Chromium mangles the value
   // internally (see issue #620).
@@ -155,6 +203,8 @@ int RunMain(int argc, char* argv[]) {
   }
   
   startNodeProcess();
+
+  gFilesToOpen = GetFilenamesFromCommandLine(command_line);
 
   // Initialize CEF.
   context->Initialize(main_args, settings, app, NULL);

@@ -24,6 +24,7 @@
 // Brackets specific change.
 #include "appshell/native_menu_model.h"
 #include "appshell/command_callbacks.h"
+#include "appshell/appshell_extensions_platform.h"
 
 namespace client {
 
@@ -390,6 +391,7 @@ void DelayedResize(GtkWidget* window_) {
   }
 }
 
+
 void RootWindowGtk::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
   REQUIRE_MAIN_THREAD();
 
@@ -601,13 +603,47 @@ void RootWindowGtk::MenubarSizeAllocated(GtkWidget* widget,
   self->menubar_height_ = allocation->height;
 }
 
+// Brackets specific change.
+// GTK is toggling the menu state just by
+// clicking on the menu entry. So posting a task to undo that
+// unwanted side effect. This is a hack.
+void DelayedMenuMarkToggle(GtkWidget *menuItem){
+
+  // It is important to make sure our MenuItemACtivated
+  // knows that we are only changing the state and not
+  // firing any command as such.
+  StMenuCommandSkipper skipCmd;
+
+  // Get the current state of the menu.
+  gboolean menuState = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuItem));
+
+  // Now go about toggling the state. If Brackets is triggering a menu state change,
+  // that will get executed later than DelayedMenuMarkToggle, as this task would have been
+  // posted prior to shell call to fire a command, so need not worry about this function
+  // getting executed after the shell call.
+  gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menuItem), !menuState);
+}
+
 // static
 gboolean RootWindowGtk::MenuItemActivated(GtkWidget* widget,
                                           RootWindowGtk* self) {
-  // Retrieve the menu ID set in AddMenuEntry.
-  int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
-  if (self && self->browser_window_)
-    self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
+  // Since we have migrated to checked menu items, setting the
+  // state of the menu is triggering a menu activation. So made
+  // sure we actually execute a command only when is menu is
+  // actually activated by the user and not when setting the menu
+  // state.
+  if(!StMenuCommandSkipper::GetMenuCmdSkipFlag()){
+
+    // Post a message to undo the undesired menu state change.
+    // See the comments above for explanation.
+    CefPostTask(TID_UI, base::Bind(&DelayedMenuMarkToggle, widget));
+
+    // Retrieve the menu ID set in AddMenuEntry.
+    int tag = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), kMenuIdKey));
+    if (self && self->browser_window_)
+      self->browser_window_->DispatchCommandToBrowser(self->GetBrowser(), tag);
+    }
+
 }
 
 // static
