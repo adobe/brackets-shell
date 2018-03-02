@@ -1098,12 +1098,20 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
-void CheckedItemCallback(GtkWidget* checkMenuItem, GtkWidget* originalMenuItem) {
-    if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(checkMenuItem))) {
-        gtk_menu_item_activate(GTK_MENU_ITEM(originalMenuItem));
-    } else {
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkMenuItem), true);
-    }
+int _getMenuItemPosition(GtkWidget* parent, GtkWidget* menuItem)
+{
+    GList* children = gtk_container_get_children(GTK_CONTAINER(parent));
+    int index = 0;
+    do {
+        GtkWidget* widget = (GtkWidget*) children->data;
+        if (widget == menuItem) {
+            return index;
+        }
+        index++;
+    } while ((children = g_list_next(children)) != NULL);
+    g_list_free(children);
+
+    return -1;
 }
 
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
@@ -1117,45 +1125,26 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     gtk_widget_set_sensitive(menuItem, enabled);
 
     // Functionality for checked
-    gint checkedItemPos = -1;
-    GtkWidget* checkedMenuItem;
     GtkWidget* parent = gtk_widget_get_parent(menuItem);
+    int position = _getMenuItemPosition(parent, menuItem);
     const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
 
-    if (GTK_IS_CONTAINER(parent)) {
-        GList* children = gtk_container_get_children(GTK_CONTAINER(parent));
-        gint index = 0;
-        do {
-            GtkWidget* widget = (GtkWidget*) children->data;
-            const gchar* widgetLabel = gtk_menu_item_get_label(GTK_MENU_ITEM(widget));
-            if (widget == menuItem) {
-                checkedItemPos = index + 1;
-            }
-            if (index >= checkedItemPos && GTK_IS_CHECK_MENU_ITEM(widget) && strcmp(widgetLabel, label) == 0) {
-                checkedMenuItem = widget;
-                break;
-            }
-            index++;
-        } while ((children = g_list_next(children)) != NULL);
-        g_list_free(children);
+    GtkWidget* newMenuItem;
+    if (checked == true) {
+        newMenuItem = gtk_check_menu_item_new_with_label(label);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(newMenuItem), true);
+    } else if (checked == false){
+        newMenuItem = gtk_menu_item_new_with_label(label);
     }
 
-    if (checked == true) {
-        if (!GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
-            checkedMenuItem = gtk_check_menu_item_new_with_label(label);
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(checkedMenuItem), true);
-            g_signal_connect(checkedMenuItem, "activate", G_CALLBACK(CheckedItemCallback), menuItem);
-            gtk_menu_shell_insert(GTK_MENU_SHELL(parent), checkedMenuItem, checkedItemPos);
-        }
-        gtk_widget_set_sensitive(checkedMenuItem, enabled);
-        gtk_widget_show(checkedMenuItem);
-        gtk_widget_hide(menuItem);
-    } else {
-        gtk_widget_show(menuItem);
-        if (GTK_IS_CHECK_MENU_ITEM(checkedMenuItem)) {
-            gtk_widget_hide(checkedMenuItem);
-        }
-    }
+    gtk_widget_destroy(menuItem);
+
+    InstallMenuHandler(newMenuItem, browser, tag);
+    model.setOsItem(tag, newMenuItem);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(parent), newMenuItem, position);
+    gtk_widget_set_sensitive(newMenuItem, enabled);
+    gtk_widget_show(newMenuItem);
+
     return NO_ERROR;
 }
 
