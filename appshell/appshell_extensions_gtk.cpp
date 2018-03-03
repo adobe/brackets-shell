@@ -1122,9 +1122,6 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
         return ERR_NOT_FOUND;
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
-    gtk_widget_set_sensitive(menuItem, enabled);
-
-    // Functionality for checked
     GtkWidget* parent = gtk_widget_get_parent(menuItem);
     int position = _getMenuItemPosition(parent, menuItem);
     const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
@@ -1136,7 +1133,6 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     } else if (checked == false){
         newMenuItem = gtk_menu_item_new_with_label(label);
     }
-
     gtk_widget_destroy(menuItem);
 
     InstallMenuHandler(newMenuItem, browser, tag);
