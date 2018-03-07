@@ -95,6 +95,8 @@
 
 typedef char s8;
 
+bool StMenuCommandSkipper::sSkipMenuCommand = false;
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Supported browsers (order matters):
@@ -1109,7 +1111,6 @@ int _getMenuItemPosition(GtkWidget* parent, GtkWidget* menuItem)
         }
         index++;
     } while ((children = g_list_next(children)) != NULL);
-    g_list_free(children);
 
     return -1;
 }
