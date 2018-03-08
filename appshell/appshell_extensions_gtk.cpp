@@ -1123,8 +1123,17 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
         return ERR_NOT_FOUND;
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
+    if (menuItem == NULL) {
+        return ERR_UNKNOWN;
+    }
     GtkWidget* parent = gtk_widget_get_parent(menuItem);
+    if (parent == NULL) {
+        return ERR_UNKNOWN;
+    }
     int position = _getMenuItemPosition(parent, menuItem);
+    if (position < 0) {
+        return ERR_UNKNOWN;
+    }
     const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
 
     GtkWidget* newMenuItem;
