@@ -108,6 +108,20 @@ public:
     void operator()(std::string &contents);
 };
 
+#if defined(OS_LINUX)
+class StMenuCommandSkipper {
+public:
+
+    StMenuCommandSkipper()  { sSkipMenuCommand = true; }
+    ~StMenuCommandSkipper() { sSkipMenuCommand = false;}
+
+    static bool GetMenuCmdSkipFlag () { return sSkipMenuCommand;}
+
+private:
+    static bool sSkipMenuCommand;
+};
+#endif
+
 #if defined(OS_MACOSX) || defined(OS_LINUX)
 void DecodeContents(std::string &contents, const std::string& encoding);
 #endif

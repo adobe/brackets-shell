@@ -95,6 +95,8 @@
 
 typedef char s8;
 
+bool StMenuCommandSkipper::sSkipMenuCommand = false;
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Supported browsers (order matters):
@@ -1098,16 +1100,57 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int _getMenuItemPosition(GtkWidget* parent, GtkWidget* menuItem)
+{
+    GList* children = gtk_container_get_children(GTK_CONTAINER(parent));
+    int index = 0;
+    do {
+        GtkWidget* widget = (GtkWidget*) children->data;
+        if (widget == menuItem) {
+            return index;
+        }
+        index++;
+    } while ((children = g_list_next(children)) != NULL);
+
+    return -1;
+}
+
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
 {
-    // TODO: Implement functionality for checked
     NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
     int tag = model.getTag(command);
     if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
-    gtk_widget_set_sensitive(menuItem, enabled);
+    if (menuItem == NULL) {
+        return ERR_UNKNOWN;
+    }
+    GtkWidget* parent = gtk_widget_get_parent(menuItem);
+    if (parent == NULL) {
+        return ERR_UNKNOWN;
+    }
+    int position = _getMenuItemPosition(parent, menuItem);
+    if (position < 0) {
+        return ERR_UNKNOWN;
+    }
+    const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
+
+    GtkWidget* newMenuItem;
+    if (checked == true) {
+        newMenuItem = gtk_check_menu_item_new_with_label(label);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(newMenuItem), true);
+    } else if (checked == false){
+        newMenuItem = gtk_menu_item_new_with_label(label);
+    }
+    gtk_widget_destroy(menuItem);
+
+    InstallMenuHandler(newMenuItem, browser, tag);
+    model.setOsItem(tag, newMenuItem);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(parent), newMenuItem, position);
+    gtk_widget_set_sensitive(newMenuItem, enabled);
+    gtk_widget_show(newMenuItem);
+
     return NO_ERROR;
 }
 
