@@ -60,6 +60,7 @@ static const int ERR_CL_TOOLS_NOTSUPPORTED = 17;
 static const int ERR_ENCODE_FILE_FAILED = 18;
 static const int ERR_DECODE_FILE_FAILED = 19;
 static const int ERR_UNSUPPORTED_UTF16_ENCODING = 20;
+static const int ERR_UPDATE_ARGS_INIT_FAILED = 21;
 
 static const int ERR_PID_NOT_FOUND = -9999; // negative int to avoid confusion with real PIDs
 

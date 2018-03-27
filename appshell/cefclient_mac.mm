@@ -7,6 +7,7 @@
 #import <objc/runtime.h>
 #include <sstream>
 #include "cefclient.h"
+#include "update.h"
 #include "include/cef_app.h"
 #include "include/cef_version.h"
 #import "include/cef_application_mac.h"
@@ -730,6 +731,9 @@ extern NSMutableArray* pendingOpenFiles;
   g_handler = NULL;
   CefShutdown();
 
+    //Run the app auto update
+  RunAppUpdate();
+    
   [self release];
 
   // Release the AutoRelease pool.

@@ -643,7 +643,30 @@ if (!brackets) {
     appshell.app.getRemoteDebuggingPort = function () {
         return GetRemoteDebuggingPort();
     };
+    
+    
+    /**
+     * Set the parameters for auto update, to be used by installer on Win/Update Script on Mac as command line arguments.
+     *
+     * @param {string} updateInfoObj - update info json object
+     * @param {function(err)=} callback Asynchronous callback function. 
+     * @return None. 
+     */
+    native function SetUpdateParamsAndRunUpdate();
+    appshell.app.setUpdateParamsAndQuit = function (updateInfoObj, callback) {
+        SetUpdateParamsAndRunUpdate(callback || _dummyCallback, updateInfoObj);
+    }
  
+    /**
+    * Check if auto update is in progress
+    * @param {function(err)=} callback Asynchronous callback function. 
+    * @return None. This is an asynchronous call that sends all return information to the callback.
+    */
+    native function IsAutoUpdateInProgress();
+        appshell.app.isAutoUpdateInProgress = function (callback) {
+            IsAutoUpdateInProgress(callback || _dummyCallback);
+    }
+
     /**
      * Set menu enabled/checked state.
      * @param {string} command ID of the menu item.
