@@ -109,22 +109,22 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
         // Unmount the already existing disk image, if any
         NSArray* pArgs = [NSArray arrayWithObjects:@"detach", mountPoint,  @"-force", nil];
         
-        int retval = RunScript(hdiPath, pArgs, true, false);
+        int retval = RunScript(hdiPath, pArgs, true);
         while (retval != 1) {
-            retval = RunScript(hdiPath, pArgs, true, false);
+            retval = RunScript(hdiPath, pArgs, true);
         }
     
         // Mount the new disk image
         pArgs = [NSArray arrayWithObjects:@"attach", imagePath, @"-mountpoint", mountPoint, @"-nobrowse", nil];
    
-        retval = RunScript(hdiPath, pArgs, true, false);
+        retval = RunScript(hdiPath, pArgs, true);
     
         // Run the update script present inside the dmg
         if (!retval) {
     
             NSString *scriptPath = [mountPoint stringByAppendingString:@"/update.sh"];
             pArgs = [NSArray arrayWithObjects:shPath, scriptPath, @"-a", bracketsAppName, @"-b", installDir,  @"-l", logFilePath, @"-m", mountPoint,  @"-t", updateDir, @"&", nil];
-            retval = RunScript(nohupPath, pArgs, false, true);
+            retval = RunScript(nohupPath, pArgs, false);
         }
     }
 }
