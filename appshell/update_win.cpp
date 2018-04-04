@@ -29,56 +29,91 @@
 class UpdateHelper {
 private:
 	static bool m_blaunchInstaller;
-	static ExtensionString m_InstallerPath;
-	static ExtensionString m_logFilePath;	//AUTOUPDATE_PRERELEASE
+	static ExtensionString m_InstallerPath;	 //Path to the installer file
+	static ExtensionString m_logFilePath;	// Path to the installer log file //AUTOUPDATE_PRERELEASE
+	static ExtensionString m_installStatusFilePath;	// Path to the log file which logs errors which prevent the installer from running
+	
 public:
 	void static SetInstallerPath(ExtensionString &path);
+	void static SetInstallStatusFilePath(ExtensionString &path);
 	void static SetlaunchInstaller(bool val);
 	void static SetLogFilePath(ExtensionString &logFilePath);	//AUTOUPDATE_PRERELEASE
 	void static RunAppUpdate();
-	void static SetUpdateArgs(ExtensionString &installerPath, ExtensionString &logFilePath);
+	void static SetUpdateArgs(ExtensionString &installerPath, ExtensionString &installStatusFilePath, ExtensionString &logFilePath);
 	bool static IsAutoUpdateInProgress() { return m_blaunchInstaller; }
 };
 
 bool UpdateHelper::m_blaunchInstaller;
 ExtensionString UpdateHelper::m_InstallerPath;
 ExtensionString UpdateHelper::m_logFilePath;
+ExtensionString UpdateHelper::m_installStatusFilePath;
 
 // Runs the installer for app update
 void UpdateHelper::RunAppUpdate() {
 	if (m_blaunchInstaller ) {
-		std::wstring commandInput = L"msiexec /i ";
 
-		commandInput += m_InstallerPath;
-
-		commandInput += L" /qr";
-
+		std::wstring commandInput = L"msiexec /i " + m_InstallerPath + L" /qr";
 		//AUTOUPDATE_PRERELEASE
 		if (!m_logFilePath.empty()) {
-			commandInput += L" /l*V ";
-			commandInput += m_logFilePath;
+			commandInput += L" /l*V " + m_logFilePath;
 		}
 		commandInput += L" LAUNCH_APPLICATION_SILENT=1 MSIFASTINSTALL=2";
 
-		const wchar_t* input = commandInput.c_str();
-
-		wchar_t cmd[MAX_PATH];
+		const TCHAR* input = commandInput.c_str();
+		TCHAR cmd[MAX_UNC_PATH];
 		size_t nSize = _countof(cmd);
-		_wgetenv_s(&nSize, cmd, L"COMSPEC");
-		wchar_t cmdline[MAX_PATH + 50];
-		swprintf_s(cmdline, L"%s /c %s", cmd, input);
+		errno_t comspecEnv = _wgetenv_s(&nSize, cmd, L"COMSPEC");
 
-		STARTUPINFOW startInf;
-		memset(&startInf, 0, sizeof startInf);
-		startInf.cb = sizeof(startInf);
+		// fp is a pointer to log file, which logs any errors encountered due to which installer could not be launched
+		FILE *fp = NULL;
+		if (comspecEnv == 0 && nSize != 0)
+		{
+			TCHAR cmdline[3*MAX_UNC_PATH];
+			swprintf_s(cmdline, 3*MAX_UNC_PATH, L"%s /c %s", cmd, input);
 
+			STARTUPINFOW startInf;
+			memset(&startInf, 0, sizeof startInf);
+			startInf.cb = sizeof(startInf);
 
-		PROCESS_INFORMATION procInfo;
-		memset(&procInfo, 0, sizeof procInfo);
+			PROCESS_INFORMATION procInfo;
+			memset(&procInfo, 0, sizeof procInfo);
 
-		//AutoUpdate : TODO : Error handling
-		//Create the installer process
-		CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &startInf, &procInfo);
+			//Create the installer process
+			BOOL installerProcess = CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW, NULL, NULL, &startInf, &procInfo);
+			if (!installerProcess && !m_installStatusFilePath.empty()) {
+				// Process could not be created successfully
+				DWORD err = GetLastError();
+				fp = _wfopen(m_installStatusFilePath.c_str(), L"a+");
+				if (fp != NULL) {
+					std::wstring errStr = std::to_wstring(err);
+					fwprintf(fp, L"Installer process could not be created successfully. Error : %s \n", errStr.c_str());
+				}
+			}
+		}
+		else {
+			if (!m_installStatusFilePath.empty())
+			{
+				fp = _wfopen(m_installStatusFilePath.c_str(), L"a+");
+				if (comspecEnv != 0)
+				{
+					//Command line interpreter could not be fetched
+					if (fp != NULL) {
+						std::wstring comspecStr = std::to_wstring(comspecEnv);
+						fwprintf(fp, L"Command line interpreter could not be fetched from the current environment. Error : %s \n", comspecStr.c_str());
+					}
+				}
+				else
+				{
+					//COMSPEC variable not found
+					if (fp != NULL) {
+						std::wstring nSizeStr = std::to_wstring(nSize);
+						fwprintf(fp, L"COMSPEC not found in the current environment. Error : %s \n", nSizeStr.c_str());
+					}
+				}
+			}
+		}
+		if(fp != NULL)
+			fclose(fp);
 	}
 }
 
@@ -91,16 +126,24 @@ void UpdateHelper::SetInstallerPath(ExtensionString &path) {
 }
 
 //Sets the command line arguments to installer
-void UpdateHelper::SetUpdateArgs(ExtensionString &installerPath, ExtensionString &logFilePath)
+void UpdateHelper::SetUpdateArgs(ExtensionString &installerPath, ExtensionString &installStatusFilePath ,ExtensionString &logFilePath)
 {
 	SetInstallerPath(installerPath);
 	SetLogFilePath(logFilePath);
+	SetInstallStatusFilePath(installStatusFilePath);
 }
 
 // Sets the installer log file path
 void UpdateHelper::SetLogFilePath(ExtensionString &logFilePath) {
 	if (!logFilePath.empty()) {
 		m_logFilePath = logFilePath;
+	}
+}
+
+// Sets the install status log file path, which logs any errors encountered due to which installer could not be run
+void UpdateHelper::SetInstallStatusFilePath(ExtensionString &installStatusFilePath) {
+	if (!installStatusFilePath.empty()) {
+		m_installStatusFilePath = installStatusFilePath;
 	}
 }
 // Sets the boolean for conditional launch of Installer
@@ -119,7 +162,8 @@ int32 SetInstallerCommandLineArgs(CefString &updateArgs) {
 	{
 		ExtensionString installerPath = argsDict->GetString("installerPath").ToWString();
 		ExtensionString logFilePath = argsDict->GetString("logFilePath").ToWString();	//AUTOUPDATE_PRERELEASE
-		UpdateHelper::SetUpdateArgs(installerPath, logFilePath);
+		ExtensionString installStatusFilePath = argsDict->GetString("installStatusFilePath").ToWString();
+		UpdateHelper::SetUpdateArgs(installerPath, installStatusFilePath, logFilePath);
 		argsDict = NULL;
 	}
 	return error;
