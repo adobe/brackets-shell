@@ -18,6 +18,7 @@ cp -r "./staging/${BRACKETS_APP_NAME}.app/" "$tempDir/$appName"
 # copy update.sh to hidden location in the dmg
 if [ -f ./update.sh ]; then
   echo "Adding update.sh"
+  chmod +X ./update.sh
   cp ./update.sh "$tempDir/.update.sh"
 fi
 
