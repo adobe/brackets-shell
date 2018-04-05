@@ -7,16 +7,11 @@ APP_DIR=$EMPTY_STRING
 LOG_FILE=$EMPTY_STRING
 MOUNT_POINT=$EMPTY_STRING
 TEMP_DIR=$EMPTY_STRING
+PID=$EMPTY_STRING
 
-#BEGIN return value codes
+#Return value codes
 SUCCESS=0
-PS_FAILED=1
-COPY_FAILED=3
-OPTIONS_MISSING=7
-MOVE_FAILED=8
-CODESIGN_FAILED=9
-DELETE_FAILED=10
-#END return value codes
+OPTIONS_MISSING=1
 
 # Logs info messages into log file
 function printInfo(){
@@ -70,15 +65,30 @@ function verifySetup(){
         printError "Temp directory is missing"
         return $OPTIONS_MISSING
     fi
+
+     if [ "$PID" == "$EMPTY_STRING" ]
+    then
+        printError "PID of current Brackets is missing"
+        return $OPTIONS_MISSING
+    fi
   
     return $SUCCESS
 }
 
 # Updates the brackets app
 function updateBrackets(){
+
+    printInfo "Check and wait if Brackets is still running ..."
+
+    lsof -p $PID +r 1 &>/dev/null
+    exitStatus=$?
+    
+    # If Brackets is not running anymore : lsof returns 1 if process is not running, and 0 if it exited successfully while being waited
+   if [ $exitStatus -eq 1 ] || [ $exitStatus -eq 0 ]
+    then
+        printInfo "Brackets not running anymore."
         
         local abortInstallation=0
-        local returnValue=$SUCCESS
         
 
         if [ -d $APP_DIR ]
@@ -92,7 +102,6 @@ function updateBrackets(){
             then
                 printError "Unable to move the existing Brackets app to temp directory updateTemp. mv retured $exitStatus"
                 abortInstallation=1
-                returnValue=$MOVE_FAILED
             else
                 printInfo "Move Successful"
                 
@@ -109,7 +118,6 @@ function updateBrackets(){
             then
                 printError "Unable to copy Brackets.app. cp retured $exitStatus"
                 abortInstallation=1
-                returnValue=$COPY_FAILED
             else
                 printInfo "Brackets.app is copied."
                 
@@ -128,7 +136,6 @@ function updateBrackets(){
                     if [ $exitStatus -ne 0 ]
                     then
                         printError "Unable to delete $APP_DIR/$APP_NAME. rm retured $exitStatus"
-                        returnValue=$DELETE_FAILED
                     else
                         printInfo "Moving the old brackets back from AppData"
                         mv "$TEMP_DIR/$APP_NAME" "$APP_DIR/$APP_NAME"
@@ -136,11 +143,8 @@ function updateBrackets(){
                         if [ $exitStatus -ne 0 ]
                         then
                             printError "Unable to move the old brackets back from AppData. mv retured $exitStatus"
-                        else
-                            returnValue=$MOVE_FAILED
                         fi
                     fi
-                    returnValue=$CODESIGN_FAILED
                 else
 
                     printInfo "Code signature verified successfully."
@@ -149,7 +153,7 @@ function updateBrackets(){
                     exitStatus=$?
                     if [ $exitStatus -ne 0 ]
                     then
-                        printWarning "Unable to mark Brackets.app as trusted application. You may have to do it manually. xattr returnd $exitStatus. Please check the error log for details."
+                        printWarning "Unable to mark Brackets.app as trusted application. You may have to do it manually. xattr returnd $exitStatus."
                     else
                         printInfo "Brackets.app is marked as trusted application."
                     
@@ -159,15 +163,27 @@ function updateBrackets(){
         fi
 
         printInfo "Unmounting the DMG ..."
-        hdiutil detach "$MOUNT_POINT" "-force" >> $LOG_FILE
-        #AutoUpdate : TODO : Add the check for command success or failure here, and log accordingly
-        printInfo "Unmounted the DMG and attempying to open Brackets ..."
+        hdiutil detach "$MOUNT_POINT" "-force" 
+        exitStatus=$?
+        if [ $exitStatus -ne 0 ]
+        then
+            printWarning "DMG could not be unmounted. hdiutil returnd $exitStatus."
+        else
+            printInfo "Unmounted the DMG and attempying to open Brackets ..."
+        fi
         
         open -a "$APP_DIR/$APP_NAME"
-        #AutoUpdate : TODO : Add the check for command success or failure here, and log accordingly
-        printInfo "Opened Brackets"
+        exitStatus=$?
+        if [ $exitStatus -ne 0 ]
+        then
+            printError "Brackets could not be opened. open returnd $exitStatus."
+        else
+            printInfo "Opened Brackets."
+        fi
         
-        return $returnValue
+    else
+        printError "Brackets could not be exited properly. lsof returned $exitStatus"
+    fi
 
 }
 
@@ -177,7 +193,7 @@ function updateBrackets(){
 # -l - Absolute path to the updation log file path
 # -m - Mount Point for the mounted disk image for latest Brackets version
 # -t - Absolute path to the update temp directory in AppData
-# -p - PID of the currently running brackets process    #AutoUpdate : TODO
+# -p - PID of the currently running brackets process
 
 while getopts a:b:l:m:t:p: OPT; do
     case "$OPT" in
@@ -211,14 +227,22 @@ while getopts a:b:l:m:t:p: OPT; do
                 TEMP_DIR=$OPTARG
             fi
             ;;
+        p)
+            if [ "$PID" == "$EMPTY_STRING" ]
+            then
+                PID=$OPTARG
+            fi
+            ;;
+
     esac
 
 done
 
 
-# AutoUpdate : TODO: If $LOG_FILE exists, make sure that we have write permissions
-echo "" > $LOG_FILE # To overwrite old content/create the file
+# Log file for update process
+echo "" > $LOG_FILE
 
+# Verify if the update setup is correctly initialized
 verifySetup
 result=$?
 if [ $result -ne $SUCCESS ]
@@ -227,4 +251,5 @@ then
     exit $result
 fi
 
+# Update brackets
 updateBrackets
