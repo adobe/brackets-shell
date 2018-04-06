@@ -15,6 +15,13 @@ rm -rf $tempDir
 mkdir $tempDir
 cp -r "./staging/${BRACKETS_APP_NAME}.app/" "$tempDir/$appName"
 
+# copy update.sh to hidden location in the dmg
+if [ -f ./update.sh ]; then
+  echo "Adding update.sh"
+  chmod +x ./update.sh
+  cp ./update.sh "$tempDir/.update.sh"
+fi
+
 # create symlink to Applications folder in staging area
 # with a single space as the name so it doesn't show an unlocalized name
 ln -s /Applications "$tempDir/ "
