@@ -49,6 +49,89 @@ void MaximizeWindow(GtkWindow* window) {
   gtk_window_maximize(window);
 }
 
+void SaveWindowState(GtkWindow* window) {
+  gint left, top;
+  gint width, height;
+
+  GKeyFile* key_file = g_key_file_new();
+  GError* error = NULL;
+  gchar* filePath = g_strdup_printf("%s/%s/%s", g_get_user_config_dir(), APP_NAME, "window.ini");
+  bool maximized = IsWindowMaximized(window);
+
+  // If window is not maximized, save current size and position
+  if (!maximized) {
+    gtk_window_get_position(window, &left, &top);
+    gtk_window_get_size(window, &width, &height);
+  // If maximized, load size and position from file
+  // to preserve last saved values
+  } else {
+    if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, NULL))
+    {
+      left = g_key_file_get_integer(key_file, "position", "left", &error);
+      top = g_key_file_get_integer(key_file, "position", "top", &error);
+      width = g_key_file_get_integer(key_file, "size", "width", &error);
+      height = g_key_file_get_integer(key_file, "size", "height", &error);
+      // If any value can not be readed, save defaults
+      if (left == 0 || top == 0 || width == 0 || height == 0) {
+        left = 1;
+        top = 1;
+        width = 800;
+        height = 600;
+      }
+    // If we can not load the file, save defaults
+    } else {
+      left = 1;
+      top = 1;
+      width = 800;
+      height = 600;
+    }
+  }
+  // The file will be written always.
+  g_key_file_set_integer(key_file, "position", "left", left);
+  g_key_file_set_integer(key_file, "position", "top", top);
+  g_key_file_set_integer(key_file, "size", "width", width - 1); // DelayedResize() 1 pixel compensation
+  g_key_file_set_integer(key_file, "size", "height", height - 1); // DelayedResize() 1 pixel compensation
+  g_key_file_set_boolean(key_file, "state", "maximized", maximized);
+
+  if(!g_key_file_save_to_file(key_file, filePath, NULL))
+  {
+    printf("%s", "Error -> SaveWindowState(): can not write `window.ini`\n");
+  }
+}
+
+void LoadWindowState(GtkWindow* window) {
+  gint left = 1;
+  gint top = 1;
+  gint width = 800;
+  gint height = 600;
+  bool maximized = FALSE;
+
+  GKeyFile* key_file = g_key_file_new();
+  GError* error = NULL;
+  gchar* filePath = g_strdup_printf("%s/%s/%s", g_get_user_config_dir(), APP_NAME, "window.ini");
+
+  if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, NULL))
+  {
+    left = g_key_file_get_integer(key_file, "position", "left", &error);
+    top = g_key_file_get_integer(key_file, "position", "top", &error);
+    width = g_key_file_get_integer(key_file, "size", "width", &error);
+    height = g_key_file_get_integer(key_file, "size", "height", &error);
+    maximized = g_key_file_get_boolean(key_file, "state", "maximized", &error);
+    // If any value can not be readed, load defaults
+    if (left == 0 || top == 0 || width == 0 || height == 0) {
+      left = 1;
+      top = 1;
+      width = 800;
+      height = 600;
+      maximized = FALSE;
+    }
+  }
+  gtk_window_move(GTK_WINDOW(window), left, top);
+  gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+  if (maximized)
+    MaximizeWindow(window);
+}
+
 }  // namespace
 
 RootWindowGtk::RootWindowGtk()
@@ -197,6 +280,7 @@ void RootWindowGtk::Close(bool force) {
   REQUIRE_MAIN_THREAD();
 
   if (window_) {
+    SaveWindowState(GTK_WINDOW(window_));
     force_close_ = force;
     gtk_widget_destroy(window_);
   }
@@ -242,18 +326,18 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   // in the upper-left corner. Maybe there's a better default place to put it?
   int x = start_rect_.x;
   int y = start_rect_.y;
-  int width, height;
-  if (start_rect_.IsEmpty()) {
-    // TODO(port): Also, maybe there's a better way to choose the default size.
-    width = 800;
-    height = 600;
-  } else {
-    width = start_rect_.width;
-    height = start_rect_.height;
-  }
+  int width = start_rect_.width;
+  int height = start_rect_.height;
 
   window_ = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_default_size(GTK_WINDOW(window_), width, height);
+
+  if (start_rect_.IsEmpty()) {
+    LoadWindowState(GTK_WINDOW(window_));
+  } else {
+    gtk_window_move(GTK_WINDOW(window_), x, y);
+    gtk_window_set_default_size(GTK_WINDOW(window_), width, height);
+  }
+
   g_signal_connect(G_OBJECT(window_), "focus-in-event",
                    G_CALLBACK(&RootWindowGtk::WindowFocusIn), this);
   g_signal_connect(G_OBJECT(window_), "window-state-event", 
@@ -341,7 +425,7 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
   // Most window managers ignore requests for initial window positions (instead
   // using a user-defined placement algorithm) and honor requests after the
   // window has already been shown.
-  gtk_window_move(GTK_WINDOW(window_), x, y);
+  //gtk_window_move(GTK_WINDOW(window_), x, y);
 
   // Windowed browsers are parented to the X11 Window underlying the GtkWindow*
   // and must be sized manually. The OSR GTK widget, on the other hand, can be
