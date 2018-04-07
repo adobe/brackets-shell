@@ -71,14 +71,14 @@ void SaveWindowState(GtkWindow* window) {
       top = g_key_file_get_integer(key_file, "position", "top", &error);
       width = g_key_file_get_integer(key_file, "size", "width", &error);
       height = g_key_file_get_integer(key_file, "size", "height", &error);
-      // If any value can not be readed, save defaults
+      // If any value can not be readed, restore defaults
       if (left == 0 || top == 0 || width == 0 || height == 0) {
         left = 1;
         top = 1;
         width = 800;
         height = 600;
       }
-    // If we can not load the file, save defaults
+    // If we can not load the file, set defaults
     } else {
       left = 1;
       top = 1;
@@ -100,6 +100,7 @@ void SaveWindowState(GtkWindow* window) {
 }
 
 void LoadWindowState(GtkWindow* window) {
+  // Default values if It is not possible to load the key file
   gint left = 1;
   gint top = 1;
   gint width = 800;
@@ -117,7 +118,7 @@ void LoadWindowState(GtkWindow* window) {
     width = g_key_file_get_integer(key_file, "size", "width", &error);
     height = g_key_file_get_integer(key_file, "size", "height", &error);
     maximized = g_key_file_get_boolean(key_file, "state", "maximized", &error);
-    // If any value can not be readed, load defaults
+    // If any value can not be readed, set defaults again
     if (left == 0 || top == 0 || width == 0 || height == 0) {
       left = 1;
       top = 1;
