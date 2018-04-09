@@ -522,8 +522,7 @@ public:
                 CefString updateJson = argList->GetString(1);
                 error = SetInstallerCommandLineArgs(updateJson);
             }
-		}
-		else if (message_name == "IsAutoUpdateInProgress") {
+		} else if (message_name == "IsAutoUpdateInProgress") {
 			// Parameters:
 			//  0: int32 - callback id
 
