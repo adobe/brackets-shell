@@ -77,7 +77,7 @@
 
         <Component Id="AddContextMenu"
                          Guid="5E95F75D-91C4-44B6-B8A3-83005388B4BF" Directory="INSTALLDIR" KeyPath="yes">
-
+            <Condition>ADDCONTEXTMENU="1" OR CONTEXTMENUREGISTRY</Condition>        
             <!-- Add Open With Brackets to explorer's file context menu -->
             <RegistryValue Root="HKCR" Key="*\shell\!(loc.ProductName)" Value="!(loc.ExplorerFileOpenContextMenu)"
                                Type="string" />
@@ -114,18 +114,70 @@
         <UIRef Id="WixUI_ErrorProgressText" />
 
         <!-- Launch app after install -->
-<!--
+
         <Property Id="LAUNCHAPPONEXIT" Value="1" />
+        <Property Id="LAUNCH_APPLICATION_SILENT" Value="0" />
+        <Property Id="MSIFASTINSTALL" Value="3"/>
+
         <Property Id="WixShellExecTarget" Value="[#fil7EE01D0693DA0F92C26C5F3007D1BF2C]" />
         <CustomAction Id="LaunchApplication" FileKey="fil7EE01D0693DA0F92C26C5F3007D1BF2C" ExeCommand=""
                       Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
--->
-        <UI>
+
+        <CustomAction Id="LaunchApplicationCancel"
+                      Return="check"
+                      Execute="immediate"
+                      BinaryKey="BracketsExecutor.dll"
+                      DllEntry="LaunchBrackets" />
+        
+        <CustomAction Id="LaunchApplicationError"
+                      Return="check"
+                      Execute="immediate"
+                      BinaryKey="BracketsExecutor.dll"
+                      DllEntry="LaunchBrackets" />
+        
+        <CustomAction Id="LaunchApplicationSuspend"
+                      Return="check"
+                      Execute="immediate"
+                      BinaryKey="BracketsExecutor.dll"
+                      DllEntry="LaunchBrackets" />
+
+        <Property Id="INSTALLDIRREGISTRY">
+            <RegistrySearch Id="InstallDirRegistryID"
+                            Root="HKLM" 
+                            Type="raw"
+                            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$(var.ExeName).exe"
+            />
+        </Property>
+
+        <Property Id="CONTEXTMENUREGISTRY">
+            <RegistrySearch Id="ContextMenuRegistryID"
+                            Root="HKCR" 
+                            Type="raw"
+                            Key="directory\shell\!(loc.ProductName)"
+            />
+        </Property>
+
+        <SetProperty Id="CURRENTPATH"
+             Before="CostInitialize" 
+             Sequence="execute"
+             Value="[%PATH]" />
+
+        <Binary Id="InstallLocationChecker.dll" SourceFile="BracketsConfigurator.CA.dll" />
+        <Binary Id="BracketsExecutor.dll" SourceFile="LaunchBrackets.CA.dll" />
+
+        <CustomAction Id="InstallDirCustomAction"
+                      Return="check"
+                      Execute="immediate"
+                      BinaryKey="InstallLocationChecker.dll"
+                      DllEntry="BracketsConfigurator" />
+
+
+		<UI>
             <Publish Dialog="MyExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
-<!--
-            <Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction"
+			<!--
+            	<Publish Dialog="MyExitDialog" Control="Finish" Order="1" Event="DoAction"
                      Value="LaunchApplication">LAUNCHAPPONEXIT=1 and NOT INSTALLED AND NOT REMOVE="ALL"</Publish>
--->
+			-->
         </UI>
 
         <!-- Add image assets -->
@@ -137,6 +189,7 @@
                 <Directory Id='INSTALLDIR' Name='!(loc.ShortProductName)'>
                   <Component Id="UpdatePath"
                              Guid="1781A625-8ACB-45E7-A8BA-219D81760B2E">
+                             <Condition>UPDATEPATH="1"</Condition>
                     <CreateFolder />
                     <Environment Id="PATH"
                                  Action="set"
@@ -184,10 +237,16 @@
                       DllEntry="BroadcastEnvironmentVariablesChange" />
         
         <InstallExecuteSequence>
-            <Custom Action="BroadcastEnvironmentVariablesChange" After="InstallFinalize"/>
+            <Custom Action="BroadcastEnvironmentVariablesChange" After="InstallFinalize"/> 
+            <Custom Action="InstallDirCustomAction" Before="CostFinalize">LAUNCH_APPLICATION_SILENT = 1</Custom>
+            <Custom Action="LaunchApplication" After="InstallFinalize">LAUNCH_APPLICATION_SILENT = 1</Custom>
+            <Custom Action="LaunchApplicationCancel" OnExit="cancel">LAUNCH_APPLICATION_SILENT = 1</Custom>
+            <Custom Action="LaunchApplicationError" OnExit="error">LAUNCH_APPLICATION_SILENT = 1</Custom>
+            <Custom Action="LaunchApplicationSuspend" OnExit="suspend">LAUNCH_APPLICATION_SILENT = 1</Custom>
         </InstallExecuteSequence>
         
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize" />    
+
     </Product>
 </Wix>
 
