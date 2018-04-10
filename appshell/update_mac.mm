@@ -224,11 +224,3 @@ int32 RunAppUpdate(){
     [UpdateHelper RunAppUpdate];
     return NO_ERROR;
 }
-
-// Checks if the auto update is in progress
-int32 IsAutoUpdateInProgress(bool &isAutoUpdateInProgress)
-{
-    isAutoUpdateInProgress = [UpdateHelper launchInstaller];
-    return NO_ERROR;
-}
-

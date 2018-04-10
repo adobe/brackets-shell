@@ -652,19 +652,9 @@ if (!brackets) {
      * @param {function(err)=} callback Asynchronous callback function. 
      * @return None. 
      */
-    native function SetUpdateParamsAndRunUpdate();
-    appshell.app.setUpdateParamsAndQuit = function (updateInfoObj, callback) {
-        SetUpdateParamsAndRunUpdate(callback || _dummyCallback, updateInfoObj);
-    }
- 
-    /**
-    * Check if auto update is in progress
-    * @param {function(err)=} callback Asynchronous callback function. 
-    * @return None. This is an asynchronous call that sends all return information to the callback.
-    */
-    native function IsAutoUpdateInProgress();
-        appshell.app.isAutoUpdateInProgress = function (callback) {
-            IsAutoUpdateInProgress(callback || _dummyCallback);
+    native function SetUpdateParams();
+    appshell.app.setUpdateParams = function (updateInfoObj, callback) {
+        SetUpdateParams(callback || _dummyCallback, updateInfoObj);
     }
 
     /**

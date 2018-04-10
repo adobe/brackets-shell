@@ -38,9 +38,6 @@ int32 SetInstallerCommandLineArgs(CefString &updateArgs);
 // Runs the app auto update
 int32 RunAppUpdate();
 
-// Checks if the auto update is in progress
-int32 IsAutoUpdateInProgress(bool &isAutoUpdateInProgress);
-
 
 
 

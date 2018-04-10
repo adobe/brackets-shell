@@ -40,7 +40,6 @@ public:
 	void static SetLogFilePath(ExtensionString &logFilePath);	//AUTOUPDATE_PRERELEASE
 	void static RunAppUpdate();
 	void static SetUpdateArgs(ExtensionString &installerPath, ExtensionString &installStatusFilePath, ExtensionString &logFilePath);
-	bool static IsAutoUpdateInProgress() { return m_blaunchInstaller; }
 };
 
 bool UpdateHelper::m_blaunchInstaller;
@@ -172,12 +171,5 @@ int32 SetInstallerCommandLineArgs(CefString &updateArgs) {
 //  Runs the app auto update
 int32 RunAppUpdate() {
 	UpdateHelper::RunAppUpdate();
-	return NO_ERROR;
-}
-
-// Checks if the auto update is in progress
-int32 IsAutoUpdateInProgress(bool &isAutoUpdateInProgress)
-{
-	isAutoUpdateInProgress = UpdateHelper::IsAutoUpdateInProgress();
 	return NO_ERROR;
 }

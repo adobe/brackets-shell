@@ -508,7 +508,7 @@ public:
                 error = CopyFile(src, dest);
                 // No additional response args for this function
             }
-        } else if (message_name == "SetUpdateParamsAndRunUpdate") {
+        } else if (message_name == "SetUpdateParams") {
 			// Parameters:
 			//  0: int32 - callback id
 			//  1: string - update parameters json object
@@ -522,19 +522,6 @@ public:
                 CefString updateJson = argList->GetString(1);
                 error = SetInstallerCommandLineArgs(updateJson);
             }
-		} else if (message_name == "IsAutoUpdateInProgress") {
-			// Parameters:
-			//  0: int32 - callback id
-
-			if (argList->GetSize() != 1) {
-				error = ERR_INVALID_PARAMS;
-			}
-			if (error == NO_ERROR) {
-                bool isAutoUpdateInProgress = false;
-				error = IsAutoUpdateInProgress(isAutoUpdateInProgress);
-				responseArgs->SetBool(2, isAutoUpdateInProgress);
-			}
-
 		} else if (message_name == "GetDroppedFiles") {
             // Parameters:
             //  0: int32 - callback id

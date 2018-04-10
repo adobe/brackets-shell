@@ -27,27 +27,39 @@
 #include "update.h"
 
 
+#if defined(OS_LINUX)
+
+//In Linux, all the shell side functions will be no-op for now
+
+int32 ParseCommandLineParamsJSON(CefString &updateArgs, CefRefPtr<CefDictionaryValue> &argsDict) { return NO_ERROR; }
+
+int32 SetInstallerCommandLineArgs(CefString &updateArgs) { return NO_ERROR; }
+
+int32 RunAppUpdate() { return NO_ERROR;  }
+
+#else
+
 // Parses the update parameters json from a cef string to a cef dictionary
 int32 ParseCommandLineParamsJSON(CefString &updateArgs, CefRefPtr<CefDictionaryValue> &argsDict)
 {
-    if(updateArgs.length()){
-        CefRefPtr<CefValue> argsJSON = CefParseJSON(updateArgs, JSON_PARSER_RFC);
-        if(argsJSON->IsValid())
-        {
-            CefValueType argType = argsJSON->GetType();
-            if(argType == VTYPE_DICTIONARY)
-            {
-                CefRefPtr<CefDictionaryValue> argsDictionary = argsJSON->GetDictionary();
-                if(argsDictionary)
-                {
-                    argsDict = argsDictionary;
-                    return NO_ERROR;
-                }
-            }
-        }
+	if (updateArgs.length()) {
+		CefRefPtr<CefValue> argsJSON = CefParseJSON(updateArgs, JSON_PARSER_RFC);
+		if (argsJSON->IsValid())
+		{
+			CefValueType argType = argsJSON->GetType();
+			if (argType == VTYPE_DICTIONARY)
+			{
+				CefRefPtr<CefDictionaryValue> argsDictionary = argsJSON->GetDictionary();
+				if (argsDictionary)
+				{
+					argsDict = argsDictionary;
+					return NO_ERROR;
+				}
+			}
+		}
 
-    }
-    return ERR_UPDATE_ARGS_INIT_FAILED;
+	}
+	return ERR_UPDATE_ARGS_INIT_FAILED;
 }
 
-
+#endif //OS_LINUX
