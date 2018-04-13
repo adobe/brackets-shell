@@ -47,7 +47,7 @@ class NativeMenuItemModel
         osItem(NULL),
         commandId(commandId),
         parentId(parentId),
-		key(ExtensionString())
+        key(ExtensionString())
     {
     }
     bool checked;
@@ -55,7 +55,7 @@ class NativeMenuItemModel
     void *osItem;
     ExtensionString commandId;
     ExtensionString parentId;
-	ExtensionString key;
+    ExtensionString key;
 };
 
 //command name -> menutag
@@ -93,7 +93,7 @@ public:
     int setTag(ExtensionString command, ExtensionString parent, int tag);
     ExtensionString getCommandId(int tag);
     ExtensionString getParentId(int tag);
-	ExtensionString getKey(int tag);
+    ExtensionString getKey(int tag);
     void setKey(int tag, ExtensionString theKey);
     void setOsItem (int tag, void* theItem);
     void* getOsItem (int tag);
