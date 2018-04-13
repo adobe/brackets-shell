@@ -1064,7 +1064,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
     ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
-	model.setKey(tag, key);
+    model.setKey(tag, key);
     ParseShortcut(browser, entry, key, commandId);
     GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
@@ -1150,7 +1150,7 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
 
     model.setOsItem(tag, newMenuItem);
     ExtensionString key = model.getKey(tag);
-	ParseShortcut(browser, newMenuItem, key, command);
+    ParseShortcut(browser, newMenuItem, key, command);
     gtk_menu_shell_insert(GTK_MENU_SHELL(parent), newMenuItem, position);
     gtk_widget_set_sensitive(newMenuItem, enabled);
     gtk_widget_show(newMenuItem);
