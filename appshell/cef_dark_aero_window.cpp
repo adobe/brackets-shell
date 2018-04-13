@@ -843,6 +843,10 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
                 return 0L;
         }
         break;
+	case WM_NCPAINT:
+		if (HandleNcPaint((HRGN)wParam))
+			return 0L;
+		break;
     }
 
     // call DefWindowProc?
