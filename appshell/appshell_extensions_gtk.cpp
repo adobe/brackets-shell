@@ -1064,6 +1064,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
     ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
+    model.setKey(tag, key);
     ParseShortcut(browser, entry, key, commandId);
     GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
@@ -1140,13 +1141,16 @@ int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, b
     if (checked == true) {
         newMenuItem = gtk_check_menu_item_new_with_label(label);
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(newMenuItem), true);
-    } else if (checked == false){
+    } else {
         newMenuItem = gtk_menu_item_new_with_label(label);
     }
     gtk_widget_destroy(menuItem);
 
     InstallMenuHandler(newMenuItem, browser, tag);
+
     model.setOsItem(tag, newMenuItem);
+    ExtensionString key = model.getKey(tag);
+    ParseShortcut(browser, newMenuItem, key, command);
     gtk_menu_shell_insert(GTK_MENU_SHELL(parent), newMenuItem, position);
     gtk_widget_set_sensitive(newMenuItem, enabled);
     gtk_widget_show(newMenuItem);
@@ -1191,13 +1195,15 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
 
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
-    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
-    int32 tag = model.getTag(commandId);
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
     if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     GtkWidget* entry = (GtkWidget*) model.getOsItem(tag);
+    model.setKey(tag, shortcut);
     ParseShortcut(browser, entry, shortcut, commandId);
+
     return NO_ERROR;
 }
 
@@ -1396,5 +1402,3 @@ std::string GetSystemUniqueID()
 
     return buf;
 }
-
-
