@@ -97,6 +97,22 @@ ExtensionString NativeMenuModel::getParentId(int tag) {
     return menuItems[tag].parentId;
 }
 
+ExtensionString NativeMenuModel::getKey(int tag) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return ExtensionString();
+    }
+    return menuItems[tag].key;
+}
+
+void NativeMenuModel::setKey (int tag, ExtensionString theKey) {
+    menu::iterator foundItem = menuItems.find(tag);
+    if(foundItem == menuItems.end()) {
+        return;
+    }
+    menuItems[tag].key = theKey;
+}
+
 int NativeMenuModel::getOrCreateTag(ExtensionString command, ExtensionString parent)
 {
     menuTag::iterator foundItem = commandMap.find(command);
