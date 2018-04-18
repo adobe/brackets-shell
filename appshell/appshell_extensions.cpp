@@ -34,6 +34,7 @@
 #endif
 
 #include <algorithm>
+#include "update.h"
 
 extern std::vector<CefString> gDroppedFiles;
 
@@ -507,7 +508,21 @@ public:
                 error = CopyFile(src, dest);
                 // No additional response args for this function
             }
-        } else if (message_name == "GetDroppedFiles") {
+        } else if (message_name == "SetUpdateParams") {
+			// Parameters:
+			//  0: int32 - callback id
+			//  1: string - update parameters json object
+
+			size_t numArgs = argList->GetSize();
+			if (numArgs < 2 ||
+				argList->GetType(1) != VTYPE_STRING) {
+				error = ERR_INVALID_PARAMS;
+			}
+            if(error == NO_ERROR){
+                CefString updateJson = argList->GetString(1);
+                error = SetInstallerCommandLineArgs(updateJson);
+            }
+		} else if (message_name == "GetDroppedFiles") {
             // Parameters:
             //  0: int32 - callback id
             if (argList->GetSize() != 1) {

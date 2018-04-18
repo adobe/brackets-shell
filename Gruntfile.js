@@ -192,6 +192,19 @@ module.exports = function (grunt) {
                     }
                 ]
             },
+            "winInstallerDLLs": {
+                "files": [
+                    {
+                        "flatten"   : true,
+                        "expand"    : true,
+                        "src"       : [
+                            "installer/win/LaunchBrackets/LaunchBrackets/bin/Release/LaunchBrackets.CA.dll",
+                            "installer/win/BracketsConfigurator/BracketsConfigurator/bin/Release/BracketsConfigurator.CA.dll"
+                        ],
+                        "dest"      : "installer/win/"
+                    }
+                ]
+            },
             "mac": {
                 "files": [
                     {
