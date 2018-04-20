@@ -38,37 +38,37 @@ function printError(){
 function verifySetup(){
     if [ "$APP_DIR" == "$EMPTY_STRING" ]
     then
-        printError "Brackets app dir is missing"
+        printError "Brackets app dir is missing: INS_O1"
         return $OPTIONS_MISSING
     fi
 
     if [ "$APP_NAME" == "$EMPTY_STRING" ]
     then
-        printError "Brackets app is missing"
+        printError "Brackets app is missing: INS_02"
         return $OPTIONS_MISSING
     fi
     
     if [ "$LOG_FILE" == "$EMPTY_STRING" ]
     then
-        printError "Installer log file is missing"
+        printError "Installer log file is missing: INS_03"
         return $OPTIONS_MISSING
     fi
     
     if [ "$MOUNT_POINT" == "$EMPTY_STRING" ]
     then
-        printError "DMG mount point is missing"
+        printError "DMG mount point is missing: INS_04"
         return $OPTIONS_MISSING
     fi
     
     if [ "$TEMP_DIR" == "$EMPTY_STRING" ]
     then
-        printError "Temp directory is missing"
+        printError "Temp directory is missing: INS_05"
         return $OPTIONS_MISSING
     fi
 
      if [ "$PID" == "$EMPTY_STRING" ]
     then
-        printError "PID of current Brackets is missing"
+        printError "PID of current Brackets is missing: INS_06"
         return $OPTIONS_MISSING
     fi
   
@@ -100,7 +100,7 @@ function updateBrackets(){
             exitStatus=$?
             if [ $exitStatus -ne 0 ]
             then
-                printError "Unable to move the existing Brackets app to temp directory updateTemp. mv retured $exitStatus"
+                printError "Unable to move the existing Brackets app to temp directory updateTemp. mv retured $exitStatus : INS_07"
                 abortInstallation=1
             else
                 printInfo "Move Successful"
@@ -116,7 +116,7 @@ function updateBrackets(){
             exitStatus=$?
             if [ $exitStatus -ne 0 ]
             then
-                printError "Unable to copy Brackets.app. cp retured $exitStatus"
+                printError "Unable to copy Brackets.app. cp retured $exitStatus : INS_08"
                 abortInstallation=1
             else
                 printInfo "Brackets.app is copied."
@@ -127,7 +127,7 @@ function updateBrackets(){
 
                 if [ $exitStatus -ne 0 ]
                 then
-                    printError "Unable to verify the downloaded $APP_DIR/$APP_NAME. codesign retured $exitStatus"
+                    printError "Unable to verify the downloaded $APP_DIR/$APP_NAME. codesign retured $exitStatus : INS_09"
                     abortInstallation=1
 
                     printInfo "Deleting the new app copied."
@@ -135,14 +135,14 @@ function updateBrackets(){
                     exitStatus=$?
                     if [ $exitStatus -ne 0 ]
                     then
-                        printError "Unable to delete $APP_DIR/$APP_NAME. rm retured $exitStatus"
+                        printError "Unable to delete $APP_DIR/$APP_NAME. rm retured $exitStatus : INS_10"
                     else
                         printInfo "Moving the old brackets back from AppData"
                         mv "$TEMP_DIR/$APP_NAME" "$APP_DIR/$APP_NAME"
                         exitStatus=$?
                         if [ $exitStatus -ne 0 ]
                         then
-                            printError "Unable to move the old brackets back from AppData. mv retured $exitStatus"
+                            printError "Unable to move the old brackets back from AppData. mv retured $exitStatus : INS_11"
                         fi
                     fi
                 else
@@ -176,13 +176,13 @@ function updateBrackets(){
         exitStatus=$?
         if [ $exitStatus -ne 0 ]
         then
-            printError "Brackets could not be opened. open returnd $exitStatus."
+            printError "Brackets could not be opened. open returnd $exitStatus : INS_12"
         else
             printInfo "Opened Brackets."
-        fi
+        fiS
         
     else
-        printError "Brackets could not be exited properly. lsof returned $exitStatus"
+        printError "Brackets could not be exited properly. lsof returned $exitStatus : INS_13"
     fi
 
 }
@@ -247,7 +247,7 @@ verifySetup
 result=$?
 if [ $result -ne $SUCCESS ]
 then
-    printError "Invalid setup"
+    printError "Invalid setup : INS_14"
     exit $result
 fi
 

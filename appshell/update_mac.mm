@@ -129,15 +129,15 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                 if (filePresent) {
                     NSString *logStr;
                     if([hdiPath length] == 0 ) {
-                        logStr = @"hdiutil command could not be found";
+                        logStr = @"hdiutil command could not be found: BA_01";
                         [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
                     }
                     if([shPath length] == 0 ) {
-                        logStr = @"sh command could not be found";
+                        logStr = @"sh command could not be found: BA_02";
                         [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
                     }
                     if([nohupPath length] == 0 ) {
-                        logStr = @"nohupPath command could not be found";
+                        logStr = @"nohupPath command could not be found: BA_03";
                         [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
                     }
                 }
@@ -165,7 +165,7 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                     if (![[NSFileManager defaultManager] fileExistsAtPath:scriptPath]) {
                         BOOL filePresent = [self createFileItNotExists:installStatusFilePath];
                         if (filePresent) {
-                            NSString *logStr = @"update script could not be found";
+                            NSString *logStr = @"update script could not be found: BA_04";
                             [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
                         }
                     }
