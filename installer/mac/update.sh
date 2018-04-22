@@ -179,7 +179,7 @@ function updateBrackets(){
             printError "Brackets could not be opened. open returnd $exitStatus : INS_12"
         else
             printInfo "Opened Brackets."
-        fiS
+        fi
         
     else
         printError "Brackets could not be exited properly. lsof returned $exitStatus : INS_13"
