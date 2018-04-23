@@ -85,7 +85,7 @@ void UpdateHelper::RunAppUpdate() {
 				fp = _wfopen(m_installStatusFilePath.c_str(), L"a+");
 				if (fp != NULL) {
 					std::wstring errStr = std::to_wstring(err);
-					fwprintf(fp, L"Installer process could not be created successfully. Error : %s \n", errStr.c_str());
+					fwprintf(fp, L"Installer process could not be created successfully. ERROR: %s : BA_05\n", errStr.c_str());
 				}
 			}
 		}
@@ -98,7 +98,7 @@ void UpdateHelper::RunAppUpdate() {
 					//Command line interpreter could not be fetched
 					if (fp != NULL) {
 						std::wstring comspecStr = std::to_wstring(comspecEnv);
-						fwprintf(fp, L"Command line interpreter could not be fetched from the current environment. Error : %s \n", comspecStr.c_str());
+						fwprintf(fp, L"Command line interpreter could not be fetched from the current environment. ERROR: %s : BA_06\n", comspecStr.c_str());
 					}
 				}
 				else
@@ -106,7 +106,7 @@ void UpdateHelper::RunAppUpdate() {
 					//COMSPEC variable not found
 					if (fp != NULL) {
 						std::wstring nSizeStr = std::to_wstring(nSize);
-						fwprintf(fp, L"COMSPEC not found in the current environment. Error : %s \n", nSizeStr.c_str());
+						fwprintf(fp, L"COMSPEC not found in the current environment. ERROR: %s : BA_07\n", nSizeStr.c_str());
 					}
 				}
 			}
