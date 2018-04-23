@@ -76,6 +76,11 @@ module.exports = function (grunt) {
             /<property name="product\.release\.number\.minor" value="(\d+)"\/>/,
             '<property name="product.release.number.minor" value="' + newVersion.minor + '"/>'
         );
+        text = safeReplace(
+            text,
+            /<property name="product\.release\.number\.maint" value="(\d+)"\/>/,
+            '<property name="product.release.number.maint" value="' + newVersion.patch + '"/>'
+        );
         grunt.file.write(winInstallerBuildXmlPath, text);
 
         // 3. Open installer/mac/buildInstaller.sh and change `dmgName`
