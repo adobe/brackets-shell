@@ -80,8 +80,10 @@ void SaveWindowState(GtkWindow* window) {
 
   GKeyFile* key_file = g_key_file_new();
   GError* err = NULL;
+  gchar* filePath = NULL;
+
   if (key_file) {
-    gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
+    filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
     gboolean maximized  = IsWindowMaximized(window);
 
     // If window is not maximized, save current size and position
@@ -119,12 +121,12 @@ void SaveWindowState(GtkWindow* window) {
     g_key_file_set_integer(key_file, "size", "width", width - 1);   // DelayedResize() 1 pixel compensation
     g_key_file_set_integer(key_file, "size", "height", height - 1); // DelayedResize() 1 pixel compensation
     g_key_file_set_boolean(key_file, "state", "maximized", maximized);
-
+  
+    err = NULL;
     g_key_file_save_to_file(key_file, filePath, &err);
 
     if (err) {
       fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`. Error Description: %s\n", err->message);
-      g_error_free(err);
     }
   } else {
     fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`\n");
@@ -143,46 +145,49 @@ void LoadWindowState(GtkWindow* window) {
   gint width  = DEFAULT_WINDOW_WIDTH;
   gint height = DEFAULT_WINDOW_HEIGHT;
 
+  // Try to center the window.
+  GdkScreen* screen = gdk_screen_get_default();
+  if (screen) {
+    left = (gdk_screen_get_width(screen)  - DEFAULT_WINDOW_WIDTH) / 2 ;
+    top  = (gdk_screen_get_height(screen) - DEFAULT_WINDOW_HEIGHT) / 2 ;
+  }
+
   gboolean maximized = false;
 
   GKeyFile* key_file = g_key_file_new();
   bool any_error = false;
   GError* err = NULL;
+  gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
 
-  if (key_file) {
+  if (key_file && g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, &err)) {
 
-    gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
+    left = g_key_file_get_integer(key_file, "position", "left", &err);
+    if (!err)
+      top = g_key_file_get_integer(key_file, "position", "top", &err);
 
-    if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, &err)) {
+    if (!err)
+      width = g_key_file_get_integer(key_file, "size", "width", &err);
 
-      left = g_key_file_get_integer(key_file, "position", "left", &err);
-      if (!err)
-        top = g_key_file_get_integer(key_file, "position", "top", &err);
+    if (!err)
+      height = g_key_file_get_integer(key_file, "size", "height", &err);
 
-      if (!err)
-        width = g_key_file_get_integer(key_file, "size", "width", &err);
+    if (!err)
+      maximized = g_key_file_get_boolean(key_file, "state", "maximized", &err);
 
-      if (!err)
-        height = g_key_file_get_integer(key_file, "size", "height", &err);
+    // If any value can not be readed, set defaults again
+    if (err) {
+      left      = 1;
+      top       = 1;
+      width     = DEFAULT_WINDOW_WIDTH;
+      height    = DEFAULT_WINDOW_HEIGHT;
+      maximized = TRUE;
+    }
 
-      if (!err)
-        maximized = g_key_file_get_boolean(key_file, "state", "maximized", &err);
+    gtk_window_move(GTK_WINDOW(window), left, top);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
 
-      // If any value can not be readed, set defaults again
-      if (err) {
-        left      = 1;
-        top       = 1;
-        width     = DEFAULT_WINDOW_WIDTH;
-        height    = DEFAULT_WINDOW_HEIGHT;
-        maximized = TRUE;
-      }
-
-      gtk_window_move(GTK_WINDOW(window), left, top);
-      gtk_window_set_default_size(GTK_WINDOW(window), width, height);
-
-      if (maximized)
-        MaximizeWindow(window);
-     }
+    if (maximized)
+      MaximizeWindow(window);
 
   } else {
     any_error = true;
@@ -196,12 +201,12 @@ void LoadWindowState(GtkWindow* window) {
     MaximizeWindow(window);
 
     if (err) {
-      if (err && err->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND){
-        fprintf(stderr, "Err -> SaveWindowState(): could not create a file object to read `window.ini`. Error Description:%s.\n", err->message);
+      if (err->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND){
+        fprintf(stderr, "LoadWindowState(): Could not read %s. Error Description:%s.\n", filePath, err->message);
       }
       g_error_free(err);
     } else {
-      fprintf(stderr, "Err -> SaveWindowState(): could not create a file object to read `window.ini`.\n");
+      fprintf(stderr, "LoadWindowState(): Could not read %s.\n", filePath);
     }
   }
 }
