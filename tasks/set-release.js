@@ -62,6 +62,7 @@ module.exports = function (grunt) {
 
         // 1. Update package.json
         packageJSON.version = newVersion.version + "-0";
+        packageJSON.prerelease = newVersion.prerelease.toString();
         common.writeJSON(packageJsonPath, packageJSON);
 
         // 2. Open installer/win/brackets-win-install-build.xml and change `product.release.number`

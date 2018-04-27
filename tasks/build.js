@@ -191,6 +191,22 @@ module.exports = function (grunt) {
     grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
 
+        var configData = grunt.file.readJSON(grunt.config("config-json"));
+        var packageData = grunt.file.readJSON("package.json");
+        var buildnumber = configData.buildnumber;
+        var winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
+        var text = grunt.file.read(winInstallerBuildXmlPath);
+        text = safeReplace(
+            text,
+            /<property name="product\.release\.number\.build" value="(\d+)"\/>/,
+            '<property name="product.release.number.build" value="' + buildnumber + '"/>'
+        );
+        configData.prerelease = packageData.prerelease;
+        
+        grunt.file.write(winInstallerBuildXmlPath, text);
+        grunt.file.write(grunt.config("config-json"), JSON.stringify(configData, null, "    "));
+        
+        
         spawn(["cmd.exe /c ant.bat -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
             done();
         }, function (err) {
