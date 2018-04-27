@@ -24,7 +24,7 @@
 // ClientHandler implementation.
 class ClientHandler : public CefClient,
                       public CefLifeSpanHandler,
-                      public CefDragHandler,
+                      
                       public CefLoadHandler,
                       public CefRequestHandler,
                       public CefDisplayHandler,
@@ -76,9 +76,6 @@ public:
   virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE {
     return this;
   }
-  virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE {
-    return this;
-  }
   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE {
     return this;
   }
@@ -119,10 +116,10 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
   
-  // CefDragHandler methods
-  virtual bool OnDragEnter(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefDragData> dragData,
-                           DragOperationsMask mask) OVERRIDE;
+  // // CefDragHandler methods
+  // virtual bool OnDragEnter(CefRefPtr<CefBrowser> browser,
+  //                          CefRefPtr<CefDragData> dragData,
+  //                          DragOperationsMask mask) OVERRIDE;
 
   // CefLoadHandler methods
   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
