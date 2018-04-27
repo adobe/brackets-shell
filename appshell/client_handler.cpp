@@ -188,6 +188,7 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 
 std::vector<CefString> gDroppedFiles;
 
+#ifndef OS_LINUX
 bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDragData> dragData,
                                 DragOperationsMask mask) {
@@ -200,6 +201,7 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
     }
     return false;
 }
+#endif
 
 void ClientHandler::OnLoadStart(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame
