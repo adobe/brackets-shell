@@ -105,9 +105,12 @@ class ClientHandler :
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE {
     return this;
   }
+  #ifndef OS_LINUX
   CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE {
     return this;
   }
+  #endif
+
   CefRefPtr<CefGeolocationHandler> GetGeolocationHandler() OVERRIDE {
     return this;
   }
@@ -173,9 +176,11 @@ class ClientHandler :
       CefRefPtr<CefDownloadItemCallback> callback) OVERRIDE;
 
   // CefDragHandler methods
+  #ifndef OS_LINUX
   bool OnDragEnter(CefRefPtr<CefBrowser> browser,
                    CefRefPtr<CefDragData> dragData,
                    CefDragHandler::DragOperationsMask mask) OVERRIDE;
+  #endif
 
   void OnDraggableRegionsChanged(
       CefRefPtr<CefBrowser> browser,
