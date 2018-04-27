@@ -40,9 +40,8 @@ module.exports = function (grunt) {
 
         return newContent;
     }
-
-    // task: set-release
-    grunt.registerTask("set-release", "Update occurrences of release number for all native installers and binaries", function () {
+    
+    function setRelease() {
         var packageJsonPath             = "package.json",
             packageJSON                 = grunt.file.readJSON(packageJsonPath),
             winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
@@ -129,5 +128,14 @@ module.exports = function (grunt) {
             'APP_VERSION "' + newVersion.major + "." + newVersion.minor + "." + newVersion.patch + "." + (newVersion.build.length ? newVersion.build : "0") + '"'
         );
         grunt.file.write(linuxVersionFile, text);
+    }
+
+    // task: set-release
+    grunt.registerTask("set-release", "Update occurrences of release number for all native installers and binaries", setRelease);
+    grunt.registerTask("set-release-optional", "Update occurrences of release number for all native installers and binaries", function () {
+        if (grunt.option("release")) {
+            setRelease();
+        }
     });
+    
 };

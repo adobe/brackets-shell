@@ -40,10 +40,24 @@ module.exports = function (grunt) {
 
         return env;
     }
+    
+    function safeReplace(content, regexp, replacement) {
+        if (!regexp.test(content)) {
+            grunt.fail.fatal("Regexp " + regexp + " did not match");
+        }
+
+        var newContent = content.replace(regexp, replacement);
+
+        if (newContent === content) {
+            grunt.log.warn("Buildnumber for ", regexp, "hasn't been updated, because it's already set.");
+        }
+
+        return newContent;
+    }
 
     // task: full-build
     grunt.registerTask("full-build", ["git", "create-project", "build-www", "build", "stage", "package"]);
-    grunt.registerTask("installer", ["full-build", "build-installer"]);
+    grunt.registerTask("installer", ["set-release-optional", "full-build", "build-installer"]);
 
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
@@ -194,7 +208,7 @@ module.exports = function (grunt) {
         var configData = grunt.file.readJSON(grunt.config("config-json"));
         var packageData = grunt.file.readJSON("package.json");
         var buildnumber = configData.buildnumber;
-        var winInstallerBuildXmlPath    = "installer/win/brackets-win-install-build.xml",
+        var winInstallerBuildXmlPath  = "installer/win/brackets-win-install-build.xml";
         var text = grunt.file.read(winInstallerBuildXmlPath);
         text = safeReplace(
             text,
