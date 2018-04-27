@@ -323,6 +323,7 @@ void ClientHandler::OnDownloadUpdated(
   }
 }
 
+#ifndef OS_LINUX
 bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDragData> dragData,
                                 CefDragHandler::DragOperationsMask mask) {
@@ -334,6 +335,7 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
 
   return false;
 }
+#endif
 
 void ClientHandler::OnDraggableRegionsChanged(
     CefRefPtr<CefBrowser> browser,
