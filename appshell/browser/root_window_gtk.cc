@@ -21,9 +21,14 @@
 #include "appshell/browser/window_test.h"
 #include "appshell/common/client_switches.h"
 
-// Brackets specific change.
+// Brackets specific changes.
 #include "appshell/native_menu_model.h"
 #include "appshell/command_callbacks.h"
+#include "appshell/appshell_helpers.h"
+
+#define DEFAULT_WINDOW_WIDTH    800
+#define DEFAULT_WINDOW_HEIGHT  600
+// End of Brackets specific changes.
 
 namespace client {
 
@@ -31,107 +36,181 @@ namespace {
 
 const char kMenuIdKey[] = "menu_id";
 
-bool IsWindowMaximized(GtkWindow* window) {
-  GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(window));
-  gint state = gdk_window_get_state(gdk_window);
-  return (state & GDK_WINDOW_STATE_MAXIMIZED) ? true : false;
+// Brackets specific changes.
+gboolean IsWindowMaximized(GtkWindow* window) {
+
+  if (window) {
+    GdkWindow* gdk_window = gtk_widget_get_window(GTK_WIDGET(window));
+    if (gdk_window) {
+      gint state = gdk_window_get_state(gdk_window);
+      return (state & GDK_WINDOW_STATE_MAXIMIZED) ? TRUE : FALSE;
+    }
+  } else {
+    return FALSE;
+  }
+
 }
 
 void MinimizeWindow(GtkWindow* window) {
-  // Unmaximize the window before minimizing so restore behaves correctly.
-  if (IsWindowMaximized(window))
-    gtk_window_unmaximize(window);
 
-  gtk_window_iconify(window);
+  if (window) {
+    // Unmaximize the window before minimizing so restore behaves correctly.
+    if (IsWindowMaximized(window))
+      gtk_window_unmaximize(window);
+
+    gtk_window_iconify(window);
+  }
 }
 
 void MaximizeWindow(GtkWindow* window) {
-  gtk_window_maximize(window);
+  if (window) {
+    gtk_window_maximize(window);
+  }
 }
 
 void SaveWindowState(GtkWindow* window) {
-  gint left, top;
-  gint width, height;
+
+  if (!window)
+    return;
+
+  gint left   = 1;
+  gint top    = 1;
+  gint width  = DEFAULT_WINDOW_WIDTH;
+  gint height = DEFAULT_WINDOW_HEIGHT;
 
   GKeyFile* key_file = g_key_file_new();
-  GError* error = NULL;
-  gchar* filePath = g_strdup_printf("%s/%s/%s", g_get_user_config_dir(), APP_NAME, "window.ini");
-  bool maximized = IsWindowMaximized(window);
+  GError* err = NULL;
+  gchar* filePath = NULL;
 
-  // If window is not maximized, save current size and position
-  if (!maximized) {
-    gtk_window_get_position(window, &left, &top);
-    gtk_window_get_size(window, &width, &height);
-  // If maximized, load size and position from file
-  // to preserve last saved values
-  } else {
-    if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, NULL))
-    {
-      left = g_key_file_get_integer(key_file, "position", "left", &error);
-      top = g_key_file_get_integer(key_file, "position", "top", &error);
-      width = g_key_file_get_integer(key_file, "size", "width", &error);
-      height = g_key_file_get_integer(key_file, "size", "height", &error);
-      // If any value can not be readed, restore defaults
-      if (left == 0 || top == 0 || width == 0 || height == 0) {
-        left = 1;
-        top = 1;
-        width = 800;
-        height = 600;
+  if (key_file) {
+    filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
+    gboolean maximized  = IsWindowMaximized(window);
+
+    // If window is not maximized, save current size and position
+    
+    if (!maximized) {
+      gtk_window_get_position(window, &left, &top);
+      gtk_window_get_size(window, &width, &height);
+    } else if (g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, &err)) {
+
+      // If maximized, load size and position from file
+      // to preserve last saved values
+      left = g_key_file_get_integer(key_file, "position", "left", &err);
+      if (!err)
+        top = g_key_file_get_integer(key_file, "position", "top", &err);
+
+      if (!err)
+        width = g_key_file_get_integer(key_file, "size", "width", &err);
+
+      if (!err)
+        height = g_key_file_get_integer(key_file, "size", "height", &err);
+      
+      // If any value can not be read, restore defaults
+      if (err) {
+        left   = 1;
+        top    = 1;
+        width  = DEFAULT_WINDOW_WIDTH;
+        height = DEFAULT_WINDOW_HEIGHT;
+        g_error_free(err);
       }
-    // If we can not load the file, set defaults
-    } else {
-      left = 1;
-      top = 1;
-      width = 800;
-      height = 600;
     }
-  }
-  // The file will be written always.
-  g_key_file_set_integer(key_file, "position", "left", left);
-  g_key_file_set_integer(key_file, "position", "top", top);
-  g_key_file_set_integer(key_file, "size", "width", width - 1); // DelayedResize() 1 pixel compensation
-  g_key_file_set_integer(key_file, "size", "height", height - 1); // DelayedResize() 1 pixel compensation
-  g_key_file_set_boolean(key_file, "state", "maximized", maximized);
 
-  if(!g_key_file_save_to_file(key_file, filePath, NULL))
-  {
-    printf("%s", "Error -> SaveWindowState(): can not write `window.ini`\n");
+    // The values would always be written to file.
+    g_key_file_set_integer(key_file, "position", "left", left);
+    g_key_file_set_integer(key_file, "position", "top", top);
+    g_key_file_set_integer(key_file, "size", "width", width - 1);   // DelayedResize() 1 pixel compensation
+    g_key_file_set_integer(key_file, "size", "height", height - 1); // DelayedResize() 1 pixel compensation
+    g_key_file_set_boolean(key_file, "state", "maximized", maximized);
+  
+    err = NULL;
+    g_key_file_save_to_file(key_file, filePath, &err);
+
+    if (err) {
+      fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`. Error Description: %s\n", err->message);
+    }
+  } else {
+    fprintf(stderr, "Err -> SaveWindowState(): could not write to `window.ini`\n");
   }
 }
 
 void LoadWindowState(GtkWindow* window) {
-  // Default values if It is not possible to load the key file
-  gint left = 1;
-  gint top = 1;
-  gint width = 800;
-  gint height = 600;
-  bool maximized = FALSE;
+
+  if (!window) {
+    return;
+  }
+
+  // Default values for the window state.
+  gint left   = 1;
+  gint top    = 1;
+  gint width  = DEFAULT_WINDOW_WIDTH;
+  gint height = DEFAULT_WINDOW_HEIGHT;
+
+  // Try to center the window.
+  GdkScreen* screen = gdk_screen_get_default();
+  if (screen) {
+    left = (gdk_screen_get_width(screen)  - DEFAULT_WINDOW_WIDTH) / 2 ;
+    top  = (gdk_screen_get_height(screen) - DEFAULT_WINDOW_HEIGHT) / 2 ;
+  }
+
+  gboolean maximized = false;
 
   GKeyFile* key_file = g_key_file_new();
-  GError* error = NULL;
-  gchar* filePath = g_strdup_printf("%s/%s/%s", g_get_user_config_dir(), APP_NAME, "window.ini");
+  bool any_error = false;
+  GError* err = NULL;
+  gchar* filePath = g_strdup_printf("%s/%s", appshell::AppGetSupportDirectory().ToString().c_str(), "window.ini");
 
-  if(g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, NULL))
-  {
-    left = g_key_file_get_integer(key_file, "position", "left", &error);
-    top = g_key_file_get_integer(key_file, "position", "top", &error);
-    width = g_key_file_get_integer(key_file, "size", "width", &error);
-    height = g_key_file_get_integer(key_file, "size", "height", &error);
-    maximized = g_key_file_get_boolean(key_file, "state", "maximized", &error);
+  if (key_file && g_key_file_load_from_file(key_file, filePath, G_KEY_FILE_NONE, &err)) {
+
+    left = g_key_file_get_integer(key_file, "position", "left", &err);
+    if (!err)
+      top = g_key_file_get_integer(key_file, "position", "top", &err);
+
+    if (!err)
+      width = g_key_file_get_integer(key_file, "size", "width", &err);
+
+    if (!err)
+      height = g_key_file_get_integer(key_file, "size", "height", &err);
+
+    if (!err)
+      maximized = g_key_file_get_boolean(key_file, "state", "maximized", &err);
+
     // If any value can not be readed, set defaults again
-    if (left == 0 || top == 0 || width == 0 || height == 0) {
-      left = 1;
-      top = 1;
-      width = 800;
-      height = 600;
-      maximized = FALSE;
+    if (err) {
+      left      = 1;
+      top       = 1;
+      width     = DEFAULT_WINDOW_WIDTH;
+      height    = DEFAULT_WINDOW_HEIGHT;
+      maximized = TRUE;
+    }
+
+    gtk_window_move(GTK_WINDOW(window), left, top);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+
+    if (maximized)
+      MaximizeWindow(window);
+
+  } else {
+    any_error = true;
+  }
+
+  if (err || any_error) {
+
+    // The failure could be because the file may not have been present,
+    // or the file read itself failed.
+    // In either of the cases default to maximizing the window.
+    MaximizeWindow(window);
+
+    if (err) {
+      if (err->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND){
+        fprintf(stderr, "LoadWindowState(): Could not read %s. Error Description:%s.\n", filePath, err->message);
+      }
+      g_error_free(err);
+    } else {
+      fprintf(stderr, "LoadWindowState(): Could not read %s.\n", filePath);
     }
   }
-  gtk_window_move(GTK_WINDOW(window), left, top);
-  gtk_window_set_default_size(GTK_WINDOW(window), width, height);
-  if (maximized)
-    MaximizeWindow(window);
 }
+// End of Brackets specific changes.
 
 }  // namespace
 
@@ -332,12 +411,14 @@ void RootWindowGtk::CreateRootWindow(const CefBrowserSettings& settings) {
 
   window_ = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
+  // Brackets specific change.
   if (start_rect_.IsEmpty()) {
     LoadWindowState(GTK_WINDOW(window_));
   } else {
     gtk_window_move(GTK_WINDOW(window_), x, y);
     gtk_window_set_default_size(GTK_WINDOW(window_), width, height);
   }
+  // End of Brackets specific change.
 
   g_signal_connect(G_OBJECT(window_), "focus-in-event",
                    G_CALLBACK(&RootWindowGtk::WindowFocusIn), this);
