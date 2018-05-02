@@ -78,6 +78,13 @@ void SaveWindowState(GtkWindow* window) {
   gint width  = DEFAULT_WINDOW_WIDTH;
   gint height = DEFAULT_WINDOW_HEIGHT;
 
+  // Try to center the window.
+  GdkScreen* screen = gdk_screen_get_default();
+  if (screen) {
+    left = (gdk_screen_get_width(screen)  - DEFAULT_WINDOW_WIDTH) / 2 ;
+    top  = (gdk_screen_get_height(screen) - DEFAULT_WINDOW_HEIGHT) / 2 ;
+  }
+
   GKeyFile* key_file = g_key_file_new();
   GError* err = NULL;
   gchar* filePath = NULL;
@@ -182,16 +189,15 @@ void LoadWindowState(GtkWindow* window) {
       height    = DEFAULT_WINDOW_HEIGHT;
       maximized = TRUE;
     }
-
-    gtk_window_move(GTK_WINDOW(window), left, top);
-    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
-
-    if (maximized)
-      MaximizeWindow(window);
-
   } else {
     any_error = true;
   }
+
+  gtk_window_move(GTK_WINDOW(window), left, top);
+  gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+
+  if (maximized)
+    MaximizeWindow(window);
 
   if (err || any_error) {
 
