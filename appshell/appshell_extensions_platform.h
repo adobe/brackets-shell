@@ -34,6 +34,9 @@
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
 #endif
+#include <unicode/ucnv_err.h>
+#include <unicode/uenum.h>
+#include <unicode/localpointer.h>
 
 // Extension error codes. These MUST be in sync with the error
 // codes in appshell_extensions.js

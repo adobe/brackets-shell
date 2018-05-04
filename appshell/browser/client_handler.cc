@@ -337,6 +337,9 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
 }
 #endif
 
+/**
+ * We do not plan to add any feature to parent class(::ClientHandler) implementation of this function,
+ * So override is useless
 void ClientHandler::OnDraggableRegionsChanged(
     CefRefPtr<CefBrowser> browser,
     const std::vector<CefDraggableRegion>& regions) {
@@ -344,6 +347,7 @@ void ClientHandler::OnDraggableRegionsChanged(
 
   NotifyDraggableRegions(regions);
 }
+**/
 
 bool ClientHandler::OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
