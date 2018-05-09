@@ -40,6 +40,10 @@ module.exports = function (grunt) {
     if (platform === "linux") {
         cef_version = "3.2785.1486";
     }
+    
+    if (platform === "win") {
+        cef_version = "3.2623.1402";
+    }
 
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
