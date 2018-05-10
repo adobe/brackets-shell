@@ -1,6 +1,7 @@
 #include "appshell/appshell_extensions_platform.h"
 #include <unicode/ucsdet.h>
 #include <unicode/ucnv.h>
+#include <unicode/unistr.h>
 #include <fstream>
 
 #ifdef OS_LINUX

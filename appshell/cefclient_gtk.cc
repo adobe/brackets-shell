@@ -229,9 +229,19 @@ int RunMain(int argc, char* argv[]) {
 
 }  // namespace
 }  // namespace client
-
-
+namespace{
+template<typename T>
+struct deleter
+{
+	deleter(T * ptr):ptr_(ptr){}
+	~deleter(){delete ptr_;}
+	T * ptr_;
+};
+}
 // Program entry point function.
 int main(int argc, char* argv[]) {
+	deleter<char> extra_option(new char[14]);
+	sprintf(extra_option.ptr_,"--disable-gpu");
+	argv[argc++] = extra_option.ptr_;
   return client::RunMain(argc, argv);
 }
