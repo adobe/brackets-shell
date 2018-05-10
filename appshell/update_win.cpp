@@ -54,7 +54,7 @@ void UpdateHelper::RunAppUpdate() {
 		std::wstring commandInput = L"msiexec /i " + m_InstallerPath + L" /qr";
 		//AUTOUPDATE_PRERELEASE
 		if (!m_logFilePath.empty()) {
-			commandInput += L" /l*V " + m_logFilePath;
+			commandInput += L" /li " + m_logFilePath;
 		}
 		commandInput += L" LAUNCH_APPLICATION_SILENT=1 MSIFASTINSTALL=2";
 
