@@ -233,5 +233,8 @@ int RunMain(int argc, char* argv[]) {
 
 // Program entry point function.
 int main(int argc, char* argv[]) {
+	char extra_option[14];
+	snprintf(extra_option,sizeof(extra_option),"--disable-gpu");
+	argv[argc] = extra_option;++argc;
   return client::RunMain(argc, argv);
 }
