@@ -182,9 +182,13 @@ class ClientHandler :
                    CefDragHandler::DragOperationsMask mask) OVERRIDE;
   #endif
 
+#ifndef OS_LINUX
+//We do not plan to add any feature to parent class(::ClientHandler) implementation of this function.
+//So override is useless, modern compilers will complain about this.
   void OnDraggableRegionsChanged(
       CefRefPtr<CefBrowser> browser,
       const std::vector<CefDraggableRegion>& regions) OVERRIDE;
+#endif
 
   // CefGeolocationHandler methods
   bool OnRequestGeolocationPermission(
