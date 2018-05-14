@@ -723,6 +723,12 @@ int ShowFolderInOSWindow(ExtensionString pathname)
     GError *gerror = NULL;
     gchar *uri = NULL, *parentdir = NULL;
 
+	// Check if file exist in OS
+	struct stat fileStat;
+	if (stat(pathname.c_str(), &fileStat) != 0) {
+		return ERR_NOT_FOUND;
+	}
+
     if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
         uri = g_filename_to_uri(pathname.c_str(), NULL, NULL);
         if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
