@@ -38,7 +38,7 @@ module.exports = function (grunt) {
     }
 
     if (platform === "linux") {
-        cef_version = "3.2785.1486";
+        cef_version = "3.2785.1487";
     }
     
     if (platform === "win") {
