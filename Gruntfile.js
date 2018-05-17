@@ -27,7 +27,7 @@ module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
         staging,
-        cef_version = "3.2623.1397";
+        cef_version = "3.2704.1434";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -39,6 +39,10 @@ module.exports = function (grunt) {
 
     if (platform === "linux") {
         cef_version = "3.2785.1486";
+    }
+    
+    if (platform === "win") {
+        cef_version = "3.2623.1402";
     }
 
     grunt.initConfig({
