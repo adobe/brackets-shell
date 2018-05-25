@@ -969,7 +969,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
                             if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
-								CloseHandle(hFile);
+				 CloseHandle(hFile);
                                 return ERR_UNSUPPORTED_UTF16_ENCODING;
                             }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
