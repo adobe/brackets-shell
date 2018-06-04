@@ -48,6 +48,16 @@
 				</dict>
 				<dict>
 					<key>identifier</key>
+					<string>LayoutItem.3E1B7344-C175-4BE0-87DB-880A4A30E80F</string>
+					<key>name</key>
+					<string>.update.sh</string>
+					<key>position</key>
+					<string>{228, 424}</string>
+					<key>type</key>
+					<string>file</string>
+				</dict>
+				<dict>
+					<key>identifier</key>
 					<string>LayoutItem.0679B008-641D-4857-A4B8-156BF67D8320</string>
 					<key>name</key>
 					<string>.fseventsd</string>

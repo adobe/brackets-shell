@@ -913,26 +913,6 @@ std::wstring StringToWString(const std::string& str)
     return converterX.from_bytes(str);
 }
 
-class ReadFileHandle {
-	HANDLE hFile;
-public:
-	ReadFileHandle(const std::wstring& filename) {
-		hFile = CreateFile(filename.c_str(), GENERIC_READ,
-			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (INVALID_HANDLE_VALUE == hFile)
-			throw "Could not initialize read handle";
-	}
-	~ReadFileHandle() {
-		if (hFile)
-			CloseHandle(hFile);
-	}
-	operator HANDLE() {
-		return hFile;
-	}
-};
-
-
-
 int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string& contents, bool& preserveBOM)
 {
     if (encoding == L"utf8") {
@@ -946,9 +926,12 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
     if (dwAttr & FILE_ATTRIBUTE_DIRECTORY)
         return ERR_CANT_READ;
 
-    ReadFileHandle readFileHandle(filename);
-    HANDLE hFile = readFileHandle;
+    HANDLE hFile = CreateFile(filename.c_str(), GENERIC_READ,
+        FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     int32 error = NO_ERROR;
+
+    if (INVALID_HANDLE_VALUE == hFile)
+        return ConvertWinErrorCode(GetLastError());
 
     DWORD dwFileSize = GetFileSize(hFile, NULL);
 
@@ -986,6 +969,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
                                 detectedCharSet = conv.to_bytes(encoding);
                             }
                             if (detectedCharSet == "UTF-16LE" || detectedCharSet == "UTF-16BE") {
+				 CloseHandle(hFile);
                                 return ERR_UNSUPPORTED_UTF16_ENCODING;
                             }
                             std::transform(detectedCharSet.begin(), detectedCharSet.end(), detectedCharSet.begin(), ::toupper);
@@ -1027,6 +1011,7 @@ int32 ReadFile(ExtensionString filename, ExtensionString& encoding, std::string&
             }
         }
     }
+    CloseHandle(hFile);
     return error;
 }
 

@@ -323,6 +323,7 @@ void ClientHandler::OnDownloadUpdated(
   }
 }
 
+#ifndef OS_LINUX
 bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDragData> dragData,
                                 CefDragHandler::DragOperationsMask mask) {
@@ -334,7 +335,11 @@ bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
 
   return false;
 }
+#endif
 
+#ifndef OS_LINUX
+//We do not plan to add any feature to parent class(::ClientHandler) implementation of this function.
+//So override is useless, modern compilers will complain about this.
 void ClientHandler::OnDraggableRegionsChanged(
     CefRefPtr<CefBrowser> browser,
     const std::vector<CefDraggableRegion>& regions) {
@@ -342,6 +347,7 @@ void ClientHandler::OnDraggableRegionsChanged(
 
   NotifyDraggableRegions(regions);
 }
+#endif
 
 bool ClientHandler::OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,

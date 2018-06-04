@@ -33,6 +33,9 @@
 
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
+#include <unicode/ucnv_err.h>
+#include <unicode/uenum.h>
+#include <unicode/localpointer.h>
 #endif
 
 // Extension error codes. These MUST be in sync with the error
@@ -60,6 +63,7 @@ static const int ERR_CL_TOOLS_NOTSUPPORTED = 17;
 static const int ERR_ENCODE_FILE_FAILED = 18;
 static const int ERR_DECODE_FILE_FAILED = 19;
 static const int ERR_UNSUPPORTED_UTF16_ENCODING = 20;
+static const int ERR_UPDATE_ARGS_INIT_FAILED = 21;
 
 static const int ERR_PID_NOT_FOUND = -9999; // negative int to avoid confusion with real PIDs
 
@@ -107,6 +111,20 @@ public:
     ~CharSetEncode();
     void operator()(std::string &contents);
 };
+
+#if defined(OS_LINUX)
+class StMenuCommandSkipper {
+public:
+
+    StMenuCommandSkipper()  { sSkipMenuCommand = true; }
+    ~StMenuCommandSkipper() { sSkipMenuCommand = false;}
+
+    static bool GetMenuCmdSkipFlag () { return sSkipMenuCommand;}
+
+private:
+    static bool sSkipMenuCommand;
+};
+#endif
 
 #if defined(OS_MACOSX) || defined(OS_LINUX)
 void DecodeContents(std::string &contents, const std::string& encoding);

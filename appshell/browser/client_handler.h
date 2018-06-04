@@ -105,9 +105,12 @@ class ClientHandler :
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE {
     return this;
   }
+  #ifndef OS_LINUX
   CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE {
     return this;
   }
+  #endif
+
   CefRefPtr<CefGeolocationHandler> GetGeolocationHandler() OVERRIDE {
     return this;
   }
@@ -173,13 +176,19 @@ class ClientHandler :
       CefRefPtr<CefDownloadItemCallback> callback) OVERRIDE;
 
   // CefDragHandler methods
+  #ifndef OS_LINUX
   bool OnDragEnter(CefRefPtr<CefBrowser> browser,
                    CefRefPtr<CefDragData> dragData,
                    CefDragHandler::DragOperationsMask mask) OVERRIDE;
+  #endif
 
+#ifndef OS_LINUX
+//We do not plan to add any feature to parent class(::ClientHandler) implementation of this function.
+//So override is useless, modern compilers will complain about this.
   void OnDraggableRegionsChanged(
       CefRefPtr<CefBrowser> browser,
       const std::vector<CefDraggableRegion>& regions) OVERRIDE;
+#endif
 
   // CefGeolocationHandler methods
   bool OnRequestGeolocationPermission(

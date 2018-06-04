@@ -198,6 +198,8 @@
     'appshell_sources_common': [
       'appshell/cefclient.cpp',
       'appshell/cefclient.h',
+      'appshell/update.h',
+      'appshell/update.cpp',
       '<@(appshell_sources_common_helper)',
     ],
     'appshell_sources_common_linux': [
@@ -243,6 +245,7 @@
       'appshell/cef_registry.h',
       'appshell/cef_window.cpp',
       'appshell/cef_window.h',
+      'appshell/update_win.cpp',
       'appshell/res/close-hover.png',
       'appshell/res/close.png',
       'appshell/res/max-hover.png',
@@ -283,6 +286,7 @@
       'appshell/appshell_helpers_mac.mm',
       'appshell/cefclient_mac.mm',
       'appshell/client_handler_mac.mm',
+      'appshell/update_mac.mm',
       '<@(appshell_sources_browser)',
       '<@(appshell_sources_common)',
    ],

@@ -28,6 +28,7 @@
 
 #include "cef_registry.h"
 #include "cef_main_window.h"
+#include "update.h"
 
 // Global Variables:
 DWORD            g_appStartupTime;
@@ -325,6 +326,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
   // Shut down CEF.
   CefShutdown();
+
+  // Run the app auto update
+  RunAppUpdate();
 
   // release the first instance mutex
   if (hMutex != NULL)

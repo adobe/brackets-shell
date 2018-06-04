@@ -40,10 +40,24 @@ module.exports = function (grunt) {
 
         return env;
     }
+    
+    function safeReplace(content, regexp, replacement) {
+        if (!regexp.test(content)) {
+            grunt.fail.fatal("Regexp " + regexp + " did not match");
+        }
+
+        var newContent = content.replace(regexp, replacement);
+
+        if (newContent === content) {
+            grunt.log.warn("Buildnumber for ", regexp, "hasn't been updated, because it's already set.");
+        }
+
+        return newContent;
+    }
 
     // task: full-build
     grunt.registerTask("full-build", ["git", "create-project", "build-www", "build", "stage", "package"]);
-    grunt.registerTask("installer", ["full-build", "build-installer"]);
+    grunt.registerTask("installer", ["set-release-optional", "full-build", "build-installer"]);
 
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
@@ -85,7 +99,7 @@ module.exports = function (grunt) {
     grunt.registerTask("build-win", "Build windows shell", function () {
         var done = this.async();
 
-        spawn("cmd.exe /c scripts\\build_projects.bat").then(function () {
+        spawn(["cmd.exe /c scripts\\build_projects.bat", "cmd.exe /c scripts\\brackets_installer_projects.bat"]).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);
@@ -154,6 +168,7 @@ module.exports = function (grunt) {
     // task: stage-win
     grunt.registerTask("stage-win", "Stage win executable files", function () {
         // stage platform-specific binaries, then package www files
+        grunt.task.run("copy:winInstallerDLLs");
         grunt.task.run("copy:win");
     });
 
@@ -190,6 +205,22 @@ module.exports = function (grunt) {
     grunt.registerTask("build-installer-win", "Build windows installer", function () {
         var done = this.async();
 
+        var configData = grunt.file.readJSON(grunt.config("config-json"));
+        var packageData = grunt.file.readJSON("package.json");
+        var buildnumber = configData.buildnumber;
+        var winInstallerBuildXmlPath  = "installer/win/brackets-win-install-build.xml";
+        var text = grunt.file.read(winInstallerBuildXmlPath);
+        text = safeReplace(
+            text,
+            /<property name="product\.release\.number\.build" value="(\d+)"\/>/,
+            '<property name="product.release.number.build" value="' + buildnumber + '"/>'
+        );
+        configData.prerelease = packageData.prerelease;
+        
+        grunt.file.write(winInstallerBuildXmlPath, text);
+        grunt.file.write(grunt.config("config-json"), JSON.stringify(configData, null, "    "));
+        
+        
         spawn(["cmd.exe /c ant.bat -f brackets-win-install-build.xml"], { cwd: resolve("installer/win"), env: getBracketsEnv() }).then(function () {
             done();
         }, function (err) {

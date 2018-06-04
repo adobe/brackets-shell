@@ -95,6 +95,8 @@
 
 typedef char s8;
 
+bool StMenuCommandSkipper::sSkipMenuCommand = false;
+
 extern CefRefPtr<ClientHandler> g_handler;
 
 // Supported browsers (order matters):
@@ -721,6 +723,12 @@ int ShowFolderInOSWindow(ExtensionString pathname)
     GError *gerror = NULL;
     gchar *uri = NULL, *parentdir = NULL;
 
+    // Check if file exist in OS
+    struct stat fileStat;
+    if (stat(pathname.c_str(), &fileStat) != 0) {
+        return ERR_NOT_FOUND;
+    }
+
     if (g_file_test(pathname.c_str(), G_FILE_TEST_IS_DIR)) {
         uri = g_filename_to_uri(pathname.c_str(), NULL, NULL);
         if (!gtk_show_uri(NULL, uri, GDK_CURRENT_TIME, &gerror)) {
@@ -1062,6 +1070,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
 
     ExtensionString commandId = model.getCommandId(tag);
     model.setOsItem(tag, entry);
+    model.setKey(tag, key);
     ParseShortcut(browser, entry, key, commandId);
     GtkWidget* menuHeader = (GtkWidget*) model.getOsItem(parentTag);
     GtkWidget* menuWidget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(menuHeader));
@@ -1098,16 +1107,60 @@ int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId,
     return NO_ERROR;
 }
 
+int _getMenuItemPosition(GtkWidget* parent, GtkWidget* menuItem)
+{
+    GList* children = gtk_container_get_children(GTK_CONTAINER(parent));
+    int index = 0;
+    do {
+        GtkWidget* widget = (GtkWidget*) children->data;
+        if (widget == menuItem) {
+            return index;
+        }
+        index++;
+    } while ((children = g_list_next(children)) != NULL);
+
+    return -1;
+}
+
 int32 SetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString command, bool& enabled, bool& checked)
 {
-    // TODO: Implement functionality for checked
     NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
     int tag = model.getTag(command);
     if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     GtkWidget* menuItem = (GtkWidget*) model.getOsItem(tag);
-    gtk_widget_set_sensitive(menuItem, enabled);
+    if (menuItem == NULL) {
+        return ERR_UNKNOWN;
+    }
+    GtkWidget* parent = gtk_widget_get_parent(menuItem);
+    if (parent == NULL) {
+        return ERR_UNKNOWN;
+    }
+    int position = _getMenuItemPosition(parent, menuItem);
+    if (position < 0) {
+        return ERR_UNKNOWN;
+    }
+    const gchar* label = gtk_menu_item_get_label(GTK_MENU_ITEM(menuItem));
+
+    GtkWidget* newMenuItem;
+    if (checked == true) {
+        newMenuItem = gtk_check_menu_item_new_with_label(label);
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(newMenuItem), true);
+    } else {
+        newMenuItem = gtk_menu_item_new_with_label(label);
+    }
+    gtk_widget_destroy(menuItem);
+
+    InstallMenuHandler(newMenuItem, browser, tag);
+
+    model.setOsItem(tag, newMenuItem);
+    ExtensionString key = model.getKey(tag);
+    ParseShortcut(browser, newMenuItem, key, command);
+    gtk_menu_shell_insert(GTK_MENU_SHELL(parent), newMenuItem, position);
+    gtk_widget_set_sensitive(newMenuItem, enabled);
+    gtk_widget_show(newMenuItem);
+
     return NO_ERROR;
 }
 
@@ -1148,13 +1201,15 @@ int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, Ext
 
 int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
 {
-    NativeMenuModel model = NativeMenuModel::getInstance(getMenuParent(browser));
-    int32 tag = model.getTag(commandId);
+    NativeMenuModel& model = NativeMenuModel::getInstance(getMenuParent(browser));
+    int tag = model.getTag(commandId);
     if (tag == kTagNotFound) {
         return ERR_NOT_FOUND;
     }
     GtkWidget* entry = (GtkWidget*) model.getOsItem(tag);
+    model.setKey(tag, shortcut);
     ParseShortcut(browser, entry, shortcut, commandId);
+
     return NO_ERROR;
 }
 
@@ -1353,5 +1408,3 @@ std::string GetSystemUniqueID()
 
     return buf;
 }
-
-
