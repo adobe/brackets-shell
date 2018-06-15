@@ -98,7 +98,7 @@ NSString * RunCommand(NSString* launchPath, NSArray* argsArray)
 int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
 {
     int returnCode = -1;
-    if(launchPath) {
+    if(launchPath) {        
         // Create a NSTask for the script
         NSTask* pScriptTask = [[NSTask alloc] init];
         pScriptTask.launchPath = launchPath;
