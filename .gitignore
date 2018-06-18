@@ -57,5 +57,6 @@ appshell.Makefile
 *.target.mk
 appshell/gtk
 appshell/gtk/*
+appshell.sln
 
 appshell/node-core/node_modules
