@@ -194,12 +194,12 @@
       'appshell/client_handler.h',
       'appshell/native_menu_model.cpp',
       'appshell/native_menu_model.h',
+      'appshell/update.h',
+      'appshell/update.cpp',
     ],
     'appshell_sources_common': [
       'appshell/cefclient.cpp',
       'appshell/cefclient.h',
-      'appshell/update.h',
-      'appshell/update.cpp',
       '<@(appshell_sources_common_helper)',
     ],
     'appshell_sources_common_linux': [
@@ -310,6 +310,7 @@
       'appshell/appshell_helpers_mac.mm',
       'appshell/client_handler_mac.mm',
       'appshell/process_helper_mac.cpp',
+      'appshell/update_mac.mm',
       '<@(appshell_sources_common_helper)',
       '<@(appshell_sources_renderer)',
     ],
