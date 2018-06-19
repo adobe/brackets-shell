@@ -172,7 +172,7 @@ function updateBrackets(){
             printInfo "Unmounted the DMG and attempying to open Brackets ..."
         fi
         
-        rm -f "$TEMP_DIR/$APP_NAME"
+        rm -rf "$TEMP_DIR/$APP_NAME"
         open -a "$APP_DIR/$APP_NAME"
         exitStatus=$?
         if [ $exitStatus -ne 0 ]
