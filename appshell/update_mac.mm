@@ -67,32 +67,6 @@ static NSMutableDictionary * _params;
     _params = params;
 }
 
-// Runs a Command and return the output
-NSString * RunCommand(NSString* launchPath, NSArray* argsArray)
-{
-    NSString * commandOutput = NULL;
-    if(launchPath) {
-        NSPipe *pipe = [NSPipe pipe];
-        NSFileHandle *file = pipe.fileHandleForReading;
-        // Create a NSTask for the command
-        NSTask* pCommandTask = [[NSTask alloc] init];
-        pCommandTask.launchPath = launchPath;
-        pCommandTask.arguments = argsArray;
-        pCommandTask.standardOutput = pipe;
-        
-        // Launch the script.
-        [pCommandTask launch];
-        
-        NSData *data = [file readDataToEndOfFile];
-        [file closeFile];
-        
-        commandOutput = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-        
-        return commandOutput;
-        [pCommandTask release];
-    }
-    return commandOutput;
-}
 
 // Runs a script, given the script path, and args array.
 int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
@@ -200,16 +174,18 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                         int pid = [self getCurrentProcessID];
                         NSString* pidString = [NSString stringWithFormat:@"%d", pid];
                         BOOL isAdmin = false;
+
+                        NSString *installDirPath = installDir;
+                        installDirPath = [installDirPath stringByAppendingString:@"/"];
+                        NSString *bracketsAppPath = installDirPath;
+                        bracketsAppPath = [bracketsAppPath stringByAppendingString:bracketsAppName];
                         
-                        NSString* userRights = NULL;
-                        pArgs = [NSArray arrayWithObjects:@"-Gn", nil];
-                        userRights = RunCommand(@"/usr/bin/id", pArgs);
-                        
-                        if (userRights != NULL) {
-                            if([userRights containsString: @"admin"]) {
-                                isAdmin = true;
-                            }
+                        NSFileManager *fm = [NSFileManager defaultManager];
+                        if([fm isWritableFileAtPath:installDirPath] && [fm isWritableFileAtPath:bracketsAppPath] )
+                        {
+                            isAdmin = true;
                         }
+                        
                         
                         /*Build the Apple Script String*/
                         NSAppleEventDescriptor *returnDescriptor = NULL;
