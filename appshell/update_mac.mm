@@ -173,7 +173,7 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                     else {
                         int pid = [self getCurrentProcessID];
                         NSString* pidString = [NSString stringWithFormat:@"%d", pid];
-                        BOOL isAdmin = false;
+                        BOOL isAdmin = NO;
 
                         NSString *installDirPath = installDir;
                         installDirPath = [installDirPath stringByAppendingString:@"/"];
@@ -183,38 +183,15 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                         NSFileManager *fm = [NSFileManager defaultManager];
                         if([fm isWritableFileAtPath:installDirPath] && [fm isWritableFileAtPath:bracketsAppPath] )
                         {
-                            isAdmin = true;
+                            isAdmin = YES;
                         }
                         
                         
                         /*Build the Apple Script String*/
                         NSAppleEventDescriptor *returnDescriptor = NULL;
-                        NSString * appleScriptString = @"do shell script \"";
-                        appleScriptString = [appleScriptString stringByAppendingString:nohupPath];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" "];
-                        appleScriptString = [appleScriptString stringByAppendingString:shPath];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" "];
-                        appleScriptString = [appleScriptString stringByAppendingString:scriptPath];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -a "];
-                        appleScriptString = [appleScriptString stringByAppendingString:bracketsAppName];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -b "];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:installDir];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -l "];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:logFilePath];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -m "];
-                        appleScriptString = [appleScriptString stringByAppendingString:mountPoint];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -t "];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:updateDir];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"'"];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" -p "];
-                        appleScriptString = [appleScriptString stringByAppendingString:pidString];
-                        appleScriptString = [appleScriptString stringByAppendingString:@" > /dev/null 2>&1 &"];
-                        appleScriptString = [appleScriptString stringByAppendingString:@"\""];
+                        NSString * appleScriptString;
+                        
+                        appleScriptString = [NSString stringWithFormat:@"do shell script \"%@ %@ %@ -a %@ -b '%@' -l '%@' -m %@  -t '%@' -p %@ > /dev/null 2>&1 &\"", nohupPath, shPath, scriptPath, bracketsAppName, installDir, logFilePath, mountPoint, updateDir, pidString];
                         
                         if(!isAdmin) {
                             appleScriptString = [appleScriptString stringByAppendingString:@" with administrator privileges"];
@@ -226,7 +203,7 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                         
                         returnDescriptor = [theScript executeAndReturnError: &theError];
                         if(returnDescriptor == NULL) {
-                            NSString *logStr = @"ERROR: scriptexecution Failed error: BA_06 ";
+                            NSString *logStr = @"ERROR: scriptexecution Failed error: BA_06";
                             [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
                         }
                     }
