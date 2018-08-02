@@ -3531,7 +3531,7 @@
                 #     '.rdata' (40000040) with different attributes
                 #   - warning LNK4078: multiple 'ATL' sections found with
                 #     different attributes
-                'AdditionalOptions': ['/ignore:4254', '/ignore:4078'],
+                'AdditionalOptions': ['/ignore:4254', '/ignore:4078', '/guard:cf'],
               },
             },
             'msvs_system_include_dirs': [
@@ -3671,6 +3671,7 @@
                   '/dynamicbase',
                   '/ignore:4199',
                   '/ignore:4221',
+                  '/guard:cf',
                   '/nxcompat',
                 ],
               },
@@ -3684,6 +3685,7 @@
                   '/dynamicbase',
                   '/ignore:4199',
                   '/ignore:4221',
+                  '/guard:cf',
                   '/nxcompat',
                 ],
               },

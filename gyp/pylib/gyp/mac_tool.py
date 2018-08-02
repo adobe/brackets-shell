@@ -8,7 +8,6 @@
 These functions are executed via gyp-mac-tool when using the Makefile generator.
 """
 
-import errno
 import fcntl
 import fnmatch
 import glob
@@ -50,6 +49,7 @@ class MacTool(object):
   def ExecCopyBundleResource(self, source, dest, convert_to_binary):
     """Copies a resource file to the bundle/Resources directory, performing any
     necessary compilation on each resource."""
+    convert_to_binary = convert_to_binary == 'True'
     extension = os.path.splitext(source)[1].lower()
     if os.path.isdir(source):
       # Copy tree.
@@ -63,22 +63,14 @@ class MacTool(object):
       return self._CopyXIBFile(source, dest)
     elif extension == '.storyboard':
       return self._CopyXIBFile(source, dest)
-    elif extension == '.strings':
+    elif extension == '.strings' and not convert_to_binary:
       self._CopyStringsFile(source, dest)
     else:
-      # Try to hard-link, but fallback to copy if the hard-link fails due
-      # to cross device link error ([Errno 18] Cross-device link).
-      try:
-        if os.path.isfile(dest):
-          os.unlink(dest)
-        os.link(source, dest)
-      except OSError, e:
-        if e.errno == errno.EXDEV:
-          shutil.copy(source, dest)
-        else:
-          raise
+      if os.path.exists(dest):
+        os.unlink(dest)
+      shutil.copy(source, dest)
 
-    if extension in ('.plist', '.strings') and convert_to_binary == 'True':
+    if convert_to_binary and extension in ('.plist', '.strings'):
       self._ConvertToBinary(dest)
 
   def _CopyXIBFile(self, source, dest):
@@ -113,17 +105,21 @@ class MacTool(object):
 
     ibtool_section_re = re.compile(r'/\*.*\*/')
     ibtool_re = re.compile(r'.*note:.*is clipping its content')
-    ibtoolout = subprocess.Popen(args, stdout=subprocess.PIPE)
+    try:
+      stdout = subprocess.check_output(args)
+    except subprocess.CalledProcessError as e:
+      print(e.output)
+      raise
     current_section_header = None
-    for line in ibtoolout.stdout:
+    for line in stdout.splitlines():
       if ibtool_section_re.match(line):
         current_section_header = line
       elif not ibtool_re.match(line):
         if current_section_header:
-          sys.stdout.write(current_section_header)
+          print(current_section_header)
           current_section_header = None
-        sys.stdout.write(line)
-    return ibtoolout.returncode
+        print(line)
+    return 0
 
   def _ConvertToBinary(self, dest):
     subprocess.check_call([
@@ -155,7 +151,7 @@ class MacTool(object):
     fp = open(file_name, 'rb')
     try:
       header = fp.read(3)
-    except e:
+    except:
       fp.close()
       return None
     fp.close()
@@ -183,7 +179,7 @@ class MacTool(object):
 
     # Go through all the environment variables and replace them as variables in
     # the file.
-    IDENT_RE = re.compile(r'[/\s]')
+    IDENT_RE = re.compile(r'[_/\s]')
     for key in os.environ:
       if key.startswith('_'):
         continue
@@ -414,7 +410,7 @@ class MacTool(object):
       self._MergePlist(merged_plist, plist)
     plistlib.writePlist(merged_plist, output)
 
-  def ExecCodeSignBundle(self, key, entitlements, provisioning):
+  def ExecCodeSignBundle(self, key, entitlements, provisioning, path, preserve):
     """Code sign a bundle.
 
     This function tries to code sign an iOS bundle, following the same
@@ -428,11 +424,14 @@ class MacTool(object):
         provisioning, self._GetCFBundleIdentifier())
     entitlements_path = self._InstallEntitlements(
         entitlements, substitutions, overrides)
-    subprocess.check_call([
-        'codesign', '--force', '--sign', key, '--entitlements',
-        entitlements_path, '--timestamp=none', os.path.join(
-            os.environ['TARGET_BUILD_DIR'],
-            os.environ['FULL_PRODUCT_NAME'])])
+
+    args = ['codesign', '--force', '--sign', key]
+    if preserve == 'True':
+      args.extend(['--deep', '--preserve-metadata=identifier,entitlements'])
+    else:
+      args.extend(['--entitlements', entitlements_path])
+    args.extend(['--timestamp=none', path])
+    subprocess.check_call(args)
 
   def _InstallProvisioningProfile(self, profile, bundle_identifier):
     """Installs embedded.mobileprovision into the bundle.
@@ -648,7 +647,7 @@ class MacTool(object):
     return data
 
 def NextGreaterPowerOf2(x):
-  return 2**(x-1).bit_length()
+  return 2**(x).bit_length()
 
 def WriteHmap(output_name, filelist):
   """Generates a header map based on |filelist|.

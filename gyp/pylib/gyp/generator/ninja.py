@@ -148,6 +148,9 @@ class Target(object):
     # because dependents only link against the lib (not both the lib and the
     # dll) we keep track of the import library here.
     self.import_lib = None
+    # Track if this target contains any C++ files, to decide if gcc or g++
+    # should be used for linking.
+    self.uses_cpp = False
 
   def Linkable(self):
     """Return true if this is a target that can be linked against."""
@@ -375,9 +378,6 @@ class NinjaWriter(object):
     self.target = Target(spec['type'])
     self.is_standalone_static_library = bool(
         spec.get('standalone_static_library', 0))
-    # Track if this target contains any C++ files, to decide if gcc or g++
-    # should be used for linking.
-    self.uses_cpp = False
 
     self.target_rpath = generator_flags.get('target_rpath', r'\$$ORIGIN/lib/')
 
@@ -425,6 +425,8 @@ class NinjaWriter(object):
           target = self.target_outputs[dep]
           actions_depends.append(target.PreActionInput(self.flavor))
           compile_depends.append(target.PreCompileInput())
+          if target.uses_cpp:
+            self.target.uses_cpp = True
       actions_depends = filter(None, actions_depends)
       compile_depends = filter(None, compile_depends)
       actions_depends = self.WriteCollapsedDependencies('actions_depends',
@@ -450,7 +452,12 @@ class NinjaWriter(object):
 
     # Write out the compilation steps, if any.
     link_deps = []
-    sources = extra_sources + spec.get('sources', [])
+    try:
+      sources = extra_sources + spec.get('sources', [])
+    except TypeError:
+      print 'extra_sources: ', str(extra_sources)
+      print 'spec.get("sources"): ', str(spec.get('sources'))
+      raise
     if sources:
       if self.flavor == 'mac' and len(self.archs) > 1:
         # Write subninja file containing compile and link commands scoped to
@@ -1027,7 +1034,7 @@ class NinjaWriter(object):
       obj_ext = self.obj_ext
       if ext in ('cc', 'cpp', 'cxx'):
         command = 'cxx'
-        self.uses_cpp = True
+        self.target.uses_cpp = True
       elif ext == 'c' or (ext == 'S' and self.flavor != 'win'):
         command = 'cc'
       elif ext == 's' and self.flavor != 'win':  # Doesn't generate .o.d files.
@@ -1042,7 +1049,7 @@ class NinjaWriter(object):
         command = 'objc'
       elif self.flavor == 'mac' and ext == 'mm':
         command = 'objcxx'
-        self.uses_cpp = True
+        self.target.uses_cpp = True
       elif self.flavor == 'win' and ext == 'rc':
         command = 'rc'
         obj_ext = '.res'
@@ -1178,7 +1185,7 @@ class NinjaWriter(object):
           implicit_deps.add(final_output)
 
     extra_bindings = []
-    if self.uses_cpp and self.flavor != 'win':
+    if self.target.uses_cpp and self.flavor != 'win':
       extra_bindings.append(('ld', '$ldxx'))
 
     output = self.ComputeOutput(spec, arch)
@@ -1188,7 +1195,10 @@ class NinjaWriter(object):
     is_executable = spec['type'] == 'executable'
     # The ldflags config key is not used on mac or win. On those platforms
     # linker flags are set via xcode_settings and msvs_settings, respectively.
-    env_ldflags = os.environ.get('LDFLAGS', '').split()
+    if self.toolset == 'target':
+      env_ldflags = os.environ.get('LDFLAGS', '').split()
+    elif self.toolset == 'host':
+      env_ldflags = os.environ.get('LDFLAGS_host', '').split()
     if self.flavor == 'mac':
       ldflags = self.xcode_settings.GetLdflags(config_name,
           self.ExpandSpecial(generator_default_variables['PRODUCT_DIR']),
@@ -1369,7 +1379,8 @@ class NinjaWriter(object):
                                  is_command_start=not package_framework)
     if package_framework and not is_empty:
       if spec['type'] == 'shared_library' and self.xcode_settings.isIOS:
-        self.ninja.build(output, 'package_ios_framework', mac_bundle_depends)
+        self.ninja.build(output, 'package_ios_framework', mac_bundle_depends,
+                         variables=variables)
       else:
         variables.append(('version', self.xcode_settings.GetFrameworkVersion()))
         self.ninja.build(output, 'package_framework', mac_bundle_depends,
@@ -2303,15 +2314,22 @@ def GenerateOutputForConfig(target_list, target_dicts, data, params,
       'stamp',
       description='STAMP $out',
       command='%s gyp-win-tool stamp $out' % sys.executable)
-    master_ninja.rule(
-      'copy',
-      description='COPY $in $out',
-      command='%s gyp-win-tool recursive-mirror $in $out' % sys.executable)
   else:
     master_ninja.rule(
       'stamp',
       description='STAMP $out',
       command='${postbuilds}touch $out')
+  if flavor == 'win':
+    master_ninja.rule(
+      'copy',
+      description='COPY $in $out',
+      command='%s gyp-win-tool recursive-mirror $in $out' % sys.executable)
+  elif flavor == 'zos':
+    master_ninja.rule(
+      'copy',
+      description='COPY $in $out',
+      command='rm -rf $out && cp -fRP $in $out')
+  else:
     master_ninja.rule(
       'copy',
       description='COPY $in $out',
