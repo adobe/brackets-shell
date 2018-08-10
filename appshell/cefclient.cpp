@@ -19,6 +19,7 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
+extern bool gEnableNodeDebug;
 
 CefRefPtr<CefBrowser> AppGetBrowser() {
   if (!g_handler.get())
@@ -42,9 +43,24 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
   settings.multi_threaded_message_loop =
       command_line->HasSwitch(client::switches::kMultiThreadedMessageLoop);
 #endif
+  
+  std::string str2 = command_line->GetSwitchValue("debugNode"); 
+  std::vector<CefString> vec;
+  command_line->GetArguments(vec);
 
-  CefString(&settings.cache_path) =
-      command_line->GetSwitchValue(client::switches::kCachePath);
+  for (std::vector<CefString>::const_iterator iArg = vec.begin();
+	  iArg != vec.end();
+	  ++iArg) {
+	  std::string someStr = *iArg;
+	  if (someStr == "debugNode") {
+		  gEnableNodeDebug = true;
+	  }
+  }
+
+  if (str2.size() > 0 && str2 == "true")
+	  gEnableNodeDebug = true;
+
+  
   CefString(&settings.log_file) =
       command_line->GetSwitchValue(client::switches::kLogFile);
 

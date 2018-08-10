@@ -42,6 +42,7 @@ static HANDLE g_hChildStd_OUT_Wr = NULL;
 static volatile HANDLE hNodeThread = NULL;
 static volatile HANDLE hNodeReadThread = NULL;
 static volatile HANDLE hNodeMutex = NULL;
+bool gEnableNodeDebug = false;
 
 // Threads should hold hNodeMutex before using these variables
 static volatile int nodeState = BRACKETS_NODE_NOT_YET_STARTED;
@@ -136,7 +137,12 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 
 			StringCchCopy(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\""));
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, executablePath);
-			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\" \""));
+			
+			if (gEnableNodeDebug)
+				StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\" --inspect-brk \""));
+			else
+				StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\" \""));
+
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, scriptPath);
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\""));
 
