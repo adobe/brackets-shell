@@ -10,10 +10,10 @@
         <customObject id="-3" userLabel="Application"/>
         <menu title="AMainMenu" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
-                <menuItem title="Brackets" id="56">
-                    <menu key="submenu" title="Brackets" systemMenu="apple" id="57">
+                <menuItem title="MB Creator" id="56">
+                    <menu key="submenu" title="MB Creator" systemMenu="apple" id="57">
                         <items>
-                            <menuItem title="About Brackets" id="58">
+                            <menuItem title="About MB Creator" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showAbout:" target="-1" id="440"/>
@@ -36,7 +36,7 @@
                             <menuItem isSeparatorItem="YES" id="144">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Hide Brackets" keyEquivalent="h" id="134">
+                            <menuItem title="Hide MB Creator" keyEquivalent="h" id="134">
                                 <connections>
                                     <action selector="hide:" target="-1" id="367"/>
                                 </connections>
@@ -55,7 +55,7 @@
                             <menuItem isSeparatorItem="YES" id="149">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Quit Brackets" keyEquivalent="q" id="136" userLabel="1111">
+                            <menuItem title="Quit MB Creator" keyEquivalent="q" id="136" userLabel="1111">
                                 <connections>
                                     <action selector="quit:" target="-1" id="441"/>
                                 </connections>
