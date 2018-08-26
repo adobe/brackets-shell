@@ -3403,8 +3403,8 @@
                   # iOS SDK wants everything for device signed.
                   'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
                 }, {
-                  'CODE_SIGNING_REQUIRED': 'NO',
-                  'CODE_SIGN_IDENTITY[sdk=iphoneos*]': '',
+                  'CODE_SIGNING_REQUIRED': 'YES',
+                  'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
                 }],
               ],
             },

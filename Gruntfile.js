@@ -311,7 +311,7 @@ module.exports = function (grunt) {
             }
         },
         "build": {
-            "name"              : "Brackets",
+            "name"              : "MB Creator",
             "staging"           : staging
         },
         "git": {
