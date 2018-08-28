@@ -38,7 +38,7 @@ static const int BRACKETS_NODE_AUTO_RESTART_TIMEOUT = 5; // seconds
 // process.
 
 // Start the Node process. If a process is already running, this is a no-op.
-void startNodeProcess();
+void startNodeProcess(bool debugNode = false);
 
 // Gets the state of the current Node process. If the value is < 0, it indicates
 // an error as defined above. If the value is >= 0, it indicates the socket port

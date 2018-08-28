@@ -297,8 +297,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
+  bool debugNode = false;
+  if (cmdLine->HasSwitch("debug-node")) {
+      debugNode = true;
+  }
   // Start the node server process
-  startNodeProcess();
+  startNodeProcess(debugNode);
 
   gFilesToOpen = GetFilenamesFromCommandLine(cmdLine);
 

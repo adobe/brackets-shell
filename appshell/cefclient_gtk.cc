@@ -154,7 +154,11 @@ int RunMain(int argc, char* argv[]) {
     CefString(&settings.cache_path) = appshell::AppGetCachePath();
   }
   
-  startNodeProcess();
+  bool debugNode = false;
+  if (cmdLine->HasSwitch("debug-node")) {
+      debugNode = true;
+  }
+  startNodeProcess(debugNode);
 
   // Initialize CEF.
   context->Initialize(main_args, settings, app, NULL);

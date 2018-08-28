@@ -47,6 +47,7 @@ static volatile HANDLE hNodeMutex = NULL;
 static volatile int nodeState = BRACKETS_NODE_NOT_YET_STARTED;
 static volatile DWORD nodeStartTime = 0;
 static PROCESS_INFORMATION piProcInfo;
+static bool sDebugNode = false;
 
 // Forward declarations
 DWORD WINAPI NodeThread(LPVOID);
@@ -54,7 +55,7 @@ void restartNode(bool);
 
 // Creates the thread that starts Node and then monitors the state
 // of the node process.
-void startNodeProcess() {
+void startNodeProcess(bool debugNode) {
 	// IMPORTANT THREAD SAFETY NOTE: Currently, this function is called once
 	// during startup from the main thread, and then all other times from the
 	// NodeThread thread. Since the first call to the function actually
@@ -64,6 +65,8 @@ void startNodeProcess() {
 	// However, if we ever implement a way for the main process to re-call
 	// this function, we will need to wrap it in a separate mutex to ensure
 	// that we don't start two node processes.
+    
+    sDebugNode = debugNode;
 
 	if (hNodeMutex == NULL) {
 		hNodeMutex = CreateMutex(NULL, false, NULL);
@@ -139,6 +142,10 @@ DWORD WINAPI NodeThread(LPVOID lpParam) {
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\" \""));
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, scriptPath);
 			StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("\""));
+            
+            if (sDebugNode) {
+                StringCchCat(commandLine, BRACKETS_NODE_BUFFER_SIZE, TEXT("--debug-brk --inspect=9222"));
+            }
 
 			SECURITY_ATTRIBUTES saAttr; 
 
@@ -282,7 +289,7 @@ void restartNode(bool terminateCurrentProcess) {
 
 			if (shouldRestart) {
 				// Ran at least 5 seconds last time, so restart
-				startNodeProcess();
+				startNodeProcess(sDebugNode);
 			} else {
 				// Didn't run long enough
 				setNodeState(BRACKETS_NODE_FAILED);

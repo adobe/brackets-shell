@@ -48,6 +48,7 @@ FILE* streamFrom;
 // Threads should hold mutex before using these
 static int nodeState = BRACKETS_NODE_NOT_YET_STARTED;
 static int nodeStartTime = 0;
+static bool sDebugNode = false;
 
 // Forward declarations
 void* nodeThread(void*);
@@ -56,8 +57,8 @@ void restartNode(bool);
 
 // Creates the thread that starts Node and then monitors the state
 // of the node process.
-void startNodeProcess() {
-    
+void startNodeProcess(bool debugNode) {
+    sDebugNode = debugNode;
     pthread_t thread_id;
     if (pthread_create(&thread_id, NULL, &nodeThread, NULL) != 0)
         nodeState = BRACKETS_NODE_FAILED;
@@ -124,7 +125,7 @@ void* nodeThread(void* unused) {
         dup2(fromNode[1], STDOUT_FILENO);
         
         // run node executable
-        char* arg_list[] = { nodeExecutablePath, nodecorePath, NULL};
+        char* arg_list[] = { nodeExecutablePath, nodecorePath, NULL };
         execvp(arg_list[0], arg_list);
         
         fprintf(stderr, "the Node process failed to start: %s\n", strerror(errno));

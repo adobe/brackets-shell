@@ -76,7 +76,7 @@
 }
 
 // Starts a new node process and registers appropriate handlers
--(bool) start {
+-(bool) start:(bool)debugNode {
     state = BRACKETS_NODE_PORT_NOT_YET_SET;
     
     lastStartTime = CFAbsoluteTimeGetCurrent();
@@ -84,6 +84,8 @@
     NSString *appPath = [[NSBundle mainBundle] bundlePath];
     NSString *nodePath = [appPath stringByAppendingString:NODE_EXECUTABLE_PATH];
     NSString *nodeJSPath = [appPath stringByAppendingString:NODE_CORE_PATH];
+    NSString *debug = @"--debug-brk";
+    NSString *inspect = @"--inspect=9222";
     
     task = [[NSTask alloc] init];
     [task setStandardOutput: [NSPipe pipe]];
@@ -103,7 +105,13 @@
     
     [task setLaunchPath: nodePath];
     
-    NSArray *arguments = [NSArray arrayWithObject:nodeJSPath];
+    NSArray *arguments = nil;
+    if (debugNode) {
+        arguments = [NSArray arrayWithObjects:debug, inspect, nodeJSPath, nil];
+    } else {
+        arguments = [NSArray arrayWithObjects:nodeJSPath, nil];
+    }
+
     [task setArguments: arguments];
     
     // Here we register as an observer of the NSFileHandleReadCompletionNotification, which lets
@@ -213,10 +221,10 @@ static NodeWrapper* gNodeWrapper = [[NodeWrapper alloc] init];
 // appshell_node_process(_internal).h. Essentially wraps a singleton
 // instance of NodeWrapper and calls in to the appropriate methods
 
-void startNodeProcess()
+void startNodeProcess(bool debugNode /*= false*/)
 {
     if (getNodeState() == BRACKETS_NODE_NOT_YET_STARTED) {
-        [gNodeWrapper start];
+        [gNodeWrapper start:debugNode];
     }
 }
 

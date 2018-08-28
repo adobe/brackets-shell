@@ -805,6 +805,14 @@ int main(int argc, char* argv[]) {
   pendingOpenFiles = [[NSMutableArray alloc] init];
   
   CefMainArgs main_args(argc, argv);
+  
+  // Parse command line arguments.
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->InitFromArgv(argc, argv);
+  bool debugNode = false;
+  if (cmdLine->HasSwitch("debug-node")) {
+      debugNode = true;
+  }
  
   // Delete Special Characters Palette from Edit menu.
   [[NSUserDefaults standardUserDefaults]
@@ -813,7 +821,7 @@ int main(int argc, char* argv[]) {
   g_appStartupTime = CFAbsoluteTimeGetCurrent();
 
   // Start the node server process
-  startNodeProcess();
+  startNodeProcess(debugNode);
     
   CefRefPtr<ClientApp> app(new ClientApp);
 
@@ -829,10 +837,6 @@ int main(int argc, char* argv[]) {
   [ClientApplication sharedApplication];
   NSObject* delegate = [[ClientAppDelegate alloc] init];
   [NSApp setDelegate:delegate];
-
-  // Parse command line arguments.
-  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
-  cmdLine->InitFromArgv(argc, argv);
 
   CefSettings settings;
 
