@@ -9,7 +9,7 @@
 # on mac.
 
 TARGET_FILE=$0
-BRACKETS_APP_NAME="Brackets.app"
+BRACKETS_APP_NAME="Creator.app"
 
 TARGET_PATH="$(readlink "$TARGET_FILE")"
 TARGET_DIR="$(dirname "$TARGET_PATH")"

@@ -202,7 +202,7 @@ function start() {
                     verifyClient : function (info, callback) {
                         // Accept connections originated from local system only
                         // Also do a loose check on user-agent to accept connection only from Brackets CEF shell
-                        if (info.origin === "file://" && info.req.headers["user-agent"].indexOf(" Brackets") !== -1) {
+                        if (info.origin === "file://" && info.req.headers["user-agent"].indexOf(" MBCreator") !== -1) {
                             callback(true);
                         } else {
                             // Reject the connection

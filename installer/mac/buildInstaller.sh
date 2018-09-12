@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # config
-releaseName="Brackets"
+releaseName="MB Creator"
 version="1.14"
 dmgName="${releaseName} Release ${version}"
 format="bzip2"
@@ -17,9 +17,9 @@ cp -r "./staging/${BRACKETS_APP_NAME}.app/" "$tempDir/$appName"
 
 # copy update.sh to hidden location in the dmg
 if [ -f ./update.sh ]; then
-  echo "Adding update.sh"
-  chmod +x ./update.sh
-  cp ./update.sh "$tempDir/.update.sh"
+echo "Adding update.sh"
+chmod +x ./update.sh
+cp ./update.sh "$tempDir/.update.sh"
 fi
 
 # create symlink to Applications folder in staging area
@@ -29,13 +29,13 @@ ln -s /Applications "$tempDir/ "
 # copy volume icon to staging area if one exists
 customIcon=""
 if [ -f ./assets/VolumeIcon.icns ]; then
-  cp ./assets/VolumeIcon.icns "$tempDir/.VolumeIcon.icns"
-  customIcon="--custom-icon"
+cp ./assets/VolumeIcon.icns "$tempDir/.VolumeIcon.icns"
+customIcon="--custom-icon"
 fi
 
 # if license folder exists, use it
 if [ -d ./dropDmgConfig/licenses/bracketsLicense ]; then
-  customLicense="--license-folder ./dropDmgConfig/licenses/bracketsLicense"
+customLicense="--license-folder ./dropDmgConfig/licenses/bracketsLicense"
 fi
 
 # create disk layout
