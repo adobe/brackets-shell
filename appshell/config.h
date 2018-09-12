@@ -50,7 +50,7 @@
 // Name of group (if any) that application prefs/settings/etc. are stored under
 // This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
-#define APP_NAME L"Brackets"
+#define APP_NAME L"MB Creator"
 #define WINDOW_TITLE APP_NAME
 
 // Paths for node resources are relative to the location of the appshell executable
@@ -73,7 +73,7 @@
 #ifdef OS_LINUX
 // TODO linux preferences
 //#define GROUP_NAME @""
-#define APP_NAME "Brackets"
+#define APP_NAME "MB Creator"
 //#define WINDOW_TITLE APP_NAME
 
 // Path for node resources is in dependencies dir and relative to the location of the appshell executable
