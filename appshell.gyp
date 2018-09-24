@@ -305,22 +305,22 @@
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/Brackets-node',
               ],
             },
-            {
-              # This postbuid step is responsible for creating the following
-              # helpers:
-              #
-              # <(appname) Helper EH.app and <(appname) Helper NP.app are created
-              # from <(appname) Helper.app.
-              #
-              # The EH helper is marked for an executable heap. The NP helper
-              # is marked for no PIE (ASLR).
-              'postbuild_name': 'Make More Helpers',
-              'action': [
-                'tools/make_more_helpers.sh',
-                'Frameworks',
-                '<(appname)',
-              ],
-            },
+#            {
+#              # This postbuid step is responsible for creating the following
+#              # helpers:
+#              #
+#              # <(appname) Helper EH.app and <(appname) Helper NP.app are created
+#              # from <(appname) Helper.app.
+#              #
+#              # The EH helper is marked for an executable heap. The NP helper
+#              # is marked for no PIE (ASLR).
+#              'postbuild_name': 'Make More Helpers',
+#              'action': [
+#                'tools/make_more_helpers.sh',
+#                'Frameworks',
+#                '<(appname)',
+#              ],
+#            },
           ],
           'link_settings': {
             'libraries': [

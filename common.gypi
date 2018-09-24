@@ -3241,116 +3241,116 @@
             '-fno-strict-aliasing',  # See http://crbug.com/32204
           ],
         },
-        'target_conditions': [
-          ['_type=="executable"', {
-            'postbuilds': [
-              {
-                # Arranges for data (heap) pages to be protected against
-                # code execution when running on Mac OS X 10.7 ("Lion"), and
-                # ensures that the position-independent executable (PIE) bit
-                # is set for ASLR when running on Mac OS X 10.5 ("Leopard").
-                'variables': {
-                  # Define change_mach_o_flags in a variable ending in _path
-                  # so that GYP understands it's a path and performs proper
-                  # relativization during dict merging.
-                  'change_mach_o_flags_path':
-                      'mac/change_mach_o_flags_from_xcode.sh',
-                  'change_mach_o_flags_options%': [
-                  ],
-                  'target_conditions': [
-                    ['mac_pie==0 or release_valgrind_build==1', {
-                      # Don't enable PIE if it's unwanted. It's unwanted if
-                      # the target specifies mac_pie=0 or if building for
-                      # Valgrind, because Valgrind doesn't understand slide.
-                      # See the similar mac_pie/release_valgrind_build check
-                      # below.
-                      'change_mach_o_flags_options': [
-                        '--no-pie',
-                      ],
-                    }],
-                  ],
-                },
-                'postbuild_name': 'Change Mach-O Flags',
-                'action': [
-                  '<(change_mach_o_flags_path)',
-                  '>@(change_mach_o_flags_options)',
-                ],
-              },
-            ],
-            'conditions': [
-              ['asan==1', {
-                'variables': {
-                 'asan_saves_file': 'asan.saves',
-                },
-                'xcode_settings': {
-                  'CHROMIUM_STRIP_SAVE_FILE': '<(asan_saves_file)',
-                },
-              }],
-            ],
-            'target_conditions': [
-              ['mac_pie==1 and release_valgrind_build==0', {
-                # Turn on position-independence (ASLR) for executables. When
-                # PIE is on for the Chrome executables, the framework will
-                # also be subject to ASLR.
-                # Don't do this when building for Valgrind, because Valgrind
-                # doesn't understand slide. TODO: Make Valgrind on Mac OS X
-                # understand slide, and get rid of the Valgrind check.
-                'xcode_settings': {
-                  'OTHER_LDFLAGS': [
-                    '-Wl,-pie',  # Position-independent executable (MH_PIE)
-                  ],
-                },
-              }],
-            ],
-          }],
-          ['(_type=="executable" or _type=="shared_library" or \
-             _type=="loadable_module") and mac_strip!=0', {
-            'target_conditions': [
-              ['mac_real_dsym == 1', {
-                # To get a real .dSYM bundle produced by dsymutil, set the
-                # debug information format to dwarf-with-dsym.  Since
-                # strip_from_xcode will not be used, set Xcode to do the
-                # stripping as well.
-                'configurations': {
-                  'Release_Base': {
-                    'xcode_settings': {
-                      'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
-                      'DEPLOYMENT_POSTPROCESSING': 'YES',
-                      'STRIP_INSTALLED_PRODUCT': 'YES',
-                      'target_conditions': [
-                        ['_type=="shared_library" or _type=="loadable_module"', {
-                          # The Xcode default is to strip debugging symbols
-                          # only (-S).  Local symbols should be stripped as
-                          # well, which will be handled by -x.  Xcode will
-                          # continue to insert -S when stripping even when
-                          # additional flags are added with STRIPFLAGS.
-                          'STRIPFLAGS': '-x',
-                        }],  # _type=="shared_library" or _type=="loadable_module"'
-                      ],  # target_conditions
-                    },  # xcode_settings
-                  },  # configuration "Release"
-                },  # configurations
-              }, {  # mac_real_dsym != 1
-                # To get a fast fake .dSYM bundle, use a post-build step to
-                # produce the .dSYM and strip the executable.  strip_from_xcode
-                # only operates in the Release configuration.
-                'postbuilds': [
-                  {
-                    'variables': {
-                      # Define strip_from_xcode in a variable ending in _path
-                      # so that gyp understands it's a path and performs proper
-                      # relativization during dict merging.
-                      'strip_from_xcode_path': 'mac/strip_from_xcode'
-                    },
-                    'postbuild_name': 'Strip If Needed',
-                    'action': ['scripts/strip_from_xcode.sh']
-                  },
-                ],  # postbuilds
-              }],  # mac_real_dsym
-            ],  # target_conditions
-          }],  # (_type=="executable" or _type=="shared_library" or
-               #  _type=="loadable_module") and mac_strip!=0
-        ],  # target_conditions
+#        'target_conditions': [
+#          ['_type=="executable"', {
+#            'postbuilds': [
+#              {
+#                # Arranges for data (heap) pages to be protected against
+#                # code execution when running on Mac OS X 10.7 ("Lion"), and
+#                # ensures that the position-independent executable (PIE) bit
+#                # is set for ASLR when running on Mac OS X 10.5 ("Leopard").
+#                'variables': {
+#                  # Define change_mach_o_flags in a variable ending in _path
+#                  # so that GYP understands it's a path and performs proper
+#                  # relativization during dict merging.
+#                  'change_mach_o_flags_path':
+#                      'mac/change_mach_o_flags_from_xcode.sh',
+#                  'change_mach_o_flags_options%': [
+#                  ],
+#                  'target_conditions': [
+#                    ['mac_pie==0 or release_valgrind_build==1', {
+#                      # Don't enable PIE if it's unwanted. It's unwanted if
+#                      # the target specifies mac_pie=0 or if building for
+#                      # Valgrind, because Valgrind doesn't understand slide.
+#                      # See the similar mac_pie/release_valgrind_build check
+#                      # below.
+#                      'change_mach_o_flags_options': [
+#                        '--no-pie',
+#                      ],
+#                    }],
+#                  ],
+#                },
+#                'postbuild_name': 'Change Mach-O Flags',
+#                'action': [
+#                  '<(change_mach_o_flags_path)',
+#                  '>@(change_mach_o_flags_options)',
+#                ],
+#              },
+#            ],
+#            'conditions': [
+#              ['asan==1', {
+#                'variables': {
+#                 'asan_saves_file': 'asan.saves',
+#                },
+#                'xcode_settings': {
+#                  'CHROMIUM_STRIP_SAVE_FILE': '<(asan_saves_file)',
+#                },
+#              }],
+#            ],
+#            'target_conditions': [
+#              ['mac_pie==1 and release_valgrind_build==0', {
+#                # Turn on position-independence (ASLR) for executables. When
+#                # PIE is on for the Chrome executables, the framework will
+#                # also be subject to ASLR.
+#                # Don't do this when building for Valgrind, because Valgrind
+#                # doesn't understand slide. TODO: Make Valgrind on Mac OS X
+#                # understand slide, and get rid of the Valgrind check.
+#                'xcode_settings': {
+#                  'OTHER_LDFLAGS': [
+#                    '-Wl,-pie',  # Position-independent executable (MH_PIE)
+#                  ],
+#                },
+#              }],
+#            ],
+#          }],
+#          ['(_type=="executable" or _type=="shared_library" or \
+#             _type=="loadable_module") and mac_strip!=0', {
+#            'target_conditions': [
+#              ['mac_real_dsym == 1', {
+#                # To get a real .dSYM bundle produced by dsymutil, set the
+#                # debug information format to dwarf-with-dsym.  Since
+#                # strip_from_xcode will not be used, set Xcode to do the
+#                # stripping as well.
+#                'configurations': {
+#                  'Release_Base': {
+#                    'xcode_settings': {
+#                      'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
+#                      'DEPLOYMENT_POSTPROCESSING': 'YES',
+#                      'STRIP_INSTALLED_PRODUCT': 'YES',
+#                      'target_conditions': [
+#                        ['_type=="shared_library" or _type=="loadable_module"', {
+#                          # The Xcode default is to strip debugging symbols
+#                          # only (-S).  Local symbols should be stripped as
+#                          # well, which will be handled by -x.  Xcode will
+#                          # continue to insert -S when stripping even when
+#                          # additional flags are added with STRIPFLAGS.
+#                          'STRIPFLAGS': '-x',
+#                        }],  # _type=="shared_library" or _type=="loadable_module"'
+#                      ],  # target_conditions
+#                    },  # xcode_settings
+#                  },  # configuration "Release"
+#                },  # configurations
+#              }, {  # mac_real_dsym != 1
+#                # To get a fast fake .dSYM bundle, use a post-build step to
+#                # produce the .dSYM and strip the executable.  strip_from_xcode
+#                # only operates in the Release configuration.
+#                'postbuilds': [
+#                  {
+#                    'variables': {
+#                      # Define strip_from_xcode in a variable ending in _path
+#                      # so that gyp understands it's a path and performs proper
+#                      # relativization during dict merging.
+#                      'strip_from_xcode_path': 'mac/strip_from_xcode'
+#                    },
+#                    'postbuild_name': 'Strip If Needed',
+#                    'action': ['scripts/strip_from_xcode.sh']
+#                  },
+#                ],  # postbuilds
+#              }],  # mac_real_dsym
+#            ],  # target_conditions
+#          }],  # (_type=="executable" or _type=="shared_library" or
+#               #  _type=="loadable_module") and mac_strip!=0
+#        ],  # target_conditions
       },  # target_defaults
     }],  # OS=="mac"
     ['OS=="ios"', {
