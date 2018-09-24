@@ -51,6 +51,7 @@
       ],
       'defines': [
         'USING_CEF_SHARED',
+        'WRAPING_CEF_SHARED',
       ],
       'include_dirs': [
         '.',
@@ -444,6 +445,7 @@
       'msvs_guid': 'A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9',
       'defines': [
         'USING_CEF_SHARED',
+        'WRAPPING_CEF_SHARED',
       ],
       'configurations': {
         'Common_Base': {
@@ -521,6 +523,7 @@
           ],
           'defines': [
             'USING_CEF_SHARED',
+            'WRAPING_CEF_SHARED',
           ],
           'include_dirs': [
             '.',

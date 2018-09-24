@@ -157,7 +157,7 @@ class AppShellExtensionHandler : public CefV8Handler {
                          CefRefPtr<CefV8Value> object,
                          const CefV8ValueList& arguments,
                          CefRefPtr<CefV8Value>& retval,
-                         CefString& exception) {
+                         CefString& exception) OVERRIDE {
 
         // The only messages that are handled here is getElapsedMilliseconds(),
         // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().

@@ -20,7 +20,7 @@ class ClientApp : public CefApp,
   // Interface for renderer delegates. All RenderDelegates must be returned via
   // CreateRenderDelegates. Do not perform work in the RenderDelegate
   // constructor. See CefRenderProcessHandler for documentation.
-  class RenderDelegate : public virtual CefBase {
+  class RenderDelegate : public virtual CefBaseRefCounted {
   public:
       virtual void OnRenderThreadCreated(CefRefPtr<ClientApp> app,
                                          CefRefPtr<CefListValue> extra_info) {}
@@ -93,11 +93,11 @@ private:
   static void CreateRenderDelegates(RenderDelegateSet& delegates);
 
   // Registers custom schemes. Implemented in client_app_delegates.
-  static void RegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar);
+  static void RegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar);
 
   // CefApp methods.
   virtual void OnRegisterCustomSchemes(
-      CefRefPtr<CefSchemeRegistrar> registrar) OVERRIDE {
+      CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE {
     RegisterCustomSchemes(registrar);
   }
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()

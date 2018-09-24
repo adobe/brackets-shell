@@ -2266,6 +2266,7 @@
           # Note: this is *required* to make some plugins work.
           '-fvisibility=hidden',
           '-pipe',
+          '-Wno-undefined-var-template',
         ],
         'cflags_cc': [
           '-fno-rtti',
@@ -3119,6 +3120,7 @@
             # Don't warn about the "struct foo f = {0};" initialization
             # pattern.
             '-Wno-missing-field-initializers',
+            '-Wno-undefined-var-template',
           ],
           'conditions': [
             ['chromium_mac_pch', {'GCC_PRECOMPILE_PREFIX_HEADER': 'YES'},
