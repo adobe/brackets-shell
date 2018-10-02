@@ -36,7 +36,7 @@ void EnsureTrailingSeparator(LPWSTR pRet)
     if (!pRet)
         return;
 
-    int len = wcslen(pRet);
+    int len = static_cast<int>(wcslen(pRet));
     if (len > 0 && wcscmp(&(pRet[len-1]), L"\\") != 0)
     {
         wcscat(pRet, L"\\");

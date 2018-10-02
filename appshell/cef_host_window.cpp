@@ -168,7 +168,7 @@ BOOL cef_host_window::HandleSize(BOOL bMinimize)
     if (GetProp(L"WasMinimized")) {
         DoRepaintClientArea();
     }
-    SetProp(L"WasMinimized", (HANDLE)bMinimize);
+    SetPropW(L"WasMinimized", bit_cast<HANDLE>(&bMinimize));
 #endif
     NotifyWindowMovedOrResized();
     return FALSE;

@@ -113,7 +113,7 @@ bool ClientApp::OnProcessMessageReceived(
             // which can lead to bad things. If the browser instance has been deleted, don't
             // invoke this callback. 
             if (context->GetBrowser()) {
-                for (size_t i = 1; i < messageArgs->GetSize(); i++) {
+                for (int i = 1; i < static_cast<int>(messageArgs->GetSize()); ++i) {
                     arguments.push_back(appshell::ListValueToV8Value(messageArgs, i));
                 }
                 
