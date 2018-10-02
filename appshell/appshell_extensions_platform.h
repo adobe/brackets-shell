@@ -33,6 +33,9 @@
 
 #ifdef OS_LINUX
 #include <gtk/gtk.h>
+#include <unicode/ucnv_err.h>
+#include <unicode/uenum.h>
+#include <unicode/localpointer.h>
 #endif
 
 // Extension error codes. These MUST be in sync with the error

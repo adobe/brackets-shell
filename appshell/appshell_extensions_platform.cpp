@@ -7,6 +7,7 @@
 #include "appshell/browser/main_context.h"
 #include "appshell/browser/root_window_manager.h"
 #include "appshell/browser/root_window_gtk.h"
+#include <unicode/unistr.h>
 #endif
 
 #define UTF8_BOM "\xEF\xBB\xBF"

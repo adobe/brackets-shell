@@ -37,8 +37,10 @@ module.exports = function (grunt) {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
-    if (platform === "linux") {
-        cef_version = "3.2785.1486";
+    /*if (platform === "mac") {
+        cef_version = "3.2704.1434";
+    } else*/ if (platform === "linux") {
+        cef_version = "3.2785.1487";
     }
 
     grunt.initConfig({
@@ -347,7 +349,7 @@ module.exports = function (grunt) {
             "version"       : cef_version
         },
         "node": {
-            "version"       : "6.11.0"
+            "version"       : "6.14.0"
         },
         "icu": {
             "url"           : "http://localhost:8001",
