@@ -13,7 +13,6 @@
 #include "include/cef_version.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
-#include "include/cef_runnable.h"
 #include "client_handler.h"
 #include "config.h"
 #include "appshell/browser/resource.h"
@@ -63,7 +62,7 @@ extern CefRefPtr<ClientHandler> g_handler;
 void StripColonNumber(std::wstring& str) {
     bool gotDigits = false;
     int index;
-    for (index = str.size() - 1; index >= 0; index--) {
+    for (index = static_cast<int>(str.size()) - 1; index >= 0; index--) {
         if (!isdigit(str[index]))
             break;
         gotDigits = true;
@@ -213,7 +212,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         // note: WM_COPYDATA will manage passing the string across process space
         COPYDATASTRUCT data;
         data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-        data.cbData = (wstrFilename.length() + 1) * sizeof(WCHAR);
+        data.cbData = static_cast<DWORD>((wstrFilename.length() + 1) * sizeof(WCHAR));
         data.lpData = (LPVOID)wstrFilename.c_str();
         ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
         // exit this instance

@@ -31,7 +31,7 @@ void CharSetDetect::operator()(const char* bufferData, size_t bufferLength, std:
 	const UCharsetMatch* charsetMatch_;
 
 	// send text
-	ucsdet_setText(m_charsetDetector_, bufferData, bufferLength, &error);
+	ucsdet_setText(m_charsetDetector_, bufferData, static_cast<int32_t>(bufferLength), &error);
 	if (U_FAILURE(error))
 		throw "Failed to set text";
 
