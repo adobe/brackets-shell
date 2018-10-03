@@ -31,7 +31,6 @@ class ClientHandler : public CefClient,
                       public CefRequestHandler,
                       public CefDisplayHandler,
                       public CefKeyboardHandler,
-                      public CefGeolocationHandler,
                       public CefContextMenuHandler {
  
 public:
@@ -92,9 +91,6 @@ public:
     return this;
   }
   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
-    return this;
-  }
-  virtual CefRefPtr<CefGeolocationHandler> GetGeolocationHandler() OVERRIDE {
     return this;
   }
   virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE {
@@ -162,17 +158,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                                const CefString& url) OVERRIDE;
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) OVERRIDE;
-  virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                const CefString& message,
-                                const CefString& source,
-                                int line) OVERRIDE;
-
-  // CefGeolocationHandler methods
-  virtual bool OnRequestGeolocationPermission(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& requesting_url,
-      int request_id,
-      CefRefPtr<CefGeolocationCallback> callback) OVERRIDE;
 
   // CefContextMenuHandler methods
   virtual void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser,

@@ -27,7 +27,7 @@ module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
         staging,
-        cef_version = "3.3202.1694.gf061c23";
+        cef_version = "3.3497.1836.gb472a8d";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";

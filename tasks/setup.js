@@ -65,16 +65,14 @@ module.exports = function (grunt) {
         return exec("unzip -q \"" + src + "\" -d \"" + dest + "\"");
     }
 
-    var target_archbit = grunt.option('force-target-word-size') || "32";
+    //Not to be used for MacOS
+    var target_wordsize_arg = grunt.option('force-target-word-size') || undefined;
 
     function platform_arch_suffix()
     {
-        var arch = common.arch();
-        if( arch == "")
-        {
-            return target_archbit;
-        }
-        return arch;
+	if(target_wordsize_arg){ return target_wordsize_arg; }
+        if (process.platform === "win32") { return "32"; }
+        return common.arch();
     }
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
