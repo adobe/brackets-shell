@@ -37,12 +37,6 @@ module.exports = function (grunt) {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
-    /*if (platform === "mac") {
-        cef_version = "3.2704.1434";
-    } else*/ if (platform === "linux") {
-        cef_version = "3.2785.1487";
-    }
-
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
         "config-json":      staging + "/www/config.json",

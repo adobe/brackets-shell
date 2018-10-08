@@ -272,32 +272,6 @@ void ClientHandler::OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
   NotifyFullscreen(fullscreen);
 }
 
-bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                     const CefString& message,
-                                     const CefString& source,
-                                     int line) {
-  CEF_REQUIRE_UI_THREAD();
-
-  // FILE* file = fopen(console_log_file_.c_str(), "a");
-  // if (file) {
-  //   std::stringstream ss;
-  //   ss << "Message: " << message.ToString() << NEWLINE <<
-  //         "Source: " << source.ToString() << NEWLINE <<
-  //         "Line: " << line << NEWLINE <<
-  //         "-----------------------" << NEWLINE;
-  //   fputs(ss.str().c_str(), file);
-  //   fclose(file);
-
-  //   if (first_console_message_) {
-  //     test_runner::Alert(
-  //         browser, "Console messages written to \"" + console_log_file_ + "\"");
-  //     first_console_message_ = false;
-  //   }
-  // }
-
-  return false;
-}
-
 void ClientHandler::OnBeforeDownload(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefDownloadItem> download_item,
@@ -348,18 +322,6 @@ void ClientHandler::OnDraggableRegionsChanged(
   NotifyDraggableRegions(regions);
 }
 #endif
-
-bool ClientHandler::OnRequestGeolocationPermission(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& requesting_url,
-      int request_id,
-      CefRefPtr<CefGeolocationCallback> callback) {
-  CEF_REQUIRE_UI_THREAD();
-
-  // Allow geolocation access from all websites.
-  callback->Continue(true);
-  return true;
-}
 
 bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                   const CefKeyEvent& event,
@@ -486,6 +448,7 @@ void ClientHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
 bool ClientHandler::OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
                                    CefRefPtr<CefFrame> frame,
                                    CefRefPtr<CefRequest> request,
+                                   bool user_gesture,
                                    bool is_redirect) {
   CEF_REQUIRE_UI_THREAD();
 
@@ -577,8 +540,9 @@ bool ClientHandler::OnCertificateError(
     CefRefPtr<CefRequestCallback> callback) {
   CEF_REQUIRE_UI_THREAD();
 
-  CefRefPtr<CefSSLCertPrincipal> subject = ssl_info->GetSubject();
-  CefRefPtr<CefSSLCertPrincipal> issuer = ssl_info->GetIssuer();
+  CefRefPtr<CefX509Certificate> cert = ssl_info->GetX509Certificate();
+  CefRefPtr<CefX509CertPrincipal> subject = cert->GetSubject();
+  CefRefPtr<CefX509CertPrincipal> issuer = cert->GetIssuer();
 
   // Build a table showing certificate information. Various types of invalid
   // certificates can be tested using https://badssl.com/.
@@ -592,22 +556,22 @@ bool ClientHandler::OnCertificateError(
             (issuer.get() ? issuer->GetDisplayName().ToString() : "&nbsp;") <<
             "</td></tr>"
         "<tr><td>Serial #*</td><td>" <<
-            GetBinaryString(ssl_info->GetSerialNumber()) << "</td></tr>"
+            GetBinaryString(cert->GetSerialNumber()) << "</td></tr>"
         "<tr><td>Status</td><td>" <<
             GetCertStatusString(ssl_info->GetCertStatus()) << "</td></tr>"
         "<tr><td>Valid Start</td><td>" <<
-            GetTimeString(ssl_info->GetValidStart()) << "</td></tr>"
+            GetTimeString(cert->GetValidStart()) << "</td></tr>"
         "<tr><td>Valid Expiry</td><td>" <<
-            GetTimeString(ssl_info->GetValidExpiry()) << "</td></tr>";
+            GetTimeString(cert->GetValidExpiry()) << "</td></tr>";
 
-  CefSSLInfo::IssuerChainBinaryList der_chain_list;
-  CefSSLInfo::IssuerChainBinaryList pem_chain_list;
-  ssl_info->GetDEREncodedIssuerChain(der_chain_list);
-  ssl_info->GetPEMEncodedIssuerChain(pem_chain_list);
+  CefX509Certificate::IssuerChainBinaryList der_chain_list;
+  CefX509Certificate::IssuerChainBinaryList pem_chain_list;
+  cert->GetDEREncodedIssuerChain(der_chain_list);
+  cert->GetPEMEncodedIssuerChain(pem_chain_list);
   DCHECK_EQ(der_chain_list.size(), pem_chain_list.size());
 
-  der_chain_list.insert(der_chain_list.begin(), ssl_info->GetDEREncoded());
-  pem_chain_list.insert(pem_chain_list.begin(), ssl_info->GetPEMEncoded());
+  der_chain_list.insert(der_chain_list.begin(), cert->GetDEREncoded());
+  pem_chain_list.insert(pem_chain_list.begin(), cert->GetPEMEncoded());
 
   for (size_t i = 0U; i < der_chain_list.size(); ++i) {
     ss << "<tr><td>DER Encoded*</td>"
