@@ -67,6 +67,7 @@ static NSMutableDictionary * _params;
     _params = params;
 }
 
+
 // Runs a script, given the script path, and args array.
 int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
 {
@@ -172,9 +173,39 @@ int RunScript(NSString* launchPath, NSArray* argsArray, BOOL waitUntilExit)
                     else {
                         int pid = [self getCurrentProcessID];
                         NSString* pidString = [NSString stringWithFormat:@"%d", pid];
-                        pArgs = [NSArray arrayWithObjects:shPath, scriptPath, @"-a", bracketsAppName, @"-b", installDir,  @"-l", logFilePath, @"-m", mountPoint,  @"-t", updateDir, @"-p", pidString, @"&", nil];
-                
-                        retval = RunScript(nohupPath, pArgs, false);
+                        BOOL isAdmin = NO;
+
+                        NSString *installDirPath = installDir;
+                        installDirPath = [installDirPath stringByAppendingString:@"/"];
+                        NSString *bracketsAppPath = installDirPath;
+                        bracketsAppPath = [bracketsAppPath stringByAppendingString:bracketsAppName];
+                        
+                        NSFileManager *fm = [NSFileManager defaultManager];
+                        if([fm isWritableFileAtPath:installDirPath] && [fm isWritableFileAtPath:bracketsAppPath] )
+                        {
+                            isAdmin = YES;
+                        }
+                        
+                        
+                        /*Build the Apple Script String*/
+                        NSAppleEventDescriptor *returnDescriptor = NULL;
+                        NSString * appleScriptString;
+                        
+                        appleScriptString = [NSString stringWithFormat:@"do shell script \"%@ %@ %@ -a %@ -b '%@' -l '%@' -m %@  -t '%@' -p %@ > /dev/null 2>&1 &\"", nohupPath, shPath, scriptPath, bracketsAppName, installDir, logFilePath, mountPoint, updateDir, pidString];
+                        
+                        if(!isAdmin) {
+                            appleScriptString = [appleScriptString stringByAppendingString:@" with administrator privileges"];
+                        }
+
+                        NSAppleScript *theScript = [[NSAppleScript alloc] initWithSource:appleScriptString];
+                        
+                        NSDictionary *theError = nil;
+                        
+                        returnDescriptor = [theScript executeAndReturnError: &theError];
+                        if(returnDescriptor == NULL) {
+                            NSString *logStr = @"ERROR: scriptexecution Failed error: BA_06";
+                            [logStr writeToFile:installStatusFilePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+                        }
                     }
                 }
             }
