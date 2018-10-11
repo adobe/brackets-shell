@@ -564,11 +564,35 @@ BOOL cef_main_window::HandleSize(BOOL bMinimize)
     return FALSE;
 }
 
+#define DPI_1X 96.0f
+
+BOOL cef_main_window::HandleDPIChanged(WPARAM wParam, LPARAM lParam)
+{
+	//UINT uDpi = HIWORD(wParam);
+	UINT uDpi =
+		static_cast<float>(LOWORD(wParam)) / DPI_1X * 100;
+
+	ReleaseResources();
+	InitDrawingResources(&uDpi);
+
+	const RECT* rect = reinterpret_cast<RECT*>(lParam);
+	HWND hwnd_ = GetSafeWnd();
+	::SetWindowPos(hwnd_, NULL, rect->left, rect->top, static_cast<int>(rect->right - rect->left),
+		static_cast<int>(rect->bottom - rect->top), SWP_NOZORDER);
+	
+	UpdateNonClientArea();
+
+	return TRUE;
+}
+
 // WindowProc -- Dispatches and routes window messages
 LRESULT cef_main_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) 
     {
+	case WM_DPICHANGED:
+		HandleDPIChanged(wParam, lParam);
+		break;
     case WM_CREATE:
         if (HandleCreate())
             return 0L;

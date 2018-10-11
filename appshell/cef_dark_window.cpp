@@ -27,6 +27,7 @@
 #include <objidl.h>
 #include <Uxtheme.h>
 #include <Shlwapi.h>
+#include <shellscalingapi.h>
 
 #include "config.h"
 
@@ -98,6 +99,11 @@ static const int kWindowFrameZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCY = 4;
 static const int kSystemIconZoomFactorCX = 2;
 
+int LogicalToDevice(int value, float device_scale_factor) {
+	float scaled_val = static_cast<float>(value) * device_scale_factor;
+	return static_cast<int>(scaled_val);
+}
+
 // GDI+ Helpers
 static void RECT2Rect(Gdiplus::Rect& dest, const RECT& src) {
     dest.X = src.left;
@@ -161,7 +167,8 @@ cef_dark_window::cef_dark_window() :
     mMenuFont(NULL),
     mHighlightBrush(NULL),
     mHoverBrush(NULL),
-    mIsActive(TRUE)
+    mIsActive(TRUE),
+	mInitialDeviceFactor(0)
 {
     ::ZeroMemory(&mNcMetrics, sizeof(mNcMetrics));
 }
@@ -190,20 +197,59 @@ void cef_dark_window::InitializeWindowForDarkUI()
 /*
  * InitDrawingResources -- Loads Pens, Brushes and Images used for drawing
  */
-void cef_dark_window::InitDrawingResources()
+void cef_dark_window::InitDrawingResources(UINT *scaleFactor)
 {
+	if (!scaleFactor) {
+		mInitialDeviceFactor = GetDPIScalingX() / 100;
+	}
+
     // Fetch Non Client Metric Data 
     //  NOTE: Windows XP chokes if the size include Windows Version 6 members so 
     //          subtract off the size of the new data members
-    mNcMetrics.cbSize = sizeof (mNcMetrics) - sizeof (mNcMetrics.iPaddedBorderWidth);
+	mNcMetrics.cbSize = sizeof(mNcMetrics) - sizeof(mNcMetrics.iPaddedBorderWidth);
     ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &mNcMetrics, 0);
+	float device_scale = GetWindowScaleFactor(GetSafeWnd());
+	device_scale = static_cast<UINT>(device_scale);
+	LONG fontHeight = -mNcMetrics.lfSmCaptionFont.lfHeight;
+
+	if (mInitialDeviceFactor < device_scale) {
+		mNcMetrics.iBorderWidth = mNcMetrics.iBorderWidth * device_scale;
+		mNcMetrics.iCaptionHeight = mNcMetrics.iCaptionHeight * device_scale;
+	} else if(mInitialDeviceFactor > device_scale) {
+		mNcMetrics.iBorderWidth = mNcMetrics.iBorderWidth / mInitialDeviceFactor;
+		mNcMetrics.iCaptionHeight = mNcMetrics.iCaptionHeight / mInitialDeviceFactor;
+	}
+
+	const int font_height = LogicalToDevice(12, device_scale);
+	if (font_height > fontHeight) {
+		// This could happen if moved from low res to high res.
+		// In this case we take the device scale factor into account.
+		mNcMetrics.iBorderWidth = mNcMetrics.iBorderWidth * device_scale;
+		mNcMetrics.iCaptionHeight = mNcMetrics.iCaptionHeight * device_scale;
+	} if (font_height < fontHeight) {
+		// Move from high res to low res.
+		mNcMetrics.iBorderWidth = mNcMetrics.iBorderWidth / device_scale;
+		mNcMetrics.iCaptionHeight = mNcMetrics.iCaptionHeight / device_scale;
+	}
+
+	mNcMetrics.lfCaptionFont.lfHeight = mNcMetrics.lfMenuFont.lfHeight = mNcMetrics.lfMenuFont.lfHeight = font_height;
 
     // Startup GDI+
     if (gdiplusToken == NULL) {
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
     }
-    LoadSysButtonImages();
+	
+	UINT scaleFactor_ = 0; 
+	if (scaleFactor) {
+		scaleFactor_ = *scaleFactor;
+	}
+	else {
+		//scaleFactor_ = GetDPIScalingX();
+		scaleFactor_ = GetWindowScaleFactor(GetSafeWnd()) * 100;
+	}
+	
+    LoadSysButtonImages(scaleFactor_);
   
 
     // Create Brushes and Pens 
@@ -233,16 +279,23 @@ void cef_dark_window::InitDrawingResources()
 void cef_dark_window::InitMenuFont()
 {
     if (mMenuFont == NULL) {
-        mMenuFont = ::CreateFontIndirect(&mNcMetrics.lfMenuFont);
+		
+		LOGFONT lfFont = {};
+		SystemParametersInfoForDPI(SPI_GETICONTITLELOGFONT, sizeof(lfFont), &lfFont, GetSafeWnd());
+        
+		const int font_height = LogicalToDevice(12, GetWindowScaleFactor(GetSafeWnd()));
+		mMenuFont = ::CreateFont(-font_height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+				DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+				DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, lfFont.lfFaceName);
+		//mMenuFont = ::CreateFontIndirect(&mNcMetrics.lfMenuFont);
     }
 }
 
 /*
  * LoadSysButtonImages -- Loads the images used for system buttons (close, min, max, restore) 
  */
-void cef_dark_window::LoadSysButtonImages()
+void cef_dark_window::LoadSysButtonImages(UINT scaleFactor)
 {
-	UINT scaleFactor = GetDPIScalingX();
 
     if(scaleFactor>=250)
     {
@@ -284,34 +337,75 @@ bool cef_dark_window::SubclassWindow(HWND hWnd)
     return false;
 }
 
+void cef_dark_window::ReleaseResources()
+{
+	delete mSysCloseButton;
+	delete mSysRestoreButton;
+	delete mSysMinimizeButton;
+	delete mSysMaximizeButton;
+
+	delete mHoverSysCloseButton;
+	delete mHoverSysRestoreButton;
+	delete mHoverSysMinimizeButton;
+	delete mHoverSysMaximizeButton;
+
+	delete mPressedSysCloseButton;
+	delete mPressedSysRestoreButton;
+	delete mPressedSysMinimizeButton;
+	delete mPressedSysMaximizeButton;
+
+	::DeleteObject(mBackgroundActiveBrush);
+	::DeleteObject(mBackgroundInactiveBrush);
+	::DeleteObject(mCaptionFont);
+	::DeleteObject(mMenuFont);
+	::DeleteObject(mHighlightBrush);
+	::DeleteObject(mHoverBrush);
+	::DeleteObject(mFrameOutlineActivePen);
+	::DeleteObject(mFrameOutlineInactivePen);
+
+	mSysCloseButton = NULL;
+	mSysRestoreButton = NULL;
+	mSysMinimizeButton = NULL;
+	mSysMaximizeButton = NULL;
+	mHoverSysCloseButton = NULL;
+	mHoverSysRestoreButton = NULL;
+	mHoverSysMinimizeButton = NULL;
+	mHoverSysMaximizeButton = NULL;
+	mPressedSysCloseButton = NULL;
+	mPressedSysRestoreButton = NULL;
+	mPressedSysMinimizeButton = NULL;
+	mPressedSysMaximizeButton = NULL;
+	mWindowIcon = NULL;
+	mBackgroundActiveBrush = NULL;
+	mBackgroundInactiveBrush = NULL;
+	mFrameOutlineActivePen = NULL;
+	mFrameOutlineInactivePen = NULL;
+	mCaptionFont = NULL;
+	mMenuFont = NULL;
+	mHighlightBrush = NULL;
+	mHoverBrush = NULL;
+	mWindowIcon = NULL;
+
+	// Reset our state
+	mNonClientData.Reset();
+
+	// Reset Fonts -- they will be recreated when needed
+	::DeleteObject(mCaptionFont);
+	mCaptionFont = NULL;
+
+	::DeleteObject(mMenuFont);
+	mMenuFont = NULL;
+
+	::ZeroMemory(&mNcMetrics, sizeof(mNcMetrics));
+
+}
+
 // WM_NCCREATE handler
 BOOL cef_dark_window::HandleNcDestroy()
 {
     TrackNonClientMouseEvents(false);
 
-    delete mSysCloseButton;
-    delete mSysRestoreButton;
-    delete mSysMinimizeButton;
-    delete mSysMaximizeButton;
-
-    delete mHoverSysCloseButton;
-    delete mHoverSysRestoreButton;
-    delete mHoverSysMinimizeButton;
-    delete mHoverSysMaximizeButton;
-
-    delete mPressedSysCloseButton;
-    delete mPressedSysRestoreButton;
-    delete mPressedSysMinimizeButton;
-    delete mPressedSysMaximizeButton;
-
-    ::DeleteObject(mBackgroundActiveBrush);
-    ::DeleteObject(mBackgroundInactiveBrush);
-    ::DeleteObject(mCaptionFont);
-    ::DeleteObject(mMenuFont);
-    ::DeleteObject(mHighlightBrush);
-    ::DeleteObject(mHoverBrush);
-    ::DeleteObject(mFrameOutlineActivePen);
-    ::DeleteObject(mFrameOutlineInactivePen);
+	ReleaseResources();
 
     return cef_window::HandleNcDestroy();
 }
@@ -348,8 +442,8 @@ BOOL cef_dark_window::HandleSettingChange(UINT uFlags, LPCWSTR lpszSection)
 // Computes the Rect where the System Icon is drawn in window coordinates
 void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
 {
-    int top = ::GetSystemMetrics (SM_CYFRAME);
-    int left = ::GetSystemMetrics (SM_CXFRAME);
+	int top = GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd());
+    int left = GetSystemMetricsForDpi(SM_CXFRAME, GetSafeWnd());
 
     if (IsZoomed()) {
         top += ::kSystemIconZoomFactorCY;
@@ -358,8 +452,8 @@ void cef_dark_window::ComputeWindowIconRect(RECT& rect) const
     ::SetRectEmpty(&rect);
     rect.top =  top;
     rect.left = left;
-    rect.bottom = rect.top + ::GetSystemMetrics(SM_CYSMICON);
-    rect.right = rect.left + ::GetSystemMetrics(SM_CXSMICON);
+    rect.bottom = rect.top + GetSystemMetricsForDpi(SM_CYSMICON, GetSafeWnd());
+    rect.right = rect.left + GetSystemMetricsForDpi(SM_CXSMICON, GetSafeWnd());
 }
 
 // Computes the Rect where the window caption is drawn in window coordinates
@@ -383,8 +477,8 @@ void cef_dark_window::ComputeWindowCaptionRect(RECT& rect) const
     RECT mr;
     ComputeMinimizeButtonRect(mr);
 
-    rect.left = ir.right + ::GetSystemMetrics (SM_CXFRAME);
-    rect.right = mr.left - ::GetSystemMetrics (SM_CXFRAME);
+    rect.left = ir.right + GetSystemMetricsForDpi(SM_CXFRAME, GetSafeWnd());
+    rect.right = mr.left - GetSystemMetricsForDpi(SM_CXFRAME, GetSafeWnd());
 }
 
 // Computes the Rect where the minimize button is drawn in window coordinates
@@ -414,8 +508,8 @@ void cef_dark_window::ComputeCloseButtonRect(RECT& rect) const
     int right = mNcMetrics.iBorderWidth;
 
     if (IsZoomed()) {
-        top = ::GetSystemMetrics (SM_CYFRAME);
-        right = ::GetSystemMetrics (SM_CXFRAME);
+		top = GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd());
+		right = GetSystemMetricsForDpi(SM_CXFRAME, GetSafeWnd());
     }
 
     RECT wr;
@@ -526,11 +620,20 @@ void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
     ::DrawIconEx(hdc, rectIcon.left, rectIcon.top, mWindowIcon, ::RectWidth(rectIcon), ::RectHeight(rectIcon), 0, NULL, DI_NORMAL);
 }
 
+
 // Draw the Caption Bar
 void cef_dark_window::DoDrawTitlebarText(HDC hdc)
 {
     if (mCaptionFont == 0) {
-        mCaptionFont = ::CreateFontIndirect(&mNcMetrics.lfCaptionFont);
+		LOGFONT lfFont = {};
+		SystemParametersInfoForDPI(SPI_GETICONTITLELOGFONT, sizeof(lfFont), &lfFont, GetSafeWnd());
+        
+		const int font_height = LogicalToDevice(12, GetWindowScaleFactor(GetSafeWnd()));
+		mCaptionFont = ::CreateFont(-font_height, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+			DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+			DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, lfFont.lfFaceName);
+
+		//mCaptionFont = ::CreateFontIndirect(&mNcMetrics.lfCaptionFont);
     }
 
     RECT textRect;
@@ -835,38 +938,38 @@ int cef_dark_window::HandleNcHitTest(LPPOINT ptHit)
     if (!IsZoomed()) {
 
         // Left Border
-        if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + ::GetSystemMetrics (SM_CYFRAME))
+		if (ptHit->x >= rectWindow.left && ptHit->x <= rectWindow.left + GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
         {
             // it's important that we know if the mouse is on a corner so that
             //    the right mouse cursor is displayed
-            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+			if (ptHit->y <= rectWindow.top + GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
                  return HTTOPLEFT;
  
-            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+			if (ptHit->y >= rectWindow.bottom - GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
                  return HTBOTTOMLEFT;
  
             return HTLEFT;
         }
 
         // Right Border
-        if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - ::GetSystemMetrics (SM_CYFRAME)) 
+		if (ptHit->x <= rectWindow.right && ptHit->x >= rectWindow.right - GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
         {
             // it's important that we know if the mouse is on a corner so that
             //    the right mouse cursor is displayed
-            if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME))
+			if (ptHit->y <= rectWindow.top + GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
                 return HTTOPRIGHT;
  
-            if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+			if (ptHit->y >= rectWindow.bottom - GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
                 return HTBOTTOMRIGHT;
  
             return HTRIGHT;
         }
 
         // Top and Bottom Borders
-        if (ptHit->y <= rectWindow.top + ::GetSystemMetrics (SM_CYFRAME)) 
+		if (ptHit->y <= rectWindow.top + GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
              return HTTOP;
              
-        if (ptHit->y >= rectWindow.bottom - ::GetSystemMetrics (SM_CYFRAME))
+		if (ptHit->y >= rectWindow.bottom - GetSystemMetricsForDpi(SM_CYFRAME, GetSafeWnd()))
              return HTBOTTOM;
     }
 

@@ -187,6 +187,28 @@ BOOL cef_host_window::HandleMoveOrMoving()
     return FALSE;
 }
 
+void SendMessageToDescendants(HWND hWnd, UINT message,
+	WPARAM wParam, LPARAM lParam, BOOL bDeep = TRUE, BOOL bOnlyPerm = FALSE)
+{
+	// walk through HWNDs to avoid creating temporary CWnd objects
+	// unless we need to call this function recursively
+	for (HWND hWndChild = ::GetTopWindow(hWnd); hWndChild != NULL;
+		hWndChild = ::GetNextWindow(hWndChild, GW_HWNDNEXT))
+	{
+		// if bOnlyPerm is TRUE, don't send to non-permanent windows
+		{
+			// send message with Windows SendMessage API
+			::SendMessage(hWndChild, message, wParam, lParam);
+		}
+		if (bDeep && ::GetTopWindow(hWndChild) != NULL)
+		{
+			// send to child windows after parent
+			SendMessageToDescendants(hWndChild, message, wParam, lParam,
+				bDeep, bOnlyPerm);
+		}
+	}
+}
+
 void cef_host_window::DoRepaintClientArea()
 {
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
@@ -218,6 +240,9 @@ LRESULT cef_host_window::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
         if (HandleMoveOrMoving())
             return 0L;
         break;
+	/*case WM_DPICHANGED:
+		HandleDPIChanged(wParam, lParam);
+		break;*/
     }
 
 

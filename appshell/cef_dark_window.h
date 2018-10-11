@@ -99,6 +99,7 @@ protected:
     BOOL HandleDrawItem(LPDRAWITEMSTRUCT lpDIS);
     BOOL HandleSettingChange(UINT uFlags, LPCWSTR lpszSection);
 
+	void ReleaseResources();
     int HandleNcHitTest(LPPOINT ptHit);
     void HandleNcMouseLeave();
 
@@ -133,8 +134,8 @@ protected:
     virtual void AdjustMenuItemRect(RECT& itemRect) const;
 
     // Drawing Initializers
-    void InitDrawingResources();
-    void LoadSysButtonImages();
+    void InitDrawingResources(UINT *scaleFactor = NULL);
+    void LoadSysButtonImages(UINT scaleFactor);
 
     // Menu Initializers 
     void InitMenuFont();
@@ -176,4 +177,5 @@ protected:
     // Metrics and State Data
     NONCLIENTMETRICS             mNcMetrics;
     NonClientButtonStateData     mNonClientData;
+	UINT						 mInitialDeviceFactor;
 };

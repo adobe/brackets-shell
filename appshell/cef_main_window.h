@@ -63,6 +63,7 @@ protected:
     BOOL HandleGetMinMaxInfo(LPMINMAXINFO mmi);
     BOOL HandleCopyData(HWND, PCOPYDATASTRUCT lpCopyData);
     BOOL HandleSize(BOOL bMinimize);
+	BOOL HandleDPIChanged(WPARAM wParam, LPARAM lParam);
 
     // Implementation
     virtual void PostNcDestroy();

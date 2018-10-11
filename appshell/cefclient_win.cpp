@@ -173,6 +173,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
+  CefEnableHighDPISupport();
+
   g_appStartupTime = timeGetTime();
 
   CefMainArgs main_args(hInstance);

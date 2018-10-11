@@ -26,6 +26,15 @@
 #include <winuser.h>
 #include <Shellapi.h>
 
+#define DPI_1X 96.0f
+
+bool IsProcessPerMonitorDpiAware();
+
+float GetWindowScaleFactor(HWND hwnd);
+int GetSystemMetricsForDpi(int  nIndex, HWND hWnd);
+
+BOOL SystemParametersInfoForDPI(UINT uiAction, UINT uiSize, PVOID params, HWND hwnd);
+
 class cef_window;
 class cef_menu;
 

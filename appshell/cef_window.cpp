@@ -21,6 +21,7 @@
  */
 
 #include "cef_window.h"
+#include <shellscalingapi.h>
 
 //DEFINES
 //HiDPI The default logical DPI when scaling is applied in windows. see. https://msdn.microsoft.com/en-us/library/ms701681(v=vs.85).aspx
@@ -48,6 +49,73 @@ struct HookData {
     cef_window* mWindow;
 } gHookData;
 
+#define DPI_1X 96.0f
+
+bool IsProcessPerMonitorDpiAware() {
+	enum class PerMonitorDpiAware {
+		UNKNOWN = 0,
+		PER_MONITOR_DPI_UNAWARE,
+		PER_MONITOR_DPI_AWARE,
+	};
+	static PerMonitorDpiAware per_monitor_dpi_aware = PerMonitorDpiAware::UNKNOWN;
+	if (per_monitor_dpi_aware == PerMonitorDpiAware::UNKNOWN) {
+		per_monitor_dpi_aware = PerMonitorDpiAware::PER_MONITOR_DPI_UNAWARE;
+		HMODULE shcore_dll = ::LoadLibrary(L"shcore.dll");
+		if (shcore_dll) {
+			typedef HRESULT(WINAPI * GetProcessDpiAwarenessPtr)(
+				HANDLE, PROCESS_DPI_AWARENESS*);
+			GetProcessDpiAwarenessPtr func_ptr =
+				reinterpret_cast<GetProcessDpiAwarenessPtr>(
+					::GetProcAddress(shcore_dll, "GetProcessDpiAwareness"));
+			if (func_ptr) {
+				PROCESS_DPI_AWARENESS awareness;
+				if (SUCCEEDED(func_ptr(nullptr, &awareness)) &&
+					awareness == PROCESS_PER_MONITOR_DPI_AWARE)
+					per_monitor_dpi_aware = PerMonitorDpiAware::PER_MONITOR_DPI_AWARE;
+			}
+		}
+	}
+	return per_monitor_dpi_aware == PerMonitorDpiAware::PER_MONITOR_DPI_AWARE;
+}
+
+float GetWindowScaleFactor(HWND hwnd) {
+	if (hwnd && IsProcessPerMonitorDpiAware()) {
+		typedef UINT(WINAPI * GetDpiForWindowPtr)(HWND);
+		static GetDpiForWindowPtr func_ptr = reinterpret_cast<GetDpiForWindowPtr>(
+			GetProcAddress(GetModuleHandle(L"user32.dll"), "GetDpiForWindow"));
+		if (func_ptr)
+			return static_cast<float>(func_ptr(hwnd)) / DPI_1X;
+	}
+
+	return 0.0;
+}
+int GetSystemMetricsForDpi(int  nIndex, HWND hWnd) {
+
+	typedef int(WINAPI * GetSystemMetricsForDpiPtr)(int, UINT);
+
+	static GetSystemMetricsForDpiPtr func_ptr = reinterpret_cast<GetSystemMetricsForDpiPtr>(
+		GetProcAddress(GetModuleHandle(L"user32.dll"), "GetSystemMetricsForDpi"));
+
+	if (func_ptr) {
+		return func_ptr(nIndex, GetWindowScaleFactor(hWnd));
+	}
+
+	return 0;
+}
+
+BOOL SystemParametersInfoForDPI(UINT uiAction, UINT uiSize, PVOID params, HWND hwnd)
+{
+	typedef BOOL(WINAPI * SystemParametersInfoForDpiPtr)(UINT, UINT, PVOID, UINT, UINT);
+
+	static SystemParametersInfoForDpiPtr func_ptr = reinterpret_cast<SystemParametersInfoForDpiPtr>(
+		GetProcAddress(GetModuleHandle(L"user32.dll"), "SystemParametersInfoForDpi"));
+
+	if (func_ptr) {
+		return func_ptr(uiAction, uiSize, params, 0, GetWindowScaleFactor(hwnd));
+	}
+
+	return FALSE;
+}
 //cef_window -- 
 cef_window::cef_window(void) :
     mWnd(NULL),
