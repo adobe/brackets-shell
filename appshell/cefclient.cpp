@@ -33,16 +33,18 @@ CefWindowHandle AppGetMainHwnd() {
   return g_handler->GetMainHwnd();
 }
 
-// CefCommandLine::HasSwitch is unable to
-// report these switches properly. So instead
-// we will do a string search one the command
-// line string to figure out presense of any
-// particular flag.
+// CefCommandLine::HasSwitch is unable to report the presense of switches,
+// in the command line properly. This is a generic function that could be
+// used to check for any particular switch, passed as a command line argument.
 bool HasSwitch(CefRefPtr<CefCommandLine> command_line , CefString& switch_name)
 {
-  ExtensionString cmdLine = command_line->GetCommandLineString();
-  size_t idx = cmdLine.find(switch_name);
-  return idx > 0 && idx < cmdLine.length();
+  if (command_line) {
+    ExtensionString cmdLine = command_line->GetCommandLineString();
+    size_t idx = cmdLine.find(switch_name);
+    return idx > 0 && idx < cmdLine.length();
+  } else {
+    return false;
+  }
 }
 
 // Returns the application settings based on command line arguments.
@@ -105,11 +107,8 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
     CefString(&settings.product_version) = versionStr;
   }
 
-  // Also see if we need to extract force enable renderer accessibility flags.
   // We disable renderer accessibility by default as it is known to cause performance
   // issues. But if any one wants to enable it back, then we need to honor the flag.
-  std::vector<CefString> arguments_vec;
-  command_line->GetArguments(arguments_vec);
 
   CefString force_acc_switch_name("--force-renderer-accessibility");
   CefString enable_acc_switch_name("--enable-renderer-accessibility");
