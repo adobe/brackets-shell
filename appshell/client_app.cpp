@@ -42,6 +42,19 @@ void ClientApp::OnContextCreated(CefRefPtr<CefBrowser> browser,
     (*it)->OnContextCreated(this, browser, frame, context);
 }
 
+void ClientApp::OnBeforeCommandLineProcessing(
+	const CefString& process_type,
+	CefRefPtr<CefCommandLine> command_line)
+{
+	command_line->AppendSwitch("disable-renderer-accessibility");
+}
+
+void ClientApp::OnBeforeChildProcessLaunch(
+	CefRefPtr<CefCommandLine> command_line)
+{
+	command_line->AppendSwitch("disable-renderer-accessibility");
+}
+
 void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 CefRefPtr<CefV8Context> context) {
