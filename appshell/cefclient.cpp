@@ -19,7 +19,10 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
-bool					 g_force_enable_acc = false;
+
+#ifdef OS_WIN
+bool g_force_enable_acc = false;
+#endif
 
 CefRefPtr<CefBrowser> AppGetBrowser() {
   if (!g_handler.get())
@@ -107,6 +110,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
     CefString(&settings.product_version) = versionStr;
   }
 
+#ifdef OS_WIN
   // We disable renderer accessibility by default as it is known to cause performance
   // issues. But if any one wants to enable it back, then we need to honor the flag.
 
@@ -115,5 +119,6 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
 
   if (HasSwitch(command_line, force_acc_switch_name) || HasSwitch(command_line, enable_acc_switch_name))
     g_force_enable_acc = true;
+#endif
 
 }

@@ -16,7 +16,9 @@
 #include "appshell/appshell_extension_handler.h"
 #include "appshell/appshell_helpers.h"
 
+#ifdef OS_WIN
 extern bool g_force_enable_acc;
+#endif
 
 ClientApp::ClientApp() {
   CreateRenderDelegates(render_delegates_);
@@ -48,17 +50,21 @@ void ClientApp::OnBeforeCommandLineProcessing(
 	const CefString& process_type,
 	CefRefPtr<CefCommandLine> command_line)
 {
-	// Check if the user wants to enable renderer accessibility
-	// and if not, then disable renderer accessibility.
+ #ifdef OS_WIN
+  // Check if the user wants to enable renderer accessibility
+  // and if not, then disable renderer accessibility.
   if (!g_force_enable_acc)
     command_line->AppendSwitch("disable-renderer-accessibility");
+ #endif
 }
 
 void ClientApp::OnBeforeChildProcessLaunch(
 	CefRefPtr<CefCommandLine> command_line)
 {
+#ifdef OS_WIN
   if (!g_force_enable_acc)
     command_line->AppendSwitch("disable-renderer-accessibility");
+#endif
 }
 
 void ClientApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
