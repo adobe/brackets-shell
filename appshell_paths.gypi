@@ -71,6 +71,9 @@
       'include/wrapper/cef_xml_object.h',
       'include/wrapper/cef_zip_archive.h',
     ],
+    'includes_wrapper_mac': [
+      'include/wrapper/cef_library_loader.h',
+    ],
     'includes_win': [
       'include/base/internal/cef_atomicops_x86_msvc.h',
       'include/base/internal/cef_bind_internal_win.h',
@@ -82,6 +85,7 @@
       'include/base/internal/cef_atomicops_atomicword_compat.h',
       'include/base/internal/cef_atomicops_mac.h',
       'include/cef_application_mac.h',
+      'include/cef_sandbox_mac.h',
       'include/internal/cef_mac.h',
       'include/internal/cef_types_mac.h',
     ],
@@ -110,7 +114,7 @@
       'libcef_dll/wrapper_types.h',
       '<@(autogen_library_side)',
     ],
-    'libcef_dll_wrapper_sources_common': [
+    'libcef_dll_wrapper_sources_base': [
       'libcef_dll/base/cef_atomicops_x86_gcc.cc',
       'libcef_dll/base/cef_bind_helpers.cc',
       'libcef_dll/base/cef_callback_helpers.cc',
@@ -122,6 +126,8 @@
       'libcef_dll/base/cef_string16.cc',
       'libcef_dll/base/cef_thread_checker_impl.cc',
       'libcef_dll/base/cef_weak_ptr.cc',
+    ],
+    'libcef_dll_wrapper_sources_common': [
       'libcef_dll/cpptoc/base_ref_counted_cpptoc.cc',
       'libcef_dll/cpptoc/base_ref_counted_cpptoc.h',
       'libcef_dll/cpptoc/base_scoped_cpptoc.cc',
@@ -146,6 +152,10 @@
       'libcef_dll/wrapper/libcef_dll_wrapper.cc',
       'libcef_dll/wrapper/libcef_dll_wrapper2.cc',
       '<@(autogen_client_side)',
+    ],
+    'libcef_dll_wrapper_sources_mac': [
+      'libcef_dll/wrapper/cef_library_loader_mac.mm',
+      'libcef_dll/wrapper/libcef_dll_dylib.cc',
     ],
     'appshell_sources_browser': [
       'appshell/browser/client_types.h',
