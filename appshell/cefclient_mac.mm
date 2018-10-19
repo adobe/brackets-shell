@@ -554,7 +554,7 @@ extern NSMutableArray* pendingOpenFiles;
 
 // BOBNOTE: Consider moving the AppDelegate interface into its own .h file
 // Receives notifications from the application. Will delete itself when done.
-@interface ClientAppDelegate : NSObject
+@interface ClientAppDelegate : NSObject <NSApplicationDelegate>
 {
     ClientWindowDelegate *delegate;
     ClientMenuDelegate *menuDelegate;
@@ -680,7 +680,7 @@ extern NSMutableArray* pendingOpenFiles;
   CefWindowInfo window_info;
   CefBrowserSettings settings;
 
-  settings.web_security = STATE_DISABLED;
+  settings.universal_access_from_file_urls = STATE_ENABLED;
 
   // Necessary to enable document.executeCommand("paste")
   settings.javascript_access_clipboard = STATE_ENABLED;
@@ -827,11 +827,12 @@ int main(int argc, char* argv[]) {
 
   // Initialize the ClientApplication instance.
   [ClientApplication sharedApplication];
-  NSObject* delegate = [[ClientAppDelegate alloc] init];
+  NSObject<NSApplicationDelegate>* delegate = [[ClientAppDelegate alloc] init];
   [NSApp setDelegate:delegate];
 
   // Parse command line arguments.
   CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::CreateCommandLine();
+  cmdLine->AppendSwitch(client::switches::kUniversalAccessFromFileUrlsAllowed);
   cmdLine->InitFromArgv(argc, argv);
 
   CefSettings settings;
