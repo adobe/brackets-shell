@@ -323,7 +323,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "url"           : "http://localhost:8000",
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
             "version"       : cef_version
         },
         "node": {
