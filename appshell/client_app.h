@@ -121,6 +121,10 @@ private:
       CefRefPtr<CefBrowser> browser,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;
+  virtual void OnBeforeCommandLineProcessing(const CefString& process_type,CefRefPtr<CefCommandLine> command_line) override
+  {
+    command_line->AppendSwitch("--disable-web-security");
+  }
 
   // Set of supported RenderDelegates.
   RenderDelegateSet render_delegates_;

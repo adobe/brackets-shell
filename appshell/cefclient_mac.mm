@@ -680,8 +680,6 @@ extern NSMutableArray* pendingOpenFiles;
   CefWindowInfo window_info;
   CefBrowserSettings settings;
 
-  settings.universal_access_from_file_urls = STATE_ENABLED;
-
   // Necessary to enable document.executeCommand("paste")
   settings.javascript_access_clipboard = STATE_ENABLED;
   settings.javascript_dom_paste = STATE_ENABLED;
