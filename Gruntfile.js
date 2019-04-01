@@ -345,14 +345,14 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
+            "url"           : "http://localhost:8000",
             "version"       : cef_version
         },
         "node": {
             "version"       : "6.14.0"
         },
         "icu": {
-            "url"           : "http://localhost:8001",
+            "url"           : "http://localhost:8000",
             "version"       : "58"
         },
         "vsCrt": {

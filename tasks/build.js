@@ -59,9 +59,18 @@ module.exports = function (grunt) {
     grunt.registerTask("full-build", ["git", "create-project", "build-www", "build", "stage", "package"]);
     grunt.registerTask("installer", ["set-release-optional", "full-build", "build-installer"]);
 
+    //Not to be used for MacOS
+    var target_wordsize_arg = grunt.option('force-target-word-size') || undefined;
+
+    function platform_arch_suffix()
+    {
+	if(target_wordsize_arg){ return target_wordsize_arg; }
+        if (process.platform === "win32") { return "32"; }
+        return common.arch();
+    }
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
-        grunt.task.run("build-" + platform);
+        grunt.task.run("build-" + platform + platform_arch_suffix());
     });
 
     // task: build-www
@@ -96,7 +105,7 @@ module.exports = function (grunt) {
     });
 
     // task: build-win
-    grunt.registerTask("build-win", "Build windows shell", function () {
+    grunt.registerTask("build-win32", "Build 32 bit windows shell", function () {
         var done = this.async();
 
         spawn(["cmd.exe /c scripts\\build_projects.bat", "cmd.exe /c scripts\\brackets_installer_projects.bat"]).then(function () {
@@ -107,6 +116,17 @@ module.exports = function (grunt) {
         });
     });
 
+    // task: build-x64
+    grunt.registerTask("build-win64", "Build 64 bit windows shell", function () {
+        var done = this.async();
+
+        spawn(["cmd.exe /c scripts\\build_projects_x64.bat", "cmd.exe /c scripts\\brackets_installer_projects_x64.bat"]).then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
     // task: build-linux
     grunt.registerTask("build-linux", "Build linux shell", function () {
         var done = this.async();
