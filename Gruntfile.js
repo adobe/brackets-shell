@@ -121,7 +121,7 @@ module.exports = function (grunt) {
             },
             "node-win64": {
                 "dest"      : "<%= downloads %>",
-                "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x64/node.exe"
             },
             "icu-win64": {
                 "dest"      :  "<%= downloads %>",
@@ -345,14 +345,14 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "url"           : "http://localhost:8000",
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
             "version"       : cef_version
         },
         "node": {
             "version"       : "6.14.0"
         },
         "icu": {
-            "url"           : "http://localhost:8000",
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
             "version"       : "58"
         },
         "vsCrt": {
