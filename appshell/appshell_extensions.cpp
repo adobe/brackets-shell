@@ -811,8 +811,8 @@ public:
             ReadDir(path, dirContents);
             
             // Now we iterator through the contents of directoryContents.
-            size_t theSize = dirContents->GetSize();
-            for ( size_t iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
+            int theSize = static_cast<int>(dirContents->GetSize());
+            for ( int iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
                 CefRefPtr<CefListValue> fileStats = CefListValue::Create();
 
                 #ifdef OS_WIN
@@ -821,7 +821,7 @@ public:
                     ExtensionString theFile  = path + "/";
                 #endif
 
-                ExtensionString fileName = dirContents->GetString(iFileEntry);
+                ExtensionString fileName = dirContents->GetString(iFileEntry).ToWString();
                 theFile = theFile + fileName;
                 
                 ExtensionString realPath;

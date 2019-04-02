@@ -617,10 +617,10 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     }
 
     // On Windows, list directories first, then files
-    size_t i, total = 0;
-    for (i = 0; i < resultDirs.size(); i++)
+    int i, total = 0;
+    for (i = 0; i < static_cast<int>(resultDirs.size()); ++i)
         directoryContents->SetString(total++, resultDirs[i]);
-    for (i = 0; i < resultFiles.size(); i++)
+    for (i = 0; i < static_cast<int>(resultFiles.size()); ++i)
         directoryContents->SetString(total++, resultFiles[i]);
 
     return NO_ERROR;
