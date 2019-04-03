@@ -31,13 +31,12 @@ class ClientHandler : public CefClient,
                       public CefRequestHandler,
                       public CefDisplayHandler,
                       public CefKeyboardHandler,
-                      public CefGeolocationHandler,
                       public CefContextMenuHandler {
  
 public:
   // Interface for process message delegates. Do not perform work in the
   // RenderDelegate constructor.
-  class ProcessMessageDelegate : public virtual CefBase {
+  class ProcessMessageDelegate : public virtual CefBaseRefCounted {
    public:
     // Called when a process message is received. Return true if the message was
     // handled and should not be passed on to other handlers.
@@ -57,7 +56,7 @@ public:
 
   // Interface for request handler delegates. Do not perform work in the
   // RequestDelegate constructor.
-  class RequestDelegate : public virtual CefBase {
+  class RequestDelegate : public virtual CefBaseRefCounted {
    public:
     // Called to retrieve a resource handler.
     virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
@@ -92,9 +91,6 @@ public:
     return this;
   }
   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
-    return this;
-  }
-  virtual CefRefPtr<CefGeolocationHandler> GetGeolocationHandler() OVERRIDE {
     return this;
   }
   virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE {
@@ -135,9 +131,7 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   // CefLoadHandler methods
   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame
-                    #ifdef OS_LINUX
                            ,TransitionType transition_type
-                    #endif
                            ) OVERRIDE;
   virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                          CefRefPtr<CefFrame> frame,
@@ -164,17 +158,6 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
                                const CefString& url) OVERRIDE;
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
                              const CefString& title) OVERRIDE;
-  virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                const CefString& message,
-                                const CefString& source,
-                                int line) OVERRIDE;
-
-  // CefGeolocationHandler methods
-  virtual bool OnRequestGeolocationPermission(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& requesting_url,
-      int request_id,
-      CefRefPtr<CefGeolocationCallback> callback) OVERRIDE;
 
   // CefContextMenuHandler methods
   virtual void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser,

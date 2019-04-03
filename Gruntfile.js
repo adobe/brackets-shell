@@ -27,7 +27,7 @@ module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
         staging,
-        cef_version = "3.2623.1402";
+        cef_version = "3.3538.1846.g678fa78";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -37,9 +37,7 @@ module.exports = function (grunt) {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
-    if (platform === "mac") {
-        cef_version = "3.2704.1434";
-    } else if (platform === "linux") {
+    if (platform === "linux") {
         cef_version = "3.2785.1487";
     }
 

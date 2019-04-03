@@ -384,10 +384,10 @@ module.exports = function (grunt) {
             var memo = path.resolve(process.cwd(), "deps/cef/" + zipName + ".txt"),
                 permissionsPromise;
 
-            if (platform === "mac") {
+            /*if (platform === "mac") {
                 // FIXME figure out how to use fs.chmod to only do additive mode u+x
                 permissionsPromise = exec("chmod u+x deps/cef/tools/*");
-            } else {
+            } else */{
                 permissionsPromise = q.resolve();
             }
 

@@ -53,7 +53,7 @@ const ExtensionString EDIT_SELECT_ALL   = "edit.selectAll";
 #endif
 
 // Base CommandCallback class
-class CommandCallback : public CefBase {
+class CommandCallback : public CefBaseRefCounted {
   
 public:
   // Called when the command is complete. When handled=true, the command
