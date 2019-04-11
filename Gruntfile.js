@@ -38,7 +38,7 @@ module.exports = function (grunt) {
     }
 
     if (platform === "linux") {
-        cef_version = "3.2785.1487";
+        cef_version = "3.3683.1920.g9f41a27";
     }
 
     grunt.initConfig({
@@ -251,6 +251,10 @@ module.exports = function (grunt) {
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "chrome-sandbox",
+							"swiftshader/*",
+							"libEGL.so",
+							"libGLESv2.so",
+							"v8_context_snapshot.bin"
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
@@ -323,7 +327,7 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
+            "url"           : "http://localhost:8000",
             "version"       : cef_version
         },
         "node": {

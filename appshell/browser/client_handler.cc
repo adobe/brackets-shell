@@ -272,32 +272,6 @@ void ClientHandler::OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
   NotifyFullscreen(fullscreen);
 }
 
-bool ClientHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                     const CefString& message,
-                                     const CefString& source,
-                                     int line) {
-  CEF_REQUIRE_UI_THREAD();
-
-  // FILE* file = fopen(console_log_file_.c_str(), "a");
-  // if (file) {
-  //   std::stringstream ss;
-  //   ss << "Message: " << message.ToString() << NEWLINE <<
-  //         "Source: " << source.ToString() << NEWLINE <<
-  //         "Line: " << line << NEWLINE <<
-  //         "-----------------------" << NEWLINE;
-  //   fputs(ss.str().c_str(), file);
-  //   fclose(file);
-
-  //   if (first_console_message_) {
-  //     test_runner::Alert(
-  //         browser, "Console messages written to \"" + console_log_file_ + "\"");
-  //     first_console_message_ = false;
-  //   }
-  // }
-
-  return false;
-}
-
 void ClientHandler::OnBeforeDownload(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefDownloadItem> download_item,
@@ -347,7 +321,6 @@ void ClientHandler::OnDraggableRegionsChanged(
 
   NotifyDraggableRegions(regions);
 }
-#endif
 
 bool ClientHandler::OnRequestGeolocationPermission(
       CefRefPtr<CefBrowser> browser,
@@ -360,6 +333,7 @@ bool ClientHandler::OnRequestGeolocationPermission(
   callback->Continue(true);
   return true;
 }
+#endif
 
 bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
                                   const CefKeyEvent& event,
@@ -577,6 +551,7 @@ bool ClientHandler::OnCertificateError(
     CefRefPtr<CefRequestCallback> callback) {
   CEF_REQUIRE_UI_THREAD();
 
+#if 0
   CefRefPtr<CefSSLCertPrincipal> subject = ssl_info->GetSubject();
   CefRefPtr<CefSSLCertPrincipal> issuer = ssl_info->GetIssuer();
 
@@ -622,6 +597,7 @@ bool ClientHandler::OnCertificateError(
 
   // Load the error page.
   LoadErrorPage(browser->GetMainFrame(), request_url, cert_error, ss.str());
+#endif
 
   return false;  // Cancel the request.
 }

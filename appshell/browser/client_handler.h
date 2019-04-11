@@ -40,7 +40,6 @@ class ClientHandler :
                       public CefDisplayHandler,
                       public CefDownloadHandler,
                       public CefDragHandler,
-                      public CefGeolocationHandler,
                       public CefKeyboardHandler,
                       public CefLifeSpanHandler,
                       public CefLoadHandler,
@@ -111,9 +110,6 @@ class ClientHandler :
   }
   #endif
 
-  CefRefPtr<CefGeolocationHandler> GetGeolocationHandler() OVERRIDE {
-    return this;
-  }
   CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() OVERRIDE {
     return this;
   }
@@ -159,11 +155,6 @@ class ClientHandler :
                      const CefString& title) OVERRIDE;
   void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
                               bool fullscreen) OVERRIDE;
-  bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                        const CefString& message,
-                        const CefString& source,
-                        int line) OVERRIDE;
-
   // CefDownloadHandler methods
   void OnBeforeDownload(
       CefRefPtr<CefBrowser> browser,
@@ -189,13 +180,6 @@ class ClientHandler :
       CefRefPtr<CefBrowser> browser,
       const std::vector<CefDraggableRegion>& regions) OVERRIDE;
 #endif
-
-  // CefGeolocationHandler methods
-  bool OnRequestGeolocationPermission(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& requesting_url,
-      int request_id,
-      CefRefPtr<CefGeolocationCallback> callback) OVERRIDE;
 
   // CefKeyboardHandler methods
   bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
@@ -235,7 +219,7 @@ class ClientHandler :
   bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
                       CefRefPtr<CefFrame> frame,
                       CefRefPtr<CefRequest> request,
-                      bool is_redirect) OVERRIDE;
+                      bool is_redirect);
   bool OnOpenURLFromTab(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
