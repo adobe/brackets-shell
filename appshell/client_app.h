@@ -102,6 +102,15 @@ private:
   }
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler()
       OVERRIDE { return this; }
+  
+  virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler()
+	  OVERRIDE { return this; }
+  virtual void OnBeforeCommandLineProcessing(
+	  const CefString& process_type,
+	  CefRefPtr<CefCommandLine> command_line);
+
+  virtual void OnBeforeChildProcessLaunch(
+	  CefRefPtr<CefCommandLine> command_line);
 
   // CefRenderProcessHandler methods.
   virtual void OnWebKitInitialized() OVERRIDE;

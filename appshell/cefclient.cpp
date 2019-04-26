@@ -20,6 +20,10 @@
 
 CefRefPtr<ClientHandler> g_handler;
 
+#ifdef OS_WIN
+bool g_force_enable_acc = false;
+#endif
+
 CefRefPtr<CefBrowser> AppGetBrowser() {
   if (!g_handler.get())
     return NULL;
@@ -30,6 +34,20 @@ CefWindowHandle AppGetMainHwnd() {
   if (!g_handler.get())
     return NULL;
   return g_handler->GetMainHwnd();
+}
+
+// CefCommandLine::HasSwitch is unable to report the presense of switches,
+// in the command line properly. This is a generic function that could be
+// used to check for any particular switch, passed as a command line argument.
+bool HasSwitch(CefRefPtr<CefCommandLine> command_line , CefString& switch_name)
+{
+  if (command_line) {
+    ExtensionString cmdLine = command_line->GetCommandLineString();
+    size_t idx = cmdLine.find(switch_name);
+    return idx > 0 && idx < cmdLine.length();
+  } else {
+    return false;
+  }
 }
 
 // Returns the application settings based on command line arguments.
@@ -91,4 +109,16 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
     // Set product version, which gets added to the User Agent string
     CefString(&settings.product_version) = versionStr;
   }
+
+#ifdef OS_WIN
+  // We disable renderer accessibility by default as it is known to cause performance
+  // issues. But if any one wants to enable it back, then we need to honor the flag.
+
+  CefString force_acc_switch_name("--force-renderer-accessibility");
+  CefString enable_acc_switch_name("--enable-renderer-accessibility");
+
+  if (HasSwitch(command_line, force_acc_switch_name) || HasSwitch(command_line, enable_acc_switch_name))
+    g_force_enable_acc = true;
+#endif
+
 }

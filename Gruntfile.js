@@ -329,7 +329,7 @@ module.exports = function (grunt) {
             "version"       : cef_version
         },
         "node": {
-            "version"       : "6.11.0"
+            "version"       : "6.14.0"
         },
         "icu": {
             "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
