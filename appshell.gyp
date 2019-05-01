@@ -51,7 +51,6 @@
       ],
       'defines': [
         'USING_CEF_SHARED',
-        'WRAPING_CEF_SHARED',
       ],
       'include_dirs': [
         '.',
@@ -276,6 +275,16 @@
               ],
             },
             {
+              'postbuild_name': 'Fix Framework Link',
+              'action': [
+                'install_name_tool',
+                '-change',
+                '@executable_path/<(framework_name)',
+                '@executable_path/../Frameworks/<(framework_name).framework/<(framework_name)',
+                '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
+              ],
+            },
+            {
               # Copy the entire "node-core" directory into the same location as the "www"
               # directory will end up. Note that the ".." in the path is necessary because
               # the EXECUTABLE_FOLDER_PATH macro resolves to multiple levels of folders.
@@ -293,6 +302,22 @@
                 'cp',
                 './deps/node/bin/Brackets-node',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/Brackets-node',
+              ],
+            },
+            {
+              # This postbuid step is responsible for creating the following
+              # helpers:
+              #
+              # <(appname) Helper EH.app and <(appname) Helper NP.app are created
+              # from <(appname) Helper.app.
+              #
+              # The EH helper is marked for an executable heap. The NP helper
+              # is marked for no PIE (ASLR).
+              'postbuild_name': 'Make More Helpers',
+              'action': [
+                'tools/make_more_helpers.sh',
+                'Frameworks',
+                '<(appname)',
               ],
             },
           ],
@@ -419,7 +444,6 @@
       'msvs_guid': 'A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9',
       'defines': [
         'USING_CEF_SHARED',
-        'WRAPPING_CEF_SHARED',
       ],
       'configurations': {
         'Common_Base': {
@@ -435,7 +459,6 @@
         '<@(includes_common)',
         '<@(includes_capi)',
         '<@(includes_wrapper)',
-        '<@(libcef_dll_wrapper_sources_base)',
         '<@(libcef_dll_wrapper_sources_common)',
       ],
       'xcode_settings': {
@@ -498,7 +521,6 @@
           ],
           'defines': [
             'USING_CEF_SHARED',
-            'WRAPING_CEF_SHARED',
           ],
           'include_dirs': [
             '.',
@@ -548,11 +570,11 @@
               # (DYLIB_INSTALL_NAME_BASE) relative to the main executable
               # (chrome).  A different relative path needs to be used in
               # appshell_helper_app.
-              'postbuild_name': 'Fix Framework Link for Brackets Helper',
+              'postbuild_name': 'Fix Framework Link',
               'action': [
                 'install_name_tool',
                 '-change',
-                '@executable_path/../Frameworks/<(framework_name).framework/<(framework_name)',
+                '@executable_path/<(framework_name)',
                 '@executable_path/../../../../Frameworks/<(framework_name).framework/<(framework_name)',
                 '${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}'
               ],

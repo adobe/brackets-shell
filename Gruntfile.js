@@ -27,7 +27,7 @@ module.exports = function (grunt) {
     var common  = require("./tasks/common")(grunt),
         platform = common.platform(),
         staging,
-        cef_version = "3.3538.1846.g678fa78";
+        cef_version = "3.2623.1402";
 
     if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
@@ -37,7 +37,9 @@ module.exports = function (grunt) {
         staging = "installer/linux/debian/package-root/opt/brackets";
     }
 
-    if (platform === "linux") {
+    if (platform === "mac") {
+        cef_version = "3.2704.1434";
+    } else if (platform === "linux") {
         cef_version = "3.3683.1920.g9f41a27";
     }
 
@@ -251,10 +253,6 @@ module.exports = function (grunt) {
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "chrome-sandbox",
-							"swiftshader/*",
-							"libEGL.so",
-							"libGLESv2.so",
-							"v8_context_snapshot.bin"
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
@@ -327,14 +325,14 @@ module.exports = function (grunt) {
             }
         },
         "cef": {
-            "url"           : "http://localhost:8000",
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/cef",
             "version"       : cef_version
         },
         "node": {
             "version"       : "6.14.0"
         },
         "icu": {
-            "url"           : "http://localhost:8000",
+            "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
             "version"       : "58"
         },
         "vsCrt": {
