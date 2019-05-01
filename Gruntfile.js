@@ -334,7 +334,7 @@ module.exports = function (grunt) {
             "version"       : "6.14.0"
         },
         "icu": {
-            "url"           : "http://s3.amazonaws.com/files.brackets.io/icu",
+            "url"           : "http://localhost:8000",
             "version"       : "58"
         },
         "vsCrt": {

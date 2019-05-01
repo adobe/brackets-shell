@@ -367,7 +367,7 @@ bool ClientHandler::OnBeforePopup(
     CefRefPtr<CefClient>& client,
     CefBrowserSettings& settings,
     bool* no_javascript_access) {
-  CEF_REQUIRE_IO_THREAD();
+  CEF_REQUIRE_UI_THREAD();
 
   // Return true to cancel the popup window.
   return !CreatePopupWindow(browser, false, popupFeatures, windowInfo, client,
