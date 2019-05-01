@@ -444,6 +444,7 @@
       'msvs_guid': 'A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9',
       'defines': [
         'USING_CEF_SHARED',
+        'WRAPPING_CEF_SHARED',
       ],
       'configurations': {
         'Common_Base': {
@@ -459,6 +460,7 @@
         '<@(includes_common)',
         '<@(includes_capi)',
         '<@(includes_wrapper)',
+        '<@(libcef_dll_wrapper_sources_base)',
         '<@(libcef_dll_wrapper_sources_common)',
       ],
       'xcode_settings': {
@@ -629,3 +631,4 @@
     }],
   ],
 }
+
