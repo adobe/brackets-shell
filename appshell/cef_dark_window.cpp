@@ -509,11 +509,11 @@ void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
 
         // Start with the small
         if (!mWindowIcon)
-            mWindowIcon = bit_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
+            mWindowIcon = from_cpp20::bit_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
         
         // Then try to load the big icon
         if (!mWindowIcon)
-            mWindowIcon = bit_cast<HICON>(GetClassLongPtr(GCLP_HICON));
+            mWindowIcon = from_cpp20::bit_cast<HICON>(GetClassLongPtr(GCLP_HICON));
 
         // Otherwise we need an icon, so just use the standard Windows default 
         //  application Icon which may very between versions 

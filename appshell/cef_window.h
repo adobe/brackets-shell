@@ -274,13 +274,15 @@ protected:
 };
 
 
-#include <memory>
-template<typename Dest, typename Source>
-inline Dest bit_cast(Source const & src)
-{
-	static_assert(sizeof(Source) == sizeof(Dest), "Size of Source and Destination type must be same");
-	Dest dest;
-	std::memcpy(&dest, &src, sizeof(Dest));
-	return dest;
+#include <type_traits>
+#include <cstring>
+namespace from_cpp20 {
+	template<typename Dest, typename Source>
+		inline auto bit_cast(Source const & src) -> typename std::enable_if<sizeof(Source) == sizeof(Dest), Dest>::type
+		{
+			Dest dest;
+			std::memcpy(&dest, &src, sizeof(Dest));
+			return dest;
+		}
 }
 

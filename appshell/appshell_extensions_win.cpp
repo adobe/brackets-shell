@@ -279,7 +279,7 @@ void CALLBACK LiveBrowserMgrWin::CloseLiveBrowserAsyncCallback( HWND hwnd, UINT 
     }
     else if(s_instance->m_closeLiveBrowserHeartbeatTimerId == 0){
         //start a heartbeat timer to see if it closes after the message returned
-        s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, bit_cast<TIMERPROC>(&CloseLiveBrowserTimerCallback));
+        s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, from_cpp20::bit_cast<TIMERPROC>(&CloseLiveBrowserTimerCallback));
     }
 }
 
@@ -400,13 +400,13 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
     } else if (liveBrowserMgr->GetCloseCallback()) {
         // set a timeout for up to 10 seconds to close the browser
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, bit_cast<TIMERPROC>(&LiveBrowserMgrWin::CloseLiveBrowserTimerCallback)) );
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, from_cpp20::bit_cast<TIMERPROC>(&LiveBrowserMgrWin::CloseLiveBrowserTimerCallback)) );
     }
 }
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
-    DWORD_PTR result = bit_cast<DWORD_PTR>(ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL));
+    DWORD_PTR result = from_cpp20::bit_cast<DWORD_PTR>(ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL));
 
     // If the result > 32, the function suceeded. If the result is <= 32, it is an
     // error code.
