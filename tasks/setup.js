@@ -65,20 +65,11 @@ module.exports = function (grunt) {
         return exec("unzip -q \"" + src + "\" -d \"" + dest + "\"");
     }
 
-    var target_archbit = grunt.option('force-target-word-size') || "32";
+    var target_arch_hint = grunt.option('arch') || undefined;
 
-    function platform_arch_suffix()
-    {
-        var arch = common.arch();
-        if( arch == "")
-        {
-            return target_archbit;
-        }
-        return arch;
-    }
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
-        var config   = "cef-" + platform + platform_arch_suffix(),
+        var config   = "cef-" + platform + common.arch(target_arch_hint),
             zipSrc   = grunt.config("curl-dir." + config + ".src"),
             zipName  = path.basename(zipSrc),
             zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
@@ -138,7 +129,7 @@ module.exports = function (grunt) {
 
     // task: icu
     grunt.registerTask("icu", "Download and setup ICU", function () {
-        var config   = "icu-" + platform + platform_arch_suffix(),
+        var config   = "icu-" + platform + common.arch(target_arch_hint),
             zipSrc   = grunt.config("curl-dir." + config + ".src"),
             zipName  = path.basename(zipSrc),
             zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
@@ -192,7 +183,7 @@ module.exports = function (grunt) {
     // task: vs-crt
     grunt.registerTask("vs-crt", "Download and setup VS CRT dlls", function () {
         if (platform === "win") {
-            var config   = "vs-crt-" + platform + platform_arch_suffix(),
+            var config   = "vs-crt-" + platform + common.arch(target_arch_hint),
                 zipSrc   = grunt.config("curl-dir." + config + ".src"),
                 zipName  = path.basename(zipSrc),
                 zipDest  = path.resolve(process.cwd(), path.join(grunt.config("curl-dir." + config + ".dest"), zipName)),
@@ -266,7 +257,7 @@ module.exports = function (grunt) {
     }
 
     grunt.registerTask("cef-symbols", "Download and unpack the CEF symbols", function () {
-        var config      = "cef-" + platform + platform_arch_suffix() + "-symbols",
+        var config      = "cef-" + platform + common.arch(target_arch_hint) + "-symbols",
             zipSymbols  = grunt.config("curl-dir." + config + ".src");
 
         if (zipSymbols) {
@@ -522,7 +513,7 @@ module.exports = function (grunt) {
 
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
-        var config      = "node-" + platform + platform_arch_suffix(),
+        var config      = "node-" + platform + common.arch(target_arch_hint),
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             nodeDest    = [],
             dest        = grunt.config("curl-dir." + config + ".dest"),

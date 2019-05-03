@@ -233,7 +233,12 @@ module.exports = function (grunt) {
         return _platform;
     }
     
-    function arch() {
+    function arch(hint) {
+		hint = !hint && platform() === 'win' ? 'ia32' : hint;
+		hint = platform() === 'mac' ? undefined : hint;
+		if (['x64', 'ia32'].includes(hint)) {
+			return hint.slice(-2);
+		}
         if (platform() === "linux") {
             if (process.arch === "x64") {
                 return 64;

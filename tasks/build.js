@@ -60,17 +60,11 @@ module.exports = function (grunt) {
     grunt.registerTask("installer", ["set-release-optional", "full-build", "build-installer"]);
 
     //Not to be used for MacOS
-    var target_wordsize_arg = grunt.option('force-target-word-size') || undefined;
+    var target_arch_hint = grunt.option('arch') || undefined;
 
-    function platform_arch_suffix()
-    {
-	if(target_wordsize_arg){ return target_wordsize_arg; }
-        if (process.platform === "win32") { return "32"; }
-        return common.arch();
-    }
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {
-        grunt.task.run("build-" + platform + platform_arch_suffix());
+        grunt.task.run("build-" + platform + common.arch(target_arch_hint));
     });
 
     // task: build-www
