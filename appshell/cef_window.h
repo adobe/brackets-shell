@@ -277,8 +277,17 @@ protected:
 #include <type_traits>
 #include <cstring>
 namespace from_cpp20 {
+	template<typename T>
+	struct int_or_ptr {
+		static constexpr bool value = std::is_pointer<T>::value || std::is_integral<T>::value;
+	};
 	template<typename Dest, typename Source>
-		inline auto bit_cast(Source const & src) -> typename std::enable_if<sizeof(Source) == sizeof(Dest), Dest>::type
+		inline typename std::enable_if<
+		int_or_ptr<Source>::value &&
+		int_or_ptr<Dest>::value &&
+		sizeof(Source) == sizeof(Dest),
+		Dest>::type
+		bit_cast(Source const & src)
 		{
 			Dest dest;
 			std::memcpy(&dest, &src, sizeof(Dest));
