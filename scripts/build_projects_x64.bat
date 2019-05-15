@@ -25,7 +25,7 @@ GOTO Build
 
 :VS2010
 call "%VS100COMNTOOLS%/VsDevCmd.bat"
-GOTO Buildddddd
+GOTO Build
 
 :Build
 msbuild.exe appshell.sln /nr:false /t:Clean /p:Platform=x64 /p:Configuration=Release
