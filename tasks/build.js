@@ -60,7 +60,7 @@ module.exports = function (grunt) {
     grunt.registerTask("installer", ["set-release-optional", "full-build", "build-installer"]);
 
     //Not to be used for MacOS
-    var target_arch_hint = grunt.option('arch') || undefined;
+    var target_arch_hint = grunt.option('arch');
 
     // task: build
     grunt.registerTask("build", "Build shell executable. Run 'grunt full-build' to update repositories, build the shell and package www files.", function (wwwBranch, shellBranch) {

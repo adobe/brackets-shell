@@ -65,7 +65,7 @@ module.exports = function (grunt) {
         return exec("unzip -q \"" + src + "\" -d \"" + dest + "\"");
     }
 
-    var target_arch_hint = grunt.option('arch') || undefined;
+    var target_arch_hint = grunt.option('arch');
 
     // task: cef
     grunt.registerTask("cef", "Download and setup CEF", function () {
