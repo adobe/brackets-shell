@@ -395,6 +395,10 @@
                 '$(BUILDTYPE)/libcef.so',
                 '$(BUILDTYPE)/natives_blob.bin',
                 '$(BUILDTYPE)/snapshot_blob.bin',
+                '$(BUILDTYPE)/libEGL.so',
+                '$(BUILDTYPE)/libGLESv2.so',
+                '$(BUILDTYPE)/swiftshader',
+                '$(BUILDTYPE)/v8_context_snapshot.bin',
               ],
             },
             {

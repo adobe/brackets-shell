@@ -253,6 +253,10 @@ module.exports = function (grunt) {
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "chrome-sandbox",
+                            "libEGL.so",
+                            "libGLESv2.so",
+                            "swiftshader/**",
+                            "v8_context_snapshot.bin",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },
