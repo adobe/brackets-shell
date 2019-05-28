@@ -129,7 +129,7 @@ module.exports = function (grunt) {
             },
             "vs-crt-win64": {
                 "dest"      :  "<%= downloads %>",
-                "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-ia32.zip"
+                "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-x64.zip"
             }
         },
         "clean": {
