@@ -113,7 +113,8 @@ bool ClientApp::OnProcessMessageReceived(
             // which can lead to bad things. If the browser instance has been deleted, don't
             // invoke this callback. 
             if (context->GetBrowser()) {
-                for (int i = 1; i < static_cast<int>(messageArgs->GetSize()); ++i) {
+                std::make_signed<size_t>::type theSize = messageArgs->GetSize();
+                for (decltype(theSize) i = 1; i < theSize; ++i) {
                     arguments.push_back(appshell::ListValueToV8Value(messageArgs, i));
                 }
                 

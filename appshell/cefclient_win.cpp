@@ -61,8 +61,8 @@ extern CefRefPtr<ClientHandler> g_handler;
 // built into brackets-shell, and I don't want to add one just for this simple case).
 void StripColonNumber(std::wstring& str) {
     bool gotDigits = false;
-    int index;
-    for (index = static_cast<int>(str.size()) - 1; index >= 0; index--) {
+	std::make_signed<size_t>::type index = str.size();
+    for (--index; index >= 0; --index) {
         if (!isdigit(str[index]))
             break;
         gotDigits = true;
@@ -212,7 +212,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         // note: WM_COPYDATA will manage passing the string across process space
         COPYDATASTRUCT data;
         data.dwData = ID_WM_COPYDATA_SENDOPENFILECOMMAND;
-        data.cbData = static_cast<DWORD>((wstrFilename.length() + 1) * sizeof(WCHAR));
+		std::make_signed<size_t>::type theLen = wstrFilename.length();
+        data.cbData = static_cast<decltype(data.cbData)>((theLen + 1) * sizeof(WCHAR));
         data.lpData = (LPVOID)wstrFilename.c_str();
         ::SendMessage(hFirstInstanceWnd, WM_COPYDATA, (WPARAM)(HWND)hFirstInstanceWnd, (LPARAM)(LPVOID)&data);
         // exit this instance

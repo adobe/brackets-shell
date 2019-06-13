@@ -811,8 +811,8 @@ public:
             ReadDir(path, dirContents);
             
             // Now we iterator through the contents of directoryContents.
-            int theSize = static_cast<int>(dirContents->GetSize());
-            for ( int iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
+            std::make_signed<size_t>::type theSize = dirContents->GetSize();
+            for (decltype(theSize) iFileEntry = 0; iFileEntry < theSize ; ++iFileEntry) {
                 CefRefPtr<CefListValue> fileStats = CefListValue::Create();
 
                 #ifdef OS_WIN

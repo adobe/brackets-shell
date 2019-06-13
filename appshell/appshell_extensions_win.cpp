@@ -357,7 +357,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     args += argURL;
 
     // Args must be mutable
-    int argsBufSize = static_cast<int>(args.length()) +1;
+    std::make_signed<size_t>::type argsBufSize = args.length(); ++argsBufSize;
     std::vector<WCHAR> argsBuf;
     argsBuf.resize(argsBufSize);
     wcscpy(&argsBuf[0], args.c_str());
@@ -499,7 +499,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                 } else {
                     // Multiple files are selected
                     wchar_t fullPath[MAX_UNC_PATH];
-                    for (int i = static_cast<int>(dir.length() + 1), fileIndex = 0; ; fileIndex++) {
+					std::make_signed<size_t>::type dirLen = dir.length();
+                    for (decltype(dirLen) i = dirLen + 1, fileIndex = 0; /* Infinite loop */ ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
 
@@ -516,7 +517,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                         }
 
                         // Go to the start of the next file name
-                        i += static_cast<int>(file.length()) + 1;
+						std::make_signed<size_t>::type fileLen = file.length();
+                        i += fileLen + 1;
                     }
                 }
 
@@ -617,11 +619,17 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     }
 
     // On Windows, list directories first, then files
-    int i, total = 0;
-    for (i = 0; i < static_cast<int>(resultDirs.size()); ++i)
-        directoryContents->SetString(total++, resultDirs[i]);
-    for (i = 0; i < static_cast<int>(resultFiles.size()); ++i)
-        directoryContents->SetString(total++, resultFiles[i]);
+    std::make_signed<size_t>::type total = 0;
+    {
+        std::make_signed<size_t>::type resultDirSize = resultDirs.size();
+        for (decltype(resultDirSize) i = 0; i < resultDirSize; ++i)
+            directoryContents->SetString(total++, resultDirs[i]);
+    }
+    {
+        std::make_signed<size_t>::type resultFileSize = resultFiles.size();
+        for (decltype(resultFileSize) i = 0; i < resultFileSize; ++i)
+            directoryContents->SetString(total++, resultFiles[i]);
+    }
 
     return NO_ERROR;
 }
@@ -1209,8 +1217,8 @@ bool isSlash(ExtensionString::value_type wc) { return wc == '/' || wc == '\\'; }
 
 void RemoveTrailingSlash(ExtensionString& filename)
 {
-    int last = static_cast<int>(filename.length()) - 1;
-    if ((last >= 0) && isSlash(filename.at(last))) {
+    std::make_signed<size_t>::type last = filename.length();
+    if ((--last >= 0) && isSlash(filename.at(last))) {
         filename.erase(last);
     }
 }

@@ -74,7 +74,8 @@ CefRefPtr<CefV8Value> ListValueToV8Value(CefRefPtr<CefListValue> value, int inde
     switch (type) {
         case VTYPE_LIST: {
             CefRefPtr<CefListValue> list = value->GetList(index);
-            new_value = CefV8Value::CreateArray(static_cast<int>(list->GetSize()));
+			std::make_signed<size_t>::type theSize = list->GetSize();
+            new_value = CefV8Value::CreateArray(theSize);
             SetList(list, new_value);
         } break;
         case VTYPE_BOOL:
@@ -106,7 +107,8 @@ void SetListValue(CefRefPtr<CefV8Value> list, int index,
     switch (type) {
         case VTYPE_LIST: {
             CefRefPtr<CefListValue> listValue = value->GetList(index);
-            new_value = CefV8Value::CreateArray(static_cast<int>(listValue->GetSize()));
+			std::make_signed<size_t>::type theSize = listValue->GetSize();
+            new_value = CefV8Value::CreateArray(theSize);
             SetList(listValue, new_value);
         } break;
         case VTYPE_BOOL:
@@ -136,11 +138,11 @@ void SetListValue(CefRefPtr<CefV8Value> list, int index,
 void SetList(CefRefPtr<CefListValue> source, CefRefPtr<CefV8Value> target) {
     DCHECK(target->IsArray());
 
-    int arg_length = static_cast<int>(source->GetSize());
+    std::make_signed<size_t>::type arg_length = source->GetSize();
     if (arg_length == 0)
         return;
 
-    for (int i = 0; i < arg_length; ++i)
+    for (decltype(arg_length) i = 0; i < arg_length; ++i)
         SetListValue(target, i, source);
 }
 
