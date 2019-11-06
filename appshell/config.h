@@ -82,7 +82,7 @@
 
 #endif
 
-#define REMOTE_DEBUGGING_PORT 9234
+extern int g_remote_debugging_port;
 
 // Comment out this line to enable OS themed drawing
 #define DARK_UI 

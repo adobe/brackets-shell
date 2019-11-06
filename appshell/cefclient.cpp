@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <limits>
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
@@ -19,9 +20,11 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
+int g_remote_debugging_port = 0;
 
 #ifdef OS_WIN
 bool g_force_enable_acc = false;
+#undef max
 #endif
 
 CefRefPtr<CefBrowser> AppGetBrowser() {
@@ -95,7 +98,19 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
       command_line->GetSwitchValue(client::switches::kJavascriptFlags);
     
   // Enable dev tools
-  settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
+  CefString debugger_port = command_line->GetSwitchValue("remote-debugging-port");
+  if (!debugger_port.empty()) {
+    int port = atoi(debugger_port.ToString().c_str());
+    static const int max_port_num = static_cast<int>(std::numeric_limits<uint16_t>::max());
+    if (port > 1024 && port < max_port_num) {
+      g_remote_debugging_port = port;
+      settings.remote_debugging_port = port;
+    }
+    else {
+      LOG(ERROR) << "Could not enable remote debugging on port: "<< port
+                 << "; port number must be greater than 1024 and less than " << max_port_num;
+    }
+  }
   
   std::wstring versionStr = appshell::AppGetProductVersionString();
     

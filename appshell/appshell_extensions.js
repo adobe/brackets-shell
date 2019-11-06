@@ -640,8 +640,8 @@ if (!brackets) {
      * @return int. The remote debugging port used by the appshell.
      */
     native function GetRemoteDebuggingPort();
-    appshell.app.getRemoteDebuggingPort = function () {
-        return GetRemoteDebuggingPort();
+    appshell.app.getRemoteDebuggingPort = function (callback) {
+        GetRemoteDebuggingPort(callback || _dummyCallback);
     };
     
     
