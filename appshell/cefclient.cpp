@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <errno.h>
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
@@ -98,12 +99,16 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
   // Enable dev tools
   CefString debugger_port = command_line->GetSwitchValue("remote-debugging-port");
   if (!debugger_port.empty()) {
-    int port = atoi(debugger_port.ToString().c_str());
-    static const int max_port_num = 65535;
-    static const int max_reserved_port_num = 1024;
+    const long port = strtol(debugger_port.ToString().c_str(), NULL, 10);
+    if (errno == ERANGE) {
+        LOG(ERROR) << "Error while parsing remote-debugging-port arg: "<< debugger_port.ToString();
+        errno = 0;
+    }
+    static const long max_port_num = 65535;
+    static const long max_reserved_port_num = 1024;
     if (port > max_reserved_port_num && port < max_port_num) {
-      g_remote_debugging_port = port;
-      settings.remote_debugging_port = port;
+      g_remote_debugging_port = static_cast<int>(port);
+      settings.remote_debugging_port = g_remote_debugging_port;
     }
     else {
       LOG(ERROR) << "Could not enable Remote debugging on port: "<< port

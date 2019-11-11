@@ -37,6 +37,7 @@
 #include "update.h"
 
 extern std::vector<CefString> gDroppedFiles;
+extern int g_remote_debugging_port;
 
 namespace appshell_extensions {
 

@@ -82,8 +82,6 @@
 
 #endif
 
-extern int g_remote_debugging_port;
-
 // Comment out this line to enable OS themed drawing
 #define DARK_UI 
 #define DARK_AERO_GLASS
