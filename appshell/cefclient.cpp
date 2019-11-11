@@ -106,9 +106,9 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
       settings.remote_debugging_port = port;
     }
     else {
-      LOG(ERROR) << "Could not enable remote debugging on port: "<< port
-                 << "; port number must be greater than "<< max_reserved_port_num
-                 << " and less than " << max_port_num;
+      LOG(ERROR) << "Could not enable Remote debugging on port: "<< port
+                 << ". Port number must be greater than "<< max_reserved_port_num
+                 << " and less than " << max_port_num << ".";
     }
   }
   
