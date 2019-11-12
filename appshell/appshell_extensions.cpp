@@ -37,6 +37,7 @@
 #include "update.h"
 
 extern std::vector<CefString> gDroppedFiles;
+extern int g_remote_debugging_port;
 
 namespace appshell_extensions {
 
@@ -842,6 +843,8 @@ public:
             uberDict->SetList(0, dirContents);
             uberDict->SetList(1, allStats);
             responseArgs->SetList(2, uberDict);
+        } else if (message_name == "GetRemoteDebuggingPort") {
+            responseArgs->SetInt(2, g_remote_debugging_port);
         }
 
         else {
