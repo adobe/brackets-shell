@@ -82,8 +82,6 @@
 
 #endif
 
-#define REMOTE_DEBUGGING_PORT 9234
-
 // Comment out this line to enable OS themed drawing
 #define DARK_UI 
 #define DARK_AERO_GLASS
