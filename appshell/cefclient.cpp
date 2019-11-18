@@ -101,21 +101,21 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
   if (!debugger_port.empty()) {
     const long port = strtol(debugger_port.ToString().c_str(), NULL, 10);
     if (errno == ERANGE || port == 0) {
-        LOG(ERROR) << "Could not enable Remote debugging.";
-        LOG(ERROR) << "Error while parsing remote-debugging-port arg: "<< debugger_port.ToString();
+        LOG(ERROR) << "Could not enable remote debugging."
+                   << " Error while parsing remote-debugging-port arg: "<< debugger_port.ToString();
         errno = 0;
     }
     else {
-        static const long max_port_num = 65535;
-        static const long max_reserved_port_num = 1024;
-        if (port > max_reserved_port_num && port < max_port_num) {
+        static const long max_port_num = 65534;
+        static const long max_reserved_port_num = 1025;
+        if (port >= max_reserved_port_num && port <= max_port_num) {
           g_remote_debugging_port = static_cast<int>(port);
           settings.remote_debugging_port = g_remote_debugging_port;
         }
         else {
-          LOG(ERROR) << "Could not enable Remote debugging on port: "<< port
-                     << ". Port number must be greater than "<< max_reserved_port_num
-                     << " and less than " << max_port_num << ".";
+          LOG(ERROR) << "Cannot enable remote debugging on port "<< port
+                     << ". Port numbers should be between "<< max_reserved_port_num
+                     << " and " << max_port_num << ".";
         }
     }
   }
