@@ -38,6 +38,7 @@
 
 extern std::vector<CefString> gDroppedFiles;
 extern int g_remote_debugging_port;
+extern std::string g_remote_debugging_port_invalid;
 
 namespace appshell_extensions {
 
@@ -844,7 +845,15 @@ public:
             uberDict->SetList(1, allStats);
             responseArgs->SetList(2, uberDict);
         } else if (message_name == "GetRemoteDebuggingPort") {
-            responseArgs->SetInt(2, g_remote_debugging_port);
+            if (g_remote_debugging_port > 0) {
+                responseArgs->SetInt(2, g_remote_debugging_port);
+            } else {
+                responseArgs->SetNull(2);
+                if (g_remote_debugging_port_invalid.size() > 0) {
+                    error = ERR_UNKNOWN;
+                    responseArgs->SetString(3, g_remote_debugging_port_invalid);
+               }
+            }
         }
 
         else {
