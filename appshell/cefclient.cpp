@@ -106,9 +106,15 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
         errno = 0;
     }
     else {
-        static const long max_port_num = 65534;
-        static const long max_reserved_port_num = 1024;
-        if (port >= max_reserved_port_num && port <= max_port_num) {
+        const long max_allowed_debug_port_num = 65534;
+#ifdef OS_WIN
+           // As of CEF-2623 Windows allows all positive port numbers less than 65534
+           // Please validate this before migrating to new CEF version
+           const long min_allowed_debug_port_num = 1;
+#else
+           const long min_allowed_debug_port_num = 1024;
+#endif
+        if (port >= min_allowed_debug_port_num && port <= max_allowed_debug_port_num) {
           g_remote_debugging_port = static_cast<int>(port);
           settings.remote_debugging_port = g_remote_debugging_port;
           g_remote_debugging_port_invalid.clear();
