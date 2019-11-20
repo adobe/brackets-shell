@@ -58,7 +58,7 @@ public:
         CefRefPtr<CefListValue> argList = message->GetArgumentList();
         int32 callbackId = -1;
         int32 error = NO_ERROR;
-		std::string errInfo;
+        std::string errInfo;
         CefRefPtr<CefProcessMessage> response = 
             CefProcessMessage::Create("invokeCallback");
         CefRefPtr<CefListValue> responseArgs = response->GetArgumentList();
@@ -852,7 +852,6 @@ public:
             else {
                 responseArgs->SetNull(2);
                 errInfo = g_remote_debugging_port_invalid_arg;
-                error = ERR_UNKNOWN;
             }
         }
 
