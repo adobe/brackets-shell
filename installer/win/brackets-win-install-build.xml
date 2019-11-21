@@ -13,7 +13,7 @@ default="build.mul">
   <property name="product.shortname" value="Brackets"/>
   <property name="product.release.number.major" value="1"/>
   <property name="product.release.number.minor" value="14"/>
-  <property name="product.release.number.build" value="0"/>
+  <property name="product.release.number.build" value="1"/>
   <property name="product.version.number" value="${product.release.number.major}.${product.release.number.minor}.${product.release.number.build}"/>
   <property name="product.version.name" value="Release ${product.release.number.major}.${product.release.number.minor}"/>
   <property name="product.fullname" value="Brackets ${product.version.name}"/>
