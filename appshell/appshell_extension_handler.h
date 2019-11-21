@@ -160,7 +160,7 @@ class AppShellExtensionHandler : public CefV8Handler {
                          CefString& exception) {
 
         // The only messages that are handled here is getElapsedMilliseconds(),
-        // GetCurrentLanguage(), GetApplicationSupportDirectory(), and GetRemoteDebuggingPort().
+        // GetCurrentLanguage(), and GetApplicationSupportDirectory().
         // All other messages are passed to the browser process.
         if (name == "GetElapsedMilliseconds") {
             retval = CefV8Value::CreateDouble(GetElapsedMilliseconds());
@@ -170,8 +170,6 @@ class AppShellExtensionHandler : public CefV8Handler {
             retval = CefV8Value::CreateString(AppGetSupportDirectory());
         } else if (name == "GetUserDocumentsDirectory") {
             retval = CefV8Value::CreateString(AppGetDocumentsDirectory());
-        } else if (name == "GetRemoteDebuggingPort") {
-            retval = CefV8Value::CreateInt(REMOTE_DEBUGGING_PORT);
         } else {
             // Pass all messages to the browser process. Look in appshell_extensions.cpp for implementation.
             CefRefPtr<CefBrowser> browser = CefV8Context::GetCurrentContext()->GetBrowser();
