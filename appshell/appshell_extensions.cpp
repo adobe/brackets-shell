@@ -38,7 +38,7 @@
 
 extern std::vector<CefString> gDroppedFiles;
 extern int g_remote_debugging_port;
-extern std::string g_remote_debugging_port_invalid_arg;
+extern std::string g_get_remote_debugging_port_error;
 
 namespace appshell_extensions {
 
@@ -846,12 +846,12 @@ public:
             uberDict->SetList(1, allStats);
             responseArgs->SetList(2, uberDict);
         } else if (message_name == "GetRemoteDebuggingPort") {
-            if (g_remote_debugging_port_invalid_arg.empty() && g_remote_debugging_port > 0) {
+            if (g_get_remote_debugging_port_error.empty() && g_remote_debugging_port > 0) {
                 responseArgs->SetInt(2, g_remote_debugging_port);
             }
             else {
                 responseArgs->SetNull(2);
-                errInfo = g_remote_debugging_port_invalid_arg;
+                errInfo = g_get_remote_debugging_port_error;
             }
         }
 
@@ -865,7 +865,6 @@ public:
                 responseArgs->SetInt(1, error);
             }
             else {
-                // Cef is not allowing to set CefDictionaryValue as error-info.
                 responseArgs->SetString(1, errInfo);
             }
 

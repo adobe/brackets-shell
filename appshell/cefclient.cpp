@@ -21,7 +21,7 @@
 
 CefRefPtr<ClientHandler> g_handler;
 int g_remote_debugging_port = 0;
-std::string g_remote_debugging_port_invalid_arg;
+std::string g_get_remote_debugging_port_error;
 
 #ifdef OS_WIN
 bool g_force_enable_acc = false;
@@ -100,8 +100,8 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
   // Enable dev tools
   CefString debugger_port = command_line->GetSwitchValue("remote-debugging-port");
   if (!debugger_port.empty()) {
-    g_remote_debugging_port_invalid_arg = debugger_port.ToString();
-    long port = strtol(g_remote_debugging_port_invalid_arg.c_str(), NULL, 10);
+    g_get_remote_debugging_port_error = debugger_port.ToString();
+    long port = strtol(g_get_remote_debugging_port_error.c_str(), NULL, 10);
     if (errno == ERANGE) {
       errno = port = 0;
     }
@@ -110,7 +110,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
     if (port > max_reserved_port_num && port < max_port_num) {
       g_remote_debugging_port = static_cast<int>(port);
       settings.remote_debugging_port = g_remote_debugging_port;
-      g_remote_debugging_port_invalid_arg.clear();
+      g_get_remote_debugging_port_error.clear();
     }
     else {
       // Setting debugging port to highest number will disable remote debugging
