@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
+#include <errno.h>
 #include "include/cef_app.h"
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
@@ -19,6 +20,8 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
+int g_remote_debugging_port = 0;
+std::string g_get_remote_debugging_port_error;
 
 #ifdef OS_WIN
 bool g_force_enable_acc = false;
@@ -95,7 +98,26 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
       command_line->GetSwitchValue(client::switches::kJavascriptFlags);
     
   // Enable dev tools
-  settings.remote_debugging_port = REMOTE_DEBUGGING_PORT;
+  CefString debugger_port = command_line->GetSwitchValue("remote-debugging-port");
+  if (!debugger_port.empty()) {
+    g_get_remote_debugging_port_error = debugger_port.ToString();
+    long port = strtol(g_get_remote_debugging_port_error.c_str(), NULL, 10);
+    if (errno == ERANGE) {
+      errno = port = 0;
+    }
+    static const long max_port_num = 65535;
+    static const long max_reserved_port_num = 1023;
+    if (port > max_reserved_port_num && port < max_port_num) {
+      g_remote_debugging_port = static_cast<int>(port);
+      settings.remote_debugging_port = g_remote_debugging_port;
+      g_get_remote_debugging_port_error.clear();
+    }
+    else {
+      // Setting debugging port to highest number will disable remote debugging
+      // As setting.remote_debugging_port has higher priority compared to command line option
+      settings.remote_debugging_port = max_port_num;
+    }
+  }
   
   std::wstring versionStr = appshell::AppGetProductVersionString();
     
