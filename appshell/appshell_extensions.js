@@ -376,6 +376,42 @@ if (!brackets) {
     };
 
     /**
+     * Open Document in XD App
+     *
+     * @param {string} path The Document Path to be opened.
+     * @param {function(err)} callback Asynchronous callback function. The callback gets one arguments 
+     *        (err)
+     * 
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function OpenDocumentWithXDApp();
+    appshell.app.OpenDocumentWithXDApp = function (path, callback) {
+        var resultString = OpenDocumentWithXDApp(callback, path);
+    };
+    
+    /**
+     * Check whether XD App is installed. 
+     *
+     * @param {function(err, isInstalled)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (err, isInstalled) where isInstalled indicates whether xd App is installed or not.
+     * 
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function IsXDAppInstalled();
+    appshell.app.IsXDAppInstalled = function (callback) {
+        var resultString = IsXDAppInstalled(callback);
+    };
+
+    /**
      * Quits native shell application
      */
     native function QuitApplication();

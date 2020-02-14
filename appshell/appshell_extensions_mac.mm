@@ -71,6 +71,7 @@ NSRunningApplication* GetLiveBrowserApp(NSString *bundleId, int debugPort);
 // App ID for either Chrome or Chrome Canary (commented out)
 NSString *const appId = @"com.google.Chrome";
 //NSString *const appId = @"com.google.Chrome.canary";
+NSString *const xdAppId = @"com.adobe.xd";
 
 // Live Development browser debug paramaters
 int const debugPort = 9222;
@@ -399,6 +400,46 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
         return ERR_UNKNOWN;
     }
     
+    return NO_ERROR;
+}
+
+int32 OpenDocumentWithXDApp(ExtensionString argPath)
+{
+    // Parse the arguments
+    NSString *pathString = [NSString stringWithUTF8String:argPath.c_str()];
+
+    bool isXDInstalled;
+	IsXDAppInstalled(isXDInstalled);
+	if(isXDInstalled)
+		return ERR_NOT_FOUND;
+		
+
+    // Create the configuration dictionary for launching with custom parameters.
+    NSArray *parameters = [NSArray arrayWithObjects:
+                    pathString,
+                    nil];
+
+    NSDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
+    NSUInteger launchOptions = NSWorkspaceLaunchDefault;
+	NSRunningApplication* XDAppProcess;
+
+	// Launch XD App
+    XDAppProcess = [[NSWorkspace sharedWorkspace] launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:nil];
+    if (!XDAppProcess) {
+        return ERR_UNKNOWN;
+    }
+
+    return NO_ERROR;
+}
+
+int32 IsXDAppInstalled(bool& isInstalled)
+{
+	isInstalled = true;
+	NSURL* appURL = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:xdAppId];
+    if( !appURL ) {
+		isInstalled = false;
+    }
+
     return NO_ERROR;
 }
 

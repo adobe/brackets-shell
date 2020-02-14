@@ -192,6 +192,10 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 int32 CopyFile(ExtensionString src, ExtensionString dest);
 
+int32 OpenDocumentWithXDApp(ExtensionString path);
+
+int32 IsXDAppInstalled(bool& isRemote);
+
 int32 GetNodeState(int32& state);
 
 void OnBeforeShutdown();

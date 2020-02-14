@@ -48,6 +48,14 @@
 
 #define UTF8_BOM "\xEF\xBB\xBF"
 
+#define XD_REG_STORAGE_PATH L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppContainer\\Storage\\adobe.cc.xd_adky2gkssdxte"
+#define XD_REG_FAMILIES_PATH L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Families\\Adobe.CC.XD_adky2gkssdxte"
+#define UWP_REG_PACKAGES_PATH L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages\\"
+
+const std::wstring XDAppPublisherId = L"Adobe.CC.XD_adky2gkssdxte!App";
+const std::wstring ShellCommand = L"shell:appsFolder\\";
+const std::wstring ShellCommandOptions = L" /select,";
+
 // Forward declarations for functions at the bottom of this file
 void ConvertToNativePath(ExtensionString& filename);
 void ConvertToUnixPath(ExtensionString& filename);
@@ -401,6 +409,77 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         // set a timeout for up to 10 seconds to close the browser
         liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
     }
+}
+
+int32 OpenDocumentWithXDApp(ExtensionString path)
+{
+	ConvertToNativePath(path);
+	std::wstring args = ShellCommand + XDAppPublisherId + ShellCommandOptions + path;
+	DWORD result = (DWORD)ShellExecute(NULL, L"open", L"explorer.exe", args.c_str(), NULL, SW_SHOWDEFAULT);
+
+	// If the result > 32, the function suceeded. If the result is <= 32, it is an
+	// error code.
+	if (result <= 32)
+		return ConvertWinErrorCode(result);
+
+	return NO_ERROR;
+}
+
+int32 IsXDAppInstalled(bool& isRemote)
+{
+	HKEY    hkOpened;
+	isRemote = FALSE;
+
+	// Look for installed XD app under Windows
+	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
+		, XD_REG_STORAGE_PATH
+		, NULL
+		, KEY_READ
+		, &hkOpened))
+	{
+		isRemote = TRUE;
+	}
+	else if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
+		, XD_REG_FAMILIES_PATH
+		, NULL
+		, KEY_READ
+		, &hkOpened))
+	{
+		isRemote = TRUE;
+	}
+	else if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
+		, UWP_REG_PACKAGES_PATH
+		, NULL
+		, KEY_READ | KEY_ENUMERATE_SUB_KEYS
+		, &hkOpened))
+	{
+		DWORD	iNumSubKeys;
+		DWORD   maxPathLen = MAX_PATH;
+		DWORD   valueNameLen = 128;
+		// Get the number of sub keys in this "directory"
+		::RegQueryInfoKey(hkOpened, NULL, NULL, NULL, &iNumSubKeys, NULL, NULL,
+			NULL, NULL, NULL, NULL, NULL);
+
+		// Iterate over subkeys and look for ApplicationPath from each.
+		for (int i = 0; i < (int)iNumSubKeys; i++)
+		{
+			TCHAR subKeyName[128];
+			if (RegEnumKeyEx(hkOpened, i, subKeyName,
+				&valueNameLen, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+			{
+				std::wstring XDApp = std::wstring(subKeyName);
+				if (XDApp.rfind(L"Adobe.CC.XD", 0) == 0)
+				{
+					isRemote = TRUE;
+					break;
+				}
+			}
+			valueNameLen = 128;
+			maxPathLen = MAX_PATH;
+		}
+	}
+	RegCloseKey(hkOpened);
+	return NO_ERROR;
 }
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)

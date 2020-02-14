@@ -210,6 +210,16 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
+int32 OpenDocumentWithXDApp(ExtensionString path)
+{
+	return ERR_UNKNOWN;
+}
+
+int32 IsXDAppInstalled(bool& isRemote)
+{
+	return NO_ERROR;
+}
+
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     return NO_ERROR;

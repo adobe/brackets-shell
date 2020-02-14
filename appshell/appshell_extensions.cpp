@@ -431,7 +431,37 @@ public:
                 }
                 responseArgs->SetInt(2, port);
             }
-            
+        
+		}
+		else if (message_name == "IsXDAppInstalled") {
+			// Parameters:
+			//  0: int32 - callback id
+			if (argList->GetSize() != 1) {
+				error = ERR_INVALID_PARAMS;
+			}
+
+			bool isInstalled = false;
+			if (error == NO_ERROR) {
+				error = IsXDAppInstalled(isInstalled);
+			}
+
+			// Set response args for this function
+			responseArgs->SetBool(2, isInstalled);
+		}
+		else if (message_name == "OpenDocumentWithXDApp") {
+			// Parameters:
+			//  0: int32 - callback id
+			//  1: string - document path
+			if (argList->GetSize() != 2 ||
+				argList->GetType(1) != VTYPE_STRING) {
+				error = ERR_INVALID_PARAMS;
+			}
+
+			if (error == NO_ERROR) {
+				ExtensionString path = argList->GetString(1);
+				error = OpenDocumentWithXDApp(path);
+			}
+
         } else if (message_name == "QuitApplication") {
             // Parameters - none
 
