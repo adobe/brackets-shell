@@ -405,29 +405,22 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
 
 int32 OpenDocumentWithXDApp(ExtensionString argPath)
 {
-    // Parse the arguments
-    NSString *pathString = [NSString stringWithUTF8String:argPath.c_str()];
+    NSString* filePath = [NSString stringWithUTF8String:argPath.c_str()];
 
-    bool isXDInstalled;
-	IsXDAppInstalled(isXDInstalled);
-	if(isXDInstalled)
-		return ERR_NOT_FOUND;
-		
+    NSURL *fileUrl = NULL;
+    fileUrl = [ NSURL fileURLWithPath:filePath ];
 
-    // Create the configuration dictionary for launching with custom parameters.
-    NSArray *parameters = [NSArray arrayWithObjects:
-                    pathString,
-                    nil];
-
-    NSDictionary* appConfig = [NSDictionary dictionaryWithObject:parameters forKey:NSWorkspaceLaunchConfigurationArguments];
-    NSUInteger launchOptions = NSWorkspaceLaunchDefault;
-	NSRunningApplication* XDAppProcess;
-
-	// Launch XD App
-    XDAppProcess = [[NSWorkspace sharedWorkspace] launchApplicationAtURL:appURL options:launchOptions configuration:appConfig error:nil];
-    if (!XDAppProcess) {
-        return ERR_UNKNOWN;
+    NSURL* appURL = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:xdAppId];
+    if( !appURL ) {
+        return ERR_UNKNOWN;;
     }
+
+    NSError *err = nil;
+    [[NSWorkspace sharedWorkspace] openURLs:[NSArray arrayWithObjects:fileUrl,nil]
+                       withApplicationAtURL:appURL
+                                    options:NSWorkspaceLaunchDefault
+                              configuration:[NSDictionary dictionary]
+                                      error:&err];
 
     return NO_ERROR;
 }
