@@ -427,8 +427,8 @@ int32 OpenDocumentWithXDApp(ExtensionString argPath)
 
 int32 IsXDAppInstalled(bool& isInstalled)
 {
-	isInstalled = true;
-	NSURL* appURL = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:xdAppId];
+    isInstalled = true;
+    NSURL* appURL = [[NSWorkspace sharedWorkspace] URLForApplicationWithBundleIdentifier:xdAppId];
     if( !appURL ) {
 		isInstalled = false;
     }
