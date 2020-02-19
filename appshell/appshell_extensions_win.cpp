@@ -425,10 +425,10 @@ int32 OpenDocumentWithXDApp(ExtensionString path)
 	return NO_ERROR;
 }
 
-int32 IsXDAppInstalled(bool& isRemote)
+int32 IsXDAppInstalled(bool& isInstalled)
 {
 	HKEY    hkOpened;
-	isRemote = FALSE;
+	isInstalled = FALSE;
 
 	// Look for installed XD app under Windows
 	if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
@@ -437,7 +437,7 @@ int32 IsXDAppInstalled(bool& isRemote)
 		, KEY_READ
 		, &hkOpened))
 	{
-		isRemote = TRUE;
+		isInstalled = TRUE;
 	}
 	else if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
 		, XD_REG_FAMILIES_PATH
@@ -445,7 +445,7 @@ int32 IsXDAppInstalled(bool& isRemote)
 		, KEY_READ
 		, &hkOpened))
 	{
-		isRemote = TRUE;
+		isInstalled = TRUE;
 	}
 	else if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_CLASSES_ROOT
 		, UWP_REG_PACKAGES_PATH
@@ -470,7 +470,7 @@ int32 IsXDAppInstalled(bool& isRemote)
 				std::wstring XDApp = std::wstring(subKeyName);
 				if (XDApp.rfind(L"Adobe.CC.XD", 0) == 0)
 				{
-					isRemote = TRUE;
+					isInstalled = TRUE;
 					break;
 				}
 			}

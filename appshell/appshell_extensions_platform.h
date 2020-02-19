@@ -194,7 +194,7 @@ int32 CopyFile(ExtensionString src, ExtensionString dest);
 
 int32 OpenDocumentWithXDApp(ExtensionString path);
 
-int32 IsXDAppInstalled(bool& isRemote);
+int32 IsXDAppInstalled(bool& isInstalled);
 
 int32 GetNodeState(int32& state);
 

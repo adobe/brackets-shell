@@ -431,7 +431,7 @@ public:
                 }
                 responseArgs->SetInt(2, port);
             }
-        
+
 		}
 		else if (message_name == "IsXDAppInstalled") {
 			// Parameters:

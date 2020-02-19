@@ -391,7 +391,7 @@ if (!brackets) {
      */
     native function OpenDocumentWithXDApp();
     appshell.app.OpenDocumentWithXDApp = function (path, callback) {
-        var resultString = OpenDocumentWithXDApp(callback, path);
+        var resultString = OpenDocumentWithXDApp(callback || _dummyCallback, path);
     };
     
     /**

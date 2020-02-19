@@ -215,7 +215,7 @@ int32 OpenDocumentWithXDApp(ExtensionString path)
 	return ERR_UNKNOWN;
 }
 
-int32 IsXDAppInstalled(bool& isRemote)
+int32 IsXDAppInstalled(bool& isInstalled)
 {
 	return NO_ERROR;
 }
