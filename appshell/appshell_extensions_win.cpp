@@ -554,7 +554,7 @@ int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesW
 			result = GetLegacyWin32SystemEditor(*it, appPath);
 
 		if (result)
-			fileTypesWithdefaultApp = fileTypesWithdefaultApp + *it + L":" + appPath + L",";
+			fileTypesWithdefaultApp = fileTypesWithdefaultApp + *it + L"##" + appPath + L",";
 	}
 
 	return true;

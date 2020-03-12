@@ -391,6 +391,59 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
                                          );
 }
 
+int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesWithdefaultApp)
+{
+
+    char delim[] = ",";
+    char separator[] = "##";
+    std::vector<ExtensionString> extArray;
+    char* token = std::strtok((char*)fileTypes.c_str(), delim);
+    while (token) {
+        extArray.push_back(token);
+        token = std::strtok(NULL, delim);
+    }
+
+    for (std::vector<ExtensionString>::iterator it = extArray.begin(); it != extArray.end(); ++it)
+    {
+        ExtensionString appPath;
+
+        CFStringRef contentType = CFStringCreateWithCString (NULL, (*it).c_str(), kCFStringEncodingUTF8);
+
+        CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,
+                                                                           contentType,
+                                                                           NULL);
+        if(UTI)
+        {
+            CFURLRef bundle_id;
+
+            bundle_id = LSCopyDefaultApplicationURLForContentType(UTI, kLSRolesEditor, NULL);
+
+            if(bundle_id)
+            {
+                NSBundle *bundle = [NSBundle bundleWithURL: (NSURL*)bundle_id];
+
+                if (bundle)
+                {
+                    appPath = [(NSString *)[bundle objectForInfoDictionaryKey: @"CFBundleIdentifier"] cStringUsingEncoding:NSUTF8StringEncoding];
+                }
+
+                fileTypesWithdefaultApp = fileTypesWithdefaultApp + *it + separator + appPath + ",";
+
+                CFRelease(bundle_id);
+            }
+
+            CFRelease(UTI);
+        }
+
+        CFRelease(contentType);
+    }
+
+    return NO_ERROR;
+}
+
+
+
+
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
     NSString* urlString = [NSString stringWithUTF8String:url.c_str()];
