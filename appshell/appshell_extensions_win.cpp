@@ -427,6 +427,9 @@ static BOOL ResolveAppPathCommon(ExtensionString lpszKey, ExtensionString lpszVa
                 if (iExe != -1)
                     appPath = appPath.substr(0, iExe+4);
 
+                if (appPath[0] == '\"')
+                    appPath = appPath.substr(1);
+
                 result = TRUE;
             }
 

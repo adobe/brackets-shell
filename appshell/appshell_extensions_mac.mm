@@ -424,7 +424,7 @@ int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesW
 
                 if (bundle)
                 {
-                    appPath = [(NSString *)[bundle objectForInfoDictionaryKey: @"CFBundleIdentifier"] cStringUsingEncoding:NSUTF8StringEncoding];
+                    appPath = [(NSString *)[bundle objectForInfoDictionaryKey: @"CFBundleExecutable"] cStringUsingEncoding:NSUTF8StringEncoding];
                 }
 
                 fileTypesWithdefaultApp = fileTypesWithdefaultApp + *it + separator + appPath + ",";
