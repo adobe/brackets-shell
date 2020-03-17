@@ -465,14 +465,14 @@ static BOOL ResolveAppPathFromProgID(const ExtensionString& lpszProgID, Extensio
 BOOL GetShellDefaultOpenWithProgPath(const ExtensionString& fileExt, ExtensionString &appPath)
 {
     HKEY	extKey = NULL;
-    ExtensionString key;
+    ExtensionString key = fileExt;
     BOOL	result = FALSE;
     ULONG	regKey(REG_SZ);
 
     if (fileExt[0] != '.')
-        fileExt = L"." + fileExt;
+		key = L"." + fileExt;
 
-    key = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\" +  fileExt + L"\\UserChoice";
+    key = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\" + key + L"\\UserChoice";
 
     if (::RegOpenKeyEx(HKEY_CURRENT_USER, key.c_str(), 0, KEY_QUERY_VALUE, &extKey) == ERROR_SUCCESS)
     {
@@ -496,12 +496,13 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
 {
     HKEY	rootKey;
     ULONG	regKey(REG_SZ);
+	ExtensionString key = fileExt;
 
     if (fileExt[0] != '.')
-        fileExt = L"." + fileExt;
+		key = L"." + key;
 
     // find the key for the file extension
-    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, fileExt.c_str(), 0, KEY_QUERY_VALUE, &rootKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, key.c_str(), 0, KEY_QUERY_VALUE, &rootKey) == ERROR_SUCCESS)
     {
         TCHAR nextKeyStr[255];
         ULONG strSize = 255;
@@ -514,10 +515,10 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
         RegCloseKey(rootKey);
     }
 
-    fileExt = fileExt+ L"\\OpenWithProgids";
+	key = key + L"\\OpenWithProgids";
     HKEY extKey;
     // find the key for the file extension
-    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, fileExt.c_str(), 0, KEY_QUERY_VALUE | KEY_READ, &extKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, key.c_str(), 0, KEY_QUERY_VALUE | KEY_READ, &extKey) == ERROR_SUCCESS)
     {
         TCHAR subKeyStr[255];
         ULONG subKeySize = 255;
