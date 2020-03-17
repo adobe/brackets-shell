@@ -497,6 +497,7 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
     HKEY	rootKey;
     ULONG	regKey(REG_SZ);
 	ExtensionString key = fileExt;
+	BOOL	result = FALSE;
 
     if (fileExt[0] != '.')
 		key = L"." + key;
@@ -510,6 +511,7 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
         if (RegQueryValueEx(rootKey, L"", NULL, &regKey,
             (LPBYTE)nextKeyStr, &strSize) == ERROR_SUCCESS)
         {
+			RegCloseKey(rootKey);
             return ResolveAppPathFromProgID(nextKeyStr, appPath);
         }
         RegCloseKey(rootKey);
@@ -527,8 +529,8 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
             0, 0, 0, NULL);
         if (err != ERROR_NO_MORE_ITEMS)
         {
+			RegCloseKey(extKey);
             return ResolveAppPathFromProgID(subKeyStr, appPath);
-
         }
 
         RegCloseKey(extKey);
