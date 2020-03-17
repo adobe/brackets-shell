@@ -404,7 +404,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
 }
 
 
-static BOOL ResolveAppPathCommon(ExtensionString lpszKey, ExtensionString lpszVal, ExtensionString& appPath)
+static BOOL ResolveAppPathCommon(const ExtensionString& lpszKey, const ExtensionString& lpszVal, ExtensionString& appPath)
 {
     HKEY	keyRoot = NULL;
     BOOL	result = FALSE;
@@ -442,7 +442,7 @@ static BOOL ResolveAppPathCommon(ExtensionString lpszKey, ExtensionString lpszVa
 
 }
 
-static BOOL ResolveAppPathFromProgID(ExtensionString lpszProgID, ExtensionString& appPath)
+static BOOL ResolveAppPathFromProgID(const ExtensionString& lpszProgID, ExtensionString& appPath)
 {
 
     ExtensionString key;
@@ -462,7 +462,7 @@ static BOOL ResolveAppPathFromProgID(ExtensionString lpszProgID, ExtensionString
 
 }
 
-BOOL GetShellDefaultOpenWithProgPath(ExtensionString fileExt, ExtensionString &appPath)
+BOOL GetShellDefaultOpenWithProgPath(const ExtensionString& fileExt, ExtensionString &appPath)
 {
     HKEY	extKey = NULL;
     ExtensionString key;
@@ -492,7 +492,7 @@ BOOL GetShellDefaultOpenWithProgPath(ExtensionString fileExt, ExtensionString &a
 }
 
 
-BOOL GetLegacyWin32SystemEditor(ExtensionString fileExt, ExtensionString &appPath)
+BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString &appPath)
 {
     HKEY	rootKey;
     ULONG	regKey(REG_SZ);
@@ -517,7 +517,7 @@ BOOL GetLegacyWin32SystemEditor(ExtensionString fileExt, ExtensionString &appPat
     fileExt = fileExt+ L"\\OpenWithProgids";
     HKEY extKey;
     // find the key for the file extension
-    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, fileExt.c_str(), 0, KEY_QUERY_VALUE | KEY_READ | KEY_ENUMERATE_SUB_KEYS, &extKey) == ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, fileExt.c_str(), 0, KEY_QUERY_VALUE | KEY_READ, &extKey) == ERROR_SUCCESS)
     {
         TCHAR subKeyStr[255];
         ULONG subKeySize = 255;
@@ -527,14 +527,16 @@ BOOL GetLegacyWin32SystemEditor(ExtensionString fileExt, ExtensionString &appPat
         if (err != ERROR_NO_MORE_ITEMS)
         {
             return ResolveAppPathFromProgID(subKeyStr, appPath);
-            }
+
         }
+
         RegCloseKey(extKey);
+    }
 
     return FALSE;
 }
 
-int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesWithdefaultApp)
+int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fileTypesWithdefaultApp)
 {
     wchar_t* nextPtr;
     wchar_t delim[] = L",";
@@ -548,7 +550,7 @@ int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesW
         token = wcstok(NULL, delim, &nextPtr);
     }
 
-    for (std::vector<ExtensionString>::iterator it = extArray.begin(); it != extArray.end(); ++it) {
+    for (std::vector<ExtensionString>::const_iterator it = extArray.begin(); it != extArray.end(); ++it) {
         ExtensionString appPath;
         BOOL result = GetShellDefaultOpenWithProgPath(*it, appPath);
 

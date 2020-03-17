@@ -391,7 +391,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
                                          );
 }
 
-int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesWithdefaultApp)
+int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fileTypesWithdefaultApp)
 {
 
     char delim[] = ",";
@@ -403,11 +403,14 @@ int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesW
         token = std::strtok(NULL, delim);
     }
 
-    for (std::vector<ExtensionString>::iterator it = extArray.begin(); it != extArray.end(); ++it)
+    for (std::vector<ExtensionString>::const_iterator it = extArray.begin(); it != extArray.end(); ++it)
     {
         ExtensionString appPath;
 
         CFStringRef contentType = CFStringCreateWithCString (NULL, (*it).c_str(), kCFStringEncodingUTF8);
+
+        if(!contentType)
+            continue;
 
         CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,
                                                                            contentType,

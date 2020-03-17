@@ -210,7 +210,7 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
-int32 getSystemDefaultApp(ExtensionString fileTypes, ExtensionString& fileTypesWithdefaultApp)
+int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fileTypesWithdefaultApp)
 {
 	return NO_ERROR;
 }
