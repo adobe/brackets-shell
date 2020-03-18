@@ -432,6 +432,23 @@ public:
                 responseArgs->SetInt(2, port);
             }
             
+        } else if (message_name == "getSystemDefaultApp") {
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - list of file extensions
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+
+            ExtensionString defaultApp;
+            if (error == NO_ERROR) {
+                error = getSystemDefaultApp(argList->GetString(1), defaultApp);
+            }
+
+            // Set response args for this function
+            responseArgs->SetString(2, defaultApp);
+
         } else if (message_name == "QuitApplication") {
             // Parameters - none
 
