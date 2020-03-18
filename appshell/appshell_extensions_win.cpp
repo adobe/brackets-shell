@@ -445,8 +445,7 @@ static BOOL ResolveAppPathCommon(const ExtensionString& lpszKey, const Extension
 static BOOL ResolveAppPathFromProgID(const ExtensionString& lpszProgID, ExtensionString& appPath)
 {
 
-    ExtensionString key;
-    key = lpszProgID + L"\\shell\\open\\command";
+    ExtensionString key = lpszProgID + L"\\shell\\open\\command";
 
 
     if (!ResolveAppPathCommon(key, L"", appPath))
@@ -468,6 +467,9 @@ BOOL GetShellDefaultOpenWithProgPath(const ExtensionString& fileExt, ExtensionSt
     ExtensionString key = fileExt;
     BOOL	result = FALSE;
     ULONG	regKey(REG_SZ);
+
+    if (fileExt.empty())
+        return false;
 
     if (fileExt[0] != '.')
         key = L"." + fileExt;
@@ -497,6 +499,9 @@ BOOL GetLegacyWin32SystemEditor(const ExtensionString& fileExt, ExtensionString 
     HKEY	rootKey;
     ULONG	regKey(REG_SZ);
     ExtensionString key = fileExt;
+
+    if (fileExt.empty())
+        return false;
 
     if (fileExt[0] != '.')
         key = L"." + key;
