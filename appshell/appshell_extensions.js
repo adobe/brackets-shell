@@ -376,6 +376,26 @@ if (!brackets) {
     };
 
     /**
+     * Checks If fileytype has assigned system default app
+     *
+     * @param {string} filetypes list of file Types for which deafult app to checked.
+     * @param {function(err)} callback Asynchronous callback function. The callback gets two arguments 
+     *        (filetypes, err)
+     *        filetypes which has system default app assigned.
+     *
+     *        Possible error values:
+     *          NO_ERROR
+     *          ERR_INVALID_PARAMS
+     *          ERR_NOT_FOUND
+     *
+     * @return None. This is an asynchronous call that sends all return information to the callback.
+     */
+    native function getSystemDefaultApp();
+        appshell.app.getSystemDefaultApp = function (filetypes, callback) {
+            getSystemDefaultApp(callback || _dummyCallback, filetypes);
+    };
+
+    /**
      * Quits native shell application
      */
     native function QuitApplication();

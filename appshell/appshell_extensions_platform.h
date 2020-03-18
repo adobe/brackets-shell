@@ -192,6 +192,8 @@ void MoveFileOrDirectoryToTrash(ExtensionString filename, CefRefPtr<CefBrowser> 
 
 int32 CopyFile(ExtensionString src, ExtensionString dest);
 
+int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fileTypesWithdefaultApp);
+
 int32 GetNodeState(int32& state);
 
 void OnBeforeShutdown();
