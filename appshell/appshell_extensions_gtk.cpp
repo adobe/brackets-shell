@@ -210,6 +210,11 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
+int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fileTypesWithdefaultApp)
+{
+	return NO_ERROR;
+}
+
 int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
 {
     return NO_ERROR;
