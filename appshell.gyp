@@ -116,6 +116,7 @@
             'VCManifestTool': {
               'AdditionalManifestFiles': [
                 'appshell.exe.manifest',
+                '>(win_exe_compatibility_manifest)',
               ],
             },
           },
