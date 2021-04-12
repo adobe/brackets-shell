@@ -91,25 +91,45 @@ module.exports = function (grunt) {
                 "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_macosx64.zip"
             },
             /* win */
-            "cef-win": {
+            "cef-win32": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows32.zip"
             },
-            "cef-win-symbols": {
+            "cef-win32-symbols": {
                 "src"  : ["<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_debug_symbols.zip", "<%= cef.url %>/cef_binary_<%= cef.version %>_windows32_release_symbols.zip"],
                 "dest" : "<%= downloads %>/cefsymbols"
             },
-            "node-win": {
+            "node-win32": {
                 "dest"      : "<%= downloads %>",
                 "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x86/node.exe"
             },
-            "icu-win": {
+            "icu-win32": {
                 "dest"      :  "<%= downloads %>",
                 "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_windows32.zip"
             },
-            "vs-crt-win": {
+            "vs-crt-win32": {
                 "dest"      :  "<%= downloads %>",
                 "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-ia32.zip"
+            },
+            "cef-win64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "<%= cef.url %>/cef_binary_<%= cef.version %>_windows64.zip"
+            },
+            "cef-win64-symbols": {
+                "src"  : ["<%= cef.url %>/cef_binary_<%= cef.version %>_windows64_debug_symbols.zip", "<%= cef.url %>/cef_binary_<%= cef.version %>_windows64_release_symbols.zip"],
+                "dest" : "<%= downloads %>/cefsymbols"
+            },
+            "node-win64": {
+                "dest"      : "<%= downloads %>",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/win-x64/node.exe"
+            },
+            "icu-win64": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= icu.url %>/icu_<%= icu.version %>_windows64.zip"
+            },
+            "vs-crt-win64": {
+                "dest"      :  "<%= downloads %>",
+                "src"       :  "<%= vsCrt.url %>/vs<%= vsCrt.version %>-crt-x64.zip"
             }
         },
         "clean": {

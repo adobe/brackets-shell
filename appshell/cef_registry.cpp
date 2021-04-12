@@ -36,7 +36,7 @@ void EnsureTrailingSeparator(LPWSTR pRet)
     if (!pRet)
         return;
 
-    int len = wcslen(pRet);
+    std::make_signed<size_t>::type len = wcslen(pRet);
     if (len > 0 && wcscmp(&(pRet[len-1]), L"\\") != 0)
     {
         wcscat(pRet, L"\\");

@@ -148,13 +148,13 @@ public:
     HANDLE RemoveProp(LPCWSTR lpString)
     { return ::RemoveProp(mWnd, lpString); }
 
-    LONG GetWindowLongPtr(int nIndex)  const
+    LONG_PTR GetWindowLongPtr(int nIndex)  const
     { return ::GetWindowLongPtr(mWnd, nIndex); }
 
-    LONG SetWindowLongPtr(int nIndex, LONG dwNewLong) 
+    LONG_PTR SetWindowLongPtr(int nIndex, LONG_PTR dwNewLong) 
     { return ::SetWindowLongPtr(mWnd, nIndex, dwNewLong); }
 
-    LONG GetClassLongPtr(int nIndex) const
+	ULONG_PTR GetClassLongPtr(int nIndex) const
     { return ::GetClassLongPtr(mWnd, nIndex); }
 
     BOOL GetWindowInfo (PWINDOWINFO pwi) const
@@ -200,10 +200,22 @@ public:
     { return ::IsWindowVisible(mWnd); }
 
     void SetStyle(DWORD dwStyle) 
-    { SetWindowLong(GWL_STYLE, dwStyle); }
+    {
+#ifdef _WIN64
+		SetWindowLong(mWnd, GWL_STYLE, dwStyle);
+#else
+		SetWindowLong(GWL_STYLE, dwStyle);
+#endif // __WIN64
+	}
 
     DWORD GetStyle() const
-    { return GetWindowLong(GWL_STYLE); }
+    {
+#ifdef _WIN64
+		return GetWindowLong(mWnd,GWL_STYLE);
+#else
+		return GetWindowLong(GWL_STYLE);
+#endif // __WIN64
+	}
 
     void RemoveStyle(DWORD dwStyle) 
     { SetStyle(GetStyle() & ~dwStyle); }
@@ -212,11 +224,22 @@ public:
     { SetStyle(GetStyle() & dwStyle); }
 
     void SetExStyle(DWORD dwExStyle) 
-    { SetWindowLong(GWL_EXSTYLE, dwExStyle); }
+    {
+#ifdef _WIN64
+		SetWindowLong(mWnd,GWL_EXSTYLE, dwExStyle); 
+#else
+		SetWindowLong(GWL_EXSTYLE, dwExStyle);
+#endif // __WIN64
+	}
 
-    DWORD GetExStyle() const
-    { return GetWindowLong(GWL_EXSTYLE); }
-
+	DWORD GetExStyle() const
+	{
+#ifdef _WIN64
+		return GetWindowLong(mWnd, GWL_EXSTYLE);
+#else
+		return GetWindowLong(GWL_EXSTYLE);
+#endif  // __WIN64
+	}
     void RemoveExStyle(DWORD dwExStyle)
     { SetExStyle(GetExStyle() & ~dwExStyle); }
 
@@ -249,3 +272,26 @@ protected:
 
     BOOL TrackNonClientMouseEvents(bool track = true);
 };
+
+
+#include <type_traits>
+#include <cstring>
+namespace from_cpp20 {
+	template<typename T>
+	struct int_or_ptr {
+		static constexpr bool value = std::is_pointer<T>::value || std::is_integral<T>::value;
+	};
+	template<typename Dest, typename Source>
+		inline typename std::enable_if<
+		int_or_ptr<Source>::value &&
+		int_or_ptr<Dest>::value &&
+		sizeof(Source) == sizeof(Dest),
+		Dest>::type
+		bit_cast(Source const & src)
+		{
+			Dest dest;
+			std::memcpy(&dest, &src, sizeof(Dest));
+			return dest;
+		}
+}
+

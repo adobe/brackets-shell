@@ -509,11 +509,11 @@ void cef_dark_window::DoDrawSystemMenuIcon(HDC hdc)
 
         // Start with the small
         if (!mWindowIcon)
-            mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
+            mWindowIcon = from_cpp20::bit_cast<HICON>(GetClassLongPtr(GCLP_HICONSM));
         
         // Then try to load the big icon
         if (!mWindowIcon)
-            mWindowIcon = reinterpret_cast<HICON>(GetClassLongPtr(GCLP_HICON));
+            mWindowIcon = from_cpp20::bit_cast<HICON>(GetClassLongPtr(GCLP_HICON));
 
         // Otherwise we need an icon, so just use the standard Windows default 
         //  application Icon which may very between versions 
@@ -554,7 +554,7 @@ void cef_dark_window::DoDrawTitlebarText(HDC hdc)
     // Figure out how much space we need to draw ethe whole thing
     RECT rectTemp;
     ::SetRectEmpty(&rectTemp);
-    ::DrawText(hdc, szCaption, ::wcslen(szCaption), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
+    ::DrawText(hdc, szCaption, static_cast<int>(::wcslen(szCaption)), &rectTemp, DT_SINGLELINE|DT_CALCRECT|DT_NOPREFIX);
 
     // Can it be centered within the window?
     if (((::RectWidth(windowRect) / 2) + (::RectWidth(rectTemp) / 2) + 1) < textRect.right) {
@@ -945,7 +945,7 @@ BOOL cef_dark_window::HandleMeasureItem(LPMEASUREITEMSTRUCT lpMIS)
         SetRectEmpty(&rectTemp);
 
         // Calc the size of this menu item 
-        ::DrawText(dc, szMenuString, ::wcslen(szMenuString), &rectTemp, DT_SINGLELINE|DT_CALCRECT);
+        ::DrawText(dc, szMenuString, static_cast<int>(::wcslen(szMenuString)), &rectTemp, DT_SINGLELINE|DT_CALCRECT);
 
         lpMIS->itemHeight = ::RectHeight(rectTemp);
         lpMIS->itemWidth = ::RectWidth(rectTemp);
@@ -999,7 +999,7 @@ BOOL cef_dark_window::HandleDrawItem(LPDRAWITEMSTRUCT lpDIS)
 
         int oldBkMode   = ::SetBkMode(lpDIS->hDC, TRANSPARENT);
 
-        ::DrawText(lpDIS->hDC, szMenuString, ::wcslen(szMenuString), &lpDIS->rcItem, format);
+        ::DrawText(lpDIS->hDC, szMenuString, static_cast<int>(::wcslen(szMenuString)), &lpDIS->rcItem, format);
 
         ::SelectObject(lpDIS->hDC, fontOld);
         ::SetBkMode(lpDIS->hDC, oldBkMode);

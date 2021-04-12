@@ -233,15 +233,14 @@ module.exports = function (grunt) {
         return _platform;
     }
     
-    function arch() {
-        if (platform() === "linux") {
-            if (process.arch === "x64") {
-                return 64;
-            } else {
-                return 32;
-            }
-        }
-        
+    function arch(hint) {
+		if (platform() === 'mac') {
+			return '';
+		}
+		hint = hint ? hint : process.arch;
+		if (['x64', 'ia32'].includes(hint)) {
+			return hint.slice(-2);
+		}
         return "";
     }
     

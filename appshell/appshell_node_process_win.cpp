@@ -302,7 +302,7 @@ void sendData(const std::string &data) {
 		BOOL bSuccess = FALSE;
 		dwWaitResult = WaitForSingleObject(hNodeMutex, INFINITE);
 		if (dwWaitResult == WAIT_OBJECT_0) { // got the mutex
-			bSuccess = WriteFile(g_hChildStd_IN_Wr, data.c_str(), data.length(), &dwWritten, NULL);
+			bSuccess = WriteFile(g_hChildStd_IN_Wr, data.c_str(), static_cast<int>(data.length()), &dwWritten, NULL);
 			ReleaseMutex(hNodeMutex);
 			if (!bSuccess) {
 				// Failed to write, there's something wrong with this process.

@@ -292,7 +292,7 @@ BOOL cef_main_window::HandleClose()
     CefWindowHandle hwnd = SafeGetCefBrowserHwnd();
     if (hwnd)
     {
-        BOOL closing = (BOOL)::GetProp(hwnd, ::kCefWindowClosingPropName);
+        DWORD_PTR closing = from_cpp20::bit_cast<DWORD_PTR>(::GetProp(hwnd, ::kCefWindowClosingPropName));
         if (closing) 
         {
             if (!g_handler->CanCloseBrowser(GetBrowser())) {

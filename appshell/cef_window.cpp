@@ -125,7 +125,7 @@ bool cef_window::SubclassWindow(HWND hWnd)
     if (::GetProp(hWnd, ::gCefClientWindowPropName) != NULL) 
         return false;
     mWnd = hWnd;
-    mSuperWndProc = (WNDPROC)SetWindowLongPtr(GWLP_WNDPROC, (LONG_PTR)&_WindowProc);
+    mSuperWndProc = from_cpp20::bit_cast<WNDPROC>(SetWindowLongPtr(GWLP_WNDPROC, (LONG_PTR)&_WindowProc));
     SetProp(::gCefClientWindowPropName, (HANDLE)this);
     return true;
 }
@@ -178,13 +178,13 @@ LRESULT cef_window::DefaultWindowProc(UINT message, WPARAM wParam, LPARAM lParam
 //  calls PostNcDestroy
 BOOL cef_window::HandleNcDestroy()
 {
-    WNDPROC superWndProc = WNDPROC(GetWindowLongPtr(GWLP_WNDPROC));
+    WNDPROC superWndProc = from_cpp20::bit_cast<WNDPROC>(GetWindowLongPtr(GWLP_WNDPROC));
 
     RemoveProp(::gCefClientWindowPropName);
 
     DefaultWindowProc(WM_NCDESTROY, 0, 0);
     
-    if ((WNDPROC(GetWindowLongPtr(GWLP_WNDPROC)) == superWndProc) && (mSuperWndProc != NULL))
+    if ((from_cpp20::bit_cast<WNDPROC>(GetWindowLongPtr(GWLP_WNDPROC)) == superWndProc) && (mSuperWndProc != NULL))
         SetWindowLongPtr(GWLP_WNDPROC, reinterpret_cast<INT_PTR>(mSuperWndProc));
     
     mSuperWndProc = NULL;

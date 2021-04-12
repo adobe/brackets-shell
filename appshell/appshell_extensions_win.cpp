@@ -25,6 +25,7 @@
 
 #include "appshell/appshell_helpers.h"
 #include "native_menu_model.h"
+#include "cef_window.h"
 
 #include <algorithm>
 #include <CommDlg.h>
@@ -278,7 +279,7 @@ void CALLBACK LiveBrowserMgrWin::CloseLiveBrowserAsyncCallback( HWND hwnd, UINT 
     }
     else if(s_instance->m_closeLiveBrowserHeartbeatTimerId == 0){
         //start a heartbeat timer to see if it closes after the message returned
-        s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, CloseLiveBrowserTimerCallback);
+        s_instance->m_closeLiveBrowserHeartbeatTimerId = ::SetTimer(NULL, 0, 30, from_cpp20::bit_cast<TIMERPROC>(&CloseLiveBrowserTimerCallback));
     }
 }
 
@@ -356,7 +357,7 @@ int32 OpenLiveBrowser(ExtensionString argURL, bool enableRemoteDebugging)
     args += argURL;
 
     // Args must be mutable
-    int argsBufSize = args.length() +1;
+    std::make_signed<size_t>::type argsBufSize = args.length(); ++argsBufSize;
     std::vector<WCHAR> argsBuf;
     argsBuf.resize(argsBufSize);
     wcscpy(&argsBuf[0], args.c_str());
@@ -399,7 +400,7 @@ void CloseLiveBrowser(CefRefPtr<CefBrowser> browser, CefRefPtr<CefProcessMessage
         liveBrowserMgr->CloseLiveBrowserFireCallback(NO_ERROR);
     } else if (liveBrowserMgr->GetCloseCallback()) {
         // set a timeout for up to 10 seconds to close the browser
-        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, LiveBrowserMgrWin::CloseLiveBrowserTimerCallback) );
+        liveBrowserMgr->SetCloseTimeoutTimerId( ::SetTimer(NULL, 0, 10 * 1000, from_cpp20::bit_cast<TIMERPROC>(&LiveBrowserMgrWin::CloseLiveBrowserTimerCallback)) );
     }
 }
 
@@ -574,7 +575,7 @@ int32 getSystemDefaultApp(const ExtensionString& fileTypes, ExtensionString& fil
 
 int32 OpenURLInDefaultBrowser(ExtensionString url)
 {
-    DWORD result = (DWORD)ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+    DWORD_PTR result = from_cpp20::bit_cast<DWORD_PTR>(ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL));
 
     // If the result > 32, the function suceeded. If the result is <= 32, it is an
     // error code.
@@ -667,7 +668,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                 } else {
                     // Multiple files are selected
                     wchar_t fullPath[MAX_UNC_PATH];
-                    for (int i = (dir.length() + 1), fileIndex = 0; ; fileIndex++) {
+					std::make_signed<size_t>::type dirLen = dir.length();
+                    for (decltype(dirLen) i = dirLen + 1, fileIndex = 0; /* Infinite loop */ ; fileIndex++) {
                         // Get the next file name
                         std::wstring file(&szFile[i]);
 
@@ -684,7 +686,8 @@ int32 ShowOpenDialog(bool allowMultipleSelection,
                         }
 
                         // Go to the start of the next file name
-                        i += file.length() + 1;
+						std::make_signed<size_t>::type fileLen = file.length();
+                        i += fileLen + 1;
                     }
                 }
 
@@ -785,11 +788,17 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     }
 
     // On Windows, list directories first, then files
-    size_t i, total = 0;
-    for (i = 0; i < resultDirs.size(); i++)
-        directoryContents->SetString(total++, resultDirs[i]);
-    for (i = 0; i < resultFiles.size(); i++)
-        directoryContents->SetString(total++, resultFiles[i]);
+    std::make_signed<size_t>::type total = 0;
+    {
+        std::make_signed<size_t>::type resultDirSize = resultDirs.size();
+        for (decltype(resultDirSize) i = 0; i < resultDirSize; ++i)
+            directoryContents->SetString(total++, resultDirs[i]);
+    }
+    {
+        std::make_signed<size_t>::type resultFileSize = resultFiles.size();
+        for (decltype(resultFileSize) i = 0; i < resultFileSize; ++i)
+            directoryContents->SetString(total++, resultFiles[i]);
+    }
 
     return NO_ERROR;
 }
@@ -1054,7 +1063,7 @@ static void CharSetToWide(const std::string &aString, long codePage, std::wstrin
     int aUTF16Length = ::MultiByteToWideChar(codePage, // get destination buffer length
         0,
         aString.data(),
-        aString.size(),
+        static_cast<int>(aString.size()),
         NULL,
         NULL);
 
@@ -1065,7 +1074,7 @@ static void CharSetToWide(const std::string &aString, long codePage, std::wstrin
     int wcharsWritten = ::MultiByteToWideChar(codePage,
         0,
         aString.data(),
-        aString.size(),
+        static_cast<int>(aString.size()),
         buf.get(),
         aUTF16Length);
 
@@ -1194,7 +1203,7 @@ static void WideToCharSet(const std::wstring &aUTF16string, long codePage, std::
         int aUTF8Length = ::WideCharToMultiByte(codePage,
             0,
             aUTF16string.data(),
-            aUTF16string.size(),
+            static_cast<int>(aUTF16string.size()),
             NULL,
             0,
             NULL,
@@ -1206,7 +1215,7 @@ static void WideToCharSet(const std::wstring &aUTF16string, long codePage, std::
         int bytesWritten = ::WideCharToMultiByte(codePage,
             0,
             aUTF16string.data(),
-            aUTF16string.size(),
+            static_cast<int>(aUTF16string.size()),
             buf.get(),
             aUTF8Length,
             NULL,
@@ -1253,7 +1262,7 @@ int32 WriteFile(ExtensionString filename, std::string contents, ExtensionString 
         return ConvertWinErrorCode(GetLastError(), false);
 
     // TODO (issue 67) -  Should write to temp file
-    if (!WriteFile(hFile, contents.c_str(), contents.length(), &dwBytesWritten, NULL)) {
+    if (!WriteFile(hFile, contents.c_str(), static_cast<DWORD>(contents.length()), &dwBytesWritten, NULL)) {
         error = ConvertWinErrorCode(GetLastError(), false);
     }
 
@@ -1377,8 +1386,8 @@ bool isSlash(ExtensionString::value_type wc) { return wc == '/' || wc == '\\'; }
 
 void RemoveTrailingSlash(ExtensionString& filename)
 {
-    int last = filename.length() - 1;
-    if ((last >= 0) && isSlash(filename.at(last))) {
+    std::make_signed<size_t>::type last = filename.length();
+    if ((--last >= 0) && isSlash(filename.at(last))) {
         filename.erase(last);
     }
 }
@@ -1455,7 +1464,7 @@ int32 ShowFolderInOSWindow(ExtensionString pathname) {
         
     } else {
         // File: open its containing folder with this file selected
-        ITEMIDLIST *pidl = ILCreateFromPath(pathname.c_str());
+        auto pidl = ILCreateFromPath(pathname.c_str());
         if (pidl) {
             SHOpenFolderAndSelectItems(pidl,0,0,0);
             ILFree(pidl);
@@ -1688,7 +1697,7 @@ int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString itemTitle, Extensio
     menuInfo.fType = MFT_STRING;
 #endif
     menuInfo.dwTypeData = (LPWSTR)itemTitle.c_str();
-    menuInfo.cch = itemTitle.size();        
+    menuInfo.cch = static_cast<decltype(menuInfo.cch)>(itemTitle.size());
         
     if (positionIdx == kAppend) {
         if (!InsertMenuItem(mainMenu, -1, TRUE, &menuInfo)) {
@@ -1721,7 +1730,7 @@ bool canBeUsedAsShortcutKey(int unicode)
 
 bool UpdateAcceleratorTable(int32 tag, ExtensionString& keyStr)
 {
-    int keyStrLen = keyStr.length();
+    int keyStrLen = static_cast<int>(keyStr.length());
     if (keyStrLen) {
         LPACCEL lpaccelNew;             // pointer to new accelerator table
         HACCEL haccelOld;               // handle to old accelerator table
@@ -1996,7 +2005,7 @@ int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, 
             menuInfo.fType = MFT_SEPARATOR;
         }
         menuInfo.dwTypeData = (LPWSTR)title.c_str();
-        menuInfo.cch = itemTitle.size();        
+        menuInfo.cch = static_cast<decltype(menuInfo.cch)>(itemTitle.size());
         if (positionIdx >= 0) {
             InsertMenuItem(submenu, positionIdx, TRUE, &menuInfo);
             inserted = true;
@@ -2176,7 +2185,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
 #endif
             menuInfo.dwTypeData = (LPWSTR)newTitle.c_str();
             menuInfo.hSubMenu = itemInfo.hSubMenu;
-            menuInfo.cch = newTitle.size();        
+            menuInfo.cch = static_cast<decltype(menuInfo.cch)>(newTitle.size());
         
             InsertMenuItem(mainMenu, position, TRUE, &menuInfo);
         }
@@ -2184,7 +2193,7 @@ int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString command, Exten
     } else { 
         itemInfo.fType = MFT_STRING; // just to make sure
         itemInfo.dwTypeData = (LPWSTR)newTitle.c_str();
-        itemInfo.cch = newTitle.size();
+        itemInfo.cch = static_cast<decltype(itemInfo.cch)>(newTitle.size());
         if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
             return ConvertErrnoCode(GetLastError());        
         }
@@ -2284,7 +2293,7 @@ int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString command
 
     itemInfo.fType = MFT_STRING; // just to make sure
     itemInfo.dwTypeData = (LPWSTR)titleStr.c_str();
-    itemInfo.cch = titleStr.size();
+    itemInfo.cch = static_cast<decltype(itemInfo.cch)>(titleStr.size());
 
     if (!SetMenuItemInfo(menu, tag, FALSE, &itemInfo)) {
         return ConvertErrnoCode(GetLastError());        
