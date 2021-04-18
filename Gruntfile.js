@@ -40,7 +40,7 @@ module.exports = function (grunt) {
     if (platform === "mac") {
         cef_version = "3.2704.1434";
     } else if (platform === "linux") {
-        cef_version = "3.2785.1487";
+        cef_version = "3.3683.1920.g9f41a27";
     }
 
     grunt.initConfig({
@@ -253,6 +253,10 @@ module.exports = function (grunt) {
                             "natives_blob.bin",
                             "snapshot_blob.bin",
                             "chrome-sandbox",
+                            "libEGL.so",
+                            "libGLESv2.so",
+                            "swiftshader/**",
+                            "v8_context_snapshot.bin",
                         ],
                         "dest"      : "<%= build.staging %>"
                     },

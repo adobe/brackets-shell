@@ -396,6 +396,10 @@
                 '$(BUILDTYPE)/libcef.so',
                 '$(BUILDTYPE)/natives_blob.bin',
                 '$(BUILDTYPE)/snapshot_blob.bin',
+                '$(BUILDTYPE)/libEGL.so',
+                '$(BUILDTYPE)/libGLESv2.so',
+                '$(BUILDTYPE)/swiftshader',
+                '$(BUILDTYPE)/v8_context_snapshot.bin',
               ],
             },
             {
@@ -445,6 +449,7 @@
       'msvs_guid': 'A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9',
       'defines': [
         'USING_CEF_SHARED',
+        'WRAPPING_CEF_SHARED',
       ],
       'configurations': {
         'Common_Base': {
@@ -460,6 +465,7 @@
         '<@(includes_common)',
         '<@(includes_capi)',
         '<@(includes_wrapper)',
+        '<@(libcef_dll_wrapper_sources_base)',
         '<@(libcef_dll_wrapper_sources_common)',
       ],
       'xcode_settings': {
@@ -633,3 +639,4 @@
     }],
   ],
 }
+

@@ -35,7 +35,7 @@ CefRefPtr<CefBrowser> AppGetBrowser() {
 
 CefWindowHandle AppGetMainHwnd() {
   if (!g_handler.get())
-    return NULL;
+    return 0;
   return g_handler->GetMainHwnd();
 }
 

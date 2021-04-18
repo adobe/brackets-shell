@@ -2,6 +2,7 @@
 #include <unicode/ucsdet.h>
 #include <unicode/ucnv.h>
 #include <fstream>
+#include <memory>
 
 #ifdef OS_LINUX
 #include "appshell/browser/main_context.h"
@@ -71,7 +72,7 @@ void CharSetEncode::operator()(std::string &contents) {
     if(error != U_BUFFER_OVERFLOW_ERROR) {
         throw "Unable to convert encoding";
     }
-    std::auto_ptr<char> target(new  char[targetLen + 1]());
+    std::unique_ptr<char> target(new  char[targetLen + 1]());
     error = U_ZERO_ERROR;
     ustr.extract(target.get(), targetLen, m_conv, error);
     target.get()[targetLen] = '\0';
@@ -87,7 +88,7 @@ void DecodeContents(std::string &contents, const std::string& encoding) {
     if(status != U_BUFFER_OVERFLOW_ERROR) {
         throw "Unable to decode contents";
     }
-    std::auto_ptr<char> target(new char[targetLen + 1]());
+    std::unique_ptr<char> target(new char[targetLen + 1]());
     status = U_ZERO_ERROR;
     ustr.extract(target.get(), targetLen, NULL, status);
     target.get()[targetLen] = '\0';
