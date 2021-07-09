@@ -811,7 +811,7 @@ LRESULT cef_dark_aero_window::WindowProc(UINT message, WPARAM wParam, LPARAM lPa
         if (mReady) {
             UpdateNonClientArea();
         }
-        break;
+        return 0L;
     case WM_NCMOUSELEAVE:
         // NOTE: We want anyone else interested in this message
         //          to be notified. Otherwise the default implementation 
