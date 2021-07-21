@@ -203,7 +203,16 @@
             </Directory>
             <Directory Id="ProgramMenuFolder"/>
         </Directory>
-    
+        
+        <!-- add MSVCRT merge modules -->
+        <DirectoryRef Id="TARGETDIR">
+            <Merge Id="VCRedist" SourceFile="$(env.CommonProgramFiles)\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" Language="0"/>
+        </DirectoryRef>
+
+        <Feature Id="VCRedist" Title="Visual C++ 8.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+            <MergeRef Id="VCRedist"/>
+        </Feature>
+        
         <!-- Set default install location -->    
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- Install Files -->
