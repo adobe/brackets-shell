@@ -20,8 +20,8 @@
 #include "config.h"
 
 CefRefPtr<ClientHandler> g_handler;
-int g_remote_debugging_port = 0;
-std::string g_get_remote_debugging_port_error;
+extern int g_remote_debugging_port;
+extern std::string g_get_remote_debugging_port_error;
 
 #ifdef OS_WIN
 bool g_force_enable_acc = false;

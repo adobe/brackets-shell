@@ -187,6 +187,8 @@ void ClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
 }
 
 std::vector<CefString> gDroppedFiles;
+int g_remote_debugging_port = 0;
+std::string g_get_remote_debugging_port_error;
 
 #ifndef OS_LINUX
 bool ClientHandler::OnDragEnter(CefRefPtr<CefBrowser> browser,
