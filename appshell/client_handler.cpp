@@ -36,6 +36,16 @@ ClientHandler::ClientHandler()
   callbackId = 0;
   CreateProcessMessageDelegates(process_message_delegates_);
   CreateRequestDelegates(request_delegates_);
+  
+  // Default schemes that support cookies.
+  cookieable_schemes_.push_back("http");
+  cookieable_schemes_.push_back("https");
+  cookieable_schemes_.push_back("file");
+
+  // Register cookieable schemes with the global cookie manager.
+  CefRefPtr<CefCookieManager> manager = CefCookieManager::GetGlobalManager();
+  ASSERT(manager.get());
+  manager->SetSupportedSchemes(cookieable_schemes_);
 }
 
 ClientHandler::~ClientHandler() {

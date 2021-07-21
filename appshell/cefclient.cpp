@@ -64,6 +64,7 @@ void AppGetSettings(CefSettings& settings, CefRefPtr<CefCommandLine> command_lin
       command_line->HasSwitch(client::switches::kMultiThreadedMessageLoop);
 #endif
 
+  settings.persist_session_cookies = true;
   CefString(&settings.cache_path) =
       command_line->GetSwitchValue(client::switches::kCachePath);
   CefString(&settings.log_file) =

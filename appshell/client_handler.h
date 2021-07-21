@@ -304,6 +304,9 @@ virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
   IMPLEMENT_REFCOUNTING(ClientHandler);
   // Include the default locking implementation.
   IMPLEMENT_LOCKING(ClientHandler);
+  
+  // Schemes that will be registered with the global cookie manager.
+  std::vector<CefString> cookieable_schemes_;
 };
 
 #endif  // CEF_TESTS_CEFCLIENT_CLIENT_HANDLER_H_
